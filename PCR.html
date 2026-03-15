@@ -1,0 +1,2380 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>PCR</title>
+	<style>
+		:root{
+			--bg:#f4f6f8;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;
+			--good:#166534;--warn:#92400e;--bad:#b91c1c;
+		}
+		body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+		.container{max-width:1200px;padding:18px}
+		h1{margin:0 0 6px 0;font-size:28px}
+		.subtitle{margin:0 0 16px 0;color:var(--muted)}
+		.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+		.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
+		@media(max-width:980px){.grid{grid-template-columns:1fr}}
+		.row{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;align-items:end}
+		@media(max-width:900px){.row{grid-template-columns:1fr 1fr}}
+		@media(max-width:600px){.row{grid-template-columns:1fr}}
+		label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px}
+		input,button,select{font-family:inherit}
+		input,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;box-sizing:border-box}
+		button{padding:8px 12px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+		button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+		button.danger{background:#ef4444}
+		.status{font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#fff}
+		.status.good{background:#ecfdf5;border-color:#86efac;color:var(--good)}
+		.status.warn{background:#fffbeb;border-color:#fcd34d;color:var(--warn)}
+		.status.bad{background:#fef2f2;border-color:#fca5a5;color:var(--bad)}
+		.mini{font-size:12px;color:var(--muted)}
+		.kpi{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-top:10px}
+		.kpi-item{border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff}
+		.kpi-item .label{font-size:11px;color:var(--muted);font-weight:700}
+		.kpi-item .value{font-size:14px;font-weight:800;margin-top:2px;font-family:ui-monospace,monospace}
+		.enzyme-table{width:100%;border-collapse:collapse;font-size:13px}
+		.enzyme-table th,.enzyme-table td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+		.enzyme-table th{background:#f9fafb;font-size:12px;color:#374151}
+		.enzyme-table tr:last-child td{border-bottom:none}
+		.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line);background:#f8fafc;color:#334155;margin-right:6px;margin-bottom:6px}
+		.chip.mut{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+		.chip.fwd{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+		.chip.rev{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
+		.chip.enz{background:#ecfdf5;border-color:#86efac;color:#166534}
+		.viewer{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:auto;max-height:520px;padding:8px}
+		.seq-line{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:start;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;margin-bottom:2px}
+		.coord{color:#6b7280;text-align:right;padding-top:2px}
+		.seq-content{display:inline-block;vertical-align:top;min-width:max-content;position:relative}
+		.bases{display:block;width:max-content;white-space:pre;overflow-x:visible;font-size:13px;letter-spacing:0px;line-height:1.5}
+		.strand-label{font-size:10px;color:#9ca3af;font-weight:700;margin-right:6px;display:inline-block;width:24px;line-height:1.5}
+		.track-wrap{position:relative;height:19.5px;border-bottom:none;margin-bottom:0;margin-left:30px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5}
+		.track-lane{position:relative;height:19.5px;width:100%;display:flex;align-items:flex-start}
+		.annot{position:absolute;top:50%;transform:translateY(-50%);height:16px;border-radius:4px;border:1px solid transparent;padding:0 4px;font-size:10px;font-weight:800;white-space:nowrap;line-height:14px;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+		.annot::before{content:'';display:inline-block;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid currentColor;opacity:.9}
+		.annot.rev::before{border-left:none;border-right:6px solid currentColor}
+		.annot.mut{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+		.annot.fwd{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+		.annot.rev{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
+		.annot.enz{background:#ecfdf5;border-color:#86efac;color:#166534}
+		.annot.primer{background:#ffffff;border:2px solid #c026d3;color:#111827;border-radius:0;height:16px;line-height:13px;padding:1px 2px;box-sizing:border-box;overflow:visible;z-index:3;font-size:13px;font-weight:600;letter-spacing:0px}
+		.annot.primer::before{display:none}
+		.annot.primer::after{content:attr(data-name);position:absolute;left:2px;font-size:10px;font-weight:700;color:#a21caf;white-space:nowrap;z-index:4}
+		.annot.primer.fwd::after{top:-14px}
+		.annot.primer.rev::after{bottom:-14px}
+		.annot.primer .connector{position:absolute;width:16px;height:10px;border:2px solid #c026d3;border-left:none;background:transparent}
+		.annot.primer.fwd .connector{right:6px;top:-10px;border-bottom:none}
+		.annot.primer.rev .connector{left:6px;bottom:-10px;border-top:none}
+		.enzyme-tooltip{position:fixed;z-index:9999;pointer-events:none;min-width:230px;max-width:320px;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.18);padding:10px;display:none}
+		.enzyme-tooltip .t-title{font-weight:800;font-size:22px;line-height:1.1;color:#111827}
+		.enzyme-tooltip .t-sub{font-size:12px;color:#4b5563;margin-top:2px}
+		.enzyme-tooltip .t-kpi{margin-top:6px;font-size:12px;color:#111827}
+		.enzyme-tooltip .t-kpi .dot{margin:0 6px;color:#9ca3af}
+		.enzyme-tooltip .t-seq{margin-top:8px;font-family:ui-monospace,monospace;font-size:13px;letter-spacing:1px;line-height:1.25}
+		.enzyme-tooltip .t-mini{margin-top:6px;font-size:11px;color:#6b7280}
+		@keyframes preview-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+		.annot:has-text(PREVIEW), .annot[title*="PREVIEW"] {
+			border: 2px dashed currentColor !important;
+			animation: preview-pulse 1.5s ease-in-out infinite;
+			font-weight: 900;
+		}
+		.base-mut{background:#fee2e2;color:#991b1b;font-weight:800}
+		.base-fwd{background:#dbeafe;color:#1e3a8a;font-weight:700}
+		.base-rev{background:#ede9fe;color:#5b21b6;font-weight:700}
+		.base-enz{background:#dcfce7;color:#166534;font-weight:700}
+		.legend{margin-bottom:8px}
+		.gel-wrap{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px}
+		.gel-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:8px}
+		.gel{border:1px solid #d1d5db;border-radius:8px;background:linear-gradient(180deg,#f8fafc 0%,#eef2ff 100%);padding:12px;overflow-x:auto}
+		.gel-lanes{display:flex;align-items:flex-start;gap:10px;min-width:max-content}
+		.gel-lane{position:relative;width:64px;height:220px;border:1px solid #cbd5e1;border-radius:6px;background:linear-gradient(180deg,#e2e8f0 0%,#cbd5e1 14px,#eef2ff 14px,#f8fafc 100%)}
+		.gel-well{position:absolute;top:5px;left:8px;right:8px;height:6px;background:#94a3b8;border-radius:2px;opacity:.55}
+		.gel-band{position:absolute;left:8px;right:8px;height:3px;border-radius:2px;background:#0f172a;box-shadow:0 0 5px rgba(30,64,175,.28)}
+		.gel-band.ladder{background:#334155;box-shadow:none}
+		.gel-label{font-size:10px;color:#475569;text-align:center;margin-top:4px;max-width:64px;word-break:break-word}
+		.gel-size-guide{font-size:10px;color:#6b7280;margin-top:6px}
+		.digest-map{margin-top:10px;border:1px solid #d1d5db;border-radius:8px;background:#f8fafc;padding:8px}
+		.digest-site{position:absolute;top:2px;height:calc(100% - 4px);background:rgba(16,185,129,.25);border:1.5px solid #10b981;border-radius:2px;pointer-events:none;z-index:1;}
+		/* Vertical allele bar */
+		.abar-container{display:flex;gap:32px;align-items:flex-end;padding:8px 12px 4px;justify-content:flex-start}
+		.abar-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+		.abar-title{font-size:11px;font-weight:700;color:#374151;letter-spacing:.04em}
+		.abar-wrap{display:flex;gap:6px;align-items:stretch;position:relative}
+		.abar-bar{position:relative;width:28px;border:1.5px solid #64748b;border-radius:3px;background:#e2e8f0;overflow:hidden;box-sizing:border-box}
+		.abar-labels{display:flex;flex-direction:column;justify-content:flex-start;position:relative;width:52px}
+		.abar-cut{position:absolute;left:-2px;right:-2px;height:2px;background:#ef4444;z-index:2}
+		.abar-cut-label{position:absolute;left:34px;top:-8px;font-size:9px;color:#ef4444;white-space:nowrap;font-weight:600}
+		.abar-frag-label{position:absolute;left:0;font-size:9px;color:#374151;white-space:nowrap;transform:translateY(-50%)}
+		.abar-len{font-size:10px;color:#6b7280}
+	</style>
+</head>
+<body>
+	<div id="enzyme-tooltip" class="enzyme-tooltip"></div>
+	<div class="container">
+		<h1>PCR</h1>
+		<p class="subtitle">Search an rs number, fetch sequence from NCBI, design flanking primers using Primer3-like algorithm, and annotate restriction enzyme sites.</p>
+		<div class="tool-version" id="toolVersion">Version v1.0.0 (Build 0)</div>
+		<!-- FULL TOOL CONTENT BELOW -->
+		<div class="card">
+			<div class="row">
+				<div>
+					<label>rs number</label>
+					<input id="rs-input" type="text" placeholder="rs1799966" />
+				</div>
+				<div>
+					<label>Flank each side (bp)</label>
+					<input id="flank-bp" type="number" min="100" max="20000" step="50" value="2000" />
+				</div>
+				<div>
+					<label>Line width (bp)</label>
+					<input id="line-width" type="number" min="40" max="120" value="50" oninput="renderViewer()" />
+				</div>
+				<div>
+					<button onclick="loadFromRs()">Load from NCBI</button>
+				</div>
+			</div>
+			<div id="load-status" class="status" style="margin-top:10px;">Ready.</div>
+			<div class="kpi" id="load-kpi" style="display:none;"></div>
+			<div id="allele-info" style="display:none;margin-top:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;font-size:13px;"></div>
+			<div id="variant-info-wrap" style="margin-top:10px;">
+				<button id="toggle-variant-info-btn" class="secondary" style="margin-bottom:8px;" onclick="toggleVariantInfo()">Show variant details</button>
+				<div id="variant-info" class="collapsed" style="display:none;padding:10px;border:1px solid #dbeafe;border-radius:8px;background:#eff6ff;font-size:13px;"></div>
+			</div>
+			<div class="history-wrap">
+				<div class="history-title">Saved rs lookups</div>
+				<div id="rs-history" class="history-list"></div>
+			</div>
+			<p class="mini" style="margin-top:8px;">Uses NCBI E-utilities: SNP metadata + nuccore FASTA region fetch.</p>
+
+			<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+				<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Or load a local FASTA file</div>
+				<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+					<input type="file" id="fasta-file-input" accept=".fasta,.fa,.fna,.txt" style="display:none;" onchange="loadFromFastaFile()" />
+					<button class="secondary" onclick="document.getElementById('fasta-file-input').click()">Choose FASTA file</button>
+					<span id="fasta-filename" style="font-size:13px;color:#6b7280;">No file selected</span>
+				</div>
+				<p class="mini" style="margin-top:6px;">Single or multi-FASTA (first entry used). Accepted: .fasta .fa .fna .txt</p>
+			</div>
+		</div>
+		<div class="grid">
+			<div>
+				<div class="card">
+					<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+						<div class="legend">
+							<span class="chip mut">Mutation position</span>
+							<span class="chip fwd">Forward primer binding</span>
+							<span class="chip rev">Reverse primer binding</span>
+							<span class="chip enz">Restriction site</span>
+						</div>
+						<div style="display:flex;gap:12px;align-items:center;">
+							<div style="font-size:12px;color:var(--muted);font-weight:700;">View sequence:</div>
+							<label style="font-size:13px;cursor:pointer;font-weight:400;">
+								<input type="radio" name="view-variant" value="wt" checked onchange="switchVariant('wt')" style="margin-right:4px;">Wild-type
+							</label>
+							<label style="font-size:13px;cursor:pointer;font-weight:400;">
+								<input type="radio" name="view-variant" value="mut" onchange="switchVariant('mut')" style="margin-right:4px;">Mutant
+							</label>
+						</div>
+						<div style="margin-bottom:8px;">
+							<label style="font-size:13px;cursor:pointer;">
+								<input type="checkbox" id="show-complement" onchange="toggleComplement()" style="margin-right:4px;">
+								Show complement strand
+							</label>
+						</div>
+					</div>
+					<div class="viewer" id="seq-viewer"><div class="mini">Load an rs number to render sequence.</div></div>
+				</div>
+			</div>
+			<div>
+				<div class="card">
+					<h3 style="margin:0 0 4px 0;">Primer Design</h3>
+					<div class="mini" style="margin-bottom:8px;color:#059669;font-weight:600;">
+						✓ Primer3-like algorithm: Nearest-neighbor Tm, self-complementarity check, hairpin detection, 3' stability analysis
+					</div>
+					<div class="row" style="grid-template-columns:1fr 1fr;">
+						<div>
+							<label>Primer length (bp)</label>
+							<input id="primer-len" type="number" min="16" max="30" value="20" />
+						</div>
+						<div>
+							<label>Target Tm (°C)</label>
+							<input id="primer-tm" type="number" min="45" max="72" value="60" />
+						</div>
+					</div>
+					<div class="row" style="grid-template-columns:1fr 1fr;margin-top:8px;">
+						<div>
+							<label>Min flank from mutation (bp)</label>
+							<input id="primer-min-flank" type="number" min="20" max="400" value="40" />
+						</div>
+						<div>
+							<label>Max flank from mutation (bp)</label>
+							<input id="primer-max-flank" type="number" min="60" max="600" value="240" />
+						</div>
+					</div>
+					<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+						<button onclick="findPrimerCandidates_UI()">Find primer candidates</button>
+						<button class="secondary" onclick="toggleManualPrimer()">Add manual primers</button>
+						<button class="secondary" onclick="clearAllPrimers()">Clear all</button>
+					</div>
+					<div id="primer-candidates-panel" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f0f9ff;">
+						<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:#1e40af;">Select Primer Pairs to Add</div>
+						<div id="primer-candidates-list"></div>
+						<div style="margin-top:8px;display:flex;gap:8px;">
+							<button onclick="addSelectedCandidates()">Add selected pairs</button>
+							<button class="secondary" onclick="closeCandidatesPanel()">Cancel</button>
+						</div>
+					</div>
+					<div id="manual-primer-form" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f9fafb;">
+						<div style="margin-bottom:4px;font-size:12px;font-weight:700;color:var(--muted);">Add Individual Primer</div>
+						<div style="margin-bottom:8px;font-size:11px;color:#059669;">✓ Live preview shows where primer binds as you type</div>
+						<div style="margin-bottom:8px;">
+							<label>Primer name</label>
+							<input id="manual-primer-name" type="text" placeholder="e.g., Forward-1, Rev-SNP" />
+						</div>
+						<div style="margin-bottom:8px;">
+							<label>Primer type</label>
+							<select id="manual-primer-type">
+								<option value="forward">Forward (5' → 3' on plus strand)</option>
+								<option value="reverse">Reverse (5' → 3' on minus strand, complementary)</option>
+							</select>
+						</div>
+						<div>
+							<label>Primer sequence (5' → 3')</label>
+							<input id="manual-primer-seq" type="text" placeholder="ACGT..." style="font-family:ui-monospace,monospace;" oninput="previewPrimerBinding()" />
+						</div>
+						<div id="manual-primer-preview" style="margin-top:8px;padding:8px;border-radius:6px;background:#f0f9ff;border:1px solid #bae6fd;display:none;">
+							<div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:4px;">Binding Preview:</div>
+							<div id="manual-primer-preview-info" style="font-size:11px;color:#374151;"></div>
+						</div>
+						<div style="margin-top:8px;display:flex;gap:8px;">
+							<button onclick="addSinglePrimer()">Add this primer</button>
+							<button class="secondary" onclick="toggleManualPrimer()">Cancel</button>
+						</div>
+					</div>
+					<div id="primer-status" class="status" style="margin-top:10px;">No primers yet.</div>
+					<table class="enzyme-table" style="margin-top:10px;" id="primer-table-wrap">
+						<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Forward</th><th>Reverse</th><th>Amplicon</th><th></th></tr></thead>
+						<tbody id="primer-tbody"></tbody>
+					</table>
+				</div>
+				<div class="card">
+					<h3 style="margin:0 0 8px 0;">Restriction Enzymes</h3>
+					<div style="margin-bottom:10px;">
+						<label>Search common enzymes</label>
+						<input id="enz-search" type="text" placeholder="Type enzyme name..." oninput="filterEnzymeSearch()" />
+						<div id="enz-search-results" style="display:none;max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-top:4px;background:#fff;"></div>
+					</div>
+					<div class="row" style="grid-template-columns:1fr 1fr auto;">
+						<div>
+							<label>Custom enzyme name</label>
+							<input id="enz-name" type="text" placeholder="EcoRI" />
+						</div>
+						<div>
+							<label>Custom recognition site</label>
+							<input id="enz-site" type="text" placeholder="GAATTC" />
+						</div>
+						<div>
+							<button onclick="addEnzyme()">Add custom</button>
+						</div>
+					</div>
+					<table class="enzyme-table" style="margin-top:10px;">
+						<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Site (5'→3')</th><th>Complement (3'→5')</th><th>Hits</th><th></th></tr></thead>
+						<tbody id="enzyme-tbody"></tbody>
+					</table>
+				</div>
+				<div class="card">
+					<h3 style="margin:0 0 8px 0;">PCR Simulation</h3>
+					<p class="mini" style="margin:0 0 10px 0;">Simulate PCR products with selected primers and restriction enzyme digestion patterns.</p>
+					<div style="margin-bottom:10px;">
+						<label>Gel ladder</label>
+						<select id="ladder-type">
+							<option value="100">100 bp ladder</option>
+							<option value="50">50 bp ladder</option>
+						</select>
+					</div>
+					<div style="margin-bottom:10px;">
+						<label>Show genotype patterns</label>
+						<div style="display:flex;gap:12px;margin-top:6px;">
+							<label style="font-size:13px;font-weight:400;cursor:pointer;">
+								<input type="checkbox" id="show-wt" checked style="margin-right:4px;">Wild-type
+							</label>
+							<label style="font-size:13px;font-weight:400;cursor:pointer;">
+								<input type="checkbox" id="show-hz" checked style="margin-right:4px;">Heterozygous
+							</label>
+							<label style="font-size:13px;font-weight:400;cursor:pointer;">
+								<input type="checkbox" id="show-mut" checked style="margin-right:4px;">Homozygous mutant
+							</label>
+						</div>
+					</div>
+					<button onclick="simulatePCR()" style="width:100%;">Simulate PCR & Restriction Digest</button>
+					<div id="pcr-status" class="status" style="margin-top:10px;display:none;"></div>
+					<div id="pcr-results" style="margin-top:10px;display:none;"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="assets/js/version.js"></script>
+	<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPersistentData();
+    });
+    const commonEnzymes = [
+      {name:'AatII', site:'GACGTC'}, {name:'AluI', site:'AGCT'}, {name:'ApaI', site:'GGGCCC'},
+      {name:'BamHI', site:'GGATCC'}, {name:'BglII', site:'AGATCT'}, {name:'Bst4CI', site:'ACNGT'}, {name:'BstBI', site:'TTCGAA'},
+      {name:'ClaI', site:'ATCGAT'}, {name:'DpnI', site:'GATC'}, {name:'DraI', site:'TTTAAA'},
+      {name:'EcoRI', site:'GAATTC'}, {name:'EcoRV', site:'GATATC'}, {name:'HaeIII', site:'GGCC'},
+      {name:'HhaI', site:'GCGC'}, {name:'HindIII', site:'AAGCTT'}, {name:'HinfI', site:'GANTC'},
+      {name:'HpaI', site:'GTTAAC'}, {name:'KpnI', site:'GGTACC'}, {name:'MboI', site:'GATC'},
+      {name:'MluI', site:'ACGCGT'}, {name:'MseI', site:'TTAA'}, {name:'NcoI', site:'CCATGG'},
+      {name:'NdeI', site:'CATATG'}, {name:'NheI', site:'GCTAGC'}, {name:'NotI', site:'GCGGCCGC'},
+      {name:'NsiI', site:'ATGCAT'}, {name:'PstI', site:'CTGCAG'}, {name:'PvuII', site:'CAGCTG'},
+      {name:'RsaI', site:'GTAC'}, {name:'SacI', site:'GAGCTC'}, {name:'SalI', site:'GTCGAC'},
+      {name:'SmaI', site:'CCCGGG'}, {name:'SpeI', site:'ACTAGT'}, {name:'SphI', site:'GCATGC'},
+      {name:'StuI', site:'AGGCCT'}, {name:'XbaI', site:'TCTAGA'}, {name:'XhoI', site:'CTCGAG'},
+      {name:'XmaI', site:'CCCGGG'}
+    ];
+
+    const STORAGE_KEYS={
+      primerStore:'mb_primer_store_v1',
+      rsHistory:'mb_rs_history_v1'
+    };
+
+    const state = {
+      seq:null,
+      meta:null,
+      variantInfo:null,
+      primerSets:[],
+      enzymes:[
+        {name:'EcoRI', site:'GAATTC', selected:true},
+        {name:'BamHI', site:'GGATCC', selected:true},
+        {name:'HindIII', site:'AAGCTT', selected:true},
+        {name:'RsaI', site:'GTAC', selected:true},
+        {name:'BstBI', site:'TTCGAA', selected:true}
+      ],
+      enzymeHits:[],
+      showComplement:false,
+      alleles:null,
+      viewVariant:'wt', // 'wt' = wild-type, 'mut' = mutant
+      candidatePairs:[], // Store primer candidates for selection
+      individualPrimers:[], // Store individual primers (not pairs)
+      previewPrimer:null, // Current primer being previewed
+      primerStore:{},
+      rsHistory:[]
+    };
+
+    function el(id){return document.getElementById(id)}
+    function fmt(n){return Number.isFinite(n)?n.toLocaleString():'—'}
+    function getCurrentRsKey(){
+      return (state.meta?.rs||'').toLowerCase();
+    }
+    function safeParse(value, fallback){
+      try{return JSON.parse(value);}catch{return fallback;}
+    }
+    function savePersistentData(){
+      localStorage.setItem(STORAGE_KEYS.primerStore, JSON.stringify(state.primerStore||{}));
+      localStorage.setItem(STORAGE_KEYS.rsHistory, JSON.stringify(state.rsHistory||[]));
+    }
+    function loadPersistentData(){
+      state.primerStore=safeParse(localStorage.getItem(STORAGE_KEYS.primerStore),{})||{};
+      state.rsHistory=safeParse(localStorage.getItem(STORAGE_KEYS.rsHistory),[])||[];
+      if(!Array.isArray(state.rsHistory)) state.rsHistory=[];
+      if(typeof state.primerStore!=='object' || !state.primerStore) state.primerStore={};
+      renderRsHistory();
+    }
+    function savePrimersForCurrentRs(){
+      const key=getCurrentRsKey();
+      if(!key) return;
+      state.primerStore[key]={
+        primerSets:state.primerSets||[],
+        individualPrimers:state.individualPrimers||[]
+      };
+      savePersistentData();
+    }
+    function loadPrimersForCurrentRs(){
+      const key=getCurrentRsKey();
+      const saved=key ? state.primerStore[key] : null;
+      state.primerSets=Array.isArray(saved?.primerSets)?saved.primerSets:[];
+      state.individualPrimers=Array.isArray(saved?.individualPrimers)?saved.individualPrimers:[];
+      renderPrimerTable();
+      renderViewer();
+    }
+    function recordRsLookup(){
+      if(!state.meta?.rs) return;
+      const rs=state.meta.rs.toLowerCase();
+      state.rsHistory=state.rsHistory.filter(item=>item?.rs?.toLowerCase()!==rs);
+      state.rsHistory.unshift({
+        rs:state.meta.rs,
+        chr:state.meta.chr||'?',
+        pos:state.meta.pos||null,
+        ts:Date.now()
+      });
+      state.rsHistory=state.rsHistory.slice(0,100);
+      savePersistentData();
+      renderRsHistory();
+    }
+    function deleteRsHistory(rs){
+      const key=(rs||'').toLowerCase();
+      if(!key) return;
+      state.rsHistory=state.rsHistory.filter(item=>item?.rs?.toLowerCase()!==key);
+      delete state.primerStore[key];
+      savePersistentData();
+      renderRsHistory();
+      setStatus('load-status',`Deleted saved history for ${rs}.`,'warn');
+    }
+    function loadRsFromHistory(rs){
+      el('rs-input').value=rs;
+      loadFromRs();
+    }
+    function renderRsHistory(){
+      const box=el('rs-history');
+      if(!box) return;
+      if(!state.rsHistory.length){
+        box.innerHTML='<div class="history-empty">No rs lookups saved yet.</div>';
+        return;
+      }
+      box.innerHTML=state.rsHistory.map(item=>{
+        const posText=Number.isFinite(item.pos)?`${item.chr}:${fmt(item.pos)}`:'position unavailable';
+        return `
+          <div class="history-item">
+            <div>
+              <div style="font-weight:700;">${item.rs}</div>
+              <div class="history-meta">${posText}</div>
+            </div>
+            <div class="history-actions">
+              <button class="secondary" style="padding:4px 8px;font-size:11px;" onclick="loadRsFromHistory('${item.rs}')">Load</button>
+              <button class="danger" style="padding:4px 8px;font-size:11px;" onclick="deleteRsHistory('${item.rs}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');    }
+    function applyToolVersion(){
+      const versionElement=el('toolVersion');
+      if(!versionElement) return;
+      const appMeta=window.APP_META || {version:'1.0.0',build:0};
+      versionElement.textContent=`Version v${appMeta.version} (Build ${appMeta.build})`;
+    }
+    function normRs(v){
+      const t=(v||'').trim();
+      if(!t) return '';
+      return t.toLowerCase().startsWith('rs') ? t.slice(2) : t;
+    }
+    function rc(seq){
+      const map={A:'T',T:'A',C:'G',G:'C',N:'N'};
+      return seq.split('').reverse().map(c=>map[c]||'N').join('');
+    }
+    function tmWallace(seq){
+      const s=seq.toUpperCase();
+      let at=0,gc=0;
+      for(const ch of s){ if(ch==='A'||ch==='T') at++; if(ch==='C'||ch==='G') gc++; }
+      return 2*at+4*gc;
+    }
+    
+    // Primer3-like Tm calculation using nearest-neighbor thermodynamics
+    function tmNearestNeighbor(seq, dnaConc=50, saltConc=50) {
+      // Simplified SantaLucia nearest-neighbor parameters (kcal/mol)
+      const nnH = {
+        'AA': -7.9, 'TT': -7.9, 'AT': -7.2, 'TA': -7.2,
+        'CA': -8.5, 'TG': -8.5, 'GT': -8.4, 'AC': -8.4,
+        'CT': -7.8, 'AG': -7.8, 'GA': -8.2, 'TC': -8.2,
+        'CG': -10.6, 'GC': -9.8, 'GG': -8.0, 'CC': -8.0
+      };
+      const nnS = {
+        'AA': -22.2, 'TT': -22.2, 'AT': -20.4, 'TA': -21.3,
+        'CA': -22.7, 'TG': -22.7, 'GT': -22.4, 'AC': -22.4,
+        'CT': -21.0, 'AG': -21.0, 'GA': -22.2, 'TC': -22.2,
+        'CG': -27.2, 'GC': -24.4, 'GG': -19.9, 'CC': -19.9
+      };
+      
+      const s = seq.toUpperCase();
+      let dH = 0, dS = 0;
+      
+      // Init penalty
+      if(s[0] === 'A' || s[0] === 'T') { dH += 2.3; dS += 4.1; }
+      else { dH += 0.1; dS += -2.8; }
+      if(s[s.length-1] === 'A' || s[s.length-1] === 'T') { dH += 2.3; dS += 4.1; }
+      else { dH += 0.1; dS += -2.8; }
+      
+      // Sum nearest neighbors
+      for(let i = 0; i < s.length - 1; i++) {
+        const pair = s[i] + s[i+1];
+        if(nnH[pair]) {
+          dH += nnH[pair];
+          dS += nnS[pair];
+        }
+      }
+      
+      // Convert to Tm
+      const R = 1.987; // cal/(mol*K)
+      dH *= 1000; // convert to cal
+      const tm = (dH / (dS + R * Math.log(dnaConc / 4000000000))) - 273.15 + 16.6 * Math.log10(saltConc / 1000);
+      
+      return tm;
+    }
+    
+    function gcPct(seq){
+      const s=seq.toUpperCase();
+      let gc=0;
+      for(const ch of s){ if(ch==='C'||ch==='G') gc++; }
+      return (gc/s.length)*100;
+    }
+    function hasLongRepeat(seq){ return /(A{4,}|T{4,}|C{4,}|G{4,})/.test(seq); }
+    
+    // Calculate self-complementarity score (detects primer dimers)
+    function selfComplementarity(seq) {
+      const rc_seq = rc(seq);
+      let maxScore = 0;
+      
+      // Sliding window alignment
+      for(let offset = -seq.length + 1; offset < seq.length; offset++) {
+        let score = 0;
+        for(let i = 0; i < seq.length; i++) {
+          const j = i + offset;
+          if(j >= 0 && j < seq.length) {
+            if(seq[i] === rc_seq[j]) {
+              score += (i >= seq.length - 3 || j >= seq.length - 3) ? 2 : 1; // 3' end bonus
+            }
+          }
+        }
+        maxScore = Math.max(maxScore, score);
+      }
+      return maxScore;
+    }
+    
+    // Calculate 3' end self-complementarity (detects hairpins)
+    function endComplementarity(seq, numBases=5) {
+      const end = seq.slice(-numBases);
+      const rc_end = rc(end);
+      let score = 0;
+      
+      for(let i = 0; i < seq.length - numBases; i++) {
+        const window = seq.slice(i, i + numBases);
+        let matches = 0;
+        for(let j = 0; j < numBases; j++) {
+          if(window[j] === rc_end[j]) matches++;
+        }
+        score = Math.max(score, matches);
+      }
+      return score;
+    }
+    
+    // Check 3' end stability
+    function endStability(seq) {
+      const last5 = seq.slice(-5);
+      let gc = 0;
+      for(const ch of last5) {
+        if(ch === 'C' || ch === 'G') gc++;
+      }
+      return gc; // Higher is more stable
+    }
+    
+    // Comprehensive primer3-like penalty calculation
+    function primerPenalty(seq, targetTm=60, targetGC=50, targetLen=20) {
+      const tm = tmNearestNeighbor(seq);
+      const gc = gcPct(seq);
+      const len = seq.length;
+      const selfComp = selfComplementarity(seq);
+      const endComp = endComplementarity(seq);
+      const endStab = endStability(seq);
+      
+      let penalty = 0;
+      
+      // Tm penalty (weighted heavily)
+      penalty += Math.abs(tm - targetTm) * 0.5;
+      
+      // GC content penalty
+      if(gc < 40) penalty += (40 - gc) * 0.3;
+      if(gc > 60) penalty += (gc - 60) * 0.3;
+      
+      // Length penalty
+      penalty += Math.abs(len - targetLen) * 0.2;
+      
+      // Self-complementarity penalty
+      if(selfComp > 6) penalty += (selfComp - 6) * 2;
+      
+      // End complementarity (hairpin) penalty
+      if(endComp > 2) penalty += endComp * 3;
+      
+      // 3' end stability (want moderate GC, 2-3 ideal)
+      if(endStab < 1) penalty += 3; // Too weak
+      if(endStab > 4) penalty += 2; // Too strong, might cause mispriming
+      
+      // Repeats penalty
+      if(hasLongRepeat(seq)) penalty += 8;
+      
+      // Poly runs at 3' end
+      if(/[ACGT]\1{2,}$/.test(seq)) penalty += 5;
+      
+      // Avoid runs of same base
+      if(/(A{5,}|T{5,}|C{5,}|G{5,})/.test(seq)) penalty += 4;
+      
+      return {
+        penalty,
+        tm,
+        gc,
+        selfComp,
+        endComp,
+        endStab
+      };
+    }
+
+    function resolvePlacementFromRefsnp(payload){
+      const placements=payload?.primary_snapshot_data?.placements_with_allele||[];
+      let fallback=null;
+
+      for(const p of placements){
+        const traits=p?.placement_annot?.seq_id_traits_by_assembly||[];
+        const has38=traits.some(t=>/GRCh38/i.test(t?.assembly_name||''));
+        const has37=traits.some(t=>/GRCh37/i.test(t?.assembly_name||''));
+        const chromTrait=traits.find(t=>t?.is_top_level)||traits[0];
+
+        const allele=p?.alleles?.find(a=>a?.allele?.spdi?.seq_id?.startsWith('NC_'));
+        const spdi=allele?.allele?.spdi;
+        if(!spdi||!spdi.seq_id||!Number.isFinite(spdi.position)) continue;
+
+        const chr=(chromTrait?.chr||'').toString();
+        const rec={
+          accession:spdi.seq_id,
+          pos:spdi.position+1,
+          chr:chr||'?',
+          assembly:has38?'GRCh38':(has37?'GRCh37':(chromTrait?.assembly_name||'unknown'))
+        };
+
+        if(has38) return rec;
+        if(!fallback) fallback=rec;
+      }
+
+      return fallback;
+    }
+
+    function extractAlleles(payload, accession){
+      const placements=payload?.primary_snapshot_data?.placements_with_allele||[];
+      let fallback=null;
+
+      for(const p of placements){
+        const alleles=p?.alleles||[];
+        const sameAccession=alleles.some(a=>a?.allele?.spdi?.seq_id===accession);
+        if(accession && !sameAccession) continue;
+
+        let ref='';
+        const altSet=new Set();
+
+        for(const a of alleles){
+          const spdi=a?.allele?.spdi;
+          if(!spdi) continue;
+          const deleted=(spdi.deleted_sequence||'').toUpperCase();
+          const inserted=(spdi.inserted_sequence||'').toUpperCase();
+          if(!deleted && !inserted) continue;
+
+          if(inserted===deleted){
+            ref=deleted;
+          }else if(inserted){
+            altSet.add(inserted);
+            if(!ref && deleted) ref=deleted;
+          }
+        }
+
+        const alts=[...altSet].filter(a=>a && a!==ref);
+        if(ref && alts.length>0){
+          return {ref, alts};
+        }
+        if(!fallback && ref && altSet.size>0){
+          fallback={ref, alts:[...altSet].filter(a=>a)};
+        }
+      }
+
+      return fallback;
+    }
+
+    function classifyMutationType(ref, alt){
+      const r=(ref||'').toUpperCase();
+      const a=(alt||'').toUpperCase();
+      if(!r || !a) return 'Unknown';
+      if(r.length===1 && a.length===1) return 'SNV (single nucleotide variant)';
+      if(r.length===a.length && r.length>1) return 'MNV (multi-nucleotide variant)';
+      if(r.length<a.length && r.length===1) return 'Insertion';
+      if(r.length>a.length && a.length===1) return 'Deletion';
+      if(r.length!==a.length) return 'Indel';
+      return 'Substitution';
+    }
+
+    function extractVariantInsights(payload, accession, alleles){
+      const info={
+        genes:[],
+        consequences:[],
+        frequencies:[],
+        mutationType:'Unknown',
+        nucleotideChanges:[]
+      };
+
+      const ref=(alleles?.ref||'').toUpperCase();
+      const alts=(alleles?.alts||[]).map(a=>(a||'').toUpperCase()).filter(Boolean);
+      info.nucleotideChanges=alts.map(alt=>`${ref} → ${alt}`);
+      if(ref && alts.length){
+        info.mutationType=classifyMutationType(ref, alts[0]);
+      }
+
+      const alleleAnnotations=payload?.primary_snapshot_data?.allele_annotations||[];
+      const geneSet=new Set();
+      const consequenceSet=new Set();
+      const freqMap=new Map();
+
+      alleleAnnotations.forEach(ann=>{
+        const asm=ann?.assembly_annotation||[];
+        asm.forEach(a=>{
+          const genes=a?.genes||[];
+          genes.forEach(g=>{
+            const symbol=(g?.locus||g?.name||'').toString().trim();
+            if(symbol) geneSet.add(symbol);
+
+            const rnas=g?.rnas||[];
+            rnas.forEach(rna=>{
+              (rna?.sequence_ontology||[]).forEach(so=>{
+                const name=(so?.name||'').toString().trim();
+                if(name) consequenceSet.add(name.replace(/_/g,' '));
+              });
+              (rna?.protein?.sequence_ontology||[]).forEach(so=>{
+                const name=(so?.name||'').toString().trim();
+                if(name) consequenceSet.add(name.replace(/_/g,' '));
+              });
+            });
+          });
+        });
+
+        const freqs=ann?.frequency||[];
+        freqs.forEach(f=>{
+          const study=(f?.study_name||f?.source||'Population').toString();
+          const allele=(f?.observation?.inserted_sequence||f?.allele||'').toString().toUpperCase();
+          const af=Number(f?.allele_frequency);
+          const ac=Number(f?.allele_count);
+          const tc=Number(f?.total_count);
+          const computed=Number.isFinite(af) ? af : (Number.isFinite(ac)&&Number.isFinite(tc)&&tc>0 ? ac/tc : null);
+          if(!Number.isFinite(computed)) return;
+          const key=`${study}|${allele||'ALT'}`;
+          if(!freqMap.has(key) || computed>freqMap.get(key).freq){
+            freqMap.set(key,{study,allele:allele||'ALT',freq:computed,ac:Number.isFinite(ac)?ac:null,tc:Number.isFinite(tc)?tc:null});
+          }
+        });
+      });
+
+      info.genes=[...geneSet].slice(0,8);
+      info.consequences=[...consequenceSet].slice(0,10);
+      info.frequencies=[...freqMap.values()]
+        .sort((a,b)=>b.freq-a.freq)
+        .slice(0,8);
+
+      if(!info.consequences.length){
+        info.consequences=['Not available in NCBI refsnp payload'];
+      }
+      if(!info.frequencies.length){
+        info.frequencies=[{study:'Not available',allele:'—',freq:NaN,ac:null,tc:null}];
+      }
+      if(!info.genes.length){
+        info.genes=['Not available'];
+      }
+
+      return info;
+    }
+
+    function renderVariantInfo(){
+      const box=el('variant-info');
+      const wrap=el('variant-info-wrap');
+      const btn=el('toggle-variant-info-btn');
+      if(!box || !wrap || !btn) return;
+
+      if(!state.variantInfo || !state.meta){
+        box.style.display='none';
+        btn.style.display='none';
+        return;
+      }
+
+      btn.style.display='inline-block';
+      const v=state.variantInfo;
+      const freqRows=v.frequencies.map(f=>{
+        if(!Number.isFinite(f.freq)) return `<li>${f.study}</li>`;
+        const pct=(f.freq*100).toFixed(2);
+        const counts=(Number.isFinite(f.ac)&&Number.isFinite(f.tc))?` (n=${fmt(f.ac)}/${fmt(f.tc)})`:'';
+        return `<li>${f.study}: <strong>${pct}%</strong> for allele <strong>${f.allele}</strong>${counts}</li>`;
+      }).join('');
+
+      box.innerHTML=`
+        <div style="font-weight:800;color:#1e3a8a;margin-bottom:6px;">Variant Details (${state.meta.rs})</div>
+        <div><strong>Gene(s):</strong> ${v.genes.join(', ')}</div>
+        <div style="margin-top:4px;"><strong>Mutation type:</strong> ${v.mutationType}</div>
+        <div style="margin-top:4px;"><strong>WT → Variant nucleotide change(s):</strong> ${v.nucleotideChanges.join(', ')||'Not available'}</div>
+        <div style="margin-top:6px;"><strong>Functional consequence(s):</strong> ${v.consequences.join(', ')}</div>
+        <div style="margin-top:6px;"><strong>Population frequency:</strong><ul style="margin:4px 0 0 18px;padding:0;">${freqRows}</ul></div>
+      `;
+      // Only show if not collapsed
+      if(box.classList.contains('collapsed')){
+        box.style.display='none';
+        btn.textContent='Show variant details';
+      }else{
+        box.style.display='block';
+        btn.textContent='Hide variant details';
+      }
+    }
+
+    function toggleVariantInfo(){
+      const box=el('variant-info');
+      if(!box) return;
+      box.classList.toggle('collapsed');
+      renderVariantInfo();
+    }
+
+    async function loadFromRs(){
+      try{
+        const rsRaw=el('rs-input').value;
+        const rs=normRs(rsRaw);
+        if(!/^\d+$/.test(rs)) throw new Error('Enter a valid rs number, e.g. rs1799966');
+
+        setStatus('load-status','Resolving rs'+rs+' using NCBI refsnp placement...','warn');
+
+        const refsnpUrl=`https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/${rs}`;
+        const refsnp=await fetch(refsnpUrl).then(r=>{if(!r.ok) throw new Error('NCBI refsnp lookup failed'); return r.json();});
+        const placement=resolvePlacementFromRefsnp(refsnp);
+        if(!placement || !placement.accession || !Number.isFinite(placement.pos)){
+          throw new Error('Could not resolve genomic placement for this rs entry');
+        }
+
+        const accession=placement.accession;
+        const chr=placement.chr;
+        const pos=placement.pos;
+
+        const alleles=extractAlleles(refsnp, accession);
+        state.alleles=alleles;
+        state.variantInfo=extractVariantInsights(refsnp, accession, alleles);
+
+        const flank=Math.max(100, parseInt(el('flank-bp').value,10)||2000);
+        const start=Math.max(1,pos-flank);
+        const stop=pos+flank;
+
+        setStatus('load-status',`Fetching FASTA region ${accession}:${fmt(start)}-${fmt(stop)}...`,'warn');
+
+        const fastaUrl=`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${encodeURIComponent(accession)}&rettype=fasta&retmode=text&seq_start=${start}&seq_stop=${stop}`;
+        const fastaText=await fetch(fastaUrl).then(r=>{if(!r.ok) throw new Error('NCBI FASTA fetch failed'); return r.text();});
+        const seq=parseFasta(fastaText);
+        if(!seq || seq.length<50) throw new Error('Received empty/short FASTA sequence');
+
+        const mutIdx=(pos-start); // 0-based in fetched seq
+
+        state.seq=seq;
+        state.meta={rs:'rs'+rs, chr, pos, accession, start, stop, mutIdx};
+          state.viewVariant='wt';
+          document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+
+        refreshEnzymeHits();
+          loadPrimersForCurrentRs();
+        renderKpi();
+        renderAlleleInfo();
+        renderVariantInfo();
+        renderViewer();
+          recordRsLookup();
+
+        setStatus('load-status',`Loaded ${state.meta.rs} (${chr}:${fmt(pos)} · ${placement.assembly}) with ${fmt(seq.length)} bp window.`,'good');
+        setStatus('primer-status','No primers yet. Click Design primers.','warn');
+      }catch(err){
+        state.variantInfo=null;
+        renderVariantInfo();
+        setStatus('load-status',err.message||'Failed to load rs entry','bad');
+      }
+    }
+
+    function parseFasta(text){
+      return (text||'')
+        .split('\n')
+        .filter(line=>line && !line.startsWith('>'))
+        .join('')
+        .replace(/\s+/g,'')
+        .toUpperCase();
+    }
+
+    function parseFirstFastaEntry(text){
+      const lines=(text||'').split(/\r?\n/);
+      let header='';
+      let seqLines=[];
+      let started=false;
+      for(const line of lines){
+        if(line.startsWith('>')){
+          if(started) break; // end of first entry
+          started=true;
+          header=line.slice(1).trim();
+        } else if(started){
+          const clean=line.replace(/\s+/g,'').toUpperCase();
+          if(clean) seqLines.push(clean);
+        }
+      }
+      return {header, seq:seqLines.join('')};
+    }
+
+    function loadFromFastaFile(){
+      const input=document.getElementById('fasta-file-input');
+      const file=input.files[0];
+      if(!file) return;
+      el('fasta-filename').textContent=file.name;
+      setStatus('load-status','Reading FASTA file…','warn');
+      const reader=new FileReader();
+      reader.onload=function(e){
+        try{
+          const {header,seq}=parseFirstFastaEntry(e.target.result);
+          if(!seq || seq.length<10) throw new Error('No valid sequence found in FASTA file');
+          if(!/^[ACGTNRYMKSWHBVD]+$/.test(seq)) throw new Error('Sequence contains non-DNA characters. Ensure the file is a DNA FASTA.');
+          const label=header||file.name.replace(/\.[^.]+$/,'');
+          state.seq=seq;
+          state.meta={rs:label.slice(0,60), chr:'FASTA', pos:null, accession:label.slice(0,40), start:1, stop:seq.length, mutIdx:null};
+          state.alleles=null;
+          state.variantInfo=null;
+          state.viewVariant='wt';
+          document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+          refreshEnzymeHits();
+          renderKpi();
+          renderAlleleInfo();
+          renderVariantInfo();
+          renderViewer();
+          setStatus('load-status',`Loaded FASTA: "${label.slice(0,50)}" — ${fmt(seq.length)} bp`,'good');
+          setStatus('primer-status','No primers yet. Click Find primer candidates.','warn');
+        }catch(err){
+          setStatus('load-status',err.message||'Failed to parse FASTA file','bad');
+        }
+      };
+      reader.onerror=()=>setStatus('load-status','Failed to read file','bad');
+      reader.readAsText(file);
+      // Reset input so the same file can be reloaded if needed
+      input.value='';
+    }
+
+    function setStatus(id,msg,type){
+      const box=el(id);
+      box.className='status'+(type?' '+type:'');
+      box.textContent=msg;
+    }
+
+    function renderKpi(){
+      if(!state.meta || !state.seq){
+        el('load-kpi').style.display='none';
+        return;
+      }
+      const m=state.meta;
+      const isFasta=(m.chr==='FASTA');
+      el('load-kpi').style.display='grid';
+      if(isFasta){
+        el('load-kpi').innerHTML=`
+          <div class="kpi-item"><div class="label">SEQUENCE</div><div class="value" style="font-size:11px;word-break:break-all;">${m.rs}</div></div>
+          <div class="kpi-item"><div class="label">SOURCE</div><div class="value">Local FASTA</div></div>
+          <div class="kpi-item"><div class="label">ACCESSION / HEADER</div><div class="value" style="font-size:11px;">${m.accession}</div></div>
+          <div class="kpi-item"><div class="label">SEQUENCE LENGTH</div><div class="value">${fmt(state.seq.length)} bp</div></div>
+        `;
+      } else {
+        el('load-kpi').innerHTML=`
+          <div class="kpi-item"><div class="label">RS ID</div><div class="value">${m.rs}</div></div>
+          <div class="kpi-item"><div class="label">GENOMIC POSITION</div><div class="value">${m.chr}:${fmt(m.pos)}</div></div>
+          <div class="kpi-item"><div class="label">ACCESSION</div><div class="value">${m.accession}</div></div>
+          <div class="kpi-item"><div class="label">SEQUENCE LENGTH</div><div class="value">${fmt(state.seq.length)} bp</div></div>
+        `;
+      }
+    }
+
+    function renderAlleleInfo(){
+      const box=el('allele-info');
+      const mutRadio=document.querySelector('input[name="view-variant"][value="mut"]');
+      
+      if(!state.alleles || !state.meta){
+        box.style.display='none';
+        if(mutRadio) mutRadio.disabled=true;
+        return;
+      }
+      if(mutRadio) mutRadio.disabled=false;
+      const m=state.meta;
+      const currentSeq = getCurrentSequence();
+      const observedBase=currentSeq[m.mutIdx]||'N';
+      const variantLabel = state.viewVariant === 'wt' ? 'Wild-type (Reference)' : 'Mutant';
+      box.style.display='block';
+      box.innerHTML=`
+          <strong>Currently viewing: ${variantLabel}</strong><br>
+        <strong>SNP Alleles at position ${m.mutIdx} (genomic ${fmt(m.pos)}):</strong><br>
+        Reference: <span style="font-family:ui-monospace,monospace;color:#166534;font-weight:700;">${state.alleles.ref}</span> | 
+        Alternate(s): <span style="font-family:ui-monospace,monospace;color:#991b1b;font-weight:700;">${state.alleles.alts.join(', ')}</span> | 
+        Base at position: <span style="font-family:ui-monospace,monospace;font-weight:700;">${observedBase}</span>
+      `;
+    }
+
+    function getCurrentSequence(){
+      // Returns the sequence based on current view variant
+      if(!state.seq || !state.meta) return null;
+      if(!state.alleles || state.viewVariant === 'wt') return state.seq;
+      
+      // Return mutant sequence
+      return getSequenceVariant(state.seq, state.meta.mutIdx, 'mut');
+    }
+
+    function switchVariant(variant){
+      state.viewVariant = variant;
+      refreshEnzymeHits();
+      renderViewer();
+      renderAlleleInfo();
+    }
+
+    function toggleComplement(){
+      state.showComplement=el('show-complement').checked;
+      renderViewer();
+    }
+
+    // Primer3-like primer candidate search with variable length
+    function findPrimerCandidates(seq, from, to, minLen, maxLen, targetTm, isReverse=false){
+      const candidates = [];
+      const start = Math.max(0, from);
+      const end = Math.min(seq.length, to);
+      
+      for(let pos = start; pos < end; pos++) {
+        for(let len = minLen; len <= maxLen; len++) {
+          let candidate, primerSeq, primerStart, primerEnd;
+          
+          if(isReverse) {
+            primerEnd = pos;
+            primerStart = pos - len;
+            if(primerStart < 0) continue;
+            const binding = seq.slice(primerStart, primerEnd);
+            if(/[^ACGT]/.test(binding)) continue;
+            primerSeq = rc(binding);
+          } else {
+            primerStart = pos;
+            primerEnd = pos + len;
+            if(primerEnd > seq.length) continue;
+            primerSeq = seq.slice(primerStart, primerEnd);
+            if(/[^ACGT]/.test(primerSeq)) continue;
+          }
+          
+          const metrics = primerPenalty(primerSeq, targetTm);
+          
+          // Filter out terrible candidates early
+          if(metrics.penalty > 50) continue;
+          if(metrics.tm < 45 || metrics.tm > 75) continue;
+          if(metrics.gc < 30 || metrics.gc > 70) continue;
+          
+          candidates.push({
+            seq: primerSeq,
+            start: primerStart,
+            end: isReverse ? primerEnd - 1 : primerEnd - 1,
+            ...metrics,
+            score: metrics.penalty // For compatibility
+          });
+        }
+      }
+      
+      // Sort by penalty (lower is better)
+      candidates.sort((a, b) => a.penalty - b.penalty);
+      return candidates.slice(0, 20); // Keep top 20 candidates
+    }
+    
+    function bestForward(seq, from, to, len, targetTm){
+      const minLen = Math.max(16, len - 3);
+      const maxLen = Math.min(30, len + 3);
+      const candidates = findPrimerCandidates(seq, from, to, minLen, maxLen, targetTm, false);
+      return candidates[0] || null;
+    }
+
+    function bestReverse(seq, from, to, len, targetTm){
+      const minLen = Math.max(16, len - 3);
+      const maxLen = Math.min(30, len + 3);
+      const candidates = findPrimerCandidates(seq, from, to, minLen, maxLen, targetTm, true);
+      return candidates[0] || null;
+    }
+    
+    // Enhanced primer pair evaluation
+    function evaluatePrimerPair(fwd, rev) {
+      let penalty = fwd.penalty + rev.penalty;
+      
+      // Tm difference penalty
+      const tmDiff = Math.abs(fwd.tm - rev.tm);
+      if(tmDiff > 2) penalty += tmDiff * 0.5;
+      
+      // Check for primer-dimer between forward and reverse
+      const dimerScore = pairComplementarity(fwd.seq, rev.seq);
+      if(dimerScore > 6) penalty += dimerScore * 2;
+      
+      return penalty;
+    }
+    
+    // Check complementarity between two primers (dimer detection)
+    function pairComplementarity(seq1, seq2) {
+      const rc2 = rc(seq2);
+      let maxScore = 0;
+      
+      for(let offset = -seq1.length + 1; offset < seq2.length; offset++) {
+        let score = 0;
+        for(let i = 0; i < seq1.length; i++) {
+          const j = i + offset;
+          if(j >= 0 && j < rc2.length) {
+            if(seq1[i] === rc2[j]) {
+              // Higher weight for 3' end matches
+              score += (i >= seq1.length - 3 || j >= rc2.length - 3) ? 2 : 1;
+            }
+          }
+        }
+        maxScore = Math.max(maxScore, score);
+      }
+      return maxScore;
+    }
+
+    function findPrimerCandidates_UI(){
+      try{
+        if(!state.seq || !state.meta) throw new Error('Load a sequence first (rs number or FASTA file)');
+
+        const len=Math.max(16,parseInt(el('primer-len').value,10)||20);
+        const targetTm=parseFloat(el('primer-tm').value)||60;
+        const minFlank=Math.max(20,parseInt(el('primer-min-flank').value,10)||40);
+        const maxFlank=Math.max(minFlank+20,parseInt(el('primer-max-flank').value,10)||240);
+        // For FASTA loads with no SNP, use sequence centre as the target position
+        const c=(state.meta.mutIdx!=null) ? state.meta.mutIdx : Math.floor(state.seq.length/2);
+
+        setStatus('primer-status','Searching for primer candidates...','warn');
+
+        const minLen = Math.max(16, len - 3);
+        const maxLen = Math.min(30, len + 3);
+        
+        // Find forward candidates
+        const fwdCandidates = findPrimerCandidates(state.seq, c-maxFlank-len, c-minFlank-len, minLen, maxLen, targetTm, false);
+        
+        // Find reverse candidates
+        const revCandidates = findPrimerCandidates(state.seq, c+minFlank+len, c+maxFlank+len, minLen, maxLen, targetTm, true);
+
+        if(!fwdCandidates.length || !revCandidates.length) {
+          throw new Error('Could not find suitable primers in current window');
+        }
+
+        // Generate primer pairs (top 5 forward x top 5 reverse = up to 25 pairs, but we'll rank them)
+        const pairs = [];
+        const numFwd = Math.min(5, fwdCandidates.length);
+        const numRev = Math.min(5, revCandidates.length);
+        
+        for(let i = 0; i < numFwd; i++) {
+          for(let j = 0; j < numRev; j++) {
+            const fwd = fwdCandidates[i];
+            const rev = revCandidates[j];
+            const amplicon = rev.end - fwd.start + 1;
+            
+            // Skip if amplicon is too small or too large
+            if(amplicon < 50 || amplicon > 2000) continue;
+            
+            const pairPenalty = evaluatePrimerPair(fwd, rev);
+            
+            pairs.push({
+              forward: fwd,
+              reverse: rev,
+              amplicon,
+              pairPenalty,
+              totalPenalty: pairPenalty + fwd.penalty + rev.penalty
+            });
+          }
+        }
+        
+        // Sort by total penalty
+        pairs.sort((a, b) => a.totalPenalty - b.totalPenalty);
+        
+        // Keep top 10 pairs
+        state.candidatePairs = pairs.slice(0, 10);
+        
+        // Show candidates panel
+        renderCandidatesPanel();
+        
+        setStatus('primer-status', `Found ${state.candidatePairs.length} primer pair candidates. Select pairs to add.`, 'good');
+      }catch(err){
+        setStatus('primer-status',err.message||'Primer design failed','bad');
+      }
+    }
+    
+    function renderCandidatesPanel(){
+      const panel = el('primer-candidates-panel');
+      const list = el('primer-candidates-list');
+      
+      panel.style.display = 'block';
+      
+      let html = '<div style="max-height:300px;overflow-y:auto;">';
+      html += '<table class="enzyme-table" style="font-size:11px;">';
+      html += '<thead><tr>';
+      html += '<th style="width:30px;">Add</th>';
+      html += '<th>Forward Primer</th>';
+      html += '<th>Reverse Primer</th>';
+      html += '<th>Positions</th>';
+      html += '<th>Amplicon</th>';
+      html += '<th>Tm Fwd/Rev</th>';
+      html += '<th>GC%</th>';
+      html += '<th>Quality</th>';
+      html += '<th>Specificity</th>';
+      html += '</tr></thead><tbody>';
+      
+      state.candidatePairs.forEach((pair, i) => {
+        const tmDiff = Math.abs(pair.forward.tm - pair.reverse.tm);
+        const qualityColor = pair.totalPenalty < 15 ? '#166534' : pair.totalPenalty < 30 ? '#92400e' : '#b91c1c';
+        
+        html += '<tr>';
+        html += `<td><input type="checkbox" id="cand-${i}" checked /></td>`;
+        html += `<td style="font-family:ui-monospace,monospace;font-size:10px;">${pair.forward.seq}<br><span style="font-size:9px;color:#6b7280;">SelfComp: ${pair.forward.selfComp}, Hairpin: ${pair.forward.endComp}</span></td>`;
+        html += `<td style="font-family:ui-monospace,monospace;font-size:10px;">${pair.reverse.seq}<br><span style="font-size:9px;color:#6b7280;">SelfComp: ${pair.reverse.selfComp}, Hairpin: ${pair.reverse.endComp}</span></td>`;
+        html += `<td style="font-size:10px;">${pair.forward.start}-${pair.forward.end}<br>${pair.reverse.start}-${pair.reverse.end}</td>`;
+        html += `<td>${fmt(pair.amplicon)} bp</td>`;
+        html += `<td>${pair.forward.tm.toFixed(1)}°C<br>${pair.reverse.tm.toFixed(1)}°C<br><span style="font-size:9px;color:#6b7280;">Δ${tmDiff.toFixed(1)}°C</span></td>`;
+        html += `<td>${pair.forward.gc.toFixed(0)}%<br>${pair.reverse.gc.toFixed(0)}%</td>`;
+        html += `<td style="color:${qualityColor};font-weight:700;">${pair.totalPenalty.toFixed(1)}</td>`;
+        html += `<td><button class="secondary" style="padding:2px 4px;font-size:9px;" onclick="checkSpecificity(${i})">BLAST</button></td>`;
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table></div>';
+      list.innerHTML = html;
+    }
+    
+    function checkSpecificity(candidateIdx){
+      const pair = state.candidatePairs[candidateIdx];
+      // Open BLAST for both primers in separate tabs
+      blastPrimer(pair.forward.seq, `Candidate ${candidateIdx+1} - Forward`);
+      setTimeout(() => {
+        blastPrimer(pair.reverse.seq, `Candidate ${candidateIdx+1} - Reverse`);
+      }, 500);
+    }
+    
+    function addSelectedCandidates(){
+      const selected = [];
+      state.candidatePairs.forEach((pair, i) => {
+        const checkbox = el(`cand-${i}`);
+        if(checkbox && checkbox.checked) {
+          selected.push(pair);
+        }
+      });
+      
+      if(selected.length === 0) {
+        setStatus('primer-status', 'No candidates selected', 'warn');
+        return;
+      }
+      
+      selected.forEach(pair => {
+        const name = `Primer set ${state.primerSets.length + 1}`;
+        state.primerSets.push({
+          name,
+          forward: pair.forward,
+          reverse: pair.reverse,
+          amplicon: pair.amplicon,
+          auto: true,
+          selected: true
+        });
+      });
+      savePrimersForCurrentRs();
+      
+      renderPrimerTable();
+      renderViewer();
+      closeCandidatesPanel();
+      
+      setStatus('primer-status', `Added ${selected.length} primer pair(s)`, 'good');
+    }
+    
+    function closeCandidatesPanel(){
+      el('primer-candidates-panel').style.display = 'none';
+    }
+
+    function toggleManualPrimer(){
+      const form=el('manual-primer-form');
+      const isClosing = form.style.display !== 'none';
+      
+      if(isClosing) {
+        // Clear form and preview when closing
+        el('manual-primer-name').value = '';
+        el('manual-primer-seq').value = '';
+        el('manual-primer-preview').style.display = 'none';
+        state.previewPrimer = null;
+        renderViewer();
+      }
+      
+      form.style.display=(form.style.display==='none')?'block':'none';
+    }
+
+    // Find where a primer binds in the sequence
+    function findPrimerBindingSite(primerSeq, isReverse=false){
+      const seq = state.seq.toUpperCase();
+      const primer = primerSeq.toUpperCase();
+      const matches = [];
+      
+      if(isReverse) {
+        // For reverse primers, search for the reverse complement binding site
+        // The user enters the primer sequence 5'->3', which binds to the minus strand
+        // We search for where this binds (reverse complement on plus strand)
+        const bindingSite = rc(primer);
+        for(let i = 0; i <= seq.length - bindingSite.length; i++) {
+          if(seq.substring(i, i + bindingSite.length) === bindingSite) {
+            // Store as start/end of where the primer binds
+            matches.push({
+              start: i,
+              end: i + bindingSite.length - 1,
+              bindingSite: bindingSite,
+              primerSeq: primer
+            });
+          }
+        }
+      } else {
+        // For forward primers, search for exact match
+        for(let i = 0; i <= seq.length - primer.length; i++) {
+          if(seq.substring(i, i + primer.length) === primer) {
+            matches.push({
+              start: i,
+              end: i + primer.length - 1,
+              bindingSite: primer,
+              primerSeq: primer
+            });
+          }
+        }
+      }
+      
+      return matches;
+    }
+    
+    // Real-time preview of primer binding as user types
+    function previewPrimerBinding(){
+      if(!state.seq || !state.meta) return;
+      
+      const primerSeq = (el('manual-primer-seq').value || '').trim().toUpperCase();
+      const primerType = el('manual-primer-type').value;
+      const isReverse = primerType === 'reverse';
+      const previewDiv = el('manual-primer-preview');
+      const previewInfo = el('manual-primer-preview-info');
+      
+      // Only show preview if 5+ nucleotides
+      if(primerSeq.length < 5 || !/^[ACGT]*$/.test(primerSeq)) {
+        previewDiv.style.display = 'none';
+        state.previewPrimer = null;
+        renderViewer();
+        return;
+      }
+      
+      // Find binding site
+      const matches = findPrimerBindingSite(primerSeq, isReverse);
+      
+      if(matches.length === 0) {
+        previewDiv.style.display = 'block';
+        previewInfo.innerHTML = '<span style="color:#dc2626;">⚠ No exact match found in sequence</span>';
+        state.previewPrimer = null;
+        renderViewer();
+        return;
+      }
+      
+      // Use first match
+      const match = matches[0];
+      const matchedBases = primerSeq.length;
+      const direction = isReverse ? '(3\' ← 5\' on minus strand)' : '(5\' → 3\' on plus strand)';
+      
+      previewDiv.style.display = 'block';
+      previewInfo.innerHTML = `
+        <strong>Match found:</strong> Position ${match.start}-${match.end} ${direction}<br>
+        <span style="font-family:ui-monospace,monospace;color:#059669;font-weight:700;">${primerSeq}</span> (${matchedBases} bp)<br>
+        ${matches.length > 1 ? `<span style="color:#92400e;">⚠ ${matches.length} total matches found, showing first</span>` : '<span style="color:#059669;">✓ Unique binding site</span>'}
+      `;
+      
+      // Store for rendering highlight
+      state.previewPrimer = {
+        start: match.start,
+        end: match.end,
+        isReverse: isReverse,
+        seq: primerSeq
+      };
+      
+      renderViewer();
+    }
+    
+    // Add a single primer (not a pair)
+    function addSinglePrimer(){
+      try{
+        if(!state.seq || !state.meta) throw new Error('Load a sequence first (rs number or FASTA file)');
+        
+        const primerName = (el('manual-primer-name').value || '').trim();
+        const primerSeq = (el('manual-primer-seq').value || '').trim().toUpperCase();
+        const primerType = el('manual-primer-type').value;
+        const isReverse = primerType === 'reverse';
+        
+        if(!primerName) {
+          throw new Error('Please enter a primer name');
+        }
+        if(!/^[ACGT]+$/.test(primerSeq) || primerSeq.length < 10) {
+          throw new Error('Primer must be valid ACGT sequence (min 10 bp)');
+        }
+        
+        // Find binding site
+        const matches = findPrimerBindingSite(primerSeq, isReverse);
+        
+        if(matches.length === 0) {
+          throw new Error('Primer sequence not found in loaded sequence');
+        }
+        
+        const match = matches[0];
+        const primer = {
+          name: primerName,
+          seq: primerSeq,
+          start: match.start,
+          end: match.end,
+          tm: tmNearestNeighbor(primerSeq),
+          gc: gcPct(primerSeq),
+          isReverse: isReverse,
+          selected: true
+        };
+        
+        state.individualPrimers.push(primer);
+        savePrimersForCurrentRs();
+        
+        // Clear form
+        el('manual-primer-name').value = '';
+        el('manual-primer-seq').value = '';
+        el('manual-primer-preview').style.display = 'none';
+        state.previewPrimer = null;
+        
+        renderPrimerTable();
+        renderViewer();
+        
+        let msg = `Added primer "${primerName}" at position ${match.start}-${match.end} (${primerType})`;
+        if(matches.length > 1) msg += ` - ${matches.length} matches found, using first`;
+        
+        setStatus('primer-status', msg, 'good');
+      } catch(err) {
+        setStatus('primer-status', err.message || 'Failed to add primer', 'bad');
+      }
+    }
+    
+    function toggleIndividualPrimerSelection(idx){
+      state.individualPrimers[idx].selected = !state.individualPrimers[idx].selected;
+      savePrimersForCurrentRs();
+      renderViewer();
+    }
+    
+    function removeIndividualPrimer(idx){
+      const name = state.individualPrimers[idx].name;
+      state.individualPrimers.splice(idx, 1);
+      savePrimersForCurrentRs();
+      renderPrimerTable();
+      renderViewer();
+      setStatus('primer-status', `Removed primer "${name}"`, 'warn');
+    }
+
+    function removePrimerSet(idx){
+      state.primerSets.splice(idx,1);
+      savePrimersForCurrentRs();
+      renderPrimerTable();
+      renderViewer();
+      setStatus('primer-status',`Primer set removed. ${state.primerSets.length} remaining.`,'warn');
+    }
+
+    function clearAllPrimers(){
+      state.primerSets=[];
+      state.individualPrimers=[];
+      savePrimersForCurrentRs();
+      renderPrimerTable();
+      renderViewer();
+      setStatus('primer-status','All primers cleared.','warn');
+    }
+
+    function togglePrimerSelection(idx){
+      state.primerSets[idx].selected = !state.primerSets[idx].selected;
+      savePrimersForCurrentRs();
+      renderViewer();
+    }
+
+    function renderPrimerTable(){
+      const tbody=el('primer-tbody');
+      const wrap=el('primer-table-wrap');
+      tbody.innerHTML='';
+      
+      if(!state.primerSets.length && !state.individualPrimers.length){
+        wrap.style.display='none';
+        return;
+      }
+      
+      wrap.style.display='table';
+      
+      // Show primer pairs
+      state.primerSets.forEach((ps,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td><input type="checkbox" ${ps.selected?'checked':''} onchange="togglePrimerSelection(${i})" /></td>
+          <td>${ps.name}</td>
+          <td style="font-family:ui-monospace,monospace;font-size:11px;">
+            ${ps.forward.seq} (${ps.forward.tm.toFixed(1)}°C)
+            <br><button class="secondary" style="padding:2px 6px;font-size:10px;margin-top:4px;" onclick="blastPrimer('${ps.forward.seq}','${ps.name} - Forward')">BLAST</button>
+          </td>
+          <td style="font-family:ui-monospace,monospace;font-size:11px;">
+            ${ps.reverse.seq} (${ps.reverse.tm.toFixed(1)}°C)
+            <br><button class="secondary" style="padding:2px 6px;font-size:10px;margin-top:4px;" onclick="blastPrimer('${ps.reverse.seq}','${ps.name} - Reverse')">BLAST</button>
+          </td>
+          <td>${fmt(ps.amplicon)} bp</td>
+          <td><button class="secondary" style="padding:4px 8px;font-size:11px;" onclick="removePrimerSet(${i})">Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // Show individual primers
+      state.individualPrimers.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.style.background = '#fffbeb';
+        tr.innerHTML = `
+          <td><input type="checkbox" ${p.selected?'checked':''} onchange="toggleIndividualPrimerSelection(${i})" /></td>
+          <td>${p.name}<br><span class="chip ${p.isReverse?'rev':'fwd'}" style="margin:2px 0 0 0;">${p.isReverse?'Reverse':'Forward'}</span></td>
+          <td style="font-family:ui-monospace,monospace;font-size:11px;" colspan="2">
+            ${p.seq} (${p.tm.toFixed(1)}°C, ${p.gc.toFixed(0)}% GC)<br>
+            Position: ${p.start}-${p.end}
+            <br><button class="secondary" style="padding:2px 6px;font-size:10px;margin-top:4px;" onclick="blastPrimer('${p.seq}','${p.name}')">BLAST</button>
+          </td>
+          <td>—</td>
+          <td><button class="secondary" style="padding:4px 8px;font-size:11px;" onclick="removeIndividualPrimer(${i})">Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function blastPrimer(sequence, label){
+      // Open NCBI BLAST in new window with primer sequence pre-filled
+      // Using blastn (nucleotide BLAST) against nr/nt database
+      // MEGABLAST for highly similar sequences (good for specificity checks)
+      const baseUrl = 'https://blast.ncbi.nlm.nih.gov/Blast.cgi';
+      const params = new URLSearchParams({
+        PROGRAM: 'blastn',
+        PAGE_TYPE: 'BlastSearch',
+        LINK_LOC: 'blasthome',
+        QUERY: sequence,
+        DATABASE: 'nt',
+        MEGABLAST: 'on',
+        WORD_SIZE: '28',
+        EXPECT: '10',
+        FILTER: 'L',
+        DESCRIPTIONS: '100',
+        ALIGNMENTS: '100'
+      });
+      
+      const url = `${baseUrl}?${params.toString()}`;
+      window.open(url, '_blank');
+      
+      setStatus('primer-status', `Opening BLAST for ${label}...`, 'good');
+    }
+
+    function findCutSites(sequence, site){
+      // IUPAC-aware: uses the same siteToRegex helper as findAll
+      const cuts = [];
+      const re = siteToRegex(site);
+      const upper = sequence.toUpperCase();
+      let m;
+      while((m = re.exec(upper)) !== null){
+        cuts.push(m.index + site.length); // cut position = end of recognition site
+        re.lastIndex = m.index + 1;
+      }
+      return cuts;
+    }
+
+    function calculateFragments(ampliconLength, cutPositions){
+      if(cutPositions.length === 0) return [ampliconLength];
+      
+      // Sort cut positions
+      const sorted = [...cutPositions].sort((a, b) => a - b);
+      
+      // Calculate fragment sizes
+      const fragments = [];
+      fragments.push(sorted[0]); // First fragment from 0 to first cut
+      
+      for(let i = 1; i < sorted.length; i++){
+        fragments.push(sorted[i] - sorted[i-1]);
+      }
+      
+      fragments.push(ampliconLength - sorted[sorted.length - 1]); // Last fragment
+      
+      return fragments.sort((a, b) => b - a); // Sort by size descending
+    }
+
+    function formatBandsWithMultiplicity(fragments){
+      if(!fragments || !fragments.length) return '—';
+      const counts=new Map();
+      fragments.forEach(size=>{
+        counts.set(size,(counts.get(size)||0)+1);
+      });
+      return [...counts.entries()]
+        .sort((a,b)=>b[0]-a[0])
+        .map(([size,count])=>count>1?`${fmt(size)}×${count}`:fmt(size))
+        .join(' + ');
+    }
+
+    function digestWithEnzymes(sequence, ampliconLength, enzymes){
+      if(!enzymes || enzymes.length===0) return [ampliconLength];
+      const cutSet=new Set();
+      enzymes.forEach(enz=>{
+        const cuts=findCutSites(sequence, enz.site);
+        cuts.forEach(c=>cutSet.add(c));
+      });
+      const allCuts=[...cutSet].sort((a,b)=>a-b);
+      return calculateFragments(ampliconLength, allCuts);
+    }
+
+    function getBandCounts(fragments){
+      const counts=new Map();
+      (fragments||[]).forEach(size=>{
+        const s=Math.max(1,Math.round(size));
+        counts.set(s,(counts.get(s)||0)+1);
+      });
+      return [...counts.entries()].sort((a,b)=>b[0]-a[0]);
+    }
+
+    function getCutEvents(sequence, enzymes){
+      // Find actual restriction sites in the sequence by scanning for recognition patterns
+      const events=[];
+      (enzymes||[]).forEach(enz=>{
+        const cuts=findCutSites(sequence, enz.site);
+        cuts.forEach(pos=>events.push({pos, enzyme:enz.name}));
+      });
+      return events.sort((a,b)=>a.pos-b.pos||a.enzyme.localeCompare(b.enzyme));
+    }
+
+    function summarizeCutEvents(events){
+      const byPos=new Map();
+      (events||[]).forEach(e=>{
+        if(!byPos.has(e.pos)) byPos.set(e.pos,new Set());
+        byPos.get(e.pos).add(e.enzyme);
+      });
+      return [...byPos.entries()]
+        .sort((a,b)=>a[0]-b[0])
+        .map(([pos,enzSet])=>({pos,enzymes:[...enzSet]}));
+    }
+
+    function getRecognitionSiteSpans(sequence, enzymes){
+      const spans=[];
+      (enzymes||[]).forEach(enz=>{
+        const cuts=findCutSites(sequence, enz.site);
+        cuts.forEach(cutEnd=>{
+          spans.push({start: cutEnd - enz.site.length, end: cutEnd, name: enz.name});
+        });
+      });
+      return spans;
+    }
+
+    function renderDigestTrack(label, ampliconLen, cuts, isMut, mutationRel, fragments, showMutation, siteSpans){
+      const siteMarks=(siteSpans||[]).map(s=>{
+        const pctStart=Math.max(0,(s.start/ampliconLen)*100);
+        const pctWidth=Math.min(100-pctStart,((s.end-s.start)/ampliconLen)*100);
+        return `<div class="digest-site" style="left:${pctStart.toFixed(2)}%;width:${pctWidth.toFixed(2)}%;" title="${s.name} recognition site"></div>`;
+      }).join('');
+
+      const marks=(cuts||[]).map(c=>{
+        const pct=Math.max(0,Math.min(100,(c.pos/ampliconLen)*100));
+        const enz=Array.isArray(c.enzymes) ? [...new Set(c.enzymes)].join(', ') : c.enzymes;
+        return `<div class="digest-cut ${isMut?'mut':''}" style="left:calc(${pct.toFixed(2)}% - 1px)" title="Cut @ ${fmt(c.pos)} bp (${enz})"><div class="digest-cut-label ${isMut?'below':'above'}">${enz}</div></div>`;
+      }).join('');
+
+      let fragSegments='';
+      if(fragments && fragments.length > 0 && cuts.length > 0){
+        const cutPositions=[0,...cuts.map(c=>c.pos),ampliconLen];
+        for(let i=0; i<cutPositions.length-1; i++){
+          const start=cutPositions[i];
+          const end=cutPositions[i+1];
+          const size=end-start;
+          const pctStart=(start/ampliconLen)*100;
+          const pctWidth=(size/ampliconLen)*100;
+          const isOdd=i%2===0;
+          fragSegments+=`<div class="digest-frag" style="left:${pctStart.toFixed(2)}%;width:${pctWidth.toFixed(2)}%;background:${isOdd?'#dbeafe':'#ede9fe'};opacity:0.4"></div>`;
+        }
+      }
+
+      const mutLine=(showMutation && Number.isFinite(mutationRel))
+        ? `<div class="digest-mutation" style="left:calc(${Math.max(0,Math.min(100,(mutationRel/ampliconLen)*100)).toFixed(2)}% - 1px)" title="Mutation position"></div>`
+        : '';
+
+      return `<div class="digest-track"><div class="digest-track-label">${label}</div><div class="digest-bar">${siteMarks}${fragSegments}${marks}</div></div>`;
+    }
+
+    function renderAlleleBar(seqLen, cuts, barHeight, label){
+      // Vertical bar: top = position 0, bottom = seqLen
+      const cutLines=(cuts||[]).map(c=>{
+        const topPct=(c.pos/seqLen)*100;
+        const enzLabel=Array.isArray(c.enzymes)?[...new Set(c.enzymes)].join(', '):c.enzymes;
+        return `<div class="abar-cut" style="top:calc(${topPct.toFixed(2)}% - 1px);" title="Cut @ ${fmt(c.pos)} bp (${enzLabel})"><span class="abar-cut-label">${enzLabel}</span></div>`;
+      }).join('');
+
+      // Fragment size labels between cuts
+      const positions=[0,...(cuts||[]).map(c=>c.pos),seqLen];
+      let fragLabels='';
+      for(let i=0;i<positions.length-1;i++){
+        const fragSize=positions[i+1]-positions[i];
+        const midPct=((positions[i]+positions[i+1])/(2*seqLen))*100;
+        fragLabels+=`<div class="abar-frag-label" style="top:${midPct.toFixed(2)}%;">${fmt(fragSize)} bp</div>`;
+      }
+
+      return `
+        <div class="abar-col">
+          <div class="abar-title">${label}</div>
+          <div class="abar-wrap" style="height:${barHeight}px;">
+            <div class="abar-bar">${cutLines}</div>
+            <div class="abar-labels">${fragLabels}</div>
+          </div>
+          <div class="abar-len">${fmt(seqLen)} bp</div>
+        </div>`;
+    }
+
+    function renderHeterozygoteDigestMap(ampliconLen, wtEvents, mutEvents, wtBands, mutBands, hzBands, mutationRel, mutAmpliconLen, wtSiteSpans, mutSiteSpans){
+      mutAmpliconLen = mutAmpliconLen || ampliconLen;
+      const wtCuts=summarizeCutEvents(wtEvents);
+      const mutCuts=summarizeCutEvents(mutEvents);
+      const sameCuts=JSON.stringify(wtCuts)===JSON.stringify(mutCuts);
+      const hzSummary=formatBandsWithMultiplicity(hzBands);
+      const wtBandFmt=formatBandsWithMultiplicity(wtBands);
+      const mutBandFmt=formatBandsWithMultiplicity(mutBands);
+      const msg=sameCuts?'Selected enzyme(s) cut WT and MUT at the same positions.':'WT and MUT are cut differently by selected enzyme(s), producing heterozygote mixed-band pattern.';
+
+      const BAR_MAX=180;
+      const longest=Math.max(ampliconLen, mutAmpliconLen);
+      const wtH=Math.round((ampliconLen/longest)*BAR_MAX);
+      const mutH=Math.round((mutAmpliconLen/longest)*BAR_MAX);
+
+      const wtBar=renderAlleleBar(ampliconLen, wtCuts, wtH, 'WT allele');
+      const mutBar=renderAlleleBar(mutAmpliconLen, mutCuts, mutH, 'MUT allele');
+
+      return `<div class="digest-map"><div class="digest-map-title">Allele digest map</div><div class="abar-container">${wtBar}${mutBar}</div><div class="digest-note"><strong>WT bands:</strong> ${wtBandFmt}</div><div class="digest-note"><strong>MUT bands:</strong> ${mutBandFmt}</div><div class="digest-note"><strong>HZ expected lane:</strong> ${hzSummary}</div><div class="digest-note">${msg}</div></div>`;
+    }
+
+    function getSelectedLadder(){
+      const selected=(el('ladder-type')?.value||'100').toString();
+      if(selected==='50'){
+        return {
+          name:'50 bp ladder',
+          sizes:[1500,1200,1000,900,800,700,600,500,450,400,350,300,250,200,150,100,50]
+        };
+      }
+      return {
+        name:'100 bp ladder',
+        sizes:[1500,1200,1000,900,800,700,600,500,400,300,200,100]
+      };
+    }
+
+    function gelBandTop(size,maxSize,minSize,gelHeight){
+      let s = Math.max(size, 1);
+      if (s > maxSize) s = maxSize;
+      const logMax = Math.log10(maxSize);
+      const logMin = Math.log10(minSize);
+      const logS = Math.log10(s);
+      const t = (logMax - logS) / (logMax - logMin);
+      return 18 + Math.min(1, Math.max(0, t)) * (gelHeight - 32);
+    }
+
+    function renderGel(lanes){
+      if(!lanes || !lanes.length) return '';
+
+      const ladder=getSelectedLadder();
+      const allBands=[...lanes.flatMap(l=>l.bands||[]),...ladder.sizes];
+      const maxBand=Math.max(...allBands,100);
+      const minBand=Math.min(...allBands.filter(b=>b>0));
+      const allLanes=[{label:ladder.name,bands:ladder.sizes,ladder:true},...lanes];
+      const gelHeight=220;
+      const maxForScale=maxBand;
+      const minForScale=minBand;
+
+      const lanesHtml=allLanes.map(lane=>{
+        const counts=getBandCounts(lane.bands);
+        const bandsHtml=counts.map(([size,count])=>{
+          const top=gelBandTop(size,maxForScale,minForScale,gelHeight);
+          const bandHeight=Math.min(7,2+count);
+          const opacity=Math.min(1,0.55 + (count-1)*0.18);
+          return `<div class="gel-band ${lane.ladder?'ladder':''}" title="${fmt(size)} bp${count>1?` ×${count}`:''}" style="top:${top.toFixed(1)}px;height:${bandHeight}px;opacity:${opacity.toFixed(2)};"></div>`;
+        }).join('');
+        return `
+          <div>
+            <div class="gel-lane">
+              <div class="gel-well"></div>
+              ${bandsHtml}
+            </div>
+            <div class="gel-label">${lane.label}</div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="gel-wrap">
+          <div class="gel-title">Virtual Gel Electrophoresis</div>
+          <div class="gel">
+            <div class="gel-lanes">${lanesHtml}</div>
+          </div>
+          <div class="gel-size-guide">Band migration is shown on a log-size scale using the selected ${ladder.name} lane at left.</div>
+        </div>
+      `;
+    }
+
+    function getSequenceVariant(baseSeq, mutIdx, genotype){
+      // genotype: 'wt' = wild-type, 'hz' = heterozygous, 'mut' = homozygous mutant
+      if(!state.alleles || genotype === 'wt') return baseSeq;
+      
+      let ref = (state.alleles.ref||'').toUpperCase();
+      let alts = (state.alleles.alts||[]).map(a=>(a||'').toUpperCase()).filter(Boolean);
+      if(!ref || !alts.length) return baseSeq;
+
+      const refWindow=baseSeq.substring(mutIdx, mutIdx + ref.length).toUpperCase();
+      if(refWindow !== ref){
+        const rcRef=rc(ref);
+        const rcWindow=baseSeq.substring(mutIdx, mutIdx + rcRef.length).toUpperCase();
+        if(rcWindow===rcRef){
+          ref=rcRef;
+          alts=alts.map(a=>rc(a));
+        }
+      }
+
+      const alt = alts.find(a=>a!==ref) || alts[0] || ref;
+      
+      if(genotype === 'mut'){
+        // Homozygous mutant: replace with alternate allele
+        return baseSeq.substring(0, mutIdx) + alt + baseSeq.substring(mutIdx + ref.length);
+      }
+      
+      // For heterozygous, we would see both alleles (mix), but for digestion we need to consider both possibilities
+      return baseSeq; // Will handle het separately in simulation
+    }
+
+    function simulatePCR(){
+      try{
+        if(!state.seq || !state.meta){
+          throw new Error('Load an rs number first');
+        }
+        
+        const selectedPairSets = state.primerSets.filter(ps => ps.selected);
+        const selectedIndividual = state.individualPrimers.filter(p=>p.selected);
+        const selectedForward = selectedIndividual.filter(p=>!p.isReverse).sort((a,b)=>a.start-b.start);
+        const selectedReverse = selectedIndividual.filter(p=>p.isReverse).sort((a,b)=>a.end-b.end);
+
+        const derivedFromIndividuals=[];
+        if(selectedForward.length && selectedReverse.length){
+          const usedRev=new Set();
+          selectedForward.forEach(fwd=>{
+            let bestIdx=-1;
+            let bestAmp=Infinity;
+            selectedReverse.forEach((rev,idx)=>{
+              if(usedRev.has(idx)) return;
+              if(rev.end<=fwd.start) return;
+              const amp=rev.end-fwd.start+1;
+              if(amp<bestAmp){
+                bestAmp=amp;
+                bestIdx=idx;
+              }
+            });
+            if(bestIdx>=0){
+              const rev=selectedReverse[bestIdx];
+              usedRev.add(bestIdx);
+              derivedFromIndividuals.push({
+                name:`${fwd.name} + ${rev.name}`,
+                forward:fwd,
+                reverse:rev,
+                amplicon:rev.end-fwd.start+1,
+                selected:true,
+                auto:false
+              });
+            }
+          });
+        }
+
+        const selectedPrimers = [...selectedPairSets, ...derivedFromIndividuals];
+        const selectedEnzymes = state.enzymes.filter(e => e.selected);
+        
+        if(selectedPrimers.length === 0){
+          throw new Error('Select at least one primer set, or one forward + one reverse individual primer');
+        }
+        
+        const showWT = el('show-wt').checked;
+        const showHZ = el('show-hz').checked;
+        const showMut = el('show-mut').checked;
+        
+        const resultsDiv = el('pcr-results');
+        const statusDiv = el('pcr-status');
+        
+        let html = '';
+        
+        selectedPrimers.forEach((ps, idx) => {
+          // Extract amplicon sequence
+          const ampliconStart = ps.forward.start;
+          const ampliconEnd = ps.reverse.end;
+          const ampliconLen = ps.amplicon;
+          const mutIdx = state.meta.mutIdx;
+          
+          // Check if mutation is within amplicon
+          const mutInAmplicon = mutIdx >= ampliconStart && mutIdx <= ampliconEnd;
+          html += `
+            <div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#f9fafb;">
+              <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:var(--accent);">${ps.name}</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Amplicon: ${fmt(ampliconLen)} bp${mutInAmplicon ? ' (contains mutation)' : ' (no mutation)'}</div>
+          `;
+          
+          const wtAmplicon=state.seq.substring(ampliconStart, ampliconEnd + 1);
+          const mutWhole=getSequenceVariant(state.seq, mutIdx, 'mut');
+
+          // For indels the mutant sequence is shorter/longer — adjust amplicon coordinates
+          let netIndel=0;
+          if(mutInAmplicon && state.alleles){
+            const refAllele=(state.alleles.ref||'').toUpperCase();
+            const altAllele=(state.alleles.alts||[]).map(a=>(a||'').toUpperCase()).find(a=>a!==refAllele)||refAllele;
+            netIndel=altAllele.length - refAllele.length; // negative = deletion, positive = insertion
+          }
+          const mutAmpliconLen=ampliconLen + netIndel;
+          const mutAmplicon=mutWhole.substring(ampliconStart, ampliconEnd + 1 + netIndel);
+
+          const wtBands=digestWithEnzymes(wtAmplicon, ampliconLen, selectedEnzymes);
+          const mutBands=(mutInAmplicon && state.alleles)
+            ? digestWithEnzymes(mutAmplicon, mutAmpliconLen, selectedEnzymes)
+            : [...wtBands];
+          const hzBands=(mutInAmplicon && state.alleles)
+            ? [...wtBands, ...mutBands].sort((a,b)=>b-a)
+            : [...wtBands, ...wtBands].sort((a,b)=>b-a);
+
+          const wtCutEvents=getCutEvents(wtAmplicon, selectedEnzymes);
+          const mutCutEvents=(mutInAmplicon && state.alleles)
+            ? getCutEvents(mutAmplicon, selectedEnzymes)
+            : [...wtCutEvents];
+          const wtSiteSpans=getRecognitionSiteSpans(wtAmplicon, selectedEnzymes);
+          const mutSiteSpans=(mutInAmplicon && state.alleles)
+            ? getRecognitionSiteSpans(mutAmplicon, selectedEnzymes)
+            : [...wtSiteSpans];
+          const mutationRel=mutInAmplicon ? (mutIdx-ampliconStart+1) : NaN;
+
+          const gelLanes=[
+            {label:'PCR (no enz)',bands:[ampliconLen]},
+            {label:'WT',bands:wtBands},
+            {label:'HZ',bands:hzBands},
+            {label:'MUT',bands:mutBands.length ? mutBands : [mutAmpliconLen]}
+          ];
+
+          html += `
+            <div style="margin-bottom:12px;">
+              <button id="toggle-detail-btn" class="secondary" style="margin-bottom:8px;" onclick="this.nextElementSibling.classList.toggle('collapsed');this.textContent=this.nextElementSibling.classList.contains('collapsed')?'Show details':'Hide details'">Show details</button>
+              <div class="detail-section collapsed">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">
+                  Selected enzymes: ${selectedEnzymes.length?selectedEnzymes.map(e=>e.name).join(', '):'none (genotype lanes equal PCR)'}
+                </div>
+                <table class="enzyme-table" style="font-size:11px;">
+                  <thead>
+                    <tr>
+                      <th>Lane</th>
+                      <th>Fragments (bp)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>PCR (no enzyme)</strong></td>
+                      <td style="font-family:ui-monospace,monospace;">${fmt(ampliconLen)}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>WT</strong></td>
+                      <td style="font-family:ui-monospace,monospace;">${formatBandsWithMultiplicity(wtBands)}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>HZ</strong></td>
+                      <td style="font-family:ui-monospace,monospace;">${formatBandsWithMultiplicity(hzBands)}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>MUT</strong></td>
+                      <td style="font-family:ui-monospace,monospace;">${formatBandsWithMultiplicity(mutBands)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                ${renderHeterozygoteDigestMap(ampliconLen, wtCutEvents, mutCutEvents, wtBands, mutBands, hzBands, mutationRel, mutAmpliconLen, wtSiteSpans, mutSiteSpans)}
+                ${renderGel(gelLanes)}
+              </div>
+            </div>
+          `;
+          
+          html += `</div>`;
+        });
+        
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'status good';
+        const derivedNote=derivedFromIndividuals.length?` (${derivedFromIndividuals.length} from individual primers)`:'';
+        statusDiv.textContent = `Simulated ${selectedPrimers.length} primer set(s)${derivedNote} with ${selectedEnzymes.length} enzyme(s)`;
+        
+      } catch(err){
+        const statusDiv = el('pcr-status');
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'status bad';
+        statusDiv.textContent = err.message || 'PCR simulation failed';
+        el('pcr-results').style.display = 'none';
+      }
+    }
+
+    function filterEnzymeSearch(){
+      const query=(el('enz-search').value||'').trim().toLowerCase();
+      const results=el('enz-search-results');
+      if(!query){
+        results.style.display='none';
+        return;
+      }
+      const matches=commonEnzymes.filter(e=>e.name.toLowerCase().includes(query)).slice(0,15);
+      if(!matches.length){
+        results.style.display='none';
+        return;
+      }
+      results.style.display='block';
+      results.innerHTML=matches.map(e=>{
+        const comp=rc(e.site);
+        return `<div style="padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;" 
+          onclick="addEnzymeFromSearch('${e.name}','${e.site}')" 
+          onmouseover="this.style.background='var(--bg)'" 
+          onmouseout="this.style.background='#fff'">
+          <strong>${e.name}</strong> — ${e.site} / ${comp}
+        </div>`;
+      }).join('');
+    }
+
+    function addEnzymeFromSearch(name,site){
+      if(state.enzymes.find(e=>e.name===name && e.site===site)){
+        setStatus('load-status',`${name} already added.`,'warn');
+        el('enz-search').value='';
+        el('enz-search-results').style.display='none';
+        return;
+      }
+      state.enzymes.push({name,site,selected:true});
+      el('enz-search').value='';
+      el('enz-search-results').style.display='none';
+      refreshEnzymeHits();
+      renderViewer();
+      setStatus('load-status',`Added ${name} (${site}).`,'good');
+    }
+
+    function addEnzyme(){
+      const name=(el('enz-name').value||'').trim();
+      const site=(el('enz-site').value||'').trim().toUpperCase();
+      if(!name || !/^[ACGT]+$/.test(site) || site.length<4){
+        setStatus('load-status','Enter valid enzyme name and A/C/G/T site (min 4 bp).','warn');
+        return;
+      }
+      if(state.enzymes.find(e=>e.name===name && e.site===site)){
+        setStatus('load-status',`${name} already added.`,'warn');
+        return;
+      }
+      state.enzymes.push({name,site,selected:true});
+      el('enz-name').value='';
+      el('enz-site').value='';
+      refreshEnzymeHits();
+      renderViewer();
+      setStatus('load-status',`Added custom enzyme ${name}.`,'good');
+    }
+
+    function removeEnzyme(i){
+      state.enzymes.splice(i,1);
+      refreshEnzymeHits();
+      renderViewer();
+    }
+
+    // IUPAC ambiguity code map for regex conversion
+    const IUPAC_RE = {A:'A',C:'C',G:'G',T:'T',N:'[ACGT]',R:'[AG]',Y:'[CT]',S:'[GC]',W:'[AT]',K:'[GT]',M:'[AC]',B:'[CGT]',D:'[AGT]',H:'[ACT]',V:'[ACG]'};
+    function siteToRegex(site){
+      return new RegExp(site.toUpperCase().split('').map(c=>IUPAC_RE[c]||c).join(''),'g');
+    }
+    function findAll(haystack,needle){
+      const hits=[];
+      const re=siteToRegex(needle);
+      let m;
+      while((m=re.exec(haystack))!==null){
+        hits.push(m.index);
+        re.lastIndex=m.index+1; // allow overlapping / adjacent matches
+      }
+      return hits;
+    }
+
+    function refreshEnzymeHits(){
+      state.enzymeHits=[];
+      if(state.seq){
+          const currentSeq = getCurrentSequence();
+        state.enzymes.forEach((enz,idx)=>{
+          const forwardHits=findAll(currentSeq,enz.site);
+          const r=rc(enz.site);
+          const reverseHits=(r===enz.site)?[]:findAll(currentSeq,r);
+          forwardHits.forEach(pos=>state.enzymeHits.push({index:idx,name:enz.name,site:enz.site,start:pos,end:pos+enz.site.length-1,strand:'+'}));
+          reverseHits.forEach(pos=>state.enzymeHits.push({index:idx,name:enz.name,site:enz.site,start:pos,end:pos+enz.site.length-1,strand:'-'}));
+        });
+      }
+      renderEnzymeTable();
+    }
+
+    function toggleEnzymeSelection(idx){
+      state.enzymes[idx].selected = !state.enzymes[idx].selected;
+      renderViewer();
+    }
+
+    function renderEnzymeTable(){
+      const tbody=el('enzyme-tbody');
+      tbody.innerHTML='';
+      state.enzymes.forEach((enz,i)=>{
+        const nHits=state.enzymeHits.filter(h=>h.index===i).length;
+        const comp=rc(enz.site);
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td><input type="checkbox" ${enz.selected?'checked':''} onchange="toggleEnzymeSelection(${i})" /></td>
+          <td>${enz.name}</td>
+          <td style="font-family:ui-monospace,monospace;font-size:12px;">${enz.site}</td>
+          <td style="font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);">${comp}</td>
+          <td>${nHits}</td>
+          <td><button class="secondary" style="padding:4px 8px;font-size:11px;" onclick="removeEnzyme(${i})">Remove</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function classAt(idx){
+      if(!state.seq || !state.meta) return '';
+      if(idx===state.meta.mutIdx) return 'base-mut';
+      
+      // Check preview primer (highest priority for visibility)
+      if(state.previewPrimer) {
+        const p = state.previewPrimer;
+        if(idx >= p.start && idx <= p.end) {
+          return p.isReverse ? 'base-rev' : 'base-fwd';
+        }
+      }
+
+      for(const ps of state.primerSets){
+        if(!ps.selected) continue;
+        const f=ps.forward;
+        const r=ps.reverse;
+        if(idx>=f.start && idx<=f.end) return 'base-fwd';
+        if(idx>=r.start && idx<=r.end) return 'base-rev';
+      }
+      
+      // Check individual primers
+      for(const p of state.individualPrimers) {
+        if(!p.selected) continue;
+        if(idx >= p.start && idx <= p.end) {
+          return p.isReverse ? 'base-rev' : 'base-fwd';
+        }
+      }
+
+      for(const h of state.enzymeHits){
+        const enzyme=state.enzymes[h.index];
+        if(!enzyme || !enzyme.selected) continue;
+        if(idx>=h.start && idx<=h.end) return 'base-enz';
+      }
+      return '';
+    }
+
+    function buildFeatures(){
+      if(!state.seq || !state.meta) return [];
+      const feats=[];
+      const mut=state.meta.mutIdx;
+      feats.push({
+        name:state.meta.rs,
+        start:mut,
+        end:mut,
+        cls:'mut',
+        dir:'fwd'
+      });
+      
+      // Add preview primer with special styling
+      if(state.previewPrimer) {
+        const p = state.previewPrimer;
+        feats.push({
+          name: 'PREVIEW',
+          start: p.start,
+          end: p.end,
+          cls: p.isReverse ? 'rev' : 'fwd',
+          dir: p.isReverse ? 'rev' : 'fwd',
+          primer:true
+        });
+      }
+
+      state.primerSets.forEach((ps,i)=>{
+        if(!ps.selected) return;
+        feats.push({name:`${ps.name} Fwd`,start:ps.forward.start,end:ps.forward.end,cls:'fwd',dir:'fwd',primer:true});
+        feats.push({name:`${ps.name} Rev`,start:ps.reverse.start,end:ps.reverse.end,cls:'rev',dir:'rev',primer:true});
+      });
+      
+      // Add individual primers
+      state.individualPrimers.forEach((p, i) => {
+        if(!p.selected) return;
+        feats.push({
+          name: p.name,
+          start: p.start,
+          end: p.end,
+          cls: p.isReverse ? 'rev' : 'fwd',
+          dir: p.isReverse ? 'rev' : 'fwd',
+          primer:true
+        });
+      });
+
+      state.enzymeHits.forEach(hit=>{
+        const enzyme=state.enzymes[hit.index];
+        if(!enzyme || !enzyme.selected) return;
+        feats.push({name:hit.name,start:hit.start,end:hit.end,cls:'enz',dir:hit.strand==='-'?'rev':'fwd',index:hit.index,site:hit.site,strand:hit.strand});
+      });
+
+      return feats;
+    }
+
+    function lanePack(features){
+      const lanes=[];
+      const placed=[];
+      features
+        .slice()
+        .sort((a,b)=>(a.start-b.start)||((b.end-b.start)-(a.end-a.start)))
+        .forEach(f=>{
+          let laneIdx=0;
+          while(true){
+            if(!lanes[laneIdx]){ lanes[laneIdx]=-Infinity; break; }
+            if(f.start>lanes[laneIdx]+1) break;
+            laneIdx++;
+          }
+          lanes[laneIdx]=f.end;
+          placed.push({...f,lane:laneIdx});
+        });
+      return {placed,laneCount:Math.max(1,lanes.length)};
+    }
+
+    function escapeHtml(text){
+      return String(text||'')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function moveEnzymeTooltip(evt){
+      const tip=el('enzyme-tooltip');
+      if(!tip || tip.style.display==='none') return;
+      const x=(evt?.clientX||0)+14;
+      const y=(evt?.clientY||0)+14;
+      tip.style.left=`${Math.min(window.innerWidth-340,Math.max(8,x))}px`;
+      tip.style.top=`${Math.min(window.innerHeight-180,Math.max(8,y))}px`;
+    }
+
+    function hideEnzymeTooltip(){
+      const tip=el('enzyme-tooltip');
+      if(tip) tip.style.display='none';
+    }
+
+    function showEnzymeTooltip(evt, enzymeIndex, start, end, strand){
+      const tip=el('enzyme-tooltip');
+      if(!tip || !state.meta) return;
+      const enz=state.enzymes[enzymeIndex];
+      if(!enz) return;
+
+      const totalSites=state.enzymeHits.filter(h=>h.index===enzymeIndex).length;
+      const recognition=(enz.site||'').toUpperCase();
+      const revComp=rc(recognition);
+      const genomicStart=state.meta.start+start;
+      const genomicEnd=state.meta.start+end;
+      const center=Math.round((start+end)/2);
+      const dist=Math.abs(center-state.meta.mutIdx);
+      const orientation=strand==='-'?'minus strand':'plus strand';
+
+      tip.innerHTML=`
+        <div class="t-title">${escapeHtml(enz.name)}</div>
+        <div class="t-sub">${fmt(genomicStart)}${genomicEnd!==genomicStart?`–${fmt(genomicEnd)}`:''}</div>
+        <div class="t-kpi"><strong>${fmt(totalSites)}</strong> site${totalSites===1?'':'s'} <span class="dot">•</span> <strong>${recognition.length}</strong> bp</div>
+        <div class="t-seq">${escapeHtml(recognition)}<br>${escapeHtml(revComp)}</div>
+        <div class="t-mini">${orientation} · ${fmt(dist)} bp from SNP</div>
+      `;
+      tip.style.display='block';
+      moveEnzymeTooltip(evt);
+    }
+
+    function renderTrackForChunk(chunkStart, chunkEnd, lineWidth, features, sequence){
+      const inChunk=features
+        .filter(f=>f.end>=chunkStart && f.start<=chunkEnd)
+        .map(f=>({
+          ...f,
+          s:Math.max(f.start,chunkStart),
+          e:Math.min(f.end,chunkEnd)
+        }));
+
+      if(!inChunk.length) return '';
+
+      const chunkLen=Math.max(1,chunkEnd-chunkStart+1);
+      const spacedCols=chunkLen + Math.floor((chunkLen-1)/10);
+      const displayColAt=(baseOffset)=>baseOffset + Math.floor(baseOffset/10);
+
+      const {placed,laneCount}=lanePack(inChunk);
+      const laneHtml=Array.from({length:laneCount}).map((_,lane)=>{
+        const anns=placed.filter(p=>p.lane===lane).map(p=>{
+          const startOffset=Math.max(0,p.s-chunkStart);
+          const endOffset=Math.max(startOffset,p.e-chunkStart);
+          const startCol=displayColAt(startOffset);
+          const endCol=displayColAt(endOffset);
+          const spanCols=Math.max(1,endCol-startCol+1);
+          const nameText=(p.name||'').replace(/"/g,'&quot;');
+          const label=p.primer ? sequence.slice(p.s,p.e+1).toLowerCase() : p.name;
+          const connector=p.primer?'<span class="connector"></span>':'';
+          const hoverAttrs=(p.cls==='enz' && Number.isFinite(p.index))
+            ? `onmouseenter="showEnzymeTooltip(event,${p.index},${p.start},${p.end},'${p.strand||'+'}')" onmousemove="moveEnzymeTooltip(event)" onmouseleave="hideEnzymeTooltip()"`
+            : '';
+          return `<div class="annot ${p.cls} ${p.dir==='rev'?'rev':''} ${p.primer?'primer':''}" data-name="${nameText}" style="left:${startCol}ch;width:${spanCols}ch" title="${nameText}: ${p.start+1}-${p.end+1}" ${hoverAttrs}>${label}${connector}</div>`;
+        }).join('');
+        return `<div class="track-lane">${anns}</div>`;
+      }).join('');
+
+      return `<div class="track-wrap" style="height:${laneCount*19.5}px;width:${spacedCols}ch">${laneHtml}</div>`;
+    }
+
+    function renderViewer(){
+      const viewer=el('seq-viewer');
+      if(!state.seq || !state.meta){
+        hideEnzymeTooltip();
+        viewer.innerHTML='<div class="mini">Load an rs number to render sequence.</div>';
+        return;
+      }
+
+      const lineWidth=Math.max(40,Math.min(120,parseInt(el('line-width').value,10)||80));
+      const startGenomic=state.meta.start;
+      const seq=getCurrentSequence();
+      const comp=rc(seq);
+      const features=buildFeatures();
+
+      let html='';
+      for(let i=0;i<seq.length;i+=lineWidth){
+        const chunk=seq.slice(i,Math.min(i+lineWidth,seq.length));
+        const chunkStart=i;
+        const chunkEnd=i+chunk.length-1;
+        
+        let bases5to3='';
+        for(let j=0;j<chunk.length;j++){
+          const globalIdx=i+j;
+          const cls=classAt(globalIdx);
+          const ch=chunk[j];
+          bases5to3 += cls ? `<span class="${cls}">${ch}</span>` : ch;
+          // Add space every 10 bp for readability
+          if((j+1)%10===0 && j<chunk.length-1){
+            bases5to3 += ' ';
+          }
+        }
+
+        let bases3to5='';
+        if(state.showComplement){
+          const compChunk=comp.slice(seq.length-chunkEnd-1,seq.length-chunkStart);
+          for(let j=compChunk.length-1;j>=0;j--){
+            bases3to5 += compChunk[j];
+            // Add space every 10 bp (counting from right since reversed)
+            const posFromRight=compChunk.length-1-j;
+            if((posFromRight+1)%10===0 && j>0){
+              bases3to5 += ' ';
+            }
+          }
+        }
+
+        const genomicPos=startGenomic+i;
+        html += `
+          <div style="margin-bottom:12px;">
+            <div class="seq-line">
+              <div class="coord">${genomicPos}</div>
+              <div class="seq-content">
+                ${renderTrackForChunk(chunkStart,chunkEnd,lineWidth,features,seq)}
+                <div class="bases"><span class="strand-label">5'→</span>${bases5to3}</div>
+                ${state.showComplement?`<div class="bases" style="color:#6b7280;margin-top:2px;"><span class="strand-label">3'←</span>${bases3to5}</div>`:''}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      viewer.innerHTML=html;
+      hideEnzymeTooltip();
+    }
+
+    loadPersistentData();
+    if(state.rsHistory.length){
+      el('rs-input').value=state.rsHistory[0].rs;
+    }
+    renderEnzymeTable();
+    renderPrimerTable();
+    applyToolVersion();
+	</script>
+</body>
+</html>

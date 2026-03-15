@@ -1,0 +1,226 @@
+<div class="info-content">
+
+  <h2>Precision Analysis</h2>
+
+  <!-- Index -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#prec-purpose"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#prec-when"       style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#prec-clsi"       style="color:var(--accent); text-decoration:none; padding:2px 0;">CLSI EP5-A3</a>
+      <a href="#prec-types"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Precision Types</a>
+      <a href="#prec-formulas"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Formulas</a>
+      <a href="#prec-fixed"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Fixed Control Limits</a>
+      <a href="#prec-westgard"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Westgard Rules</a>
+      <a href="#prec-exclude"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Excluding Observations</a>
+      <a href="#prec-outputs"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Outputs</a>
+      <a href="#prec-benchmarks" style="color:var(--accent); text-decoration:none; padding:2px 0;">Allowable Imprecision</a>
+      <a href="#prec-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#prec-reporting"  style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+    </div>
+  </div>
+
+  <h3 id="prec-purpose">Purpose</h3>
+  <p>
+    Precision analysis quantifies how <strong>reproducible</strong> a measurement method is —
+    how close repeated measurements of the same sample are to one another. It is not about
+    correctness (that is trueness/bias), but about consistency and random error.
+  </p>
+  <p>
+    Poor precision means results fluctuate unpredictably: a patient's glucose could appear normal
+    one run and elevated the next, purely due to analytical variation. Precision evaluation is
+    required before releasing any new method, reagent lot, or instrument into clinical use.
+  </p>
+
+  <h3 id="prec-when">When to Use</h3>
+  <ul>
+    <li>Validation of a new laboratory method or analyser before clinical release</li>
+    <li>Reagent or calibrator lot verification</li>
+    <li>Ongoing internal QC monitoring (Levey-Jennings, Westgard rules)</li>
+    <li>Verification of manufacturer's precision claims (CLSI EP15-A3)</li>
+    <li>ISO 15189 / CAP accreditation documentation</li>
+  </ul>
+
+  <h3 id="prec-clsi">CLSI EP5-A3 Standard</h3>
+  <p>
+    <strong>EP5-A3</strong> (Evaluation of Precision of Quantitative Measurement Procedures) is the CLSI
+    guideline that defines how precision must be measured and reported in clinical laboratories.
+    It is recognized by ISO 15189, CAP, and EQAS programs globally.
+  </p>
+  <p>
+    Recommended experiment design: <strong>5 days × 2 runs/day × 2 replicates/run = 20 measurements minimum</strong>
+    per sample level. Use at least two concentration levels (low and high medical decision points).
+  </p>
+  <p class="note">
+    For a simplified verification (EP15-A3), fewer replicates are required when verifying a
+    manufacturer's claim rather than establishing precision from scratch.
+  </p>
+
+  <h3 id="prec-types">Precision Types</h3>
+  <p><strong>Repeatability (Sw)</strong> — variation within a single run under identical measurement conditions (same operator, same reagent lot, same instrument).</p>
+  <p><strong>Between-run SD (Sb)</strong> — variation between analytical runs due to run-to-run effects (e.g. calibration, reagent batches, time).</p>
+  <p><strong>Intermediate precision (St)</strong> — total within-laboratory variation combining repeatability and between-run sources; this reflects routine clinical performance and is the most clinically relevant figure for method validation.</p>
+  <p>Select <em>Repeatability</em> when all measurements come from a single run; select
+  <em>Intermediate Precision</em> when measurements are grouped by day or run.</p>
+
+  <h3 id="prec-formulas">Formulas</h3>
+  <p><strong>Repeatability SD:</strong></p>
+  <p><strong>Sw = SD of all replicates</strong></p>
+  <p><strong>Intermediate precision (ANOVA decomposition):</strong></p>
+  <ul>
+    <li><strong>Sw</strong> = within-run SD (square root of MS<sub>within</sub>)</li>
+    <li><strong>Sb</strong> = between-run SD = √(max(0, (MS<sub>between</sub> − MS<sub>within</sub>) / n<sub>per run</sub>))</li>
+    <li><strong>St</strong> = total precision SD = √(Sw² + Sb²)</li>
+  </ul>
+  <p><strong>CV% = (SD / mean) × 100</strong></p>
+  <p><strong>95% CI for SD</strong> (chi-square based):</p>
+  <p><strong>[ SD × √(df / χ²<sub>upper</sub>), &nbsp; SD × √(df / χ²<sub>lower</sub>) ]</strong></p>
+  <p class="note">
+    The chi-square CI is asymmetric: it extends further above the point estimate than below,
+    reflecting that the distribution of sample variances is right-skewed.
+  </p>
+
+  <h3 id="prec-fixed">Fixed Control Limits</h3>
+  <p>
+    Fixed limits let you evaluate new measurements against a <strong>pre-established target mean
+    and SD</strong>, rather than deriving them from the current dataset. This is the standard
+    approach for ongoing internal QC monitoring.
+  </p>
+  <ul>
+    <li><strong>Target mean</strong> — the assigned expected value for your control material, derived from historical data or the manufacturer's value assignment.</li>
+    <li><strong>Target SD (σ)</strong> — the historical within-laboratory SD used to define control chart limits (±1σ, ±2σ, ±3σ lines on the Levey-Jennings chart).</li>
+  </ul>
+  <p>
+    When fixed limits are set, the calculated mean and SD of the current dataset are still shown
+    for comparison, but all Westgard rule checks and chart lines use the fixed σ.
+  </p>
+  <p class="note">
+    Fixed limits should only be established after at least 20 measurements across ≥ 5 days.
+    Using limits derived from fewer measurements can produce unduly tight or loose control boundaries.
+  </p>
+
+  <h3 id="prec-westgard">Westgard Rules</h3>
+  <p>
+    Westgard rules are sequential decision criteria applied to control measurements to distinguish
+    random error from systematic error or instrument malfunction.
+  </p>
+
+  <style>
+    .wg-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+    .wg-table th { background:#f9fafb; font-weight:700; padding:7px 8px; text-align:left; border-bottom:2px solid #e5e7eb; }
+    .wg-table td { padding:7px 8px; border-bottom:1px solid #f3f4f6; vertical-align:top; line-height:1.5; }
+    .wg-table tr:last-child td { border-bottom:none; }
+    .wg-pill  { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+    .wg-w  { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+    .wg-r  { background:#fee2e2; color:#b91c1c;  border:1px solid #fca5a5; }
+  </style>
+
+  <table class="wg-table">
+    <thead>
+      <tr><th>Rule</th><th>Type</th><th>Definition</th><th>Detects</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="wg-pill wg-w">1₂s</span></td>
+        <td style="color:#92400e;font-weight:700;">Warning</td>
+        <td>1 measurement exceeds mean ± 2SD</td>
+        <td>Random error warning — do not reject on this rule alone; use as a trigger to inspect subsequent rules.</td>
+      </tr>
+      <tr>
+        <td><span class="wg-pill wg-r">1₃s</span></td>
+        <td style="color:#b91c1c;font-weight:700;">Rejection</td>
+        <td>1 measurement exceeds mean ± 3SD</td>
+        <td>Large random error or systematic shift. Run should be rejected and investigated.</td>
+      </tr>
+      <tr>
+        <td><span class="wg-pill wg-r">2₂s</span></td>
+        <td style="color:#b91c1c;font-weight:700;">Rejection</td>
+        <td>2 consecutive measurements both exceed mean + 2SD or both below mean − 2SD</td>
+        <td>Systematic error — both controls shifted in the same direction, suggesting calibration drift or reagent issue.</td>
+      </tr>
+      <tr>
+        <td><span class="wg-pill wg-r">R₄s</span></td>
+        <td style="color:#b91c1c;font-weight:700;">Rejection</td>
+        <td>Consecutive pair spans &gt; 4SD: one exceeds +2SD while the next exceeds −2SD</td>
+        <td>Large random error — extreme scatter within a consecutive pair indicating instrument instability.</td>
+      </tr>
+      <tr>
+        <td><span class="wg-pill wg-r">4₁s</span></td>
+        <td style="color:#b91c1c;font-weight:700;">Rejection</td>
+        <td>4 consecutive measurements all exceed mean + 1SD or all below mean − 1SD</td>
+        <td>Systematic bias — gradual drift of control values away from the mean.</td>
+      </tr>
+      <tr>
+        <td><span class="wg-pill wg-r">10x</span></td>
+        <td style="color:#b91c1c;font-weight:700;">Rejection</td>
+        <td>10 consecutive measurements all on the same side of the mean</td>
+        <td>Sustained systematic bias — strong evidence of a shift in the measurement process (new reagent lot, recalibration needed).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="note" style="margin-top:10px;">
+    A <em>warning</em> (1₂s) triggers inspection but does not require run rejection.
+    <em>Rejection</em> rules indicate the run should be repeated and the cause investigated
+    before releasing patient results. Document all violations per ISO 15189 requirements.
+    In a precision study context, use violations to identify potential outliers —
+    do not exclude observations without documented justification.
+  </p>
+
+  <h3 id="prec-exclude">Excluding Observations</h3>
+  <p>
+    Use the checkboxes in the Observations table to exclude individual measurements (repeatability)
+    or entire groups (intermediate precision) from the statistical calculation. All statistics,
+    Westgard evaluation, and the chart update automatically. Excluded points remain visible on
+    the chart as grey hollow circles for transparency.
+  </p>
+  <p>
+    Exclusions should always be clinically or analytically justified and documented. Common valid
+    reasons: verified instrument malfunction, known sample handling error, transcription mistake,
+    or power interruption during a run.
+  </p>
+
+  <h3 id="prec-outputs">Outputs</h3>
+  <ul>
+    <li><strong>Sw</strong> — within-run SD. Variation within a single run under identical measurement conditions.</li>
+    <li><strong>Sb</strong> — between-run SD. Variation between analytical runs due to run-to-run effects (e.g. calibration, reagent batches, time).</li>
+    <li><strong>St</strong> — total intermediate precision SD = √(Sw² + Sb²). Total within-laboratory variation combining repeatability and between-run sources; this reflects routine clinical performance. Compare against your allowable imprecision goal.</li>
+    <li><strong>CV%</strong> — (SD / mean) × 100. Normalises precision relative to concentration.</li>
+    <li><strong>95% CI for SD</strong> — chi-square based interval. Wider intervals reflect less data.</li>
+    <li><strong>PASS / FAIL</strong> — total CV% versus your allowable imprecision. PASS means the method meets the quality goal at this concentration level.</li>
+  </ul>
+
+  <h3 id="prec-benchmarks">Allowable Imprecision</h3>
+  <p>Define your acceptance criteria <strong>before</strong> running the evaluation. Sources:</p>
+  <ul>
+    <li><strong>Biological variation</strong> — desirable CV% ≤ 0.5 × CV<sub>I</sub> (intra-individual variation). E.g. HbA1c: CV<sub>I</sub> ≈ 1.9% → allowable CV% ≤ 0.95%</li>
+    <li><strong>State-of-the-art</strong> — published peer performance from EQAS / RIQAS programs</li>
+    <li><strong>Manufacturer's claim</strong> — stated precision specification in the IFU / package insert</li>
+    <li><strong>Clinical decision threshold</strong> — defined so analytical variation does not influence clinical decision-making</li>
+    <li><strong>Regulatory / accreditation</strong> — CLIA, ISO 15189, or national requirements</li>
+  </ul>
+  <p class="note">
+    Run separate precision evaluations at each medical decision point. A method may pass at
+    normal concentrations but fail at critical low or high values.
+  </p>
+
+  <h3 id="prec-assumptions">Assumptions</h3>
+  <ul>
+    <li>Measurements are made under controlled, documented conditions</li>
+    <li>All replicates measure the same stable control material</li>
+    <li>Values are approximately normally distributed within each run</li>
+    <li>For intermediate precision: groups (runs/days) are independent</li>
+    <li>No pre-analytical variation (same preparation, storage, and handling)</li>
+  </ul>
+
+  <h3 id="prec-reporting">Reporting Example</h3>
+  <p>
+    Precision was evaluated using a 5-day × 2-run × 2-replicate design (n = 20) at two
+    concentration levels. At the low medical decision point (3.5 mmol/L), repeatability CV%
+    was 1.1% (95% CI: 0.8–1.7%) and intermediate precision CV% was 1.8% (95% CI: 1.4–2.7%),
+    both within the allowable imprecision of 2.5% (desirable biological variation criterion).
+    No Westgard rejection rules were triggered.
+  </p>
+
+</div>

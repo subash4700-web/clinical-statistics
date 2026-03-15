@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cohen's Kappa</title>
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
+      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+    .container { max-width: 860px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
+    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
+    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
+      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* CARD */
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
+    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* FORM */
+    select, input[type="number"] {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; font-size: 13px; color: var(--ink);
+    }
+    label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
+      font-size: 13px; cursor: pointer; transition: transform .05s, opacity .15s; }
+    button:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+
+    /* ALERTS */
+    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
+      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
+    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
+    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
+
+    /* TABLE */
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { background: #f9fafb; font-weight: 800; color: #374151; }
+    tr:last-child td, tr:last-child th { border-bottom: none; }
+    td.num { text-align: right; font-family: ui-monospace, monospace; }
+
+    .ctable { border-collapse: separate; border-spacing: 0; }
+    .ctable th { background: #f9fafb; }
+    .ctable th input[type="text"] {
+      background: transparent; border: none; font-weight: 700;
+      font-size: 13px; color: #374151; padding: 4px; width: 130px;
+    }
+    .ctable td input[type="number"] {
+      width: 80px; padding: 6px 8px; border: 1px solid var(--line);
+      border-radius: 8px; font-size: 14px; text-align: center; background: #fff;
+    }
+    .ctable td { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+    .ctable tr:last-child td, .ctable tr:last-child th { border-bottom: none; }
+
+    .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+    .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: 600; margin: 0; }
+    .checkbox-group input[type="checkbox"] { margin: 0; }
+
+    .collapsible-header { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: var(--ink); }
+    .collapsible-header::before { content: "▶"; display: inline-block; transition: transform .2s; }
+    .collapsible-header.open::before { transform: rotate(90deg); }
+    .collapsible-content { display: none; margin-top: 12px; }
+    .collapsible-content.open { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Cohen's Kappa</h1>
+  <p class="subtitle">Inter-rater agreement for nominal categories (2×2 tables)</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab" data-tab="analysis">Analysis</div>
+  </div>
+
+  <!-- ===== INPUT TAB ===== -->
+  <div id="input" class="tab-content active">
+
+    <!-- Study Context & Test Settings (side by side) -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Study Context & Assumptions</div>
+        <p class="note" style="margin-top:0; margin-bottom:12px;">
+          Before running the test, verify that your study design meets the assumptions:
+        </p>
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="assumption1" /> Two independent raters / observers</label>
+          <label><input type="checkbox" id="assumption2" /> Categorical classification (nominal, not ordinal)</label>
+          <label><input type="checkbox" id="assumption3" /> Same categories for both raters</label>
+          <label><input type="checkbox" id="assumption4" /> Sample size adequate for stable estimate</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Test settings</div>
+        <div style="margin-top:12px;">
+          <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;">Significance level (α)</label>
+          <select id="alpha" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:13px;">
+            <option value="0.05" selected>0.05</option>
+            <option value="0.01">0.01</option>
+            <option value="0.10">0.10</option>
+          </select>
+          <p class="note">Probability threshold for rejecting the null hypothesis</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="vizToggle" checked />
+            Show agreement heatmap
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contingency Table -->
+    <div class="card">
+      <div class="section-title">Contingency Table</div>
+      <p class="note" style="margin-top:0; margin-bottom:12px;">
+        Click header cells to rename rater labels. <strong>Diagonal cells (a and d) represent agreement</strong>; off-diagonal cells (b and c) are disagreements.
+      </p>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead>
+            <tr>
+              <th></th>
+              <th><input type="text" value="Rater B: Yes" /></th>
+              <th><input type="text" value="Rater B: No"  /></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th><input type="text" value="Rater A: Yes" /></th>
+              <td><input type="number" id="a" value="0" min="0" /></td>
+              <td><input type="number" id="b" value="0" min="0" /></td>
+            </tr>
+            <tr>
+              <th><input type="text" value="Rater A: No" /></th>
+              <td><input type="number" id="c" value="0" min="0" /></td>
+              <td><input type="number" id="d" value="0" min="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Cohen's κ = (p<sub>o</sub> − p<sub>e</sub>) / (1 − p<sub>e</sub>), where p<sub>o</sub> = (a + d) / N is observed agreement from diagonal cells.</p>
+
+      <div id="inputError" class="alert bad" style="display:none;"></div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="runBtn">Run Analysis</button>
+        <button class="btn-ghost"   id="clearBtn">Clear Data</button>
+      </div>
+    </div>
+
+    <!-- Generate Sample Data -->
+    <div class="card">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">Generate Sample Data</div>
+      <div class="collapsible-content" style="margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label for="numCases">Sample size</label>
+            <input type="number" id="numCases" value="50" min="10" max="200" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px;" />
+          </div>
+          <div>
+            <label for="datGen">Agreement pattern</label>
+            <select id="datGen" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:13px;">
+              <option value="high">High agreement (κ ≈ 0.8)</option>
+              <option value="moderate">Moderate agreement (κ ≈ 0.5)</option>
+              <option value="low">Low agreement (κ ≈ 0.2)</option>
+              <option value="chance">Chance agreement only</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn-primary" id="genDataBtn" type="button">Generate Data & Use</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /input -->
+
+  <!-- ===== ANALYSIS TAB ===== -->
+  <div id="analysis" class="tab-content">
+    <div id="results"></div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-title">Agreement Heatmap</div>
+      <div class="note">Diagonal cells (marked ⬤) show agreement between raters. Colors show if observed agreement exceeds chance expectations. Expected table shows what would occur by chance alone based on marginal distributions.</div>
+      <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+        <canvas id="heatmapKappa" height="480"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  // Utilities
+  function toggleCollapsible(el) {
+    el.classList.toggle("open");
+    el.nextElementSibling.classList.toggle("open");
+  }
+
+  function generateKappaData() {
+    const n = parseInt(document.getElementById("numCases").value) || 50;
+    const pattern = document.getElementById("datGen").value;
+    
+    let a = 0, b = 0, c = 0, d = 0;
+    
+    for (let i = 0; i < n; i++) {
+      const raterA = Math.random() < 0.5; // Rater A random assignment
+      let raterB;
+      
+      if (pattern === "high") {
+        raterB = Math.random() < 0.9 ? raterA : !raterA; // 90% agree
+      } else if (pattern === "moderate") {
+        raterB = Math.random() < 0.6 ? raterA : !raterA; // 60% agree
+      } else if (pattern === "low") {
+        raterB = Math.random() < 0.3 ? raterA : !raterA; // 30% agree
+      } else {
+        raterB = Math.random() < 0.5; // Pure chance
+      }
+      
+      if (raterA && raterB) a++;
+      else if (raterA && !raterB) b++;
+      else if (!raterA && raterB) c++;
+      else d++;
+    }
+    
+    document.getElementById("a").value = a;
+    document.getElementById("b").value = b;
+    document.getElementById("c").value = c;
+    document.getElementById("d").value = d;
+  }
+
+  // Kappa calculation
+  function calculateKappa(a, b, c, d) {
+    const N = a + b + c + d;
+    if (N === 0) return { kappa: NaN, po: NaN, pe: NaN };
+    
+    const po = (a + d) / N;  // Observed agreement
+    const pe = ((a+b)*(a+c) + (c+d)*(b+d)) / (N * N);  // Expected by chance
+    const kappa = (pe === 1) ? NaN : (po - pe) / (1 - pe);
+    
+    return { kappa, po, pe, N };
+  }
+
+  function kappaInterpretation(k) {
+    if (!Number.isFinite(k)) return "Undefined";
+    if (k < 0) return "Poor (less than chance)";
+    if (k < 0.20) return "Slight";
+    if (k < 0.40) return "Fair";
+    if (k < 0.60) return "Moderate";
+    if (k < 0.80) return "Substantial";
+    return "Almost perfect";
+  }
+
+  // Heatmap renderer
+  function renderKappaHeatmap(a, b, c, d, r1, r2, c1, c2, rejectH0) {
+    const canvas = document.getElementById("heatmapKappa");
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    const W = canvas.parentElement.clientWidth || 800;
+    const H = 480;
+    canvas.width = W;
+    canvas.height = H;
+    ctx.clearRect(0, 0, W, H);
+
+    const N = a + b + c + d;
+    const e_a = ((a+b) * (a+c)) / N || 1;
+    const e_b = ((a+b) * (b+d)) / N || 1;
+    const e_c = ((c+d) * (a+c)) / N || 1;
+    const e_d = ((c+d) * (b+d)) / N || 1;
+
+    // Draw cells with emphasis on diagonal (agreement)
+    const drawKappaCell = (x, y, value, expected, label, isAgreement) => {
+      // Calculate deviation from expected
+      const deviation = value - expected;
+      const relativeDeviation = Math.abs(deviation) / Math.max(expected, 1);
+      
+      // Color based on whether it's agreement cell and if it exceeds expectation
+      let color;
+      if (isAgreement && deviation > 0) {
+        // Agreement higher than expected - strong blue/green
+        color = { r: 37, g: 99, b: 235 };
+        const intensity = Math.min(0.85, 0.4 + relativeDeviation * 0.45);
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${intensity})`;
+      } else if (isAgreement && deviation <= 0) {
+        // Agreement lower than expected - lighter blue with border to distinguish from gray
+        color = { r: 96, g: 165, b: 250 };
+        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.35)`;
+      } else {
+        // Disagreement cells - very light gray (not relevant for Kappa focus)
+        ctx.fillStyle = "rgba(241, 245, 249, 0.8)";
+      }
+      
+      ctx.fillRect(x, y, cellSize, cellSize);
+      
+      // Different border styles
+      if (isAgreement) {
+        ctx.strokeStyle = deviation > 0 ? "#2563eb" : "#60a5fa";
+        ctx.lineWidth = deviation > 0 ? 3 : 2;
+      } else {
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+      }
+      ctx.strokeRect(x, y, cellSize, cellSize);
+
+      // Value text
+      ctx.fillStyle = "#1f2937";
+      ctx.font = "bold 18px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(String(value), x + cellSize / 2, y + cellSize / 2 - 8);
+
+      // Label text with indicator for agreement cells
+      ctx.fillStyle = isAgreement ? "#1e40af" : "#94a3b8";
+      ctx.font = isAgreement ? "bold 11px system-ui" : "11px system-ui";
+      ctx.fillText(label + (isAgreement ? " ⬤" : ""), x + cellSize / 2, y + cellSize / 2 + 12);
+    };
+    
+    // Draw expected values table (no colors)
+    const drawExpectedCell = (x, y, expected, label) => {
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(x, y, cellSize, cellSize);
+      
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, cellSize, cellSize);
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "bold 16px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(expected.toFixed(1), x + cellSize / 2, y + cellSize / 2 - 4);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "11px system-ui";
+      ctx.fillText(label, x + cellSize / 2, y + cellSize / 2 + 16);
+    };
+
+    // Cell layout
+    const cellSize = Math.min(110, (W - 120) / 5);
+    const gap = 12;
+    const tableGap = cellSize * 2.5 + 50;
+    const startX = 45;
+    const startY = 60;
+
+    // Draw "Observed" title
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 14px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Observed", startX + cellSize + gap/2, startY - 35);
+
+    // Draw all 4 observed cells
+    drawKappaCell(startX, startY, a, e_a, "a", true);  // Top-left: Agreement
+    drawKappaCell(startX + cellSize + gap, startY, b, e_b, "b", false);  // Top-right: Disagree
+    drawKappaCell(startX, startY + cellSize + gap, c, e_c, "c", false);  // Bottom-left: Disagree
+    drawKappaCell(startX + cellSize + gap, startY + cellSize + gap, d, e_d, "d", true);  // Bottom-right: Agreement
+
+    // Labels for observed
+    ctx.fillStyle = "#374151";
+    ctx.font = "bold 11px system-ui";
+    ctx.textAlign = "right";
+    ctx.fillText(r1, startX - 8, startY + cellSize / 2 + 4);
+    ctx.fillText(r2, startX - 8, startY + cellSize * 1.5 + gap + 4);
+
+    ctx.textAlign = "center";
+    ctx.fillText(c1, startX + cellSize / 2, startY - 12);
+    ctx.fillText(c2, startX + cellSize / 2 + cellSize + gap, startY - 12);
+
+    // Draw "Expected" title
+    const expectedX = startX + tableGap;
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 14px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Expected (by chance)", expectedX + cellSize + gap/2, startY - 35);
+
+    // Draw all 4 expected cells
+    drawExpectedCell(expectedX, startY, e_a, "a");
+    drawExpectedCell(expectedX + cellSize + gap, startY, e_b, "b");
+    drawExpectedCell(expectedX, startY + cellSize + gap, e_c, "c");
+    drawExpectedCell(expectedX + cellSize + gap, startY + cellSize + gap, e_d, "d");
+
+    // Labels for expected
+    ctx.fillStyle = "#374151";
+    ctx.font = "bold 11px system-ui";
+    ctx.textAlign = "right";
+    ctx.fillText(r1, expectedX - 8, startY + cellSize / 2 + 4);
+    ctx.fillText(r2, expectedX - 8, startY + cellSize * 1.5 + gap + 4);
+
+    ctx.textAlign = "center";
+    ctx.fillText(c1, expectedX + cellSize / 2, startY - 12);
+    ctx.fillText(c2, expectedX + cellSize / 2 + cellSize + gap, startY - 12);
+
+    // Legend
+    const legendY = startY + cellSize * 2 + gap + 60;
+    
+    // Strong agreement
+    ctx.fillStyle = "rgba(37, 99, 235, 0.8)";
+    ctx.fillRect(20, legendY, 18, 18);
+    ctx.strokeStyle = "#2563eb";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(20, legendY, 18, 18);
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 13px system-ui";
+    ctx.textAlign = "left";
+    ctx.fillText("Agreement > Expected (Strong ⬤)", 45, legendY + 13);
+    
+    // Weak agreement
+    ctx.fillStyle = "rgba(96, 165, 250, 0.35)";
+    ctx.fillRect(20, legendY + 25, 18, 18);
+    ctx.strokeStyle = "#60a5fa";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, legendY + 25, 18, 18);
+    ctx.fillStyle = "#1f2937";
+    ctx.fillText("Agreement ≤ Expected (Weak ⬤)", 45, legendY + 38);
+
+    // Disagreement neutral
+    ctx.fillStyle = "rgba(241, 245, 249, 0.8)";
+    ctx.fillRect(20, legendY + 50, 18, 18);
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(20, legendY + 50, 18, 18);
+    ctx.fillStyle = "#1f2937";
+    ctx.fillText("Disagreement (not scored in κ)", 45, legendY + 63);
+  }
+
+  // Event handlers
+  document.getElementById("genDataBtn").addEventListener("click", generateKappaData);
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    ["a","b","c","d"].forEach(id => document.getElementById(id).value = 0);
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("inputError").style.display = "none";
+  });
+
+  document.getElementById("runBtn").addEventListener("click", () => {
+    const vals = ["a","b","c","d"].map(id => parseInt(document.getElementById(id).value) || 0);
+    const total = vals.reduce((s, v) => s + v, 0);
+    if (total === 0) {
+      const err = document.getElementById("inputError");
+      err.style.display = "block";
+      err.textContent = "Please enter at least one observation before running the analysis.";
+      return;
+    }
+    document.getElementById("inputError").style.display = "none";
+
+    const [a, b, c, d] = vals;
+    const alpha = parseFloat(document.getElementById("alpha").value);
+    const result = calculateKappa(a, b, c, d);
+    
+    const rejectH0 = result.kappa > 0;  // Simple: kappa > 0 is better than chance
+    const badgeClass = (!Number.isFinite(result.kappa)) ? "warn" : (result.kappa < 0.6) ? "warn" : "good";
+
+    let html = `<div class="card">`;
+    html += `<div class="kpi-grid">`;
+    html += `<div class="kpi"><div class="label">Cohen's κ</div><div class="value">${Number.isFinite(result.kappa) ? result.kappa.toFixed(4) : "—"}</div></div>`;
+    html += `<div class="kpi"><div class="label">Observed (Pₒ)</div><div class="value">${result.po.toFixed(4)}</div></div>`;
+    html += `<div class="kpi"><div class="label">Expected (Pₑ)</div><div class="value">${result.pe.toFixed(4)}</div></div>`;
+    html += `</div>`;
+    html += `<div class="alert ${badgeClass}"><strong>Interpretation:</strong> ${kappaInterpretation(result.kappa)}</div>`;
+    html += `<p class="note">Observed agreement P<sub>o</sub> = (a + d) / N = (${a} + ${d}) / ${result.N} = ${(result.po * 100).toFixed(1)}%</p>`;
+    html += `</div>`;
+
+    document.getElementById("results").innerHTML = html;
+    
+    // Switch to Analysis tab
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector('[data-tab="analysis"]').classList.add("active");
+    document.getElementById("analysis").classList.add("active");
+
+    // Render heatmap
+    setTimeout(() => {
+      const r1 = document.querySelector(".ctable th input[type='text']").value || "Rater A: Yes";
+      const c1 = document.querySelector(".ctable thead th:nth-child(2) input").value || "Rater B: Yes";
+      const c2 = document.querySelector(".ctable thead th:nth-child(3) input").value || "Rater B: No";
+      const r2 = document.querySelector(".ctable tbody tr:nth-child(2) th input").value || "Rater A: No";
+      renderKappaHeatmap(a, b, c, d, r1, r2, c1, c2, rejectH0);
+    }, 50);
+  });
+
+  // Tab switching
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.dataset.tab).classList.add("active");
+    });
+  });
+</script>
+
+</body>
+</html>

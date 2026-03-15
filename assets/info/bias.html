@@ -1,0 +1,161 @@
+<div class="info-content">
+
+  <h2>Bias &amp; Trueness</h2>
+
+  <!-- Index -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#bias-purpose"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#bias-when"       style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#bias-idea"       style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#bias-abs-rel"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Absolute vs Relative Bias</a>
+      <a href="#bias-formulas"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Formulas</a>
+      <a href="#bias-ci"         style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Interval</a>
+      <a href="#bias-ttest"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Significance Test</a>
+      <a href="#bias-specs"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Performance Specifications</a>
+      <a href="#bias-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#bias-decision"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#bias-clinical"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#bias-reporting"  style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+    </div>
+  </div>
+
+  <h3 id="bias-purpose">Purpose</h3>
+  <p>
+    Bias and trueness analysis quantifies the <strong>systematic error</strong> of a measurement method —
+    the consistent tendency to measure higher or lower than the true value. Trueness is the closeness
+    of the mean of an infinite series of measurements to the true value; bias is the numerical expression
+    of the departure from trueness.
+  </p>
+  <p>
+    This tool compares measured results against a known reference value (e.g. a certified reference
+    material or EQA assigned value) and determines whether the systematic deviation is clinically acceptable.
+    For comparing two methods without a reference standard, use the Method Comparison tool (Bland-Altman).
+  </p>
+
+  <h3 id="bias-when">When to Use</h3>
+  <ul>
+    <li>Verifying a new method against a certified reference material (CRM) or assigned target value</li>
+    <li>Interpreting External Quality Assurance (EQA/EQAS/RIQAS) results — comparing your mean to the peer or assigned target</li>
+    <li>Trueness verification before clinical release of a new analyser or reagent lot</li>
+    <li>Monitoring systematic drift over time (trending against a stable reference)</li>
+    <li>Demonstrating compliance with manufacturer bias claims or regulatory limits</li>
+  </ul>
+
+  <h3 id="bias-idea">Key Idea</h3>
+  <p>
+    Even a highly precise method (low random error) can have significant bias — it reliably returns
+    the wrong answer. Bias analysis specifically isolates and quantifies this systematic component.
+    A method passes trueness evaluation when its mean bias, along with its uncertainty (confidence interval),
+    lies entirely within the predefined allowable bias.
+  </p>
+
+  <h3 id="bias-abs-rel">Absolute vs Relative (%) Bias</h3>
+  <p><strong>Absolute bias</strong> — difference in the same units as the measurement:</p>
+  <p><strong>bias = x̄<sub>measured</sub> − reference</strong></p>
+  <p>Use when the allowable limit is defined in concentration units (e.g. ±0.3 mmol/L for glucose).</p>
+
+  <p><strong>Relative (%) bias</strong> — bias expressed as a fraction of the reference value:</p>
+  <p><strong>bias% = (x̄<sub>measured</sub> − reference) / reference × 100</strong></p>
+  <p>Use when the allowable limit is defined as a percentage (e.g. ±5% from EQA target). Preferred for
+  analytes where measurement uncertainty scales proportionally with concentration.</p>
+
+  <h3 id="bias-formulas">Formulas</h3>
+  <p><strong>Mean % bias across n measurements:</strong></p>
+  <p><strong>d̄ = (1/n) × Σ [(xᵢ − rᵢ) / rᵢ × 100]</strong></p>
+  <p><strong>SD of bias = SD of individual % differences</strong></p>
+  <ul>
+    <li><strong>xᵢ</strong> = measured result for sample i</li>
+    <li><strong>rᵢ</strong> = reference (true) value for sample i</li>
+    <li>When a single reference value is used, rᵢ = r for all i</li>
+  </ul>
+  <p class="note">
+    When per-sample reference values are provided (e.g. multi-level EQA), the tool calculates
+    individual % bias for each sample and averages them. This correctly handles cases where
+    the reference value differs by concentration level.
+  </p>
+
+  <h3 id="bias-ci">Confidence Interval</h3>
+  <p>
+    The 95% CI for mean bias is calculated using the t-distribution:
+  </p>
+  <p><strong>d̄ ± t<sub>n−1, 0.025</sub> × (SD / √n)</strong></p>
+  <p>
+    This CI answers: <em>"Where does the true systematic bias likely lie?"</em>
+    For a method to demonstrate acceptable trueness, the entire 95% CI should fall within
+    the allowable bias limits — not just the point estimate.
+  </p>
+  <p class="note">
+    Requiring the full CI (rather than just the mean) to be within the allowable limit is the
+    more conservative and recommended approach, analogous to CLSI EP09 guidance for method comparison.
+  </p>
+
+  <h3 id="bias-ttest">Significance Test</h3>
+  <p>
+    A one-sample t-test evaluates whether the mean bias differs significantly from zero (H₀: μ<sub>bias</sub> = 0):
+  </p>
+  <p><strong>t = d̄ / (SD / √n),  df = n − 1</strong></p>
+  <p class="note">
+    Statistical significance (p &lt; 0.05) means the bias is detectable given the sample size.
+    It does not mean the bias is clinically important. With large n, even a trivially small bias
+    becomes statistically significant. Always evaluate magnitude (CI and allowable bias) alongside
+    the p-value.
+  </p>
+
+  <h3 id="bias-specs">Performance Specifications</h3>
+  <p>Define your allowable bias <strong>before</strong> running the evaluation. Sources:</p>
+  <ul>
+    <li><strong>Biological variation</strong> — desirable allowable bias: ≤ 0.25 × √(CV<sub>I</sub>² + CV<sub>G</sub>²), where CV<sub>I</sub> = intra-individual and CV<sub>G</sub> = inter-individual biological variation coefficients</li>
+    <li><strong>EQA / RIQAS peer targets</strong> — the allowable deviation from the assigned peer value, published by your EQA scheme</li>
+    <li><strong>Manufacturer's claim</strong> — stated trueness/bias from the IFU or package insert</li>
+    <li><strong>Regulatory requirements</strong> — e.g. CLIA total allowable error limits (TEa), which implicitly constrain allowable bias</li>
+    <li><strong>Clinical decision thresholds</strong> — bias that would not alter a clinical decision (e.g. reclassify a patient across a diagnostic cut-off)</li>
+  </ul>
+
+  <h3 id="bias-assumptions">Assumptions</h3>
+  <ul>
+    <li>The reference value is sufficiently accurate (reference uncertainty is small relative to allowable bias)</li>
+    <li>Measurements are independent (no repeated use of the same sample in a way that inflates n)</li>
+    <li>The measured material is commutable with the reference standard (matrix equivalence)</li>
+    <li>The % bias values are approximately normally distributed (required for CI and t-test validity)</li>
+    <li>Pre-analytical conditions are controlled and consistent across replicates</li>
+  </ul>
+  <p class="note">
+    Non-commutability — where the matrix of a certified reference material behaves differently
+    from native patient samples — is a common source of apparent bias. Verify with native patient
+    specimens when possible.
+  </p>
+
+  <h3 id="bias-decision">Decision Rule</h3>
+  <ul>
+    <li><strong>PASS</strong>: |mean bias%| ≤ allowable bias AND (optionally) the entire 95% CI lies within ± allowable bias</li>
+    <li><strong>FAIL</strong>: |mean bias%| exceeds the allowable limit, or the CI extends beyond the limit</li>
+    <li>If no allowable bias is specified, report the mean bias and CI without a PASS/FAIL verdict</li>
+  </ul>
+
+  <h3 id="bias-clinical">Clinical Interpretation</h3>
+  <p>Address these questions in order:</p>
+  <ul>
+    <li>Is the mean bias within the allowable limit from your performance specification?</li>
+    <li>Does the 95% CI lie entirely within the allowable limits?</li>
+    <li>Is the bias statistically significant? If yes, is it also clinically meaningful?</li>
+    <li>Does bias vary across concentration levels (look for concentration-dependent patterns in the individual bias plot)?</li>
+    <li>Are any individual samples strongly outlying — possibly indicating pre-analytical or matrix effects?</li>
+  </ul>
+  <p class="note">
+    A PASS verdict at one concentration level does not guarantee acceptable trueness across the
+    full measurement range. Always evaluate at clinically relevant decision points (e.g. low,
+    normal, and high medical decision concentrations).
+  </p>
+
+  <h3 id="bias-reporting">Reporting Example</h3>
+  <p>
+    Trueness was evaluated using n = 20 measurements against an EQA assigned value of 5.0 mmol/L.
+    The mean bias was +1.8% (95% CI: +0.9% to +2.7%), with SD of bias 1.6%. The bias was
+    statistically significant (t = 4.14, p &lt; 0.001). However, the entire 95% CI fell within
+    the allowable bias of ±5.0% (EQAS performance criterion), and the method was classified
+    as PASS for trueness at this concentration level.
+  </p>
+
+</div>

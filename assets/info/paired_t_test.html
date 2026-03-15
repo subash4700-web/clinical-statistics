@@ -1,0 +1,135 @@
+<div class="info-content">
+
+  <h2>Paired t-test</h2>
+
+  <!-- Index table -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#pt-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#pt-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#pt-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#pt-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#pt-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#pt-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#pt-ci" style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Intervals</a>
+      <a href="#pt-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#pt-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#pt-normality" style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality Check</a>
+      <a href="#pt-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Normality Is Violated</a>
+      <a href="#pt-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#pt-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#pt-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#pt-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="pt-purpose">Purpose</h3>
+  <p>
+    The paired t-test compares <strong>two dependent measurements</strong> taken on the same subjects,
+    testing whether the mean within-subject difference differs from zero.
+  </p>
+
+  <h3 id="pt-when">When to Use</h3>
+  <ul>
+    <li>Before–after designs (same subjects measured twice)</li>
+    <li>Repeated measurements on the same subjects</li>
+    <li>Matched pairs (e.g., left/right measurements)</li>
+  </ul>
+
+  <h3 id="pt-idea">Key Idea</h3>
+  <p>For each subject <em>i</em>, compute a difference:</p>
+  <p><strong>d<sub>i</sub> = After<sub>i</sub> − Before<sub>i</sub></strong></p>
+  <p>
+    The test then reduces to a one-sample t-test on these differences, asking whether their mean (d̄) differs from zero.
+    By working on differences, between-subject variability is removed — making the test more powerful than an independent t-test when pairing is valid.
+  </p>
+
+  <h3 id="pt-hypotheses">Hypotheses</h3>
+  <p><strong>Two-sided:</strong> H₀: μ<sub>d</sub> = 0 &nbsp;|&nbsp; H₁: μ<sub>d</sub> ≠ 0</p>
+  <p><strong>One-sided (greater):</strong> H₀: μ<sub>d</sub> ≤ 0 &nbsp;|&nbsp; H₁: μ<sub>d</sub> &gt; 0</p>
+  <p><strong>One-sided (less):</strong> H₀: μ<sub>d</sub> ≥ 0 &nbsp;|&nbsp; H₁: μ<sub>d</sub> &lt; 0</p>
+
+  <h3 id="pt-statistic">Test Statistic</h3>
+  <p><strong>t = d̄ / SE</strong> &nbsp; where &nbsp; <strong>SE = s<sub>d</sub> / √n</strong></p>
+  <ul>
+    <li><strong>d̄</strong> = mean of the differences</li>
+    <li><strong>s<sub>d</sub></strong> = SD of the differences</li>
+    <li><strong>n</strong> = number of pairs</li>
+  </ul>
+
+  <h3 id="pt-df">Degrees of Freedom</h3>
+  <p><strong>df = n − 1</strong></p>
+
+  <h3 id="pt-ci">Confidence Intervals</h3>
+  <p><strong>95% CI of the mean difference:</strong></p>
+  <p><strong>d̄ ± t<sub>n−1, α/2</sub> × SE</strong> &nbsp; where &nbsp; SE = s<sub>d</sub> / √n</p>
+  <p class="note">
+    Answers: <em>"Where does the true mean difference likely lie?"</em>
+    Narrows as n increases. This is the interval displayed in the hypothesis visualisation and tested by the paired t-test.
+  </p>
+
+  <p style="margin-top:10px;"><strong>95% Reference range of individual differences</strong> <em style="color:#6b7280;">(shown for illustration only — not part of the test)</em><strong>:</strong></p>
+  <p><strong>d̄ ± t<sub>n−1, α/2</sub> × s<sub>d</sub></strong></p>
+  <p class="note">
+    Answers: <em>"Where do 95% of individual subject differences fall?"</em>
+    Does <strong>not</strong> narrow with larger n — individual differences always scatter around the mean.
+    Shown in the hypothesis visualisation only to contrast with the CI above.
+  </p>
+
+  <h3 id="pt-effect">Effect Size</h3>
+  <p>Cohen's <strong>d<sub>z</sub></strong> (standardized mean difference on differences):</p>
+  <p><strong>d<sub>z</sub> = d̄ / s<sub>d</sub></strong></p>
+  <ul>
+    <li>0.2 = small &nbsp;|&nbsp; 0.5 = medium &nbsp;|&nbsp; 0.8 = large</li>
+  </ul>
+
+  <h3 id="pt-assumptions">Assumptions</h3>
+  <ul>
+    <li>Measurements are paired (dependent samples)</li>
+    <li>Outcome is continuous (numeric measurement)</li>
+    <li>Pairs are independent of each other</li>
+    <li>Differences are approximately normally distributed</li>
+    <li>No extreme outliers in the differences (important for small n)</li>
+  </ul>
+
+  <h3 id="pt-normality">Normality Check</h3>
+  <p>
+    Normality is assessed on the <strong>differences</strong>, not on the raw before/after values.
+    Use the Shapiro–Wilk test and Q–Q plot on d<sub>i</sub> values.
+  </p>
+  <p class="note">
+    For n ≥ 30, the t-test is robust to mild non-normality due to the Central Limit Theorem.
+  </p>
+
+  <h3 id="pt-violated">If Normality Is Violated</h3>
+  <ul>
+    <li>Consider the <strong>Wilcoxon signed-rank test</strong> as a non-parametric alternative</li>
+    <li>Inspect for outliers in the differences</li>
+  </ul>
+
+  <h3 id="pt-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="pt-clinical">Clinical Interpretation</h3>
+  <p>
+    A statistically significant result suggests a systematic change between the paired measurements.
+    Statistical significance does not automatically imply clinical relevance.
+    Consider the magnitude of change (effect size d<sub>z</sub>) and the confidence interval.
+  </p>
+
+  <h3 id="pt-reporting">Reporting Example</h3>
+  <p>
+    A paired t-test showed a significant change from before to after,
+    t(df) = X.XX, p = 0.0X, d<sub>z</sub> = X.XX, 95% CI [L, U].
+  </p>
+
+  <h3 id="pt-data">Generating Sample Data</h3>
+  <p>
+    An expandable "Generate paired sample data" panel is located below the main data entry area.
+    Specify the number of pairs, distribution (normal/uniform), mean and SD for the "before"
+    values and for the within-pair differences. Click <strong>Generate</strong> to preview and
+    <strong>Use in analysis</strong> to load the data.
+  </p>
+
+</div>

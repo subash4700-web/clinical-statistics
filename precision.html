@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Precision</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;padding:20px;}
+    .container{max-width:1000px;margin:0 auto;}
+    h1{font-size:22px;margin-bottom:4px;}
+    .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;}
+    .section-title{font-weight:700;font-size:14px;margin-bottom:10px;}
+    .note{color:var(--muted);font-size:12px;margin-top:5px;}
+    .field-label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:10px 0 4px;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:700px){.grid-2{grid-template-columns:1fr;}}
+    select,input[type="number"],input[type="text"]{
+      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+      background:#fff;font-size:13px;outline:none;
+    }
+    select:focus,input:focus{border-color:var(--accent);}
+    textarea{
+      width:100%;min-height:200px;padding:10px;border:1px solid var(--line);border-radius:10px;
+      font-family:ui-monospace,monospace;font-size:13px;background:#fff;resize:vertical;outline:none;
+    }
+    textarea:focus{border-color:var(--accent);}
+    .tabs{display:flex;gap:8px;margin-bottom:16px;}
+    .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+    button{border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+    .btn-secondary{background:#111827;color:#fff;}
+    .btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;}
+    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+    .kpi{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+    .kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px;}
+    .kpi-value{font-size:19px;font-weight:900;font-family:ui-monospace,monospace;}
+    .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+    .verdict{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:14px;}
+    .verdict.pass{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
+    .verdict.fail{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
+    .section-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
+    th{background:#f9fafb;font-weight:800;color:#374151;}
+    td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
+    tr:last-child td{border-bottom:none;}
+    tr.excl-row td:not(.excl-cb-cell){opacity:.35;text-decoration:line-through;}
+    .error-msg{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
+    .var-bar-wrap{display:flex;flex-direction:column;gap:10px;}
+    .var-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+    .var-bar-track{background:#f3f4f6;border-radius:999px;height:9px;}
+    .var-bar-fill{height:9px;border-radius:999px;}
+    .example-box{background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.8;}
+
+    /* Fixed control limits */
+    .fixed-limits{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-top:12px;}
+    .fixed-limits-title{font-size:12px;font-weight:700;color:#0369a1;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .fixed-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+    .fixed-row label{font-size:12px;color:#374151;white-space:nowrap;min-width:120px;}
+    .fixed-row input[type="number"]{width:100px;flex:none;}
+    .fixed-unit{font-size:11px;color:var(--muted);}
+    .fixed-tag{display:inline-block;background:#0ea5e9;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;letter-spacing:.04em;}
+
+    /* Westgard */
+    .wg-badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin:1px 2px;white-space:nowrap;letter-spacing:.02em;}
+    .wg-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+    .wg-reject{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;}
+    .wg-panel{border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px;}
+    .wg-panel.has-reject{background:#fef2f2;border:1px solid #fca5a5;}
+    .wg-panel.has-warn{background:#fffbeb;border:1px solid #fde68a;}
+    .wg-panel.ok{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
+    .wg-rule-row{display:flex;align-items:baseline;gap:6px;margin-top:4px;font-size:12px;}
+
+    /* Exclusion */
+    .cb-excl{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
+    .excl-info{font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .excl-info strong{color:#b91c1c;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+    <h1 style="margin:0;">Precision Analysis</h1>
+    <span style="display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      CLSI EP5-A3
+    </span>
+  </div>
+  <p class="subtitle">Repeatability and intermediate precision via ANOVA variance component decomposition — aligned with CLSI EP5-A3 guidelines.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Options</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
+
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="tab-content active">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="section-title">Settings</div>
+
+          <label class="field-label">Precision type</label>
+          <select id="sel-type" onchange="updateHints()">
+            <option value="repeatability">Repeatability (within-run)</option>
+            <option value="intermediate">Intermediate Precision (between-run / between-day)</option>
+          </select>
+
+          <label class="field-label">Analyte / Sample</label>
+          <input type="text" id="inp-analyte" placeholder="e.g. Glucose, Control Level 1" oninput="syncUnitLabels()">
+
+          <label class="field-label">Unit</label>
+          <input type="text" id="inp-unit" placeholder="e.g. mmol/L, IU/L, %" oninput="syncUnitLabels()">
+
+          <label class="field-label">Allowable imprecision CV% — optional</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="inp-allowable" min="0" step="0.1" placeholder="e.g. 5.0" style="flex:1;">
+            <span style="font-size:13px;color:var(--muted);">%</span>
+          </div>
+          <p class="note">If set, results are assessed against this threshold.</p>
+
+          <div class="fixed-limits">
+            <div class="fixed-limits-title">
+              Fixed Control Limits
+              <span style="font-size:11px;font-weight:400;color:#0369a1;">— optional</span>
+            </div>
+            <div class="fixed-row">
+              <label for="inp-fixed-mean">Target mean:</label>
+              <input type="number" id="inp-fixed-mean" step="any" placeholder="e.g. 5.40">
+              <span class="fixed-unit" id="lbl-fixed-unit-mean"></span>
+            </div>
+            <div class="fixed-row">
+              <label for="inp-fixed-sd">Target SD (σ):</label>
+              <input type="number" id="inp-fixed-sd" step="any" min="0" placeholder="e.g. 0.10">
+              <span class="fixed-unit" id="lbl-fixed-unit-sd"></span>
+            </div>
+            <p class="note">When set, Westgard rules and Levey-Jennings control lines use these fixed values. Leave blank to use values calculated from data.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" id="hint-title">Format — Repeatability</div>
+          <p class="note" id="hint-body">One measurement per line. All values must come from the same analytical run.</p>
+          <div class="example-box" id="hint-example">5.42<br>5.38<br>5.45<br>5.41<br>5.39</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Raw Data</div>
+        <textarea id="txt-data" placeholder="Paste measurements here…" oninput="previewParse()"></textarea>
+        <p class="note" id="parse-preview"></p>
+      </div>
+    </div>
+
+    <details style="margin-bottom:12px;">
+      <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
+      <div class="card" style="margin-top:8px;">
+        <div id="gen-rep-opts">
+          <div class="grid-2">
+            <div><label class="field-label">n (observations)</label><input type="number" id="gen-n" value="20" min="3" step="1"></div>
+            <div><label class="field-label">Mean</label><input type="number" id="gen-mean" value="5.50" step="any"></div>
+            <div><label class="field-label">Within-run SD</label><input type="number" id="gen-sw" value="0.08" min="0" step="any"></div>
+          </div>
+        </div>
+        <div id="gen-ip-opts" style="display:none;">
+          <div class="grid-2">
+            <div><label class="field-label">Number of groups (runs/days)</label><input type="number" id="gen-groups" value="5" min="2" step="1"></div>
+            <div><label class="field-label">Replicates per group</label><input type="number" id="gen-reps" value="3" min="2" step="1"></div>
+            <div><label class="field-label">Grand mean</label><input type="number" id="gen-grand-mean" value="5.50" step="any"></div>
+            <div><label class="field-label">Within-run SD (Sw)</label><input type="number" id="gen-sw-ip" value="0.05" min="0" step="any"></div>
+            <div><label class="field-label">Between-run SD (Sb)</label><input type="number" id="gen-sb" value="0.09" min="0" step="any"></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" onclick="generatePrecData()">Generate</button>
+          <button class="btn-secondary" onclick="usePrecData()">Use in analysis</button>
+        </div>
+        <p class="note" style="margin-top:8px;">Generated values appear below. Click "Use in analysis" to copy them into the data box.</p>
+        <textarea id="gen-output" readonly style="margin-top:8px;min-height:100px;font-size:12px;font-family:ui-monospace,monospace;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:#f9fafb;"></textarea>
+      </div>
+    </details>
+
+    <div class="error-msg" id="input-error"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="loadExample()">Load Example</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+  </div>
+
+  <!-- RESULTS TAB -->
+  <div id="tab-results" class="tab-content">
+    <div id="results-body"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
+      <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tabs ──
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+function syncUnitLabels(){
+  const u = document.getElementById('inp-unit').value.trim();
+  document.getElementById('lbl-fixed-unit-mean').textContent = u;
+  document.getElementById('lbl-fixed-unit-sd').textContent   = u;
+}
+
+function getFixedLimits(){
+  const fm = parseFloat(document.getElementById('inp-fixed-mean').value);
+  const fs = parseFloat(document.getElementById('inp-fixed-sd').value);
+  return {
+    fixedMean: isNaN(fm) ? null : fm,
+    fixedSD:   (isNaN(fs) || fs <= 0) ? null : fs
+  };
+}
+
+function updateHints(){
+  const type = document.getElementById('sel-type').value;
+  if(type==='repeatability'){
+    document.getElementById('hint-title').textContent = 'Format — Repeatability';
+    document.getElementById('hint-body').textContent  = 'One measurement per line. All values from the same run.';
+    document.getElementById('hint-example').innerHTML = '5.42<br>5.38<br>5.45<br>5.41<br>5.39';
+    document.getElementById('gen-rep-opts').style.display = 'block';
+    document.getElementById('gen-ip-opts').style.display  = 'none';
+  } else {
+    document.getElementById('hint-title').textContent = 'Format — Intermediate Precision';
+    document.getElementById('hint-body').textContent  = 'Each line: group_id, value — where group_id is run, day, or operator label.';
+    document.getElementById('hint-example').innerHTML = 'Day1, 5.42<br>Day1, 5.38<br>Day2, 5.45<br>Day2, 5.41<br>Day3, 5.39<br>Day3, 5.43';
+    document.getElementById('gen-rep-opts').style.display = 'none';
+    document.getElementById('gen-ip-opts').style.display  = 'block';
+  }
+  previewParse();
+}
+
+function generatePrecData(){
+  const type = document.getElementById('sel-type').value;
+  const lines = [];
+  if(type === 'repeatability'){
+    const n  = Math.max(3, parseInt(document.getElementById('gen-n').value)||20);
+    const mu = parseFloat(document.getElementById('gen-mean').value)||5.50;
+    const sw = Math.max(0, parseFloat(document.getElementById('gen-sw').value)||0.08);
+    for(let i=0;i<n;i++) lines.push(jStat.normal.sample(mu,sw).toFixed(4));
+  } else {
+    const k   = Math.max(2, parseInt(document.getElementById('gen-groups').value)||5);
+    const r   = Math.max(2, parseInt(document.getElementById('gen-reps').value)||3);
+    const mu  = parseFloat(document.getElementById('gen-grand-mean').value)||5.50;
+    const sw  = Math.max(0, parseFloat(document.getElementById('gen-sw-ip').value)||0.05);
+    const sb  = Math.max(0, parseFloat(document.getElementById('gen-sb').value)||0.09);
+    for(let g=1;g<=k;g++){
+      const gMean = jStat.normal.sample(mu, sb);
+      for(let i=0;i<r;i++) lines.push(`Day${g}, ${jStat.normal.sample(gMean,sw).toFixed(4)}`);
+    }
+  }
+  document.getElementById('gen-output').value = lines.join('\n');
+}
+
+function usePrecData(){
+  const val = document.getElementById('gen-output').value;
+  if(val){ document.getElementById('txt-data').value = val; previewParse(); }
+}
+
+function loadExample(){
+  const type = document.getElementById('sel-type').value;
+  document.getElementById('inp-analyte').value   = 'Glucose';
+  document.getElementById('inp-unit').value      = 'mmol/L';
+  document.getElementById('inp-allowable').value = '3.0';
+  syncUnitLabels();
+  if(type==='repeatability'){
+    document.getElementById('txt-data').value =
+      '5.42\n5.38\n5.45\n5.41\n5.39\n5.44\n5.37\n5.43\n5.40\n5.42\n5.39\n5.41\n5.44\n5.38\n5.43\n5.40\n5.42\n5.39\n5.41\n5.38';
+  } else {
+    document.getElementById('txt-data').value =
+      'Day1,5.42\nDay1,5.38\nDay1,5.45\nDay2,5.41\nDay2,5.39\nDay2,5.43\nDay3,5.44\nDay3,5.40\nDay3,5.37\nDay4,5.43\nDay4,5.40\nDay4,5.42\nDay5,5.39\nDay5,5.41\nDay5,5.38';
+  }
+  previewParse();
+}
+
+function clearAll(){
+  document.getElementById('txt-data').value='';
+  document.getElementById('parse-preview').textContent='';
+}
+
+function previewParse(){
+  const type = document.getElementById('sel-type').value;
+  const raw  = document.getElementById('txt-data').value;
+  if(!raw.trim()){ document.getElementById('parse-preview').textContent=''; return; }
+  if(type==='repeatability'){
+    const vals = parseRepeatability(raw);
+    document.getElementById('parse-preview').textContent = `${vals.length} value(s) detected.`;
+  } else {
+    const g = parseGrouped(raw);
+    const k = Object.keys(g).length;
+    const N = Object.values(g).reduce((s,a)=>s+a.length,0);
+    document.getElementById('parse-preview').textContent = k>0 ? `${k} group(s), ${N} value(s) detected.` : 'No valid data detected.';
+  }
+}
+
+function showError(msg){
+  const el = document.getElementById('input-error');
+  el.textContent = msg; el.style.display = msg?'block':'none';
+}
+
+// ── Parsers ──
+function parseRepeatability(raw){
+  return raw.trim().split(/\r?\n/).map(l=>parseFloat(l.trim())).filter(n=>!isNaN(n));
+}
+function parseGrouped(raw){
+  const groups={};
+  raw.trim().split(/\r?\n/).forEach(l=>{
+    const parts=l.split(/[,;\t]/).map(s=>s.trim());
+    if(parts.length<2) return;
+    const val=parseFloat(parts[1]);
+    if(isNaN(val)) return;
+    if(!groups[parts[0]]) groups[parts[0]]=[];
+    groups[parts[0]].push(val);
+  });
+  return groups;
+}
+
+// ── Stats helpers ──
+function mean(arr){ return arr.reduce((s,v)=>s+v,0)/arr.length; }
+function variance(arr){ const m=mean(arr); return arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-1); }
+function sd(arr){ return arr.length<2?0:Math.sqrt(variance(arr)); }
+function fmt(n,d=3){ return (n===null||n===undefined||isNaN(n))?'—':Number(n).toFixed(d); }
+function sdCI(s,n,conf=0.95){
+  const alpha=1-conf, df=n-1;
+  return {
+    lower: s*Math.sqrt(df/jStat.chisquare.inv(1-alpha/2,df)),
+    upper: s*Math.sqrt(df/jStat.chisquare.inv(alpha/2,df))
+  };
+}
+
+// ── Westgard rules ──
+const WG_RULES = {
+  '1₂s': {label:'1₂s', type:'warn',   desc:'Warning: 1 value beyond ±2SD'},
+  '1₃s': {label:'1₃s', type:'reject', desc:'Rejection: 1 value beyond ±3SD'},
+  '2₂s': {label:'2₂s', type:'reject', desc:'Rejection: 2 consecutive values on same side >2SD'},
+  'R₄s': {label:'R₄s', type:'reject', desc:'Rejection: consecutive pair spans >4SD (one >+2SD, other <−2SD)'},
+  '4₁s': {label:'4₁s', type:'reject', desc:'Rejection: 4 consecutive values all >+1SD or all <−1SD'},
+  '10x': {label:'10x', type:'reject', desc:'Rejection: 10 consecutive values on same side of mean'},
+};
+
+function checkWestgard(vals, mu, s){
+  // Returns array[n] of string arrays listing violated rules at each position
+  const n = vals.length;
+  const z = vals.map(v => (v - mu) / s);
+  const vio = Array.from({length:n}, ()=>new Set());
+
+  z.forEach((zi, i)=>{
+    if(Math.abs(zi) > 3) vio[i].add('1₃s');
+    else if(Math.abs(zi) > 2) vio[i].add('1₂s');
+  });
+
+  for(let i=1;i<n;i++){
+    // 2₂s
+    if(z[i]>2 && z[i-1]>2){ vio[i].add('2₂s'); vio[i-1].add('2₂s'); }
+    if(z[i]<-2 && z[i-1]<-2){ vio[i].add('2₂s'); vio[i-1].add('2₂s'); }
+    // R₄s
+    if((z[i]>2&&z[i-1]<-2)||(z[i]<-2&&z[i-1]>2)){ vio[i].add('R₄s'); vio[i-1].add('R₄s'); }
+  }
+
+  // 4₁s
+  for(let i=3;i<n;i++){
+    const g=[z[i-3],z[i-2],z[i-1],z[i]];
+    if(g.every(zi=>zi>1))  [i-3,i-2,i-1,i].forEach(j=>vio[j].add('4₁s'));
+    if(g.every(zi=>zi<-1)) [i-3,i-2,i-1,i].forEach(j=>vio[j].add('4₁s'));
+  }
+
+  // 10x
+  for(let i=9;i<n;i++){
+    const g=z.slice(i-9,i+1);
+    if(g.every(zi=>zi>0)||g.every(zi=>zi<0))
+      for(let j=i-9;j<=i;j++) vio[j].add('10x');
+  }
+
+  return vio.map(s=>[...s]);
+}
+
+function wgBadge(rule){
+  const r=WG_RULES[rule]||{label:rule,type:'warn',desc:rule};
+  return `<span class="wg-badge wg-${r.type==='reject'?'reject':'warn'}" title="${r.desc}">${r.label}</span>`;
+}
+
+function wgPanel(violations){
+  // violations: array[n] of string arrays
+  const allRules = violations.flat();
+  const rejectRules = [...new Set(allRules.filter(r=>WG_RULES[r]?.type==='reject'))];
+  const warnRules   = [...new Set(allRules.filter(r=>WG_RULES[r]?.type==='warn'))];
+  const hasReject = rejectRules.length > 0;
+  const hasWarn   = warnRules.length   > 0;
+  const nViolated = violations.filter(v=>v.length>0).length;
+
+  if(!hasReject && !hasWarn){
+    return `<div class="wg-panel ok">✓ No Westgard rule violations detected.</div>`;
+  }
+  const cls = hasReject ? 'has-reject' : 'has-warn';
+  let html = `<div class="wg-panel ${cls}">`;
+  html += `<strong>${nViolated} observation${nViolated!==1?'s':''} violate${nViolated===1?'s':''} Westgard rules:</strong>`;
+  if(hasReject){
+    html += `<div class="wg-rule-row">Rejection: `;
+    html += rejectRules.map(r=>`${wgBadge(r)} <span style="font-size:11px;color:#6b7280;">${WG_RULES[r].desc}</span>`).join('<br>');
+    html += `</div>`;
+  }
+  if(hasWarn){
+    html += `<div class="wg-rule-row">Warning: `;
+    html += warnRules.map(r=>`${wgBadge(r)} <span style="font-size:11px;color:#6b7280;">${WG_RULES[r].desc}</span>`).join('<br>');
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ── State ──
+let _baseVals   = null;
+let _baseGroups = null;
+let _excludedSet = new Set();   // indices (repeatability) or group keys (intermediate)
+let _lastCalcType = null;
+let _lastMeta   = {};
+let lastCharts  = [];
+
+function destroyCharts(){ lastCharts.forEach(c=>c.destroy()); lastCharts=[]; }
+
+function calculate(){
+  showError('');
+  destroyCharts();
+  _excludedSet = new Set();
+  const type = document.getElementById('sel-type').value;
+  const raw  = document.getElementById('txt-data').value;
+  if(!raw.trim()){ showError('Please enter data.'); return; }
+  const analyte  = document.getElementById('inp-analyte').value.trim()||'Sample';
+  const unit     = document.getElementById('inp-unit').value.trim();
+  const allowable= parseFloat(document.getElementById('inp-allowable').value);
+  _lastMeta = {analyte,unit,allowable};
+  _lastCalcType = type;
+  if(type==='repeatability'){
+    _baseVals = parseRepeatability(raw);
+    renderRepeatability();
+  } else {
+    _baseGroups = parseGrouped(raw);
+    renderIntermediate();
+  }
+  document.querySelector('[data-tab="tab-results"]').click();
+}
+
+function rerunCalc(){
+  destroyCharts();
+  if(_lastCalcType==='repeatability') renderRepeatability();
+  else renderIntermediate();
+}
+
+function toggleExclude(key){
+  if(_excludedSet.has(key)) _excludedSet.delete(key);
+  else _excludedSet.add(key);
+  rerunCalc();
+}
+
+// ── Repeatability ──
+function renderRepeatability(){
+  const {analyte,unit,allowable} = _lastMeta;
+  const allVals = _baseVals;
+  if(!allVals || allVals.length<3){ showError('Enter at least 3 values.'); return; }
+
+  const activeVals = allVals.filter((_,i)=>!_excludedSet.has(i));
+  if(activeVals.length<3){ showError('At least 3 non-excluded values required.'); return; }
+
+  const n  = activeVals.length;
+  const mu = mean(activeVals);
+  const s  = sd(activeVals);
+  const cv = mu!==0 ? s/mu*100 : NaN;
+  const se = s/Math.sqrt(n);
+  const tCrit = jStat.studentt.inv(0.975,n-1);
+  const ciMeanLo=mu-tCrit*se, ciMeanHi=mu+tCrit*se;
+  const ciSD = sdCI(s,n);
+  const ciCVLo=mu!==0?ciSD.lower/mu*100:NaN;
+  const ciCVHi=mu!==0?ciSD.upper/mu*100:NaN;
+  const hasLimit=!isNaN(allowable)&&allowable>0;
+  const pass=hasLimit?cv<=allowable:null;
+
+  const {fixedMean, fixedSD} = getFixedLimits();
+  const ctrlMu = fixedMean!==null ? fixedMean : mu;
+  const ctrlS  = fixedSD!==null   ? fixedSD   : s;
+  const usingFixed = fixedMean!==null || fixedSD!==null;
+
+  // Westgard on active sequence
+  const activeViolations = checkWestgard(activeVals,ctrlMu,ctrlS);
+  // Map violations back to original indices
+  const activeIndices = allVals.map((_,i)=>i).filter(i=>!_excludedSet.has(i));
+  const vioByOrigIdx = {};
+  activeIndices.forEach((origIdx,ai)=>{ vioByOrigIdx[origIdx]=activeViolations[ai]||[]; });
+
+  let html='';
+
+  // Fixed limits notice
+  if(usingFixed){
+    html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;color:#0369a1;margin-bottom:10px;">
+      <strong>Fixed control limits applied</strong> — `;
+    if(fixedMean!==null) html+=`Target mean: <strong>${fmt(fixedMean,4)}</strong> `;
+    if(fixedSD!==null)   html+=`Target SD: <strong>${fmt(fixedSD,4)}</strong>`;
+    html+=` ${unit||''} — used for Westgard evaluation and chart lines.</div>`;
+  }
+
+  if(_excludedSet.size>0){
+    html+=`<div class="excl-info"><strong>${_excludedSet.size} observation${_excludedSet.size!==1?'s':''} excluded</strong> from statistics. Showing full dataset below.</div>`;
+  }
+
+  html+=kpiGrid([
+    {label:'n (active)',      value:n,                       sub:_excludedSet.size>0?`${_excludedSet.size} excluded`:'observations'},
+    {label:'Mean',            value:fmt(mu,4),               sub:unit||''},
+    {label:'SD (within-run)', value:fmt(s,4),                sub:`95% CI [${fmt(ciSD.lower,4)}, ${fmt(ciSD.upper,4)}]`},
+    {label:'CV%',             value:fmt(cv,2)+'%',           sub:`95% CI [${fmt(ciCVLo,2)}%, ${fmt(ciCVHi,2)}%]`},
+    {label:'95% CI (mean)',   value:`${fmt(ciMeanLo,4)} – ${fmt(ciMeanHi,4)}`, sub:unit||''},
+    {label:'Min / Max',       value:`${fmt(Math.min(...activeVals),4)} / ${fmt(Math.max(...activeVals),4)}`, sub:'range'},
+  ]);
+
+  if(hasLimit) html+=verdictHtml(pass,`CV% ${fmt(cv,2)}%`,`allowable ${fmt(allowable,1)}%`);
+
+  // Westgard summary panel
+  html+=`<div class="section-header">Westgard Rule Check</div>`;
+  html+=wgPanel(activeViolations);
+
+  // Levey-Jennings chart
+  html+=`<div class="section-header">Levey-Jennings Chart</div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="lj-chart"></canvas></div>`;
+
+  // All observations table
+  html+=`<div class="section-header">Observations — toggle to exclude</div>`;
+  html+=`<div class="table-wrap"><table>
+    <thead><tr>
+      <th>#</th><th class="num">Value (${unit||'—'})</th><th class="num">z-score</th>
+      <th>Westgard violations</th><th style="text-align:center;">Exclude</th>
+    </tr></thead><tbody>`;
+  allVals.forEach((v,i)=>{
+    const excl = _excludedSet.has(i);
+    const vio  = vioByOrigIdx[i]||[];
+    const z    = (v - ctrlMu)/ctrlS;
+    const zStr = isFinite(z)?fmt(z,2):'—';
+    const badges = vio.length ? vio.map(wgBadge).join('') : '<span style="font-size:11px;color:#9ca3af;">—</span>';
+    html+=`<tr class="${excl?'excl-row':''}">
+      <td>${i+1}</td>
+      <td class="num">${fmt(v,4)}</td>
+      <td class="num">${zStr}</td>
+      <td>${badges}</td>
+      <td class="excl-cb-cell" style="text-align:center;"><input type="checkbox" class="cb-excl" ${excl?'checked':''} onchange="toggleExclude(${i})"></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  document.getElementById('results-body').innerHTML=html;
+
+  // Chart — all points shown; excluded = grey, violations = colored
+  const labels=allVals.map((_,i)=>i+1);
+  const flat  =v=>labels.map(()=>v);
+  const ptBg  =allVals.map((v,i)=>{
+    if(_excludedSet.has(i)) return '#d1d5db';
+    const vio=vioByOrigIdx[i]||[];
+    if(vio.some(r=>WG_RULES[r]?.type==='reject')) return '#c62828';
+    if(vio.length) return '#f59e0b';
+    return '#1976d2';
+  });
+  // For the main line: null out excluded values so line skips them
+  const lineVals=allVals.map((v,i)=>_excludedSet.has(i)?null:v);
+
+  const ch=new Chart(document.getElementById('lj-chart'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Value',data:lineVals,borderColor:'#1976d2',backgroundColor:ptBg,pointBackgroundColor:ptBg,pointBorderColor:ptBg,pointRadius:5,pointHoverRadius:7,tension:0.15,fill:false,order:1,spanGaps:false},
+        // Excluded points shown as grey hollow
+        {label:'Excluded',data:allVals.map((v,i)=>_excludedSet.has(i)?v:null),borderColor:'transparent',backgroundColor:'#9ca3af',pointBackgroundColor:'#fff',pointBorderColor:'#9ca3af',pointBorderWidth:1.5,pointRadius:5,pointStyle:'circle',fill:false,order:0},
+        {label:`Mean (${fmt(mu,4)})`,data:flat(mu),borderColor:'#2e7d32',borderDash:[],pointRadius:0,fill:false,borderWidth:2},
+        ...(usingFixed&&fixedMean!==null?[{label:`Target mean (${fmt(ctrlMu,4)})`,data:flat(ctrlMu),borderColor:'#0ea5e9',borderDash:[4,3],pointRadius:0,fill:false,borderWidth:1.5}]:[]),
+        {label:'+1SD',data:flat(ctrlMu+ctrlS),  borderColor:'#86efac',borderDash:[3,4],pointRadius:0,fill:false,borderWidth:1},
+        {label:'-1SD',data:flat(ctrlMu-ctrlS),  borderColor:'#86efac',borderDash:[3,4],pointRadius:0,fill:false,borderWidth:1},
+        {label:'+2SD',data:flat(ctrlMu+2*ctrlS),borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'-2SD',data:flat(ctrlMu-2*ctrlS),borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'+3SD',data:flat(ctrlMu+3*ctrlS),borderColor:'#c62828',borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'-3SD',data:flat(ctrlMu-3*ctrlS),borderColor:'#c62828',borderDash:[5,4],pointRadius:0,fill:false},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'right',labels:{boxWidth:14,font:{size:11}}},
+        tooltip:{
+          callbacks:{
+            label(ctx){
+              if(ctx.datasetIndex===0||ctx.datasetIndex===1){
+                const i=ctx.dataIndex;
+                const vio=vioByOrigIdx[i]||[];
+                const excl=_excludedSet.has(i);
+                const parts=[`Value: ${fmt(allVals[i],4)}`];
+                if(excl) parts.push('EXCLUDED');
+                if(vio.length) parts.push('Rules: '+vio.join(', '));
+                return parts;
+              }
+              return ctx.dataset.label+': '+fmt(ctx.parsed.y,4);
+            }
+          }
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'Observation #'}},
+        y:{title:{display:true,text:unit||'Value'}}
+      }
+    }
+  });
+  lastCharts.push(ch);
+  window._lastResult={type:'repeatability',analyte,unit,n,mu,s,cv,ciSD,ciCVLo,ciCVHi,ciMeanLo,ciMeanHi,allowable,pass,vals:activeVals,allVals,excludedCount:_excludedSet.size,ctrlMu,ctrlS};
+}
+
+// ── Intermediate Precision ──
+function renderIntermediate(){
+  const {analyte,unit,allowable} = _lastMeta;
+  const allGroups = _baseGroups;
+  if(!allGroups){ showError('No data.'); return; }
+  const allKeys = Object.keys(allGroups);
+  if(allKeys.length<2){ showError('At least 2 groups required.'); return; }
+
+  // Active groups = exclude selected group keys
+  const keys = allKeys.filter(k=>!_excludedSet.has(k));
+  if(keys.length<2){ showError('At least 2 non-excluded groups required.'); return; }
+  if(keys.some(k=>allGroups[k].length<2)){ showError('Each group needs at least 2 replicates.'); return; }
+
+  const allVals=keys.flatMap(k=>allGroups[k]);
+  const N=allVals.length, k=keys.length;
+  const grandMean=mean(allVals);
+
+  let SSw=0, dfW=0;
+  const gMeans={};
+  keys.forEach(key=>{
+    const g=allGroups[key], gm=mean(g);
+    gMeans[key]=gm;
+    SSw+=g.reduce((s,v)=>s+(v-gm)**2,0);
+    dfW+=g.length-1;
+  });
+  const MSw=SSw/dfW;
+
+  let SSb=0;
+  keys.forEach(key=>{ SSb+=allGroups[key].length*(gMeans[key]-grandMean)**2; });
+  const dfB=k-1, MSb=SSb/dfB;
+  const n0=(N-keys.reduce((s,key)=>s+allGroups[key].length**2,0)/N)/(k-1);
+
+  const Sw2=MSw;
+  const Sb2=Math.max(0,(MSb-MSw)/n0);
+  const St2=Sw2+Sb2;
+  const Sw=Math.sqrt(Sw2), Sb=Math.sqrt(Sb2), St=Math.sqrt(St2);
+  const cvW=grandMean!==0?Sw/grandMean*100:NaN;
+  const cvB=grandMean!==0?Sb/grandMean*100:NaN;
+  const cvT=grandMean!==0?St/grandMean*100:NaN;
+  const ciSw=sdCI(Sw,dfW);
+  const ciSt=sdCI(St,N-1);
+  const ciCVlo=grandMean!==0?ciSt.lower/grandMean*100:NaN;
+  const ciCVhi=grandMean!==0?ciSt.upper/grandMean*100:NaN;
+  const hasLimit=!isNaN(allowable)&&allowable>0;
+  const pass=hasLimit?cvT<=allowable:null;
+
+  const {fixedMean, fixedSD} = getFixedLimits();
+  const ctrlMu = fixedMean!==null ? fixedMean : grandMean;
+  const ctrlS  = fixedSD!==null   ? fixedSD   : St;
+  const usingFixed = fixedMean!==null || fixedSD!==null;
+
+  // Westgard on group means (sequential)
+  const gMeansArr = keys.map(k=>gMeans[k]);
+  const wgVio = checkWestgard(gMeansArr, ctrlMu, ctrlS);
+
+  let html='';
+  if(usingFixed){
+    html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;color:#0369a1;margin-bottom:10px;">
+      <strong>Fixed control limits applied</strong> — `;
+    if(fixedMean!==null) html+=`Target mean: <strong>${fmt(fixedMean,4)}</strong> `;
+    if(fixedSD!==null)   html+=`Target SD: <strong>${fmt(fixedSD,4)}</strong>`;
+    html+=` ${unit||''}</div>`;
+  }
+  if(_excludedSet.size>0){
+    html+=`<div class="excl-info"><strong>${_excludedSet.size} group${_excludedSet.size!==1?'s':''} excluded</strong> from statistics.</div>`;
+  }
+
+  html+=kpiGrid([
+    {label:'Groups (active)',    value:k,               sub:`${N} total observations`},
+    {label:'Grand Mean',         value:fmt(grandMean,4), sub:unit||''},
+    {label:'Within-run SD (Sw)', value:fmt(Sw,4),       sub:`CV% ${fmt(cvW,2)}% · CI [${fmt(ciSw.lower,4)}, ${fmt(ciSw.upper,4)}]`},
+    {label:'Between-run SD (Sb)',value:fmt(Sb,4),       sub:`CV% ${fmt(cvB,2)}%`},
+    {label:'Total IP SD (St)',   value:fmt(St,4),       sub:`CV% ${fmt(cvT,2)}%`},
+    {label:'95% CI (CV%)',       value:`${fmt(ciCVlo,2)}% – ${fmt(ciCVhi,2)}%`, sub:'for total CV%'},
+  ]);
+
+  if(hasLimit) html+=verdictHtml(pass,`Total CV% ${fmt(cvT,2)}%`,`allowable ${fmt(allowable,1)}%`);
+
+  // Variance components
+  html+=`<div class="section-header">Variance Components</div>`;
+  html+=`<div class="card"><div class="var-bar-wrap">`;
+  html+=varBar('Within-run (Sw²)',Sw2,St2,'#1976d2');
+  html+=varBar('Between-run (Sb²)',Sb2,St2,'#7c3aed');
+  html+=`</div></div>`;
+
+  // Westgard on group means
+  html+=`<div class="section-header">Westgard Rule Check — Group Means</div>`;
+  html+=wgPanel(wgVio);
+
+  // Per-group table with Westgard + exclusion
+  html+=`<div class="section-header">Per-Group Results — toggle to exclude groups</div>`;
+  html+=`<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Group</th><th class="num">n</th><th class="num">Mean</th><th class="num">z-score</th>
+      <th class="num">SD</th><th class="num">CV%</th><th class="num">Min</th><th class="num">Max</th>
+      <th>Westgard</th><th style="text-align:center;">Exclude</th>
+    </tr></thead><tbody>`;
+  allKeys.forEach((key,ki)=>{
+    const excl=_excludedSet.has(key);
+    const g=allGroups[key];
+    const gm=mean(g), gs=g.length>1?sd(g):0;
+    // Westgard for this group (if not excluded, look up in wgVio by active index)
+    let badges='<span style="font-size:11px;color:#9ca3af;">—</span>';
+    if(!excl){
+      const ai=keys.indexOf(key);
+      const vio=wgVio[ai]||[];
+      if(vio.length) badges=vio.map(wgBadge).join('');
+    }
+    const z=(gm-ctrlMu)/ctrlS;
+    const zStr=!excl&&isFinite(z)?fmt(z,2):'—';
+    html+=`<tr class="${excl?'excl-row':''}">
+      <td>${key}</td>
+      <td class="num">${g.length}</td>
+      <td class="num">${fmt(gm,4)}</td>
+      <td class="num">${zStr}</td>
+      <td class="num">${fmt(gs,4)}</td>
+      <td class="num">${fmt(gm!==0?gs/gm*100:NaN,2)}%</td>
+      <td class="num">${fmt(Math.min(...g),4)}</td>
+      <td class="num">${fmt(Math.max(...g),4)}</td>
+      <td>${badges}</td>
+      <td class="excl-cb-cell" style="text-align:center;"><input type="checkbox" class="cb-excl" ${excl?'checked':''} onchange="toggleExclude('${key}')"></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  html+=`<div class="section-header">Group Means with Total SD Limits</div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="ip-chart"></canvas></div>`;
+
+  document.getElementById('results-body').innerHTML=html;
+
+  const ptBg=keys.map((_,ki)=>{
+    const vio=wgVio[ki]||[];
+    if(vio.some(r=>WG_RULES[r]?.type==='reject')) return '#c62828';
+    if(vio.length) return '#f59e0b';
+    return '#1976d2';
+  });
+
+  const ch=new Chart(document.getElementById('ip-chart'),{
+    type:'line',
+    data:{
+      labels:keys,
+      datasets:[
+        {label:'Group Mean',    data:gMeansArr,   borderColor:'#1976d2',backgroundColor:ptBg,pointBackgroundColor:ptBg,pointRadius:5,tension:0.2,fill:false},
+        {label:`Grand Mean (${fmt(grandMean,4)})`,data:keys.map(()=>grandMean),borderColor:'#2e7d32',borderDash:[6,4],pointRadius:0,fill:false,borderWidth:2},
+        ...(usingFixed&&fixedMean!==null?[{label:`Target mean (${fmt(ctrlMu,4)})`,data:keys.map(()=>ctrlMu),borderColor:'#0ea5e9',borderDash:[4,3],pointRadius:0,fill:false,borderWidth:1.5}]:[]),
+        {label:'+1 Total SD',  data:keys.map(()=>ctrlMu+ctrlS),  borderColor:'#86efac',borderDash:[3,4],pointRadius:0,fill:false,borderWidth:1},
+        {label:'-1 Total SD',  data:keys.map(()=>ctrlMu-ctrlS),  borderColor:'#86efac',borderDash:[3,4],pointRadius:0,fill:false,borderWidth:1},
+        {label:'+2 Total SD',  data:keys.map(()=>ctrlMu+2*ctrlS),borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'-2 Total SD',  data:keys.map(()=>ctrlMu-2*ctrlS),borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:14,font:{size:11}}},
+        tooltip:{callbacks:{label(ctx){
+          if(ctx.datasetIndex===0){
+            const ki=ctx.dataIndex;
+            const vio=wgVio[ki]||[];
+            const parts=[`Mean: ${fmt(gMeansArr[ki],4)}`];
+            if(vio.length) parts.push('Rules: '+vio.join(', '));
+            return parts;
+          }
+          return ctx.dataset.label;
+        }}}
+      },
+      scales:{x:{title:{display:true,text:'Group'}},y:{title:{display:true,text:unit||'Value'}}}
+    }
+  });
+  lastCharts.push(ch);
+  window._lastResult={type:'intermediate',analyte,unit,grandMean,Sw,Sb,St,cvW,cvB,cvT,ciSw,ciSt,ciCVlo,ciCVhi,groups:allGroups,keys,allowable,pass};
+}
+
+// ── UI helpers ──
+function kpiGrid(items){
+  return '<div class="kpi-grid">'+items.map(({label,value,sub})=>
+    `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`
+  ).join('')+'</div>';
+}
+function verdictHtml(pass,observed,limit){
+  return `<div class="verdict ${pass?'pass':'fail'}">${pass?'✓ PASS':'✗ FAIL'} — ${observed} is ${pass?'within':'above'} allowable imprecision of ${limit}</div>`;
+}
+function varBar(label,val,total,color){
+  const pct=total>0?Math.min(100,val/total*100):0;
+  return `<div>
+    <div class="var-bar-label"><span style="font-weight:600;">${label}</span><span style="color:var(--muted);">${fmt(val,6)} &nbsp;(${fmt(pct,1)}%)</span></div>
+    <div class="var-bar-track"><div class="var-bar-fill" style="background:${color};width:${pct}%;"></div></div>
+  </div>`;
+}
+
+// ── Export ──
+function exportExcel(){
+  const r=window._lastResult; if(!r) return;
+  const wb=XLSX.utils.book_new();
+  let rows=[['Analyte',r.analyte],['Unit',r.unit],['Type',r.type==='repeatability'?'Repeatability':'Intermediate Precision'],[]];
+  if(r.type==='repeatability'){
+    rows.push(['n (active)',r.n],['Mean',r.mu],['SD',r.s],['CV%',r.cv],
+      ['95% CI SD lower',r.ciSD.lower],['95% CI SD upper',r.ciSD.upper],
+      ['95% CI CV% lower',r.ciCVLo],['95% CI CV% upper',r.ciCVHi],
+      ['Excluded observations',r.excludedCount||0],
+      [],['#','Value'],...r.vals.map((v,i)=>[i+1,v]));
+  } else {
+    rows.push(['Grand Mean',r.grandMean],['Within-run SD',r.Sw],['CV% (within)',r.cvW],
+      ['Between-run SD',r.Sb],['CV% (between)',r.cvB],['Total IP SD',r.St],['CV% (total)',r.cvT],
+      ['95% CI CV% lower',r.ciCVlo],['95% CI CV% upper',r.ciCVhi]);
+  }
+  if(!isNaN(r.allowable)) rows.push([],[`Allowable CV%`,r.allowable],['Result',r.pass?'PASS':'FAIL']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Precision');
+  XLSX.writeFile(wb,`precision_${r.analyte||'results'}.xlsx`);
+}
+</script>
+</body>
+</html>

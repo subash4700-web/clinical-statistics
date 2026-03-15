@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chi-square Goodness of Fit</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
+      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
+    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+    a.back-link { display: inline-block; margin-bottom: 18px; color: var(--accent);
+      font-size: 13px; font-weight: 700; text-decoration: none; }
+    a.back-link:hover { text-decoration: underline; }
+
+    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
+    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
+      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
+    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    select, input[type="number"] {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+      border-radius: 10px; background: #fff; font-size: 13px; color: var(--ink);
+    }
+    input[type="text"] {
+      padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+      background: #fff; font-size: 13px; color: var(--ink); width: 100%;
+    }
+    label.field-label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
+      font-size: 13px; cursor: pointer; transition: transform .05s, opacity .15s; }
+    button:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn-ghost.small { padding: 6px 12px; font-size: 12px; }
+
+    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
+      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
+    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
+    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
+    .alert.info { border-color: #3b82f655; background: #eff6ff; color: #1e3a5f; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { background: #f9fafb; font-weight: 800; color: #374151; }
+    td.num { text-align: right; font-family: ui-monospace, monospace; }
+    tr:last-child td, tr:last-child th { border-bottom: none; }
+    td.flag { background: #fef2f2; color: #7f1d1d; font-weight: 700; }
+
+    /* Category input rows */
+    .cat-table { width: 100%; border-collapse: collapse; }
+    .cat-table th { background: #f9fafb; font-weight: 800; color: #374151;
+      padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .cat-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    .cat-table tr:last-child td { border-bottom: none; }
+    .cat-table input[type="number"] { width: 100px; }
+    .cat-table input[type="text"]   { width: 110px; }
+
+    .prop-sum { display: inline-block; padding: 4px 10px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; margin-top: 6px; }
+    .prop-sum.ok   { background: #ecfdf5; color: #14532d; border: 1px solid #22c55e55; }
+    .prop-sum.bad  { background: #fef2f2; color: #7f1d1d; border: 1px solid #ef444455; }
+
+    /* Viz */
+    .viz-wrap { border: 1px solid var(--line); border-radius: 12px;
+      background: #f8fafc; overflow: hidden; }
+    canvas { display: block; max-width: 100%; }
+    .viz-footer { margin-top: 8px; border-radius: 10px; padding: 10px 14px;
+      font-size: 13px; font-weight: 700; text-align: center;
+      background: #f1f5f9; color: var(--muted); }
+    .viz-header { display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 8px; padding: 0 2px; }
+    .viz-header-label { font-size: 11px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em; }
+    .viz-header-value { font-size: 13px; font-weight: 900; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Chi-square Goodness of Fit</h1>
+  <p class="subtitle">Tests whether observed counts match an expected distribution</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab" data-tab="analysis">Analysis</div>
+  </div>
+
+  <!-- ===== INPUT TAB ===== -->
+  <div id="input" class="tab-content active">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Study context</div>
+        <p class="note" style="margin-top:0; margin-bottom:12px;">
+          Before running the test, verify that your study design meets the assumptions:
+        </p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkCategorical" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Data are categorical</strong> – Observations fall into distinct, mutually exclusive categories</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkIndependent" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Observations are independent</strong> – Each observation is independent from others (no repeated measures)</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkExpected" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Expected counts ≥ 5</strong> – All expected counts should be at least 5 for valid χ² approximation</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkHypothesis" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Clear hypothesis</strong> – You have a specific expected distribution to test against (uniform, genetic ratios, etc.)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Test settings</div>
+        <div>
+          <label class="field-label">Significance level (α)</label>
+          <select id="alpha">
+            <option value="0.10">0.10 (90% confidence)</option>
+            <option value="0.05" selected>0.05 (95% confidence)</option>
+            <option value="0.01">0.01 (99% confidence)</option>
+          </select>
+          <p class="note">Probability threshold for rejecting the null hypothesis</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Show effect size</label>
+          <select id="showEffect">
+            <option value="true" selected>Yes (Cramér's V)</option>
+            <option value="false">No</option>
+          </select>
+          <p class="note">Measure of association strength independent of sample size</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="showViz" checked>
+            <span style="font-size:13px; font-weight:600;">Show hypothesis visualisation</span>
+          </label>
+          <p class="note" style="margin-top:4px;">Display chi-square distribution with rejection region and observed statistic</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Categories &amp; Counts</div>
+      <p class="note" style="margin-top:0; margin-bottom:12px;">
+        Enter each category name, its observed count, and the expected proportion under H₀. Expected proportions must sum to exactly 1.
+      </p>
+
+      <div class="table-wrap">
+        <table class="cat-table" id="catTable">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Observed count</th>
+              <th>Expected proportion</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="catBody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap;">
+        <button class="btn-ghost small" id="addRowBtn">+ Add category</button>
+        <span id="propSum" class="prop-sum bad">Proportions sum: 0.000</span>
+      </div>
+
+      <p class="note">Tip: For a uniform distribution, set each proportion to 1 ÷ (number of categories).</p>
+      
+      <div id="inputError" class="alert bad" style="display:none; margin-top:12px;"></div>
+      
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-primary" id="runBtn">Run Analysis</button>
+        <button class="btn-ghost" id="clearBtn">Reset Data</button>
+      </div>
+    </div>
+
+    <!-- Generate sample data section -->
+    <details class="card" style="margin-top:16px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px; user-select:none;">
+        Generate sample data
+      </summary>
+      <div style="margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Number of categories</label>
+            <input type="number" id="genNumCats" value="4" min="2" max="10" step="1" style="width:100%;"/>
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Total sample size (N)</label>
+            <input type="number" id="genSampleSize" value="100" min="10" step="1" style="width:100%;"/>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:10px;">
+          <div>
+            <label class="small" style="font-weight:800;">Distribution pattern</label>
+            <select id="genPattern" style="width:100%;">
+              <option value="uniform" selected>Uniform (equal proportions)</option>
+              <option value="skewed">Skewed (one dominant category)</option>
+              <option value="gradual">Gradual decline</option>
+              <option value="random">Random proportions</option>
+            </select>
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Apply noise</label>
+            <select id="genNoise" style="width:100%;">
+              <option value="none">No noise (perfect fit)</option>
+              <option value="low" selected>Low noise (slight deviation)</option>
+              <option value="medium">Medium noise</option>
+              <option value="high">High noise (clear deviation)</option>
+            </select>
+            <div class="note">Noise makes observed counts deviate from expected</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost btn-sm" id="generateDataBtn">Generate</button>
+          <button class="btn-secondary btn-sm" id="useGeneratedBtn" style="display:none;">Use in analysis</button>
+        </div>
+        <div class="note">Generated categories appear below. Click "Use in analysis" to populate the table.</div>
+        <textarea id="generatedOutput" readonly style="margin-top:8px; min-height:100px; background:#f9fafb; font-size:11px;"></textarea>
+      </div>
+    </details>
+
+  </div><!-- /input -->
+
+  <!-- ===== ANALYSIS TAB ===== -->
+  <div id="analysis" class="tab-content">
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid" style="display:none;">
+      <div class="kpi"><div class="label">χ² statistic</div><div class="value" id="kpiChi">—</div></div>
+      <div class="kpi"><div class="label">df</div><div class="value" id="kpiDf">—</div></div>
+      <div class="kpi"><div class="label">p-value</div><div class="value" id="kpiP">—</div></div>
+      <div class="kpi"><div class="label">N (total)</div><div class="value" id="kpiN">—</div></div>
+    </div>
+
+    <!-- Interpretation + summary -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Observed vs Expected</div>
+        <div class="table-wrap">
+          <table><tbody id="obsExpTable"></tbody></table>
+        </div>
+        <div id="expectedWarning" style="margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Interpretation</div>
+        <div id="interpretBox" class="alert">Run the analysis to see results.</div>
+        <div class="section-title" style="margin-top:12px;">Summary</div>
+        <div class="table-wrap">
+          <table><tbody id="summaryTable"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="card">
+      <div class="section-title">Hypothesis Visualisation</div>
+      <p class="note" style="margin-top:0; margin-bottom:10px;">
+        Chi-square distribution with df = k − 1 categories. The red shaded area is the rejection region (α). The observed χ² is the vertical marker.
+      </p>
+      <div class="viz-header">
+        <div>
+          <div class="viz-header-label">What are we testing?</div>
+          <div class="viz-header-value" id="vizQuestion">Do observed counts match expected proportions?</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="viz-header-label">Is χ² in the rejection region?</div>
+          <div class="viz-header-value" id="vizVerdict">—</div>
+        </div>
+      </div>
+      <div class="viz-wrap">
+        <canvas id="chiCanvas"></canvas>
+      </div>
+      <div class="viz-footer" id="vizFooter">Run the analysis to see the visualisation.</div>
+      
+      <!-- Bar chart showing observed vs expected counts -->
+      <div class="section-title" style="margin-top:24px;">Observed vs Expected Counts</div>
+      <p class="note" style="margin-top:0; margin-bottom:10px;">
+        Side-by-side comparison of observed counts (blue) and expected counts (orange) for each category.
+      </p>
+      <div class="viz-wrap">
+        <canvas id="barCanvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Hidden div for any external JS -->
+    <div id="results" style="display:none;"></div>
+
+  </div><!-- /analysis -->
+
+</div><!-- /container -->
+
+<script src="assets/js/stats/helpers.js"></script>
+<script src="assets/js/stats/chi_gof.js"></script>
+<script>
+  /* ===== Tabs ===== */
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ===== Dynamic category rows ===== */
+  let rowCount = 0;
+  function addRow(name, obs, prop) {
+    rowCount++;
+    const id = rowCount;
+    const tr = document.createElement("tr");
+    tr.id = "row-" + id;
+    tr.innerHTML = `
+      <td><input type="text" class="cat-name" value="${name || "Category " + id}" /></td>
+      <td><input type="number" class="cat-obs" min="0" value="${obs || 0}" /></td>
+      <td><input type="number" class="cat-prop" step="0.001" min="0" max="1" value="${prop || 0}" /></td>
+      <td><button class="btn-ghost small" onclick="removeRow(${id})" title="Remove">✕</button></td>
+    `;
+    document.getElementById("catBody").appendChild(tr);
+    // Update proportion sum on any input change
+    tr.querySelectorAll("input").forEach(inp => inp.addEventListener("input", updatePropSum));
+    updatePropSum();
+  }
+  function removeRow(id) {
+    const row = document.getElementById("row-" + id);
+    if (row) row.remove();
+    updatePropSum();
+  }
+  function updatePropSum() {
+    const props = [...document.querySelectorAll(".cat-prop")].map(i => parseFloat(i.value) || 0);
+    const sum = props.reduce((a, b) => a + b, 0);
+    const el = document.getElementById("propSum");
+    el.textContent = "Proportions sum: " + sum.toFixed(3);
+    el.className = "prop-sum " + (Math.abs(sum - 1) < 0.001 ? "ok" : "bad");
+  }
+
+  // Initialize with 3 default rows
+  addRow("A", 0, 0.333);
+  addRow("B", 0, 0.333);
+  addRow("C", 0, 0.334);
+
+  document.getElementById("addRowBtn").addEventListener("click", () => addRow("", 0, 0));
+
+  /* ===== Clear ===== */
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    document.getElementById("catBody").innerHTML = "";
+    rowCount = 0;
+    addRow("A", 0, 0.333);
+    addRow("B", 0, 0.333);
+    addRow("C", 0, 0.334);
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("kpiGrid").style.display = "none";
+    document.getElementById("summaryTable").innerHTML = "";
+    document.getElementById("obsExpTable").innerHTML = "";
+    document.getElementById("expectedWarning").innerHTML = "";
+    document.getElementById("interpretBox").className = "alert";
+    document.getElementById("interpretBox").textContent = "Run the analysis to see results.";
+    document.getElementById("vizFooter").textContent = "Run the analysis to see the visualisation.";
+    document.getElementById("vizVerdict").textContent = "—";
+    document.getElementById("inputError").style.display = "none";
+  });
+
+  /* ===== Helpers ===== */
+  function fmt(x, d) { if (!isFinite(x)) return "—"; return Number(x).toFixed(d != null ? d : 4); }
+  function fmtP(p)   { if (!isFinite(p)) return "—"; if (p < 0.0001) return "< 0.0001"; return Number(p).toFixed(4); }
+
+  /* ===== Chi-square viz (same engine as Independence) ===== */
+  function renderChiViz(chiSq, df, alpha, p) {
+    const canvas = document.getElementById("chiCanvas");
+    const W = canvas.parentElement.clientWidth || 700;
+    const H = 260;
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, W, H);
+
+    const rejected = p <= alpha;
+    const chiCrit  = jStat.chisquare.inv(1 - alpha, df);
+
+    const verdictEl = document.getElementById("vizVerdict");
+    const footerEl  = document.getElementById("vizFooter");
+    if (rejected) {
+      verdictEl.textContent = "YES — reject H₀";
+      verdictEl.style.color = "#15803d";
+      footerEl.style.background = "#ecfdf5";
+      footerEl.style.color = "#14532d";
+      footerEl.innerHTML = `H₀ rejected — χ²(${df}) = ${fmt(chiSq,3)} exceeds critical value ${fmt(chiCrit,3)} at α = ${alpha}<br>
+        <span style="font-weight:400;font-size:12px;">Observed distribution differs significantly from expected (p = ${fmtP(p)})</span>`;
+    } else {
+      verdictEl.textContent = "NO — fail to reject H₀";
+      verdictEl.style.color = "#374151";
+      footerEl.style.background = "#f1f5f9";
+      footerEl.style.color = "#374151";
+      footerEl.innerHTML = `H₀ not rejected — χ²(${df}) = ${fmt(chiSq,3)} does not exceed critical value ${fmt(chiCrit,3)} at α = ${alpha}<br>
+        <span style="font-weight:400;font-size:12px;">No significant deviation from expected distribution (p = ${fmtP(p)})</span>`;
+    }
+
+    const padL = 56, padR = 32, padT = 44, padB = 52;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const xMax = Math.max(chiSq * 1.5, chiCrit * 1.7, df * 3, 6);
+
+    function chiPDF(x) {
+      if (x <= 0) return 0;
+      return (Math.pow(x, df/2 - 1) * Math.exp(-x/2)) / (Math.pow(2, df/2) * gamma(df/2));
+    }
+    function gamma(n) {
+      if (n === 0.5) return Math.sqrt(Math.PI);
+      if (n === 1)   return 1;
+      if (n === 1.5) return 0.5 * Math.sqrt(Math.PI);
+      if (n >= 1)    return (n - 1) * gamma(n - 1);
+      return gamma(n + 1) / n;
+    }
+
+    const steps = 500;
+    const dx = xMax / steps;
+    let yMax = 0;
+    for (let i = 1; i <= steps; i++) yMax = Math.max(yMax, chiPDF(i * dx));
+    if (!isFinite(yMax) || yMax === 0) yMax = 1;
+
+    const toX = v => padL + (v / xMax) * plotW;
+    const toY = y => padT + plotH - (y / yMax) * plotH * 0.88;
+    const baseY = toY(0);
+
+    // rejection fill
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(toX(chiCrit), baseY);
+    for (let x = chiCrit; x <= xMax + dx; x += dx) ctx.lineTo(toX(x), toY(chiPDF(x)));
+    ctx.lineTo(toX(xMax), baseY);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(239,68,68,0.18)";
+    ctx.fill();
+    ctx.restore();
+
+    // non-rejection fill
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), baseY);
+    for (let x = 0; x <= chiCrit + dx; x += dx) {
+      const y = chiPDF(x);
+      if (!isFinite(y)) { ctx.moveTo(toX(x + dx), baseY); continue; }
+      ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.lineTo(toX(chiCrit), baseY);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(59,130,246,0.09)";
+    ctx.fill();
+    ctx.restore();
+
+    // curve
+    ctx.save();
+    ctx.beginPath();
+    let first = true;
+    for (let i = 1; i <= steps; i++) {
+      const x = i * dx, y = chiPDF(x);
+      if (!isFinite(y)) { first = true; continue; }
+      first ? ctx.moveTo(toX(x), toY(y)) : ctx.lineTo(toX(x), toY(y));
+      first = false;
+    }
+    ctx.strokeStyle = "#6366f1";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // baseline
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(padL, baseY); ctx.lineTo(padL + plotW, baseY);
+    ctx.strokeStyle = "#6366f1"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+
+    // critical line
+    const critX = toX(chiCrit);
+    ctx.save();
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    ctx.moveTo(critX, padT); ctx.lineTo(critX, baseY);
+    ctx.strokeStyle = "#ca8a04"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    ctx.save();
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.fillStyle = "#92400e"; ctx.textAlign = "center";
+    ctx.fillText("χ²crit = " + fmt(chiCrit,2), critX, padT - 6);
+    ctx.restore();
+
+    // alpha label
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = "#dc2626"; ctx.textAlign = "center";
+    ctx.fillText("α = " + alpha, toX((chiCrit + xMax) * 0.55), toY(yMax * 0.08));
+    ctx.restore();
+
+    // observed marker
+    const obsX = toX(chiSq);
+    const obsY = toY(chiPDF(chiSq));
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(obsX, padT + 10); ctx.lineTo(obsX, baseY);
+    ctx.strokeStyle = rejected ? "#16a34a" : "#374151";
+    ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(obsX, isFinite(obsY) ? obsY : baseY - 20, 6, 0, Math.PI * 2);
+    ctx.fillStyle = rejected ? "#16a34a" : "#374151";
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = rejected ? "#15803d" : "#111827";
+    ctx.textAlign = "center";
+    ctx.fillText("χ² = " + fmt(chiSq,3), obsX, (isFinite(obsY) ? obsY : baseY - 20) - 14);
+    ctx.restore();
+
+    // x ticks
+    ctx.save();
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "#6b7280"; ctx.textAlign = "center";
+    for (let i = 0; i <= 7; i++) {
+      const v = (i / 7) * xMax;
+      ctx.fillText(fmt(v,1), toX(v), baseY + 14);
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = "#374151"; ctx.textAlign = "center";
+    ctx.fillText("Chi-square distribution  (df = " + df + ")", padL + plotW / 2, H - 6);
+    ctx.restore();
+  }
+
+  /* ===== Main run ===== */
+  document.getElementById("runBtn").addEventListener("click", () => {
+    const err = document.getElementById("inputError");
+    const names = [...document.querySelectorAll(".cat-name")].map(i => i.value.trim() || "—");
+    const obs   = [...document.querySelectorAll(".cat-obs")].map(i => parseInt(i.value) || 0);
+    const props = [...document.querySelectorAll(".cat-prop")].map(i => parseFloat(i.value) || 0);
+    const k     = names.length;
+
+    if (k < 2) {
+      err.style.display = "block";
+      err.textContent = "Please enter at least 2 categories.";
+      return;
+    }
+    const N = obs.reduce((a, b) => a + b, 0);
+    if (N === 0) {
+      err.style.display = "block";
+      err.textContent = "Please enter at least one observed count.";
+      return;
+    }
+    const propSum = props.reduce((a, b) => a + b, 0);
+    if (Math.abs(propSum - 1) > 0.01) {
+      err.style.display = "block";
+      err.textContent = `Expected proportions must sum to 1 (currently ${propSum.toFixed(3)}). Please adjust.`;
+      return;
+    }
+    err.style.display = "none";
+
+    const alpha = parseFloat(document.getElementById("alpha").value);
+    const expected = props.map(p => p * N);
+    const df = k - 1;
+
+    // Chi-square statistic
+    let chiSq = 0;
+    for (let i = 0; i < k; i++) {
+      if (expected[i] > 0) chiSq += Math.pow(obs[i] - expected[i], 2) / expected[i];
+    }
+    const p = 1 - jStat.chisquare.cdf(chiSq, df);
+    const chiCrit = jStat.chisquare.inv(1 - alpha, df);
+
+    // KPIs
+    document.getElementById("kpiGrid").style.display = "grid";
+    document.getElementById("kpiChi").textContent = fmt(chiSq, 3);
+    document.getElementById("kpiDf").textContent  = df;
+    document.getElementById("kpiP").textContent   = fmtP(p);
+    document.getElementById("kpiN").textContent   = N;
+
+    // Observed vs Expected table
+    const anyLow = expected.some(e => e < 5);
+    let tableHtml = `<tr>
+      <th>Category</th><th class="num">Observed</th>
+      <th class="num">Expected</th><th class="num">Contribution to χ²</th>
+    </tr>`;
+    for (let i = 0; i < k; i++) {
+      const contrib = expected[i] > 0 ? Math.pow(obs[i] - expected[i], 2) / expected[i] : 0;
+      const lowFlag = expected[i] < 5 ? ' class="flag"' : '';
+      tableHtml += `<tr>
+        <td><strong>${names[i]}</strong></td>
+        <td class="num">${obs[i]}</td>
+        <td class="num"${lowFlag}>${fmt(expected[i],2)}</td>
+        <td class="num">${fmt(contrib,4)}</td>
+      </tr>`;
+    }
+    document.getElementById("obsExpTable").innerHTML = tableHtml;
+    document.getElementById("expectedWarning").innerHTML = anyLow
+      ? `<div class="alert warn">One or more expected counts are below 5. The chi-square approximation may be unreliable. Consider combining categories.</div>` : "";
+
+    // Summary table
+    const sig = p <= alpha;
+    document.getElementById("summaryTable").innerHTML = [
+      ["N (total)", N],
+      ["Categories (k)", k],
+      ["χ² statistic", fmt(chiSq, 6)],
+      ["Degrees of freedom", df],
+      ["Critical value (α = " + alpha + ")", fmt(chiCrit, 4)],
+      ["p-value", fmtP(p)]
+    ].map(([k2,v]) => `<tr><td style="font-weight:700;color:#374151;">${k2}</td><td class="num">${v}</td></tr>`).join("");
+
+    // Interpretation
+    const ibox = document.getElementById("interpretBox");
+    if (sig) {
+      ibox.className = "alert good";
+      ibox.innerHTML = `<strong>Statistically significant deviation detected.</strong><br>
+        The observed distribution differs from the expected distribution
+        (p ${p < 0.001 ? "< 0.001" : "= " + fmtP(p)}, α = ${alpha}).
+        H₀ is rejected.`;
+    } else {
+      ibox.className = "alert";
+      ibox.innerHTML = `<strong>No statistically significant deviation detected.</strong><br>
+        The data are consistent with the expected distribution
+        (p ${p < 0.001 ? "< 0.001" : "= " + fmtP(p)}, α = ${alpha}).
+        H₀ is not rejected.`;
+    }
+
+    // Switch tab then render viz
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector('.tab[data-tab="analysis"]').classList.add("active");
+    document.getElementById("analysis").classList.add("active");
+    setTimeout(() => {
+      renderChiViz(chiSq, df, alpha, p);
+      if (document.getElementById("showViz").checked) {
+        renderBarChart(names, obs, expected);
+      }
+    }, 30);
+  });
+
+  /* ===== Bar chart visualization (Observed vs Expected) ===== */
+  function renderBarChart(categories, observed, expected) {
+    const canvas = document.getElementById("barCanvas");
+    const W = canvas.parentElement.clientWidth || 700;
+    const H = Math.max(300, categories.length * 40 + 100);
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, W, H);
+
+    const padL = 120, padR = 40, padT = 40, padB = 60;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const maxVal = Math.max(...observed, ...expected) * 1.1;
+    const barHeight = Math.min(30, (plotH - (categories.length - 1) * 10) / (categories.length * 2));
+    const pairSpacing = barHeight * 2.8;
+
+    // Draw grid lines
+    ctx.save();
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const val = (i / 5) * maxVal;
+      const x = padL + (val / maxVal) * plotW;
+      ctx.beginPath();
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + plotH);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Draw bars and labels
+    for (let i = 0; i < categories.length; i++) {
+      const yBase = padT + i * pairSpacing;
+      
+      // Observed bar (blue)
+      const obsWidth = (observed[i] / maxVal) * plotW;
+      ctx.save();
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(padL, yBase, obsWidth, barHeight);
+      ctx.restore();
+
+      // Expected bar (orange)
+      const expWidth = (expected[i] / maxVal) * plotW;
+      ctx.save();
+      ctx.fillStyle = "#f97316";
+      ctx.fillRect(padL, yBase + barHeight + 4, expWidth, barHeight);
+      ctx.restore();
+
+      // Category label
+      ctx.save();
+      ctx.font = "bold 12px system-ui, sans-serif";
+      ctx.fillStyle = "#374151";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText(categories[i], padL - 8, yBase + barHeight + 2);
+      ctx.restore();
+
+      // Value labels on bars
+      ctx.save();
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.fillStyle = "#1e293b";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      
+      // Observed value
+      if (obsWidth > 30) {
+        ctx.fillStyle = "#fff";
+        ctx.fillText(observed[i], padL + 6, yBase + barHeight / 2);
+      } else {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillText(observed[i], padL + obsWidth + 4, yBase + barHeight / 2);
+      }
+      
+      // Expected value
+      if (expWidth > 40) {
+        ctx.fillStyle = "#fff";
+        ctx.fillText(fmt(expected[i], 1), padL + 6, yBase + barHeight + 4 + barHeight / 2);
+      } else {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillText(fmt(expected[i], 1), padL + expWidth + 4, yBase + barHeight + 4 + barHeight / 2);
+      }
+      ctx.restore();
+    }
+
+    // X-axis ticks
+    ctx.save();
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "#6b7280";
+    ctx.textAlign = "center";
+    for (let i = 0; i <= 5; i++) {
+      const val = (i / 5) * maxVal;
+      const x = padL + (val / maxVal) * plotW;
+      ctx.fillText(Math.round(val), x, H - padB + 20);
+    }
+    ctx.restore();
+
+    // X-axis label
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "center";
+    ctx.fillText("Count", padL + plotW / 2, H - 10);
+    ctx.restore();
+
+    // Legend
+    const legendY = 20;
+    const legendX = W - padR - 150;
+    
+    ctx.save();
+    ctx.fillStyle = "#3b82f6";
+    ctx.fillRect(legendX, legendY, 20, 12);
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "left";
+    ctx.fillText("Observed", legendX + 26, legendY + 10);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "#f97316";
+    ctx.fillRect(legendX + 90, legendY, 20, 12);
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "left";
+    ctx.fillText("Expected", legendX + 116, legendY + 10);
+    ctx.restore();
+  }
+
+  /* ===== Generate sample data ===== */
+  let generatedData = null;
+
+  document.getElementById("generateDataBtn").addEventListener("click", () => {
+    const numCats = parseInt(document.getElementById("genNumCats").value) || 4;
+    const sampleSize = parseInt(document.getElementById("genSampleSize").value) || 100;
+    const pattern = document.getElementById("genPattern").value;
+    const noise = document.getElementById("genNoise").value;
+
+    // Generate expected proportions based on pattern
+    let proportions = [];
+    if (pattern === "uniform") {
+      const prop = 1 / numCats;
+      proportions = Array(numCats).fill(prop);
+    } else if (pattern === "skewed") {
+      proportions.push(0.5); // Dominant category
+      const remaining = 0.5 / (numCats - 1);
+      for (let i = 1; i < numCats; i++) proportions.push(remaining);
+    } else if (pattern === "gradual") {
+      let sum = 0;
+      for (let i = 0; i < numCats; i++) {
+        proportions.push(numCats - i);
+        sum += numCats - i;
+      }
+      proportions = proportions.map(p => p / sum);
+    } else { // random
+      for (let i = 0; i < numCats; i++) proportions.push(Math.random());
+      const sum = proportions.reduce((a, b) => a + b, 0);
+      proportions = proportions.map(p => p / sum);
+    }
+
+    // Generate observed counts with noise
+    let observed = [];
+    let noiseLevel = 0;
+    if (noise === "low") noiseLevel = 0.1;
+    else if (noise === "medium") noiseLevel = 0.25;
+    else if (noise === "high") noiseLevel = 0.5;
+
+    for (let i = 0; i < numCats; i++) {
+      const expected = proportions[i] * sampleSize;
+      let obs = expected;
+      if (noise !== "none") {
+        const deviation = (Math.random() - 0.5) * 2 * noiseLevel * expected;
+        obs = Math.max(0, Math.round(expected + deviation));
+      } else {
+        obs = Math.round(expected);
+      }
+      observed.push(obs);
+    }
+
+    // Adjust to ensure sum equals sampleSize
+    const currentSum = observed.reduce((a, b) => a + b, 0);
+    const diff = sampleSize - currentSum;
+    if (diff !== 0) {
+      const idx = Math.floor(Math.random() * numCats);
+      observed[idx] = Math.max(0, observed[idx] + diff);
+    }
+
+    // Generate category names
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const categories = [];
+    for (let i = 0; i < numCats; i++) {
+      categories.push(i < alphabet.length ? alphabet[i] : `Cat${i + 1}`);
+    }
+
+    // Store generated data
+    generatedData = {
+      categories: categories,
+      observed: observed,
+      proportions: proportions
+    };
+
+    // Display in textarea
+    let output = `Generated ${numCats} categories with N = ${sampleSize} (${pattern} pattern, ${noise} noise):\n\n`;
+    output += "Category | Observed | Expected Proportion\n";
+    output += "---------|----------|-----------------\n";
+    for (let i = 0; i < numCats; i++) {
+      output += `${categories[i].padEnd(8)} | ${observed[i].toString().padStart(8)} | ${proportions[i].toFixed(4)}\n`;
+    }
+    output += `\nTotal: ${observed.reduce((a,b) => a + b, 0)} | Proportions sum: ${proportions.reduce((a,b) => a + b, 0).toFixed(4)}`;
+
+    document.getElementById("generatedOutput").value = output;
+    document.getElementById("useGeneratedBtn").style.display = "inline-block";
+  });
+
+  document.getElementById("useGeneratedBtn").addEventListener("click", () => {
+    if (!generatedData) return;
+
+    // Clear existing rows
+    document.getElementById("catBody").innerHTML = "";
+    rowCount = 0;
+
+    // Add generated data
+    for (let i = 0; i < generatedData.categories.length; i++) {
+      addRow(
+        generatedData.categories[i],
+        generatedData.observed[i],
+        generatedData.proportions[i]
+      );
+    }
+
+    // Scroll to the table
+    document.getElementById("catTable").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+</script>
+</body>
+</html>

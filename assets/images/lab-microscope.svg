@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Microscope illustration -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Base -->
+  <ellipse cx="100" cy="175" rx="70" ry="8" fill="#374151" opacity="0.3"/>
+  <rect x="50" y="165" width="100" height="10" rx="2" fill="url(#grad1)"/>
+  
+  <!-- Stand -->
+  <rect x="95" y="110" width="10" height="55" fill="#4B5563"/>
+  
+  <!-- Stage -->
+  <rect x="70" y="105" width="60" height="8" rx="2" fill="url(#grad1)"/>
+  <circle cx="100" cy="109" r="12" fill="#E5E7EB" stroke="#4B5563" stroke-width="2"/>
+  
+  <!-- Arm -->
+  <rect x="95" y="40" width="10" height="70" fill="#4B5563"/>
+  
+  <!-- Eyepiece -->
+  <ellipse cx="100" cy="35" rx="8" ry="15" fill="url(#grad1)"/>
+  <ellipse cx="100" cy="30" rx="6" ry="8" fill="#1F2937"/>
+  
+  <!-- Objective lens -->
+  <rect x="90" y="95" width="20" height="15" rx="2" fill="#6B7280"/>
+  <ellipse cx="100" cy="110" rx="8" ry="5" fill="#9CA3AF"/>
+  
+  <!-- Focus knobs -->
+  <circle cx="115" cy="80" r="6" fill="#F59E0B"/>
+  <circle cx="115" cy="95" r="5" fill="#F59E0B"/>
+</svg>

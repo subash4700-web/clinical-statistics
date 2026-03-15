@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inferential Statistics</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f6f7fb; color: #101828; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 24px 80px; }
+
+    h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
+    .lead { color: #667085; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+
+    /* Index */
+    .index {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 16px 20px; margin-bottom: 36px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .index h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; font-weight: 800; }
+    .index ol { margin: 0; padding-left: 18px; }
+    .index li { margin: 5px 0; }
+    .index a { color: #2b6cb0; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .index a:hover { text-decoration: underline; }
+
+    /* Sections */
+    .section { margin-bottom: 44px; scroll-margin-top: 16px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #1e3a5f; border-left: 4px solid #2b6cb0; padding-left: 10px; }
+    .section p { font-size: 14px; line-height: 1.8; color: #344054; margin: 0 0 12px; }
+    .section p:last-child { margin-bottom: 0; }
+
+    /* Callouts */
+    .callout { background: #eef4ff; border: 1px solid #c7d7fd; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #1e3a5f; margin: 14px 0; }
+    .callout b { color: #1e40af; }
+    .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #7c2d12; margin: 14px 0; }
+    .warn b { color: #9a3412; }
+    .good { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #14532d; margin: 14px 0; }
+    .good b { color: #166534; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; border-radius: 10px; overflow: hidden; }
+    th { background: #1e3a5f; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
+    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #344054; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .tag { display: inline-block; border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+    .tag-red { background: #fee2e2; color: #b42318; }
+    .tag-green { background: #dcfce7; color: #14532d; }
+
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+
+    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #2b6cb0; text-decoration: none; font-weight: 600; }
+    .back-top:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Inferential Statistics</h1>
+  <p class="lead">A practical introduction to hypothesis testing, p-values, confidence intervals, effect size, power, and categorical tests — written for clinicians and laboratory scientists without assuming prior statistics knowledge.</p>
+
+  <!-- Index -->
+  <div class="index">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#what-is">What is inferential statistics?</a></li>
+      <li><a href="#hypothesis">Hypothesis testing</a></li>
+      <li><a href="#pvalue">The p-value</a></li>
+      <li><a href="#alpha">Significance level (α) and Type I error</a></li>
+      <li><a href="#errors">Type I and Type II errors</a></li>
+      <li><a href="#power">Statistical power</a></li>
+      <li><a href="#ci">Confidence intervals</a></li>
+      <li><a href="#effectsize">Statistical vs. clinical significance</a></li>
+      <li><a href="#categorical">Categorical tests</a></li>
+      <li><a href="#summary">Summary table</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="what-is">
+    <h2>1. What is inferential statistics?</h2>
+    <p>When we measure something in a lab or a clinical study, we never have access to the entire population — we work with a <b>sample</b>. Inferential statistics gives us a principled way to draw conclusions about a population based on that sample, and to quantify how much uncertainty comes with those conclusions.</p>
+    <p>The core question is always: <em>Could the pattern we see in our sample have occurred by chance alone, or does it reflect something real in the population?</em></p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 2 -->
+  <div class="section" id="hypothesis">
+    <h2>2. Hypothesis testing</h2>
+    <p>Every hypothesis test starts with two competing statements:</p>
+    <p><b>Null hypothesis (H₀):</b> There is no effect, no difference, or no association. Any observed difference is due to random sampling variation.</p>
+    <p><b>Alternative hypothesis (H₁):</b> There is a real effect or difference in the population.</p>
+    <p>We never "prove" H₀ or H₁. Instead, we ask: <em>assuming H₀ is true, how likely is it to observe data at least as extreme as what we got?</em> That probability is the <b>p-value</b>.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 3 -->
+  <div class="section" id="pvalue">
+    <h2>3. The p-value</h2>
+    <p>The p-value is the probability of obtaining a result as extreme as — or more extreme than — the one observed, <b>assuming the null hypothesis is true</b>.</p>
+    <div class="callout">
+      <b>Correct interpretation:</b> A p-value of 0.03 means: if H₀ were true, there would be a 3% chance of seeing a difference this large (or larger) purely by chance.
+    </div>
+    <div class="warn">
+      <b>Common misconceptions:</b><br>
+      ✗ "p = 0.03 means there is a 3% chance H₀ is true." — <em>Wrong.</em><br>
+      ✗ "p = 0.03 means there is a 97% chance the result is real." — <em>Wrong.</em><br>
+      ✗ "A smaller p-value means a bigger effect." — <em>Wrong.</em>
+    </div>
+    <p>In practice, the p-value is treated as <b>dichotomous</b>: either p &lt; α (reject H₀, "significant") or p ≥ α (fail to reject H₀, "not significant"). A p = 0.049 and p = 0.051 represent essentially the same evidence, yet are treated completely differently by this threshold.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 4 -->
+  <div class="section" id="alpha">
+    <h2>4. Significance level (α)</h2>
+    <p>The significance level α is the threshold we set <em>before</em> the experiment. It defines how willing we are to make a <b>Type I error</b> — falsely rejecting a true null hypothesis (a false positive).</p>
+    <p>The most commonly used threshold is α = 0.05, meaning we accept a 5% risk of a false positive. This is a convention, not a law — in some contexts (e.g. genomics, safety-critical decisions) much lower α values are used.</p>
+    <div class="callout">
+      <b>Key point:</b> α is set before data collection. Changing it after seeing the results is a form of p-hacking and invalidates the test.
+    </div>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 5 -->
+  <div class="section" id="errors">
+    <h2>5. Type I and Type II errors</h2>
+    <p>Every decision in hypothesis testing carries two possible error types:</p>
+    <table>
+      <tr><th></th><th>H₀ is true (no real effect)</th><th>H₀ is false (real effect exists)</th></tr>
+      <tr><td><b>Reject H₀</b> (p &lt; α)</td><td><span class="tag tag-red">Type I error — false positive (α)</span></td><td><span class="tag tag-green">Correct decision — Power (1 − β)</span></td></tr>
+      <tr><td><b>Fail to reject H₀</b> (p ≥ α)</td><td><span class="tag tag-green">Correct decision (1 − α)</span></td><td><span class="tag tag-red">Type II error — false negative (β)</span></td></tr>
+    </table>
+    <div class="callout">
+      <b>Type I error (α):</b> You conclude there is an effect when there isn't one. Setting α = 0.05 means you accept a 5% risk of this.<br><br>
+      <b>Type II error (β):</b> You fail to detect a real effect. Conventionally β = 0.20, meaning a 20% chance of missing a true effect.
+    </div>
+    <p>There is an inherent trade-off: lowering α reduces false positives but increases false negatives, and vice versa. The only way to reduce both simultaneously is to increase sample size.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 6 -->
+  <div class="section" id="power">
+    <h2>6. Statistical power</h2>
+    <p><b>Power</b> is the probability of correctly detecting a true effect — rejecting H₀ when H₁ is actually true. Power = 1 − β. A study with 80% power has a 20% chance of missing a real effect.</p>
+    <p>Power is determined by three factors:</p>
+    <table>
+      <tr><th>Factor</th><th>Effect on power</th></tr>
+      <tr><td><b>Sample size (n)</b></td><td>Larger n → higher power. More data makes it easier to detect a true difference.</td></tr>
+      <tr><td><b>Effect size (Δ)</b></td><td>Larger true difference → higher power. A large signal is easier to detect.</td></tr>
+      <tr><td><b>Significance level (α)</b></td><td>Higher α → higher power, but at the cost of more false positives.</td></tr>
+    </table>
+    <div class="callout">
+      <b>Try it:</b> Open the <em>Dance of the p-values</em> simulator. Increase n while keeping the effect fixed — watch power rise and significant results become more frequent.
+    </div>
+    <div class="warn">
+      <b>Underpowered studies:</b> A non-significant result in an underpowered study does <em>not</em> mean there is no effect. It may simply mean the study was too small to detect it.
+    </div>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 7 -->
+  <div class="section" id="ci">
+    <h2>7. Confidence intervals</h2>
+    <p>A 95% confidence interval (CI) gives a range of plausible values for the population parameter based on the sample data.</p>
+    <div class="callout">
+      <b>Correct interpretation:</b> If you repeated the same experiment 100 times and computed a 95% CI each time, approximately 95 of those intervals would contain the true population value. Any single CI either contains the true value or it doesn't — we just don't know which.
+    </div>
+    <div class="warn">
+      <b>Common misconception:</b> "There is a 95% probability that the true value lies within this specific interval." — The true value is fixed; it is the interval that varies between experiments.
+    </div>
+    <p>The <b>width</b> of the CI reflects <b>precision</b>: a narrow CI means more precise estimation. Increasing sample size narrows the CI. You can observe this directly in the Dance of the p-values — as n increases, the forest of CIs becomes noticeably tighter.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 8 -->
+  <div class="section" id="effectsize">
+    <h2>8. Statistical vs. clinical significance</h2>
+    <p>A statistically significant result (p &lt; α) tells you only that the observed difference is unlikely to be due to chance. It says <b>nothing</b> about whether that difference is clinically meaningful.</p>
+    <p>With a large enough sample size, almost any difference — no matter how trivially small — will eventually become statistically significant. This is why <b>effect size</b> matters.</p>
+    <table>
+      <tr><th>Measure</th><th>What it tells you</th></tr>
+      <tr><td><b>p-value</b></td><td>Whether the result is likely due to chance</td></tr>
+      <tr><td><b>Effect size (e.g. Cohen's δ)</b></td><td>How large the difference is in standardised units, independent of sample size</td></tr>
+      <tr><td><b>Clinical significance</b></td><td>Whether the difference matters in practice — a clinical judgement, not a statistical one</td></tr>
+    </table>
+    <div class="callout">
+      <b>Cohen's δ guidelines (approximate):</b><br>
+      0.2 = small &nbsp;·&nbsp; 0.5 = medium &nbsp;·&nbsp; 0.8 = large<br><br>
+      A δ of 0.05 with p &lt; 0.001 may be statistically robust but clinically irrelevant. A δ of 0.8 with p = 0.08 may be clinically important but the study was underpowered to detect it.
+    </div>
+    <div class="warn">
+      <b>Always report effect size alongside the p-value.</b> Statistical significance without effect size is incomplete reporting.
+    </div>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 9 -->
+  <div class="section" id="categorical">
+    <h2>9. Categorical tests</h2>
+    <p>Categorical tests are used when the outcome variable is not a continuous measurement but a <b>category</b> — for example: positive/negative, disease present/absent, or agreement/disagreement between two raters.</p>
+    <p>Like all inferential tests, they produce a p-value that answers: <em>if H₀ is true, how likely is this distribution of counts by chance?</em></p>
+
+    <table>
+      <tr><th>Test</th><th>Use case</th><th>H₀</th></tr>
+      <tr>
+        <td><b>Chi-Square GOF</b></td>
+        <td>Do observed frequencies match an expected distribution?</td>
+        <td>Observed proportions equal expected proportions</td>
+      </tr>
+      <tr>
+        <td><b>Chi-Square Independence</b></td>
+        <td>Are two categorical variables associated?</td>
+        <td>The two variables are independent</td>
+      </tr>
+      <tr>
+        <td><b>Fisher's Exact Test</b></td>
+        <td>Same as Chi-Square Independence, but for small samples where expected cell counts are low (&lt;5)</td>
+        <td>The two variables are independent</td>
+      </tr>
+      <tr>
+        <td><b>McNemar's Test</b></td>
+        <td>Change in paired categorical data (e.g. before/after, two raters on same subjects)</td>
+        <td>No change in proportions between paired measurements</td>
+      </tr>
+      <tr>
+        <td><b>Kappa / Weighted Kappa</b></td>
+        <td>Agreement between two raters or methods beyond chance</td>
+        <td>Agreement is no better than chance (κ = 0)</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <b>When to use Fisher's Exact vs Chi-Square:</b> Use Fisher's Exact when any expected cell count is &lt; 5. For larger samples, Chi-Square is appropriate and computationally simpler.
+    </div>
+
+    <div class="good">
+      <b>Kappa note:</b> Kappa measures <em>agreement</em> beyond what is expected by chance. A κ of 1.0 = perfect agreement; κ = 0 = agreement no better than chance; κ &lt; 0 = systematic disagreement. It is more of a descriptive measure than a pure hypothesis test, though a p-value can be computed.
+    </div>
+
+    <p>All categorical tests assume that observations are <b>independent</b> (each subject contributes only one observation) — except McNemar, which is explicitly designed for <b>paired</b> data.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 10 -->
+  <div class="section" id="summary">
+    <h2>10. Summary</h2>
+    <table>
+      <tr><th>Concept</th><th>In plain language</th></tr>
+      <tr><td><b>H₀</b></td><td>The "nothing is happening" assumption</td></tr>
+      <tr><td><b>p-value</b></td><td>Probability of your data (or more extreme) if H₀ were true — not the probability H₀ is true</td></tr>
+      <tr><td><b>α</b></td><td>Your accepted false positive rate (typically 0.05), set before the experiment</td></tr>
+      <tr><td><b>Type I error</b></td><td>False positive — detecting an effect that isn't there (rate = α)</td></tr>
+      <tr><td><b>Type II error</b></td><td>False negative — missing an effect that is there (rate = β)</td></tr>
+      <tr><td><b>Power</b></td><td>Probability of detecting a real effect (1 − β); increases with n and effect size</td></tr>
+      <tr><td><b>95% CI</b></td><td>In repeated experiments, 95% of such intervals contain the true value — not a 95% probability for any single interval</td></tr>
+      <tr><td><b>Effect size</b></td><td>How large the difference is, independent of sample size</td></tr>
+      <tr><td><b>Cohen's δ</b></td><td>Standardised effect size: (μe − μc) / σ. Small ≈ 0.2 · Medium ≈ 0.5 · Large ≈ 0.8</td></tr>
+      <tr><td><b>Clinical significance</b></td><td>Whether the difference matters in practice — not determined by statistics alone</td></tr>
+      <tr><td><b>Categorical tests</b></td><td>Hypothesis tests for count/frequency data rather than continuous measurements</td></tr>
+    </table>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+
+</div>
+</body>
+</html>

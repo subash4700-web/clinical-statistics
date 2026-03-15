@@ -1,0 +1,127 @@
+<div class="info-content">
+
+  <h2>McNemar Test</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#mc-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#mc-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#mc-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#mc-table" style="color:var(--accent); text-decoration:none; padding:2px 0;">2×2 Paired Table</a>
+      <a href="#mc-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#mc-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#mc-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#mc-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#mc-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#mc-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#mc-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#mc-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#mc-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#mc-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#mc-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="mc-purpose">Purpose</h3>
+  <p>
+    The McNemar test evaluates whether there is a significant difference between <strong>paired proportions</strong>
+    in a 2×2 contingency table. It is specifically designed for before–after or matched binary outcomes.
+  </p>
+
+  <h3 id="mc-when">When to Use</h3>
+  <ul>
+    <li>Before–after studies with binary outcomes (e.g., positive/negative)</li>
+    <li>Matched case-control studies</li>
+    <li>Comparing two diagnostic tests applied to the same subjects</li>
+  </ul>
+
+  <h3 id="mc-idea">Key Idea</h3>
+  <p>
+    The test focuses only on <strong>discordant pairs</strong> — cases where the two measurements differ.
+    Concordant pairs (both positive or both negative) carry no information about change and are ignored.
+    Under H₀, discordant pairs should split roughly equally between b and c.
+  </p>
+
+  <h3 id="mc-table">2×2 Paired Table</h3>
+  <table border="1" cellpadding="8" cellspacing="0" style="margin-bottom:10px; font-size:13px;">
+    <tr><th></th><th>Test 2 Positive</th><th>Test 2 Negative</th></tr>
+    <tr><th>Test 1 Positive</th><td style="background:#dbeafe;"><strong>a</strong> — concordant (+/+)</td><td style="background:#fed7aa;"><strong>b</strong> — discordant (+/−)</td></tr>
+    <tr><th>Test 1 Negative</th><td style="background:#fed7aa;"><strong>c</strong> — discordant (−/+)</td><td style="background:#dbeafe;"><strong>d</strong> — concordant (−/−)</td></tr>
+  </table>
+  <p>
+    Only cells <strong>b</strong> and <strong>c</strong> (discordant pairs, shown in orange) contribute to the test.
+    Cells <strong>a</strong> and <strong>d</strong> (concordant pairs, shown in blue) are not used.
+  </p>
+
+  <h3 id="mc-hypotheses">Hypotheses</h3>
+  <p><strong>H₀:</strong> The marginal proportions are equal — b = c (no change between measurements).</p>
+  <p><strong>H₁:</strong> The marginal proportions differ — b ≠ c (systematic change present).</p>
+
+  <h3 id="mc-statistic">Test Statistic</h3>
+  <p><strong>Without continuity correction:</strong></p>
+  <p><strong>χ² = (b − c)² / (b + c)</strong></p>
+
+  <p style="margin-top:8px;"><strong>With continuity correction (Yates', recommended when b + c &lt; 30):</strong></p>
+  <p><strong>χ² = (|b − c| − 1)² / (b + c)</strong></p>
+
+  <h3 id="mc-df">Degrees of Freedom</h3>
+  <p><strong>df = 1</strong></p>
+
+  <h3 id="mc-effect">Effect Size</h3>
+  <p>The <strong>odds ratio</strong> of discordant pairs describes the asymmetry of change:</p>
+  <p><strong>OR = b / c</strong></p>
+  <p>OR &gt; 1: more subjects changed from negative to positive than vice versa. OR &lt; 1: the reverse.</p>
+  <p>Alternatively, the <strong>proportion of change</strong> can be reported: (b − c) / N.</p>
+
+  <h3 id="mc-assumptions">Assumptions</h3>
+  <ul>
+    <li>Paired or matched observations (same subjects measured twice)</li>
+    <li>Binary (dichotomous) outcome variable</li>
+    <li>Sufficient discordant pairs: b + c ≥ 10 recommended</li>
+  </ul>
+
+  <h3 id="mc-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="mc-viz">Visualisation Notes</h3>
+  <p>
+    The <strong>2×2 contingency table heatmap</strong> shows all four cells with colour intensity representing their values:
+  </p>
+  <ul>
+    <li><strong>Discordant cells (b, c) — orange with red border:</strong> these are the only cells that determine the test outcome. A large difference between b and c drives significance.</li>
+    <li><strong>Concordant cells (a, d) — blue:</strong> represent pairs where both measurements agreed; these are not part of the test calculation.</li>
+  </ul>
+  <p>
+    The test compares b (changed from positive to negative) with c (changed from negative to positive).
+    A significant result means one direction of change dominates — indicating a treatment effect or systematic shift.
+  </p>
+
+  <h3 id="mc-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant McNemar test indicates a systematic directional change in paired binary outcomes.
+    It is commonly used to compare two diagnostic tests on the same patients or to evaluate before–after treatment effects.
+    Report the odds ratio and total discordant pairs (b + c) alongside the p-value.
+  </p>
+
+  <h3 id="mc-reporting">Reporting Example</h3>
+  <p>
+    McNemar's test showed a significant difference between the two measurements,
+    χ²(1) = X.XX, p = 0.0X. Of N discordant pairs, b = X changed from positive to negative and c = X changed from negative to positive (OR = X.XX).
+  </p>
+
+  <h3 id="mc-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Significance level (α):</strong> Choose 0.10, 0.05, or 0.01</li>
+    <li><strong>Continuity correction:</strong> Yates' correction (recommended for b + c &lt; 30)</li>
+    <li><strong>Visualisation:</strong> Toggle the heatmap and chi-square distribution display</li>
+  </ul>
+
+  <h3 id="mc-data">Generating Sample Data</h3>
+  <p>
+    Create paired 2×2 tables by specifying total pairs, change pattern (no change, weak, moderate, strong),
+    before-prevalence, and noise level.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+  </p>
+
+</div>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="dnaGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#667eea;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Left strand -->
+  <path d="M 70 20 Q 50 50, 70 80 Q 90 110, 70 140 Q 50 170, 70 200" 
+        stroke="url(#dnaGrad1)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Right strand -->
+  <path d="M 130 20 Q 150 50, 130 80 Q 110 110, 130 140 Q 150 170, 130 200" 
+        stroke="url(#dnaGrad1)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  
+  <!-- Base pairs (rungs) -->
+  <!-- Top section -->
+  <line x1="70" y1="30" x2="130" y2="30" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="30" r="5" fill="#10B981"/>
+  <circle cx="130" cy="30" r="5" fill="#F59E0B"/>
+  
+  <line x1="67" y1="45" x2="133" y2="45" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="67" cy="45" r="5" fill="#3B82F6"/>
+  <circle cx="133" cy="45" r="5" fill="#EF4444"/>
+  
+  <line x1="70" y1="60" x2="130" y2="60" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="60" r="5" fill="#F59E0B"/>
+  <circle cx="130" cy="60" r="5" fill="#10B981"/>
+  
+  <!-- Middle section -->
+  <line x1="75" y1="80" x2="125" y2="80" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="75" cy="80" r="5" fill="#EF4444"/>
+  <circle cx="125" cy="80" r="5" fill="#3B82F6"/>
+  
+  <line x1="73" y1="95" x2="127" y2="95" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="73" cy="95" r="5" fill="#10B981"/>
+  <circle cx="127" cy="95" r="5" fill="#F59E0B"/>
+  
+  <line x1="70" y1="110" x2="130" y2="110" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="110" r="5" fill="#3B82F6"/>
+  <circle cx="130" cy="110" r="5" fill="#EF4444"/>
+  
+  <!-- Bottom section -->
+  <line x1="67" y1="125" x2="133" y2="125" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="67" cy="125" r="5" fill="#F59E0B"/>
+  <circle cx="133" cy="125" r="5" fill="#10B981"/>
+  
+  <line x1="70" y1="140" x2="130" y2="140" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="140" r="5" fill="#EF4444"/>
+  <circle cx="130" cy="140" r="5" fill="#3B82F6"/>
+  
+  <line x1="67" y1="155" x2="133" y2="155" stroke="#10B981" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="67" cy="155" r="5" fill="#10B981"/>
+  <circle cx="133" cy="155" r="5" fill="#F59E0B"/>
+  
+  <line x1="70" y1="170" x2="130" y2="170" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="170" r="5" fill="#3B82F6"/>
+  <circle cx="130" cy="170" r="5" fill="#EF4444"/>
+</svg>

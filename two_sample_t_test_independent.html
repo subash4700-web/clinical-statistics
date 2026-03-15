@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Independent Two-sample t-test</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
+    }
+    body{ background:var(--bg); color:var(--ink); }
+    .container{ max-width:1100px; }
+    .subtitle{ color:var(--muted); }
+
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+
+    textarea{
+      width:100%; min-height:160px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:13px; padding:10px; border:1px solid var(--line);
+      border-radius:10px; box-sizing:border-box; background:#fff;
+    }
+    select, input[type="number"]{
+      width:100%; padding:8px 10px; border:1px solid var(--line);
+      border-radius:10px; box-sizing:border-box; background:#fff;
+    }
+
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+    .section-title{ font-weight:700; margin:0 0 8px 0; font-size:14px; }
+    .note{ color:var(--muted); font-size:12.5px; margin-top:6px; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--muted); }
+    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    button{ border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; transition:transform .05s ease,opacity .15s ease; }
+    button:active{ transform:translateY(1px); }
+    .btn-primary  { background:var(--accent); color:#fff; }
+    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
+    .btn-ghost    { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .btn-danger   { background:#b91c1c; color:#fff; }
+
+    .tabs{ display:flex; gap:10px; margin:12px 0 14px; }
+    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; color:var(--muted); font-size:13px; }
+    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .tab-content{ display:none; }
+    .tab-content.active{ display:block; }
+
+    .alert{ border-radius:12px; padding:10px 12px; border:1px solid var(--line); background:#fff; font-size:13px; line-height:1.4; }
+    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color:#7c2d12; }
+    .alert.bad { border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
+    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color:#14532d; }
+
+    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
+    table{ width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
+    th,td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
+    th{ background:#f9fafb; font-weight:800; color:#374151; }
+    td.num,th.num{ text-align:right; font-family:ui-monospace,monospace; }
+    .small{ font-size:12px; color:var(--muted); }
+    .mono{ font-family:ui-monospace,monospace; }
+
+    .copybox{ display:flex; gap:10px; align-items:flex-start; border:1px dashed var(--line); padding:10px; border-radius:12px; background:#fff; }
+    .copybox pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.5; flex:1; }
+
+    canvas{ max-width:100%; }
+    .viz-wrap{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+
+    .assump-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
+    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
+    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
+    .assump-item input{ margin-top:2px; }
+
+    .kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr; } }
+    .kpi{ border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; }
+    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
+    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 style="margin-bottom:6px;">Independent Two-sample t-test</h1>
+  <p class="subtitle" style="margin-top:0;">Compare means between two independent groups.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data &amp; presumptions</div>
+    <div class="tab" data-tab="results">Results</div>
+  </div>
+
+  <!-- ═══════════════════════ DATA & PRESUMPTIONS TAB ═══════════════════════ -->
+  <div id="input" class="tab-content active">
+
+    <div class="grid-2">
+
+      <!-- Study context / assumptions -->
+      <div class="card">
+        <div class="section-title">Study context</div>
+        <div class="assump-grid">
+          <label class="assump-item">
+            <input type="checkbox" id="chkIndep" checked />
+            <span>
+              <strong>Groups are independent</strong><br>
+              <span class="small">Different subjects in each group</span>
+            </span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" id="chkContinuous" checked />
+            <span>
+              <strong>Outcome is continuous</strong><br>
+              <span class="small">Numeric measurements (not categories)</span>
+            </span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" id="chkNoOverlap" checked />
+            <span>
+              <strong>Groups do not overlap</strong><br>
+              <span class="small">No paired or matched observations</span>
+            </span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" id="chkOkCheck" checked />
+            <span>
+              <strong>Run assumption checks</strong><br>
+              <span class="small">Normality + outliers (per group)</span>
+            </span>
+          </label>
+        </div>
+        <div style="margin-top:10px;">
+          <span class="pill">Tip: If subjects are matched or measured twice, use the Paired t-test instead.</span>
+        </div>
+      </div>
+
+      <!-- Test settings -->
+      <div class="card">
+        <div class="section-title">Test settings</div>
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Significance level (α)</label>
+            <select id="alpha">
+              <option value="0.05" selected>0.05</option>
+              <option value="0.01">0.01</option>
+            </select>
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Test type</label>
+            <select id="tail">
+              <option value="two" selected>Two-sided (μ₁ ≠ μ₂)</option>
+              <option value="right">One-sided (μ₁ &gt; μ₂)</option>
+              <option value="left">One-sided (μ₁ &lt; μ₂)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="small" style="font-weight:800;">Variance assumption</label>
+          <select id="varianceType">
+            <option value="welch" selected>Unequal variances — Welch's t-test (recommended)</option>
+            <option value="pooled">Equal variances — pooled t-test (Student)</option>
+          </select>
+          <div class="note">Welch's test is the safe default; it does not assume equal variances.</div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="assump-item">
+            <input type="checkbox" id="showEffect" checked />
+            <span><strong>Show effect size</strong> (Cohen's d)</span>
+          </label>
+          <label class="assump-item" style="margin-top:6px;">
+            <input type="checkbox" id="showViz" checked />
+            <span><strong>Show hypothesis visualisation</strong> (sampling distribution of Δ̄)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data input -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Data input</div>
+      <label class="small" style="font-weight:800;">One value per line (or comma/tab separated)</label>
+      <div class="grid-2" style="margin-top:8px;">
+        <div>
+          <label class="small" style="font-weight:800;">Group 1</label>
+          <textarea id="group1" placeholder="12.4&#10;13.1&#10;11.8&#10;14.0"></textarea>
+        </div>
+        <div>
+          <label class="small" style="font-weight:800;">Group 2</label>
+          <textarea id="group2" placeholder="10.5&#10;11.2&#10;10.8&#10;12.1"></textarea>
+        </div>
+      </div>
+      <div class="note">Accepted separators: newline, tab, comma, semicolon, space. Headers are skipped automatically.</div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="clearBtn">Clear</button>
+        <button class="btn-primary" id="runBtn">Run analysis</button>
+      </div>
+      <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
+    </div>
+
+    <!-- moved generation section below and collapsed -->
+    <div class="grid-2" style="margin-top:16px;">
+      <details>
+        <summary style="font-weight:700; cursor:pointer;">Generate Group 1 data</summary>
+        <div class="card" style="margin-top:8px;">
+          <div class="grid-2">
+            <div>
+              <label class="small" style="font-weight:800;">Sample size (n₁)</label>
+              <input type="number" id="genN1" value="20" min="1" step="1" />
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">Distribution</label>
+              <select id="genDist1">
+                <option value="normal" selected>Normal</option>
+                <option value="uniform">Uniform</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div>
+              <label class="small" style="font-weight:800;">Mean</label>
+              <input type="number" id="genMean1" value="12" step="any" />
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">SD / half-range</label>
+              <input type="number" id="genSD1" value="2" step="any" />
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn-ghost" id="generateBtn1">Generate</button>
+            <button class="btn-secondary" id="useGeneratedBtn1">Use in analysis</button>
+          </div>
+          <div class="note">Generated values appear below.</div>
+          <textarea id="generatedOutput1" readonly style="margin-top:8px; min-height:100px;"></textarea>
+        </div>
+      </details>
+
+      <details>
+        <summary style="font-weight:700; cursor:pointer;">Generate Group 2 data</summary>
+        <div class="card" style="margin-top:8px;">
+          <div class="grid-2">
+            <div>
+              <label class="small" style="font-weight:800;">Sample size (n₂)</label>
+              <input type="number" id="genN2" value="20" min="1" step="1" />
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">Distribution</label>
+              <select id="genDist2">
+                <option value="normal" selected>Normal</option>
+                <option value="uniform">Uniform</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div>
+              <label class="small" style="font-weight:800;">Mean</label>
+              <input type="number" id="genMean2" value="10" step="any" />
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">SD / half-range</label>
+              <input type="number" id="genSD2" value="2" step="any" />
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn-ghost" id="generateBtn2">Generate</button>
+            <button class="btn-secondary" id="useGeneratedBtn2">Use in analysis</button>
+          </div>
+          <div class="note">Generated values appear below.</div>
+          <textarea id="generatedOutput2" readonly style="margin-top:8px; min-height:100px;"></textarea>
+        </div>
+      </details>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════ RESULTS TAB ═══════════════════════ -->
+  <div id="results" class="tab-content">
+
+    <div id="statusArea" style="margin-bottom:12px;"></div>
+
+    <!-- KPI strip -->
+    <div class="kpi-grid" id="kpiGrid" style="display:none;">
+      <div class="kpi">
+        <div class="label">n₁ / n₂</div>
+        <div class="value" id="kpiN">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">t (df)</div>
+        <div class="value" id="kpiT">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">p-value</div>
+        <div class="value" id="kpiP">—</div>
+      </div>
+    </div>
+
+    <!-- Summary + interpretation -->
+    <div class="grid-2" style="margin-top:12px;">
+      <div class="card">
+        <div class="section-title">Summary</div>
+        <div class="table-wrap">
+          <table><tbody id="summaryTable"></tbody></table>
+        </div>
+        <div class="note" id="effectNote"></div>
+        <div class="note" style="margin-top:6px; color:#6b7280; font-size:11px;">† Reference range is shown for learning purposes only — it describes where individual pairwise differences fall, not where the true mean difference lies. It is not part of the independent t-test.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Clinical interpretation</div>
+        <div id="interpretBox" class="alert" style="margin-bottom:10px;">Run the analysis to see interpretation.</div>
+        <div class="section-title" style="margin-top:10px;">Reporting text</div>
+        <div class="copybox">
+          <pre id="reportText">—</pre>
+          <button class="btn-ghost" id="copyReportBtn">Copy</button>
+        </div>
+        <div class="note">This is a template. Ensure clinical context and units are included in your final report.</div>
+      </div>
+    </div>
+
+    <!-- Assumption checks -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Assumption checks (per group)</div>
+      <div id="assumptionArea" class="note">Assumption checks will appear here.</div>
+    </div>
+
+    <!-- Data review -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Data review</div>
+      <div class="note">Flagged outliers are suggestions. You can include/exclude any row and the results will update.</div>
+      <div class="grid-2" style="margin-top:10px;">
+        <div>
+          <div class="small" style="font-weight:800; margin-bottom:6px;">Group 1</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th class="num">Value</th><th>Outlier</th><th>Include</th></tr></thead>
+              <tbody id="dataTable1"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="small" style="font-weight:800; margin-bottom:6px;">Group 2</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th class="num">Value</th><th>Outlier</th><th>Include</th></tr></thead>
+              <tbody id="dataTable2"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualisation -->
+    <div class="card" style="margin-top:16px; display:none;" id="vizCard">
+      <div class="section-title">Hypothesis visualisation</div>
+      <div class="note" style="margin-top:0;">
+        <strong style="color:#ef4444;">Red curve</strong> — sampling distribution of Δ̄ (width = SE). The blue shading and CI bar show the <strong>95% CI of Δ̄</strong>: where the true mean difference likely lies.<br>
+        <strong style="color:#6b7280;">Gray curve</strong> — distribution of individual pairwise differences (width = sₚ, pooled SD). The gray shading and bar show the <strong>95% reference range</strong>: natural spread of individual differences.
+        <span style="color:#9ca3af; font-style:italic;"> The gray curve and reference range are included to illustrate the difference between individual variability and uncertainty about the mean — they are not part of the test.</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px; padding:0 4px;">
+        <div>
+          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">What are we testing?</div>
+          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-top:2px;">Difference of means (Δ̄ = μ₁ − μ₂)</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">Does the CI include null (0)?</div>
+          <div id="vizVerdict" style="font-size:13px; font-weight:900; margin-top:2px;">—</div>
+        </div>
+      </div>
+      <div class="viz-wrap" style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#f8fafc;">
+        <canvas id="tVizCanvas" height="270"></canvas>
+      </div>
+      <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+    </div>
+
+    <!-- Export -->
+    <details class="card" style="margin-top:16px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px; color:var(--ink); list-style:none; display:flex; justify-content:space-between; align-items:center;">
+        <span class="section-title" style="margin:0;">How it works</span>
+        <span style="color:var(--muted); font-size:12px; font-weight:400;">click to expand</span>
+      </summary>
+      <div style="margin-top:12px; display:grid; gap:12px;">
+
+        <div style="background:#f8fafc; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#1e40af; margin-bottom:6px;">95% Confidence Interval of Δ̄</div>
+          <div style="font-family:ui-monospace, monospace; font-size:13px; color:#1e3a5f; background:#eff6ff; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
+            CI = Δ̄ &plusmn; t<sub>df,&thinsp;&alpha;/2</sub> &times; SE &nbsp;&nbsp;where&nbsp;&nbsp; SE = sₚ &radic;(1/n₁ + 1/n₂)
+          </div>
+          <div style="font-size:12px; color:#374151;">
+            This interval answers: <em>"Where does the true difference of means likely lie?"</em>
+            It narrows as n₁ + n₂ increases. This is the quantity tested by the independent t-test.
+          </div>
+        </div>
+
+        <div style="background:#f8fafc; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#4b5563; margin-bottom:6px;">95% Reference Range <span style="font-weight:400; font-size:11px; color:#9ca3af;">(for illustration only — not part of the test)</span></div>
+          <div style="font-family:ui-monospace, monospace; font-size:13px; color:#374151; background:#f3f4f6; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
+            Reference range = Δ̄ &plusmn; t<sub>df,&thinsp;&alpha;/2</sub> &times; sₚ
+          </div>
+          <div style="font-size:12px; color:#374151;">
+            This interval answers: <em>"Where would individual pairwise differences typically fall?"</em>
+            It does <strong>not</strong> narrow with larger n — individual variability is fixed.
+            It is shown here solely to contrast with the CI and make the distinction visual.
+          </div>
+        </div>
+
+        <div style="background:#fefce8; border-radius:8px; padding:10px 14px; font-size:12px; color:#713f12;">
+          <strong>Key insight:</strong> The CI uses SE = sₚ&thinsp;&radic;(1/n₁+1/n₂), while the reference range uses sₚ directly.
+          With n₁ = n₂ = 30, SE is ~&radic;(n/2) &asymp; 3.9&times; smaller than sₚ — which is why the red curve is much narrower.
+        </div>
+
+      </div>
+    </details>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Export</div>
+      <div class="note">PDF export opens the print dialog. Excel export includes formulas and raw data.</div>
+      <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
+        <button class="btn-secondary" id="exportPdfBtn">Export PDF</button>
+        <button class="btn-primary"   id="exportXlsxBtn">Export Excel</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /container -->
+
+<script>
+/* ═══════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════ */
+const el = id => document.getElementById(id);
+
+function fmt(x, d=4){
+  if(x===null||x===undefined||Number.isNaN(x)) return "—";
+  const ax=Math.abs(x);
+  if(ax!==0&&ax<0.0001) return x.toExponential(2);
+  return Number(x).toFixed(d);
+}
+function fmtP(p){
+  if(p===null||p===undefined||Number.isNaN(p)) return "—";
+  if(p<0.0001) return "< 0.0001";
+  return Number(p).toFixed(4);
+}
+
+function parseGroup(text){
+  return text.split(/[\r\n\t,; ]+/)
+    .map(s=>s.trim())
+    .filter(Boolean)
+    .map(s=>Number(s))
+    .filter(v=>Number.isFinite(v));
+}
+
+// ---------- data generation helpers ----------
+function generateGroupData(groupNum){
+  const n = parseInt(el(`genN${groupNum}`).value, 10);
+  const dist = el(`genDist${groupNum}`).value;
+  const m = parseFloat(el(`genMean${groupNum}`).value);
+  const s = parseFloat(el(`genSD${groupNum}`).value);
+  if (!Number.isFinite(n) || n < 1) return [];
+  if (!Number.isFinite(m) || !Number.isFinite(s) || s < 0) return [];
+  const arr = [];
+  for (let i = 0; i < n; i++){
+    let v;
+    if (dist === "normal"){
+      v = jStat.normal.sample(m, s);
+    } else {
+      v = m + (Math.random() * 2 - 1) * s;
+    }
+    arr.push(Number(v.toFixed(4)));
+  }
+  return arr;
+}
+
+function refreshGeneratedGroup(groupNum){
+  const vals = generateGroupData(groupNum);
+  el(`generatedOutput${groupNum}`).value = vals.join("\n");
+}
+
+function mean(arr){
+  if(!arr.length) return NaN;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+function variance(arr, m){
+  if(arr.length<2) return NaN;
+  return arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-1);
+}
+function sd(arr){
+  const m=mean(arr);
+  return Math.sqrt(variance(arr,m));
+}
+function quantile(sorted, q){
+  const n=sorted.length; if(!n) return NaN;
+  const pos=(n-1)*q, base=Math.floor(pos), rest=pos-base;
+  if(sorted[base+1]===undefined) return sorted[base];
+  return sorted[base]+rest*(sorted[base+1]-sorted[base]);
+}
+function iqrOutliers(values){
+  const s=[...values].sort((a,b)=>a-b);
+  const q1=quantile(s,.25), q3=quantile(s,.75), iqr=q3-q1;
+  return {q1,q3,iqr,lo:q1-1.5*iqr,hi:q3+1.5*iqr};
+}
+
+// Jarque–Bera normality test
+function jarqueBeraP(values){
+  const n=values.length; if(n<3) return {jb:NaN,p:NaN};
+  const m=mean(values);
+  let m2=0,m3=0,m4=0;
+  for(const v of values){const x=v-m,x2=x*x;m2+=x2;m3+=x2*x;m4+=x2*x2;}
+  m2/=n;m3/=n;m4/=n;
+  const s=Math.sqrt(m2); if(s===0) return {jb:NaN,p:NaN};
+  const skew=m3/Math.pow(s,3), kurt=m4/Math.pow(s,4);
+  const jb=(n/6)*(skew*skew+0.25*Math.pow(kurt-3,2));
+  const p=1-jStat.chisquare.cdf(jb,2);
+  return {jb,p};
+}
+
+/* ═══════════════════════════════════════
+   STATISTICS ENGINE
+═══════════════════════════════════════ */
+function computeTest(g1, g2, alpha, tail, varType){
+  const n1=g1.length, n2=g2.length;
+  const m1=mean(g1), m2=mean(g2);
+  const v1=variance(g1,m1), v2=variance(g2,m2);
+  const meanDiff=m1-m2;
+
+  let se, df;
+  if(varType==="pooled"){
+    const sp=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2));
+    se=sp*Math.sqrt(1/n1+1/n2);
+    df=n1+n2-2;
+  } else {
+    se=Math.sqrt(v1/n1+v2/n2);
+    df=Math.pow(v1/n1+v2/n2,2)/((Math.pow(v1/n1,2)/(n1-1))+(Math.pow(v2/n2,2)/(n2-1)));
+  }
+
+  const tObs=meanDiff/se;
+  const cdf=jStat.studentt.cdf(tObs,df);
+  let p;
+  if(tail==="two")  p=2*Math.min(cdf,1-cdf);
+  else if(tail==="right") p=1-cdf;
+  else p=cdf;
+  p=Math.min(1,Math.max(0,p));
+
+  // Cohen's d (pooled SD)
+  const sdPooled=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2));
+  const cohensD=meanDiff/sdPooled;
+
+  const tCrit=jStat.studentt.inv(1-alpha/2,df);
+  const ciLo=meanDiff-tCrit*se;
+  const ciHi=meanDiff+tCrit*se;
+  const refLo=meanDiff-tCrit*sdPooled;
+  const refHi=meanDiff+tCrit*sdPooled;
+
+  const norm1=jarqueBeraP(g1);
+  const norm2=jarqueBeraP(g2);
+  const out1=iqrOutliers(g1);
+  const out2=iqrOutliers(g2);
+
+  return {
+    n1,n2,m1,m2,v1,v2,sd1:Math.sqrt(v1),sd2:Math.sqrt(v2),
+    meanDiff,se,df,tObs,p,alpha,tail,varType,
+    tCrit,ciLo,ciHi,refLo,refHi,
+    cohensD,sdPooled,
+    norm1,norm2,out1,out2
+  };
+}
+
+function cohensLabel(d){
+  const a=Math.abs(d);
+  if(!Number.isFinite(a)) return "";
+  if(a<0.2) return "trivial";
+  if(a<0.5) return "small";
+  if(a<0.8) return "moderate";
+  return "large";
+}
+
+/* ═══════════════════════════════════════
+   VISUALISATION
+═══════════════════════════════════════ */
+function renderViz(res){
+  const canvas=el("tVizCanvas"); if(!canvas) return;
+  const {meanDiff,se,sdPooled,df,alpha,tail,tObs,p,ciLo,ciHi,refLo,refHi}=res;
+  const null0InCI=0>=ciLo&&0<=ciHi;
+  const ciPct=Math.round((1-alpha)*100);
+
+  // verdict
+  const verdictEl=el("vizVerdict"), footerEl=el("vizFooter");
+  if(null0InCI){
+    verdictEl.textContent="YES — fail to reject H₀"; verdictEl.style.color="#374151";
+    footerEl.style.background="#f1f5f9"; footerEl.style.color="#374151";
+    footerEl.innerHTML=`H₀ not rejected — ${ciPct}% CI of Δ̄ [${fmt(ciLo,3)}, ${fmt(ciHi,3)}] includes 0<br><span style="font-weight:400;font-size:12px;">Not statistically significant (p = ${fmtP(p)})</span>`;
+  } else {
+    verdictEl.textContent="NO — reject H₀"; verdictEl.style.color="#15803d";
+    footerEl.style.background="#ecfdf5"; footerEl.style.color="#14532d";
+    footerEl.innerHTML=`H₀ rejected — ${ciPct}% CI of Δ̄ [${fmt(ciLo,3)}, ${fmt(ciHi,3)}] does not include 0<br><span style="font-weight:400;font-size:12px;">Statistically significant (p = ${fmtP(p)})</span>`;
+  }
+
+  const W=canvas.parentElement.clientWidth||700, H=315;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,W,H);
+
+  const padL=60,padR=40,padT=50,padB=100;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+
+  const spread=Math.max(Math.abs(meanDiff-0),ciHi-ciLo)*1.8+Math.max(se*4,sdPooled*3);
+  const xMin=Math.min(meanDiff,0,ciLo,refLo)-spread*0.35;
+  const xMax=Math.max(meanDiff,0,ciHi,refHi)+spread*0.35;
+  const toX=v=>padL+((v-xMin)/(xMax-xMin))*plotW;
+
+  const normPDF=x=>Math.exp(-0.5*((x-meanDiff)/se)**2)/(se*Math.sqrt(2*Math.PI));
+  const step=(xMax-xMin)/400;
+  let yMax=0;
+  for(let x=xMin;x<=xMax;x+=step) yMax=Math.max(yMax,normPDF(x));
+  const toY=y=>padT+plotH-(y/yMax)*plotH*0.88;
+  const baseY=toY(0);
+
+  const refLoX=toX(refLo), refHiX=toX(refHi);
+  const ciLoX=toX(ciLo), ciHiX=toX(ciHi);
+
+  // Background: sample distribution (sdPooled), gray dashed curve
+  const samplePDF=x=>Math.exp(-0.5*((x-meanDiff)/sdPooled)**2)/(sdPooled*Math.sqrt(2*Math.PI));
+  ctx.save(); ctx.beginPath();
+  let sfirst=true;
+  for(let x=xMin;x<=xMax+step;x+=step){
+    const cx=toX(x),cy=toY(samplePDF(x));
+    sfirst?ctx.moveTo(cx,baseY):ctx.lineTo(cx,cy); sfirst=false;
+  }
+  ctx.lineTo(toX(xMax),baseY); ctx.closePath();
+  ctx.fillStyle="rgba(156,163,175,0.18)"; ctx.fill(); ctx.restore();
+
+  ctx.save(); ctx.beginPath();
+  sfirst=true;
+  for(let x=xMin;x<=xMax+step;x+=step){
+    const cx=toX(x),cy=toY(samplePDF(x));
+    sfirst?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy); sfirst=false;
+  }
+  ctx.strokeStyle="rgba(107,114,128,0.6)"; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+
+  // Gray CI shading on sample distribution (refLo/refHi = Δ̄ ± t·sdPooled)
+  ctx.save(); ctx.beginPath();
+  for(let x=refLo;x<=refHi+step;x+=step){
+    const cx=toX(x),cy=toY(samplePDF(x));
+    if(x===refLo||cx<refLoX+1) ctx.moveTo(cx,baseY);
+    ctx.lineTo(cx,cy);
+  }
+  ctx.lineTo(refHiX,baseY); ctx.closePath();
+  ctx.fillStyle="rgba(107,114,128,0.28)"; ctx.fill(); ctx.restore();
+
+  // Blue CI shading on sampling distribution (ciLo/ciHi = Δ̄ ± t·SE)
+  ctx.save(); ctx.beginPath();
+  for(let x=ciLo;x<=ciHi+step;x+=step){
+    const cx=toX(x),cy=toY(normPDF(x));
+    if(x<=ciLo+step) ctx.moveTo(toX(ciLo),baseY);
+    ctx.lineTo(cx,cy);
+  }
+  ctx.lineTo(ciHiX,baseY); ctx.closePath();
+  ctx.fillStyle="rgba(59,130,246,0.25)"; ctx.fill(); ctx.restore();
+
+  // full curve
+  ctx.save(); ctx.beginPath(); let first=true;
+  for(let x=xMin;x<=xMax+step;x+=step){
+    const cx=toX(x),cy=toY(normPDF(x));
+    first?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy); first=false;
+  }
+  ctx.strokeStyle="#ef4444"; ctx.lineWidth=2.5; ctx.stroke(); ctx.restore();
+
+  // baseline
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(padL,baseY); ctx.lineTo(padL+plotW,baseY);
+  ctx.strokeStyle="#ef4444"; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore();
+
+  // null (0) dashed line
+  const null0X=toX(0);
+  ctx.save(); ctx.setLineDash([6,5]); ctx.beginPath();
+  ctx.moveTo(null0X,padT); ctx.lineTo(null0X,baseY);
+  ctx.strokeStyle="#ca8a04"; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  ctx.save(); ctx.font="bold 12px system-ui,sans-serif"; ctx.fillStyle="#92400e"; ctx.textAlign="center";
+  ctx.fillText("0 (H₀: no difference)",null0X,padT-6); ctx.restore();
+
+  // Δ̄ dot at peak
+  const dX=toX(meanDiff), dY=toY(normPDF(meanDiff));
+  ctx.save(); ctx.beginPath(); ctx.arc(dX,dY,7,0,Math.PI*2);
+  ctx.fillStyle="#ef4444"; ctx.strokeStyle="#fff"; ctx.lineWidth=2.5; ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font="bold 12px system-ui,sans-serif"; ctx.fillStyle="#b91c1c"; ctx.textAlign="center";
+  ctx.fillText(`Δ̄ = ${fmt(meanDiff,3)}`,dX,dY-14); ctx.restore();
+
+  // Bar 1: Reference range on sample distribution (gray)
+  const refBarY=baseY+28;
+  ctx.save(); ctx.strokeStyle="#6b7280"; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(refLoX,refBarY); ctx.lineTo(refHiX,refBarY); ctx.stroke();
+  [refLoX,refHiX].forEach(x=>{ctx.beginPath();ctx.moveTo(x,refBarY-5);ctx.lineTo(x,refBarY+5);ctx.stroke();});
+  ctx.restore();
+  ctx.save(); ctx.font="bold 10px system-ui,sans-serif"; ctx.fillStyle="#4b5563"; ctx.textAlign="center";
+  ctx.fillText(`${ciPct}% reference range (pooled SD)`, (refLoX+refHiX)/2, refBarY-8); ctx.restore();
+  ctx.save(); ctx.font="600 10px system-ui,sans-serif"; ctx.fillStyle="#374151"; ctx.textAlign="center";
+  ctx.fillText(fmt(refLo,3),refLoX,refBarY+14); ctx.fillText(fmt(refHi,3),refHiX,refBarY+14); ctx.restore();
+
+  // Bar 2: CI of mean difference on sampling distribution (blue)
+  const ciBarY=baseY+58;
+  ctx.save(); ctx.beginPath(); ctx.moveTo(ciLoX,ciBarY); ctx.lineTo(ciHiX,ciBarY);
+  ctx.strokeStyle="#3b82f6"; ctx.lineWidth=3; ctx.stroke();
+  [ciLoX,ciHiX].forEach(x=>{ctx.beginPath();ctx.moveTo(x,ciBarY-5);ctx.lineTo(x,ciBarY+5);ctx.stroke();});
+  ctx.restore();
+  ctx.save(); ctx.font="bold 10px system-ui,sans-serif"; ctx.fillStyle="#1d4ed8"; ctx.textAlign="center";
+  ctx.fillText(`${ciPct}% CI of Δ̄ (sampling dist.)`, (ciLoX+ciHiX)/2, ciBarY-8); ctx.restore();
+  ctx.save(); ctx.font="600 10px system-ui,sans-serif"; ctx.fillStyle="#1e40af"; ctx.textAlign="center";
+  ctx.fillText(fmt(ciLo,3),ciLoX,ciBarY+14); ctx.fillText(fmt(ciHi,3),ciHiX,ciBarY+14); ctx.restore();
+
+  // x-axis ticks
+  ctx.save(); ctx.font="11px system-ui,sans-serif"; ctx.fillStyle="#6b7280"; ctx.textAlign="center";
+  for(let i=0;i<=6;i++){const v=xMin+(i/6)*(xMax-xMin);ctx.fillText(fmt(v,2),toX(v),baseY+13);}
+  ctx.restore();
+
+  // x-axis title
+  ctx.save(); ctx.font="bold 12px system-ui,sans-serif"; ctx.fillStyle="#374151"; ctx.textAlign="center";
+  ctx.fillText("Difference of means (Δ̄ = μ₁ − μ₂)",padL+plotW/2,H-6); ctx.restore();
+
+  // Legend
+  const legX=padL+8; let legY=padT+10;
+  const legItems=[
+    {color:"#ef4444", dash:false, label:`Sampling dist. of Δ̄  (SE = ${fmt(se,3)})`},
+    {color:"rgba(107,114,128,0.8)", dash:true, label:`Sample diff. dist.  (sₚ = ${fmt(sdPooled,3)})`},
+  ];
+  ctx.save(); ctx.font="11px system-ui,sans-serif";
+  legItems.forEach(({color,dash,label})=>{
+    ctx.strokeStyle=color; ctx.lineWidth=2;
+    if(dash) ctx.setLineDash([4,3]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(legX,legY); ctx.lineTo(legX+22,legY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#374151"; ctx.textAlign="left";
+    ctx.fillText(label,legX+28,legY+4); legY+=16;
+  });
+  ctx.restore();
+
+  // null annotation
+  if(!null0InCI){
+    const dir=0<ciLo?"← null excluded":"null excluded →";
+    ctx.save(); ctx.font="italic 11px system-ui,sans-serif"; ctx.fillStyle="#6b7280";
+    ctx.textAlign=0<ciLo?"right":"left";
+    ctx.fillText(dir,null0X+(0<ciLo?-6:6),baseY-8); ctx.restore();
+  }
+
+  // t diamond
+  const tBadgeY=baseY+78, side=5;
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(dX,tBadgeY-side); ctx.lineTo(dX+side,tBadgeY);
+  ctx.lineTo(dX,tBadgeY+side); ctx.lineTo(dX-side,tBadgeY); ctx.closePath();
+  ctx.fillStyle="#111827"; ctx.strokeStyle="#fff"; ctx.lineWidth=1.5; ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.font="bold 11px system-ui,sans-serif"; ctx.fillStyle="#111827"; ctx.textAlign="center";
+  ctx.fillText(`t = ${fmt(tObs,3)}`,dX,tBadgeY+side+12); ctx.restore();
+}
+
+/* ═══════════════════════════════════════
+   RENDER RESULTS
+═══════════════════════════════════════ */
+let state={rows1:[],rows2:[],res:null};
+
+function buildSummaryTable(res){
+  const rows=[];
+  rows.push(["n₁ / n₂",`${state.rows1.filter(r=>r.include).length} / ${state.rows2.filter(r=>r.include).length}`]);
+  rows.push(["Mean₁",fmt(res.m1,6)]);
+  rows.push(["Mean₂",fmt(res.m2,6)]);
+  rows.push(["SD₁",fmt(res.sd1,6)]);
+  rows.push(["SD₂",fmt(res.sd2,6)]);
+  rows.push(["Δ̄ (Mean₁ − Mean₂)",fmt(res.meanDiff,6)]);
+  rows.push(["Standard error (SE)",fmt(res.se,6)]);
+  rows.push(["t statistic",fmt(res.tObs,6)]);
+  rows.push(["df",fmt(res.df,2)]);
+  rows.push(["p-value",fmtP(res.p)]);
+  rows.push([`${Math.round((1-res.alpha)*100)}% CI of Δ̄`,`[${fmt(res.ciLo,6)}, ${fmt(res.ciHi,6)}]`]);
+  rows.push(["95% reference range †",`[${fmt(res.refLo,6)}, ${fmt(res.refHi,6)}]`]);
+  rows.push(["Variance method",res.varType==="welch"?"Welch (unequal)":"Pooled (equal)"]);
+  if(el("showEffect").checked){
+    rows.push(["Cohen's d",`${fmt(res.cohensD,4)} (${cohensLabel(res.cohensD)})`]);
+  }
+  el("summaryTable").innerHTML=rows.map(([k,v])=>`
+    <tr><td style="font-weight:800;color:#374151;">${k}</td><td class="num">${v}</td></tr>
+  `).join("");
+}
+
+function buildInterpretation(res){
+  const sig=res.p<res.alpha;
+  let cls="alert", text="";
+  if(sig){
+    cls+=" good";
+    text=`<strong>Statistically significant difference detected.</strong><br>
+      The mean difference between groups differs from zero (p ${res.p<0.001?"&lt; 0.001":"= "+fmtP(res.p)}).
+      Δ̄ = ${fmt(res.meanDiff,3)} (${Math.round((1-res.alpha)*100)}% CI [${fmt(res.ciLo,3)}, ${fmt(res.ciHi,3)}]).
+      Consider clinical relevance alongside statistical significance.`;
+  } else {
+    text=`<strong>No statistically significant difference detected.</strong><br>
+      Insufficient evidence that the group means differ (p ${res.p<0.001?"&lt; 0.001":"= "+fmtP(res.p)}).
+      Δ̄ = ${fmt(res.meanDiff,3)} (${Math.round((1-res.alpha)*100)}% CI [${fmt(res.ciLo,3)}, ${fmt(res.ciHi,3)}]).`;
+  }
+  if(el("showEffect").checked&&Number.isFinite(res.cohensD)){
+    text+=`<br><br><strong>Effect size:</strong> Cohen's d = ${fmt(res.cohensD,4)} (${cohensLabel(res.cohensD)}).
+      <span class="small">0.2 = small · 0.5 = medium · 0.8 = large</span>`;
+  }
+  el("interpretBox").className=cls;
+  el("interpretBox").innerHTML=text;
+
+  // reporting text
+  const tailLabel=res.tail==="two"?"two-sided":(res.tail==="right"?"one-sided (μ₁ > μ₂)":"one-sided (μ₁ < μ₂)");
+  const n1=state.rows1.filter(r=>r.include).length, n2=state.rows2.filter(r=>r.include).length;
+  const rep=[
+    `An independent two-sample t-test (${tailLabel}, ${res.varType==="welch"?"Welch":"pooled"}) was performed with n₁ = ${n1} and n₂ = ${n2}.`,
+    `The mean difference was ${fmt(res.meanDiff,3)} (${Math.round((1-res.alpha)*100)}% CI [${fmt(res.ciLo,3)}, ${fmt(res.ciHi,3)}]).`,
+    `The test was ${sig?"statistically significant":"not statistically significant"}: t(${fmt(res.df,1)}) = ${fmt(res.tObs,3)}, p ${res.p<0.001?"< 0.001":"= "+fmtP(res.p)}.`,
+    ...(el("showEffect").checked?[`Effect size: Cohen's d = ${fmt(res.cohensD,3)} (${cohensLabel(res.cohensD)}).`]:[])
+  ].join(" ");
+  el("reportText").textContent=rep;
+}
+
+function buildAssumptions(res){
+  if(!el("chkOkCheck").checked){
+    el("assumptionArea").innerHTML="Assumption checks are turned off. Enable \"Run assumption checks\" to show normality/outlier screening.";
+    return;
+  }
+
+  function normalBlock(label, norm, out){
+    let html="";
+    const p=norm?.p;
+    if(Number.isFinite(p)){
+      if(p<0.05){
+        html+=`<div class="alert warn" style="margin-top:8px;">
+          <strong>Normality warning (${label}).</strong><br>
+          Jarque–Bera suggests non-normal data (p = ${fmtP(p)}).
+          If both groups are non-normal, consider the <strong>Mann–Whitney U test</strong>.
+        </div>`;
+      } else {
+        html+=`<div class="alert good" style="margin-top:8px;">
+          <strong>Normality (${label}):</strong> no strong evidence of non-normality (p = ${fmtP(p)}).
+        </div>`;
+      }
+    }
+    html+=`<div class="note" style="margin-top:6px;">
+      Outliers (${label}) — IQR rule: Q1 = ${fmt(out.q1,4)}, Q3 = ${fmt(out.q3,4)},
+      IQR = ${fmt(out.iqr,4)}, bounds [${fmt(out.lo,4)}, ${fmt(out.hi,4)}]
+    </div>`;
+    return html;
+  }
+
+  el("assumptionArea").innerHTML=`
+    <div class="note">The independent t-test assumes approximate normality within each group (central limit theorem helps with n ≥ 30), independence of observations, and — for pooled — equal variances. Welch's test is robust to unequal variances.</div>
+    ${normalBlock("Group 1",res.norm1,res.out1)}
+    ${normalBlock("Group 2",res.norm2,res.out2)}
+  `;
+}
+
+function renderDataTable(tbody, rows, group){
+  el(tbody).innerHTML=rows.map((r,i)=>`
+    <tr style="${r.outlier?"background:#fff7ed;":""}">
+      <td>${i+1}</td>
+      <td class="num">${fmt(r.value,4)}</td>
+      <td>${r.outlier?"⚠ flagged":""}</td>
+      <td><input type="checkbox" data-g="${group}" data-i="${i}" ${r.include?"checked":""} /></td>
+    </tr>
+  `).join("");
+  el(tbody).querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener("change",e=>{
+      const g=Number(e.target.dataset.g), i=Number(e.target.dataset.i);
+      if(g===1) state.rows1[i].include=e.target.checked;
+      else      state.rows2[i].include=e.target.checked;
+      recomputeAndRender();
+    });
+  });
+}
+
+function updateKpis(res){
+  el("kpiGrid").style.display="grid";
+  el("kpiN").textContent=`${state.rows1.filter(r=>r.include).length} / ${state.rows2.filter(r=>r.include).length}`;
+  el("kpiT").textContent=`${fmt(res.tObs,3)} (${fmt(res.df,1)})`;
+  el("kpiP").textContent=fmtP(res.p);
+}
+
+function recomputeAndRender(){
+  const g1=state.rows1.filter(r=>r.include).map(r=>r.value);
+  const g2=state.rows2.filter(r=>r.include).map(r=>r.value);
+  if(g1.length<2||g2.length<2){
+    el("statusArea").innerHTML=`<div class="alert bad"><strong>Cannot compute:</strong> Each group needs at least 2 included values.</div>`;
+    el("kpiGrid").style.display="none";
+    el("vizCard").style.display="none";
+    return;
+  }
+  const alpha=state.alpha, tail=state.tail, varType=state.varType;
+  const res=computeTest(g1,g2,alpha,tail,varType);
+  state.res=res;
+
+  el("statusArea").innerHTML="";
+  updateKpis(res);
+  buildSummaryTable(res);
+  buildInterpretation(res);
+  buildAssumptions(res);
+  renderDataTable("dataTable1",state.rows1,1);
+  renderDataTable("dataTable2",state.rows2,2);
+
+  if(el("showViz").checked){
+    el("vizCard").style.display="block";
+    renderViz(res);
+  } else {
+    el("vizCard").style.display="none";
+  }
+}
+
+/* ═══════════════════════════════════════
+   RUN
+═══════════════════════════════════════ */
+function run(){
+  el("inputError").style.display="none";
+
+  if(!el("chkIndep").checked){
+    el("inputError").innerHTML="This test requires independent groups. If observations are paired, use the Paired t-test tool.";
+    el("inputError").style.display="block"; return;
+  }
+  if(!el("chkContinuous").checked){
+    el("inputError").innerHTML="Independent t-test requires a continuous outcome. For categorical outcomes consider Chi-square.";
+    el("inputError").style.display="block"; return;
+  }
+  if(!el("chkNoOverlap").checked){
+    el("inputError").innerHTML="If observations are matched or paired, use the Paired t-test instead.";
+    el("inputError").style.display="block"; return;
+  }
+
+  const raw1=parseGroup(el("group1").value);
+  const raw2=parseGroup(el("group2").value);
+  if(raw1.length<2||raw2.length<2){
+    el("inputError").innerHTML="Each group needs at least 2 numeric values.";
+    el("inputError").style.display="block"; return;
+  }
+
+  state.alpha=Number(el("alpha").value);
+  state.tail=el("tail").value;
+  state.varType=el("varianceType").value;
+
+  // outliers per group
+  const out1=iqrOutliers(raw1), out2=iqrOutliers(raw2);
+  state.rows1=raw1.map(v=>({value:v,outlier:v<out1.lo||v>out1.hi,include:true}));
+  state.rows2=raw2.map(v=>({value:v,outlier:v<out2.lo||v>out2.hi,include:true}));
+
+  document.querySelector('[data-tab="results"]').click();
+  setTimeout(()=>recomputeAndRender(),50);
+}
+
+/* ═══════════════════════════════════════
+   EXPORT
+═══════════════════════════════════════ */
+function exportPdf(){ window.print(); }
+
+function exportXlsx(){
+  if(!state.res){ alert("Run the analysis first."); return; }
+  const wb=XLSX.utils.book_new();
+
+  const maxLen=Math.max(state.rows1.length,state.rows2.length);
+  const dataAoA=[["Group1","Group1_Include","Group2","Group2_Include"]];
+  for(let i=0;i<maxLen;i++){
+    const r1=state.rows1[i], r2=state.rows2[i];
+    dataAoA.push([
+      r1?r1.value:"", r1?(r1.include?"TRUE":"FALSE"):"",
+      r2?r2.value:"", r2?(r2.include?"TRUE":"FALSE"):""
+    ]);
+  }
+  const wsData=XLSX.utils.aoa_to_sheet(dataAoA);
+
+  const r=state.res;
+  const calcAoA=[
+    ["Independent Two-sample t-test",""],
+    ["Variance method",r.varType==="welch"?"Welch (unequal)":"Pooled (equal)"],
+    ["alpha",r.alpha],["",""],
+    ["n₁",r.n1],["n₂",r.n2],
+    ["Mean₁",r.m1],["Mean₂",r.m2],
+    ["SD₁",r.sd1],["SD₂",r.sd2],
+    ["Δ̄ (Mean₁−Mean₂)",r.meanDiff],
+    ["SE",r.se],
+    ["df",r.df],
+    ["t statistic",r.tObs],
+    ["p-value",r.p],
+    ["CI low",r.ciLo],["CI high",r.ciHi],
+    ["Cohen's d",r.cohensD]
+  ];
+  const wsCalc=XLSX.utils.aoa_to_sheet(calcAoA);
+
+  XLSX.utils.book_append_sheet(wb,wsData,"Data");
+  XLSX.utils.book_append_sheet(wb,wsCalc,"Calculations");
+  wb.Workbook=wb.Workbook||{};
+  wb.Workbook.CalcPr={fullCalcOnLoad:true};
+  XLSX.writeFile(wb,`two_sample_t_test_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ═══════════════════════════════════════
+   UI WIRING
+═══════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click",()=>{
+      document.querySelectorAll(".tab,.tab-content").forEach(e=>e.classList.remove("active"));
+      tab.classList.add("active");
+      el(tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  el("runBtn").addEventListener("click",run);
+
+  el("clearBtn").addEventListener("click",()=>{
+    el("group1").value=""; el("group2").value="";
+    state.rows1=[]; state.rows2=[]; state.res=null;
+    el("inputError").style.display="none";
+    el("statusArea").innerHTML="";
+    el("kpiGrid").style.display="none";
+    el("summaryTable").innerHTML="";
+    el("dataTable1").innerHTML=""; el("dataTable2").innerHTML="";
+    el("assumptionArea").textContent="—";
+    el("reportText").textContent="—";
+    el("vizCard").style.display="none";
+  });
+
+  el("copyReportBtn").addEventListener("click",async()=>{
+    const text=el("reportText").textContent;
+    if(!text||text==="—") return;
+    try{
+      await navigator.clipboard.writeText(text);
+      el("copyReportBtn").textContent="Copied";
+      setTimeout(()=>el("copyReportBtn").textContent="Copy",900);
+    } catch { alert("Copy failed (clipboard permissions)."); }
+  });
+
+  el("exportPdfBtn").addEventListener("click",exportPdf);
+  el("exportXlsxBtn").addEventListener("click",exportXlsx);
+
+  // generate/transfer events for group 1
+  el("generateBtn1").addEventListener("click", () => refreshGeneratedGroup(1));
+  ["genN1","genDist1"].forEach(id => el(id).addEventListener("change", ()=>refreshGeneratedGroup(1)));
+  ["genMean1","genSD1"].forEach(id => el(id).addEventListener("input", ()=>refreshGeneratedGroup(1)));
+  el("useGeneratedBtn1").addEventListener("click", () => {
+    el("group1").value = el("generatedOutput1").value;
+  });
+
+  // generate/transfer events for group 2
+  el("generateBtn2").addEventListener("click", () => refreshGeneratedGroup(2));
+  ["genN2","genDist2"].forEach(id => el(id).addEventListener("change", ()=>refreshGeneratedGroup(2)));
+  ["genMean2","genSD2"].forEach(id => el(id).addEventListener("input", ()=>refreshGeneratedGroup(2)));
+  el("useGeneratedBtn2").addEventListener("click", () => {
+    el("group2").value = el("generatedOutput2").value;
+  });
+
+  el("showViz").addEventListener("change",()=>{ if(state.res) recomputeAndRender(); });
+  el("showEffect").addEventListener("change",()=>{ if(state.res) recomputeAndRender(); });
+
+  // initial populate
+  refreshGeneratedGroup(1);
+  refreshGeneratedGroup(2);
+});
+</script>
+</body>
+</html>

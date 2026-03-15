@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>F Distribution Explorer</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+
+<style>
+  body { margin:0; font-family: system-ui; background:#fff; }
+  .back-home{
+    display:inline-block; padding:10px 16px; text-decoration:none;
+    color:#0b57d0; font-weight:600;
+  }
+
+  .wrapper{
+    display:grid;
+    grid-template-columns: 420px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 980px){
+    .wrapper{ grid-template-columns: 1fr; }
+  }
+
+  .controls{
+    padding:18px;
+    border-right:2px solid #e6e6e6;
+    overflow-y:auto;
+  }
+  @media (max-width: 980px){
+    .controls{ border-right:none; border-bottom:2px solid #e6e6e6; }
+  }
+
+  .chart-area{ padding:18px; }
+
+  label{ font-weight:700; display:block; margin-top:8px; }
+  input,select{
+    width:100%; padding:6px; margin-bottom:10px; box-sizing:border-box;
+  }
+
+  .result{
+    background:#f3f3f3;
+    padding:10px;
+    border-radius:8px;
+    font-weight:600;
+    line-height:1.35;
+  }
+
+  canvas{
+    width:100% !important;
+    height:78vh !important;
+    max-height:780px;
+  }
+  @media (max-width: 980px){
+    canvas{ height:52vh !important; max-height:none; }
+  }
+
+  hr{ border:none; border-top:1px solid #ddd; margin:14px 0; }
+
+  .tabs{ display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .tab{
+    cursor:pointer; padding:6px 12px; background:#eee; border-radius:8px;
+    font-weight:700; font-size:14px; user-select:none;
+  }
+  .tab.active{ background:#1976d2; color:#fff; }
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; }
+
+  .formula{
+    font-family: "Times New Roman", serif;
+    background:#fafafa; padding:10px; border-left:4px solid #ccc;
+    margin:10px 0; border-radius:8px;
+  }
+
+  .small{ font-size:0.95rem; opacity:0.92; }
+  .grid2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+  @media (max-width: 980px){
+    .grid2{ grid-template-columns: 1fr; }
+  }
+  .hint{ font-size:0.88rem; color:#555; margin-top:-6px; margin-bottom:8px; }
+</style>
+</head>
+
+<body>
+
+<a href="quantitative_analysis.html" class="back-home">
+  ← Back to quantitative tests
+</a>
+
+<div class="wrapper">
+
+  <div class="controls">
+
+    <div class="tabs">
+      <div class="tab active" data-tab="explorer">Explorer</div>
+      <div class="tab" data-tab="formulas">Formulas</div>
+    </div>
+
+    <!-- ================= EXPLORER TAB ================= -->
+    <div id="explorer" class="tab-content active">
+      <h2 style="margin:6px 0 10px 0;">F Distribution Explorer</h2>
+
+      <label>Mode</label>
+      <select id="mode">
+        <option value="alpha_to_crit">α → F critical (F-table)</option>
+        <option value="f_to_p">F value → p-value</option>
+      </select>
+
+      <label>Tail</label>
+      <select id="tail">
+        <option value="right">Right tail (common)</option>
+        <option value="left">Left tail</option>
+      </select>
+      <div class="hint">
+        For variance-ratio tests, the usual critical region is the <strong>right tail</strong>.
+        Left-tail critical values can be obtained directly here.
+      </div>
+
+      <hr>
+
+      <h3 style="margin:6px 0 6px 0;">Distribution A (primary)</h3>
+
+      <div class="grid2">
+        <div>
+          <label>Numerator df (df1)</label>
+          <input type="number" id="df1A" value="5" min="1" step="1">
+        </div>
+        <div>
+          <label>Denominator df (df2)</label>
+          <input type="number" id="df2A" value="10" min="1" step="1">
+        </div>
+      </div>
+
+      <div id="alphaBlock">
+        <label>α (alpha)</label>
+        <input type="number" id="alpha" value="0.05" min="0.0001" max="0.9999" step="0.001">
+        <input type="range" id="alphaSlider" value="0.05" min="0.0001" max="0.9999" step="0.0001">
+        <div id="alphaNote" class="hint"></div>
+      </div>
+
+      <div id="fBlock" style="display:none">
+        <label>F value</label>
+        <input type="number" id="fValue" value="2.0" min="0.000001" step="0.01">
+      </div>
+
+      <hr>
+
+      <label>
+        <input type="checkbox" id="showB" checked>
+        Show Distribution B (comparison)
+      </label>
+
+      <div id="blockB">
+        <h3 style="margin:6px 0 6px 0;">Distribution B</h3>
+        <div class="grid2">
+          <div>
+            <label>Numerator df (df1)</label>
+            <input type="number" id="df1B" value="10" min="1" step="1">
+          </div>
+          <div>
+            <label>Denominator df (df2)</label>
+            <input type="number" id="df2B" value="20" min="1" step="1">
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <label>Axis font size</label>
+      <input type="range" id="fontSizeSlider" min="10" max="30" value="16">
+      <div id="fontSizeValue" class="hint">16 px</div>
+
+      <div class="result" id="output"></div>
+    </div>
+
+    <!-- ================= FORMULAS TAB ================= -->
+    <div id="formulas" class="tab-content">
+      <h2>Formulas used in this tool</h2>
+
+      <h3>F distribution</h3>
+      <p class="small">
+        The F distribution arises as the ratio of two scaled chi-square variables
+        and is commonly used for comparing variances and in ANOVA.
+      </p>
+
+      <div class="formula">
+        <strong>F statistic (ratio form):</strong><br>
+        F = (s₁² / s₂²) &nbsp; (in variance comparisons)
+      </div>
+
+      <div class="formula">
+        <strong>Right-tail critical value:</strong><br>
+        Find F<sub>crit</sub> such that P(F ≥ F<sub>crit</sub>) = α
+      </div>
+
+      <div class="formula">
+        <strong>Left-tail critical value:</strong><br>
+        Find F<sub>crit</sub> such that P(F ≤ F<sub>crit</sub>) = α
+      </div>
+
+      <div class="formula">
+        <strong>Degrees of freedom:</strong><br>
+        df1 = numerator degrees of freedom<br>
+        df2 = denominator degrees of freedom
+      </div>
+
+      <p class="small">
+        In ANOVA, df1 is usually “between groups” and df2 is “within groups”.
+        In variance-ratio testing, df1 and df2 typically correspond to (n₁ − 1) and (n₂ − 1).
+      </p>
+    </div>
+
+  </div>
+
+  <div class="chart-area">
+    <canvas id="chart"></canvas>
+  </div>
+
+</div>
+
+<script>
+const el = (id) => document.getElementById(id);
+let chart;
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function fmt(x){ return Number(x).toFixed(6); }
+
+/* Tabs */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
+});
+
+function updateUI(){
+  const mode = el("mode").value;
+  el("alphaBlock").style.display = (mode === "alpha_to_crit") ? "block" : "none";
+  el("fBlock").style.display     = (mode === "f_to_p") ? "block" : "none";
+
+  const showB = el("showB").checked;
+  el("blockB").style.display = showB ? "block" : "none";
+
+  // alpha note
+  if(mode === "alpha_to_crit"){
+    const a = clamp(parseFloat(el("alpha").value), 0.0001, 0.9999);
+    const tail = el("tail").value;
+    el("alphaNote").textContent =
+      (tail === "right")
+        ? `Right tail: P(F ≥ Fcrit) = α = ${a.toFixed(4)}`
+        : `Left tail: P(F ≤ Fcrit) = α = ${a.toFixed(4)}`;
+  }
+}
+
+function safeDf(v){
+  v = parseInt(v, 10);
+  if(!isFinite(v) || v < 1) return 1;
+  return v;
+}
+
+function fCdf(x, df1, df2){
+  // jStat: centralF
+  return jStat.centralF.cdf(x, df1, df2);
+}
+function fPdf(x, df1, df2){
+  return jStat.centralF.pdf(x, df1, df2);
+}
+function fInv(p, df1, df2){
+  return jStat.centralF.inv(p, df1, df2);
+}
+
+function compute(){
+  const df1A = safeDf(el("df1A").value);
+  const df2A = safeDf(el("df2A").value);
+  const df1B = safeDf(el("df1B").value);
+  const df2B = safeDf(el("df2B").value);
+
+  const showB = el("showB").checked;
+  const mode = el("mode").value;
+  const tail = el("tail").value;
+
+  let alpha = clamp(parseFloat(el("alpha").value), 0.0001, 0.9999);
+  let fVal  = parseFloat(el("fValue").value);
+  if(!isFinite(fVal) || fVal <= 0) fVal = 0.000001;
+
+  let fCritA = null;
+  let pValueA = null;
+  let shadedMode = "right"; // "right" or "left"
+  let shadeFrom = null; // threshold
+
+  if(mode === "alpha_to_crit"){
+    // Right tail: P(F >= c) = alpha => c = inv(1-alpha)
+    // Left tail:  P(F <= c) = alpha => c = inv(alpha)
+    const p = (tail === "right") ? (1 - alpha) : alpha;
+    fCritA = fInv(p, df1A, df2A);
+    shadedMode = tail;
+    shadeFrom = fCritA;
+
+    el("output").innerHTML =
+      `<strong>F-table (critical value)</strong><br>` +
+      `A: df1=${df1A}, df2=${df2A}<br>` +
+      `${tail === "right" ? "Fcrit (right tail)" : "Fcrit (left tail)"} = ${fmt(fCritA)}<br>` +
+      `<span class="small">Shaded region shows the selected tail area.</span>` +
+      (showB ? `<hr style="border:none;border-top:1px solid #ddd;margin:10px 0;">` +
+              `B: df1=${df1B}, df2=${df2B} (overlay only)` : "");
+  } else {
+    // F -> p
+    // Right tail p = 1 - CDF(F)
+    // Left tail p = CDF(F)
+    pValueA = (tail === "right") ? (1 - fCdf(fVal, df1A, df2A)) : fCdf(fVal, df1A, df2A);
+    shadedMode = tail;
+    shadeFrom = fVal;
+
+    el("output").innerHTML =
+      `<strong>P-value from F</strong><br>` +
+      `A: df1=${df1A}, df2=${df2A}<br>` +
+      `F = ${fmt(fVal)}<br>` +
+      `${tail === "right" ? "p = P(F ≥ observed)" : "p = P(F ≤ observed)"} = ${fmt(pValueA)}<br>` +
+      `<span class="small">Shaded region shows the selected tail probability.</span>` +
+      (showB ? `<hr style="border:none;border-top:1px solid #ddd;margin:10px 0;">` +
+              `B: df1=${df1B}, df2=${df2B} (overlay only)` : "");
+  }
+
+  return { df1A, df2A, df1B, df2B, showB, mode, tail, alpha, fVal, shadeFrom, shadedMode, fCritA, pValueA };
+}
+
+function initChart(){
+  const ctx = el("chart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: { datasets: [] },
+    options: {
+      animation: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: {
+          type: "linear",
+          position: "bottom",
+          title: { display:true, text:"F values", font:{ size:20, weight:"bold" } },
+          ticks: { font:{ size:16, weight:"bold" } }
+        },
+        y: { display:false }
+      }
+    }
+  });
+}
+
+function buildChart(res){
+  // Choose x-range: F is positive and often right-skewed.
+  // Use the 0.999 quantile for a stable “whole curve” view.
+  const qA = fInv(0.999, res.df1A, res.df2A);
+  const qB = res.showB ? fInv(0.999, res.df1B, res.df2B) : qA;
+  const xMax = Math.max(qA, qB, (res.shadeFrom || 0), 1);
+  const xMin = 0;
+
+  chart.options.scales.x.min = xMin;
+  chart.options.scales.x.max = xMax;
+
+  const step = xMax / 700; // smooth curve
+  const curveA = [];
+  const curveB = [];
+  const shadeA = [];
+
+  for(let x = step; x <= xMax; x += step){
+    const yA = fPdf(x, res.df1A, res.df2A);
+    curveA.push({ x, y: yA });
+
+    if(res.showB){
+      const yB = fPdf(x, res.df1B, res.df2B);
+      curveB.push({ x, y: yB });
+    }
+
+    // Tail shading for Distribution A
+    let include = false;
+    if(res.shadedMode === "right"){
+      if(x >= res.shadeFrom) include = true;
+    } else {
+      if(x <= res.shadeFrom) include = true;
+    }
+    shadeA.push({ x, y: include ? yA : 0 });
+  }
+
+  const datasets = [
+    {
+      label: `A: F(df1=${res.df1A}, df2=${res.df2A})`,
+      data: curveA,
+      borderColor: "#1976d2",
+      borderWidth: 3,
+      pointRadius: 0,
+      fill: false
+    },
+    {
+      label: `A tail region`,
+      data: shadeA,
+      backgroundColor: "rgba(255,0,0,0.28)",
+      borderColor: "rgba(255,0,0,0)",
+      pointRadius: 0,
+      fill: true
+    }
+  ];
+
+  if(res.showB){
+    datasets.push({
+      label: `B: F(df1=${res.df1B}, df2=${res.df2B})`,
+      data: curveB,
+      borderColor: "#555",
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false
+    });
+  }
+
+  chart.data.datasets = datasets;
+  chart.update();
+}
+
+/* Events */
+document.querySelectorAll("input,select").forEach(e => {
+  e.addEventListener("input", () => {
+    // sync alpha slider + input
+    if(e.id === "alpha"){
+      const v = clamp(parseFloat(el("alpha").value), 0.0001, 0.9999);
+      el("alphaSlider").value = v;
+    }
+    if(e.id === "alphaSlider"){
+      const v = clamp(parseFloat(el("alphaSlider").value), 0.0001, 0.9999);
+      el("alpha").value = v.toFixed(4);
+    }
+
+    updateUI();
+    const res = compute();
+    buildChart(res);
+  });
+});
+
+/* Font size */
+el("fontSizeSlider").addEventListener("input", function(){
+  const size = parseInt(this.value, 10);
+  el("fontSizeValue").textContent = `${size} px`;
+  chart.options.scales.x.ticks.font = { size, weight: "bold" };
+  chart.options.scales.x.title.font = { size: size + 4, weight: "bold" };
+  chart.update();
+});
+
+/* Init */
+initChart();
+updateUI();
+// ensure alpha slider matches alpha input initially
+el("alphaSlider").value = clamp(parseFloat(el("alpha").value), 0.0001, 0.9999);
+el("alpha").value = clamp(parseFloat(el("alpha").value), 0.0001, 0.9999).toFixed(4);
+
+const res = compute();
+buildChart(res);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<div class="info-content">
+
+  <h2>Cohen's Kappa</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#kp-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#kp-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#kp-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#kp-table" style="color:var(--accent); text-decoration:none; padding:2px 0;">Agreement Matrix</a>
+      <a href="#kp-formula" style="color:var(--accent); text-decoration:none; padding:2px 0;">Formula</a>
+      <a href="#kp-ci" style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Interval</a>
+      <a href="#kp-interpret" style="color:var(--accent); text-decoration:none; padding:2px 0;">Interpretation Scale</a>
+      <a href="#kp-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypothesis Test</a>
+      <a href="#kp-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#kp-limitations" style="color:var(--accent); text-decoration:none; padding:2px 0;">Limitations</a>
+      <a href="#kp-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#kp-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#kp-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#kp-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#kp-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#kp-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="kp-purpose">Purpose</h3>
+  <p>
+    Cohen's kappa measures <strong>agreement between two raters</strong> beyond what would be expected by chance,
+    for <strong>categorical (nominal) data</strong>.
+  </p>
+
+  <h3 id="kp-when">When to Use</h3>
+  <ul>
+    <li>Inter-rater reliability assessment</li>
+    <li>Agreement between two diagnostic methods or classifiers</li>
+    <li>Classification consistency studies</li>
+    <li>Evaluating whether two observers agree beyond chance on nominal categories</li>
+  </ul>
+
+  <h3 id="kp-idea">Key Idea</h3>
+  <p>
+    Observed agreement (P<sub>o</sub>) alone is misleading because some agreement occurs by chance.
+    Kappa adjusts for this: it measures how much <em>better</em> than chance the two raters agree.
+    κ = 0 means agreement no better than chance; κ = 1 means perfect agreement.
+  </p>
+
+  <h3 id="kp-table">Agreement Matrix</h3>
+  <p>
+    Data are arranged in a square matrix where rows = Rater 1 categories and columns = Rater 2 categories.
+    <strong>Diagonal cells</strong> represent agreement; <strong>off-diagonal cells</strong> represent disagreement.
+    The matrix can be any size (2×2, 3×3, etc.) depending on the number of categories.
+  </p>
+
+  <h3 id="kp-formula">Formula</h3>
+  <p><strong>κ = (P<sub>o</sub> − P<sub>e</sub>) / (1 − P<sub>e</sub>)</strong></p>
+  <ul>
+    <li><strong>P<sub>o</sub></strong> = observed proportion of agreement (sum of diagonal / N)</li>
+    <li><strong>P<sub>e</sub></strong> = expected proportion of agreement by chance (based on marginal proportions)</li>
+  </ul>
+
+  <h3 id="kp-ci">Confidence Interval</h3>
+  <p>The 95% CI for κ is computed using the asymptotic standard error:</p>
+  <p><strong>SE(κ) ≈ √(P<sub>o</sub>(1 − P<sub>o</sub>) / (N(1 − P<sub>e</sub>)²))</strong></p>
+  <p><strong>95% CI: κ ± 1.96 × SE(κ)</strong></p>
+  <p class="note">Confidence intervals for κ are asymptotic approximations and should be interpreted cautiously for small N.</p>
+
+  <h3 id="kp-interpret">Interpretation Scale</h3>
+  <ul>
+    <li>κ &lt; 0.20 → Poor agreement</li>
+    <li>0.21–0.40 → Fair agreement</li>
+    <li>0.41–0.60 → Moderate agreement</li>
+    <li>0.61–0.80 → Substantial agreement</li>
+    <li>0.81–1.00 → Almost perfect agreement</li>
+  </ul>
+  <p class="note">These thresholds (Landis &amp; Koch, 1977) are widely used but are arbitrary guidelines — context and clinical requirements should also guide interpretation.</p>
+
+  <h3 id="kp-hypotheses">Hypothesis Test</h3>
+  <p><strong>H₀:</strong> κ = 0 (agreement is no better than chance).</p>
+  <p><strong>H₁:</strong> κ &gt; 0 (agreement exceeds chance).</p>
+  <p>The test statistic is <strong>z = κ / SE(κ)</strong>, compared to a standard normal distribution.</p>
+
+  <h3 id="kp-assumptions">Assumptions</h3>
+  <ul>
+    <li>Exactly two raters (for standard Cohen's kappa)</li>
+    <li>Nominal (categorical) outcome with the same categories for both raters</li>
+    <li>Independent ratings — each rater classifies independently</li>
+    <li>All subjects rated by both raters</li>
+  </ul>
+
+  <h3 id="kp-limitations">Limitations</h3>
+  <ul>
+    <li><strong>Prevalence paradox:</strong> κ is affected by the prevalence of categories — rare categories reduce κ even with high observed agreement</li>
+    <li><strong>Marginal imbalance:</strong> unequal marginal totals between raters can reduce κ</li>
+    <li>Does not account for the severity of disagreements (use weighted kappa for ordinal data)</li>
+    <li>Only applicable to exactly two raters (use Fleiss' kappa for multiple raters)</li>
+  </ul>
+
+  <h3 id="kp-decision">Decision Rule</h3>
+  <p>Reject H₀ (κ = 0) if <strong>p &lt; α</strong>. Focus on the κ value and its CI for practical interpretation.</p>
+
+  <h3 id="kp-viz">Visualisation Notes</h3>
+  <p>
+    The <strong>agreement heatmap</strong> shows a matrix of observed counts for each rater combination:
+  </p>
+  <ul>
+    <li><strong>Diagonal cells (blue):</strong> both raters agreed — the stronger the blue, the more agreements in that category</li>
+    <li><strong>Off-diagonal cells (orange/red):</strong> raters disagreed — colour intensity reflects the frequency of that specific disagreement pattern</li>
+  </ul>
+  <p>
+    The heatmap reveals not just the overall κ value, but <em>where</em> disagreement occurs —
+    which categories are most often confused between raters.
+    This is essential for identifying systematic biases in classification.
+  </p>
+
+  <h3 id="kp-clinical">Clinical Interpretation</h3>
+  <p>
+    Kappa is widely used to evaluate diagnostic agreement, pathology interpretation consistency, and classification reliability.
+    Report both the κ value and its 95% CI.
+    A statistically significant κ (&gt; 0) is necessary but not sufficient — the magnitude must be clinically acceptable.
+    Most clinical contexts require κ ≥ 0.6 for acceptable agreement.
+  </p>
+
+  <h3 id="kp-reporting">Reporting Example</h3>
+  <p>
+    Agreement between raters was substantial (κ = 0.74, 95% CI: 0.62–0.86, p &lt; 0.001).
+  </p>
+
+  <h3 id="kp-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Significance level (α):</strong> Configure for the hypothesis test of κ = 0</li>
+    <li><strong>Agreement heatmap:</strong> Toggle the visualisation on/off</li>
+  </ul>
+
+  <h3 id="kp-data">Generating Sample Data</h3>
+  <p>
+    Create synthetic contingency matrices with varying levels of inter-rater agreement (high, moderate, low, or chance).
+    Useful for exploring how κ changes with different agreement patterns.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+  </p>
+
+</div>

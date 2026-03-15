@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bias / Trueness</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;padding:20px;}
+    .container{max-width:1000px;margin:0 auto;}
+    h1{font-size:22px;margin-bottom:4px;}
+    .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px;}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;}
+    .section-title{font-weight:700;font-size:14px;margin-bottom:10px;}
+    .note{color:var(--muted);font-size:12px;margin-top:5px;}
+    .field-label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:10px 0 4px;}
+
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:700px){.grid-2{grid-template-columns:1fr;}}
+
+    select,input[type="number"],input[type="text"]{
+      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+      background:#fff;font-size:13px;outline:none;
+    }
+    select:focus,input:focus{border-color:var(--accent);}
+    textarea{
+      width:100%;min-height:200px;padding:10px;border:1px solid var(--line);border-radius:10px;
+      font-family:ui-monospace,monospace;font-size:13px;background:#fff;resize:vertical;outline:none;
+    }
+    textarea:focus{border-color:var(--accent);}
+
+    .tabs{display:flex;gap:8px;margin-bottom:16px;}
+    .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+
+    button{border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+    .btn-secondary{background:#111827;color:#fff;}
+    .btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+    .kpi{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+    .kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px;}
+    .kpi-value{font-size:19px;font-weight:900;font-family:ui-monospace,monospace;}
+    .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+    .verdict{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:14px;}
+    .verdict.pass{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
+    .verdict.fail{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
+    .verdict.warn{background:#fffbeb;border:1px solid #fde68a;color:#b45309;}
+
+    .section-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;}
+
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
+    th{background:#f9fafb;font-weight:800;color:#374151;}
+    td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
+    tr:last-child td{border-bottom:none;}
+
+    .error-msg{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
+    .example-box{background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.8;}
+
+    .sig-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#f9fafb;margin-bottom:14px;font-size:13px;flex-wrap:wrap;}
+    .sig-label{font-weight:700;min-width:120px;}
+    .sig-val{font-family:ui-monospace,monospace;font-weight:700;}
+    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+    .badge-sig{background:#fef2f2;color:#b91c1c;}
+    .badge-ns{background:#f0fdf4;color:#15803d;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Bias &amp; Trueness</h1>
+  <p class="subtitle">Assess systematic bias against a known reference value. For method-vs-method comparison use the Method Comparison tool (Bland-Altman).</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Options</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
+
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="tab-content active">
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div class="section-title">Settings</div>
+
+          <label class="field-label">Input mode</label>
+          <select id="sel-mode" onchange="updateHints()">
+            <option value="single">Single reference value (e.g. CRM, EQA assigned value)</option>
+            <option value="multi">Per-sample reference values</option>
+          </select>
+
+          <div id="single-ref-wrap">
+            <label class="field-label">Reference / target value</label>
+            <input type="number" id="inp-ref" step="any" placeholder="e.g. 5.50">
+          </div>
+
+          <label class="field-label">Analyte / Sample</label>
+          <input type="text" id="inp-analyte" placeholder="e.g. Glucose, HbA1c">
+
+          <label class="field-label">Unit</label>
+          <input type="text" id="inp-unit" placeholder="e.g. mmol/L, %">
+
+          <label class="field-label">Allowable bias (%) — optional</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="inp-allowable" min="0" step="0.1" placeholder="e.g. 5.0" style="flex:1;">
+            <span style="font-size:13px;color:var(--muted);">%</span>
+          </div>
+          <p class="note">Absolute value — e.g. enter 5 for ±5%. If blank, no pass/fail assessment.</p>
+        </div>
+
+        <div class="card">
+          <div class="section-title" id="hint-title">Format — Single Reference</div>
+          <p class="note" id="hint-body">One measured value per line. The reference value is entered above.</p>
+          <div class="example-box" id="hint-example">5.44<br>5.51<br>5.48<br>5.53<br>5.46</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Raw Data</div>
+        <textarea id="txt-data" placeholder="Paste measurements here…" oninput="previewParse()"></textarea>
+        <p class="note" id="parse-preview"></p>
+      </div>
+    </div>
+
+    <details style="margin-bottom:12px;">
+      <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
+      <div class="card" style="margin-top:8px;">
+
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Reference / target value</label>
+            <input type="number" id="gen-ref" value="5.50" step="any">
+
+            <label class="field-label">True % bias to simulate</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" id="gen-bias-pct" value="3.0" step="0.1" style="flex:1;">
+              <span style="font-size:13px;color:var(--muted);">%</span>
+            </div>
+
+            <label class="field-label">Imprecision (SD)</label>
+            <input type="number" id="gen-sd" value="0.08" min="0" step="any">
+
+            <label class="field-label">n per level</label>
+            <input type="number" id="gen-n" value="10" min="2" step="1">
+          </div>
+
+          <div id="gen-multi-opts">
+            <label class="field-label">Extra concentration levels — optional</label>
+            <p class="note" style="margin-top:0;">Comma-separated reference values. Same % bias and SD applied to each level. Switches output to "measured, reference" pair format.</p>
+            <input type="text" id="gen-extra-refs" placeholder="e.g. 8.00, 12.00, 20.00">
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" onclick="generateBiasData()">Generate</button>
+          <button class="btn-secondary" onclick="useBiasData()">Use in analysis</button>
+        </div>
+        <p class="note" style="margin-top:8px;">Generated values appear below. Click "Use in analysis" to copy them into the data box.</p>
+        <textarea id="gen-output" readonly style="margin-top:8px;min-height:100px;font-size:12px;font-family:ui-monospace,monospace;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:#f9fafb;"></textarea>
+      </div>
+    </details>
+
+    <div class="error-msg" id="input-error"></div>
+
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="loadExample()">Load Example</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+  </div>
+
+  <!-- RESULTS TAB -->
+  <div id="tab-results" class="tab-content">
+    <div id="results-body"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
+      <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tabs ──
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+function generateBiasData(){
+  const ref      = parseFloat(document.getElementById('gen-ref').value)||5.50;
+  const biasPct  = parseFloat(document.getElementById('gen-bias-pct').value)||0;
+  const sdVal    = Math.max(0, parseFloat(document.getElementById('gen-sd').value)||0.08);
+  const n        = Math.max(2, parseInt(document.getElementById('gen-n').value)||10);
+  const extraRaw = document.getElementById('gen-extra-refs').value.trim();
+  const extraRefs= extraRaw ? extraRaw.split(',').map(s=>parseFloat(s.trim())).filter(v=>!isNaN(v)) : [];
+  const allRefs  = [ref, ...extraRefs];
+  const lines    = [];
+  const mode     = document.getElementById('sel-mode').value;
+  const multiMode= extraRefs.length > 0 || mode === 'multi';
+
+  allRefs.forEach(r=>{
+    const trueMean = r * (1 + biasPct/100);
+    for(let i=0;i<n;i++){
+      const measured = jStat.normal.sample(trueMean, sdVal);
+      if(multiMode) lines.push(`${measured.toFixed(4)}, ${r.toFixed(4)}`);
+      else          lines.push(measured.toFixed(4));
+    }
+  });
+
+  // If multi-level data was generated, switch mode to multi
+  if(multiMode && mode !== 'multi'){
+    document.getElementById('sel-mode').value = 'multi';
+    updateHints();
+  }
+
+  document.getElementById('gen-output').value = lines.join('\n');
+}
+
+function useBiasData(){
+  const val = document.getElementById('gen-output').value;
+  if(!val) return;
+  document.getElementById('txt-data').value = val;
+  // If output contains commas it's pair format — ensure multi mode is active
+  if(val.includes(',')){
+    document.getElementById('sel-mode').value = 'multi';
+    updateHints();
+  }
+  previewParse();
+}
+
+function updateHints(){
+  const mode=document.getElementById('sel-mode').value;
+  document.getElementById('single-ref-wrap').style.display=mode==='single'?'block':'none';
+  if(mode==='single'){
+    document.getElementById('hint-title').textContent='Format — Single Reference';
+    document.getElementById('hint-body').textContent='One measured value per line.';
+    document.getElementById('hint-example').innerHTML='5.44<br>5.51<br>5.48<br>5.53<br>5.46';
+  } else {
+    document.getElementById('hint-title').textContent='Format — Per-Sample References';
+    document.getElementById('hint-body').textContent='Each line: measured, reference — separated by comma, semicolon, or tab.';
+    document.getElementById('hint-example').innerHTML='5.44, 5.50<br>5.51, 5.50<br>8.21, 8.00<br>8.35, 8.00<br>12.10, 12.00';
+  }
+  previewParse();
+}
+
+function loadExample(){
+  const mode=document.getElementById('sel-mode').value;
+  document.getElementById('inp-analyte').value='Glucose';
+  document.getElementById('inp-unit').value='mmol/L';
+  document.getElementById('inp-allowable').value='5.0';
+  if(mode==='single'){
+    document.getElementById('inp-ref').value='5.50';
+    document.getElementById('txt-data').value='5.44\n5.51\n5.48\n5.53\n5.46\n5.49\n5.52\n5.47\n5.50\n5.53';
+  } else {
+    document.getElementById('txt-data').value=
+      '5.44,5.50\n5.51,5.50\n5.48,5.50\n8.21,8.00\n8.35,8.00\n8.29,8.00\n12.10,12.00\n12.18,12.00\n12.05,12.00';
+  }
+  previewParse();
+}
+
+function clearAll(){
+  document.getElementById('txt-data').value='';
+  document.getElementById('parse-preview').textContent='';
+}
+
+function previewParse(){
+  const mode=document.getElementById('sel-mode').value;
+  const raw=document.getElementById('txt-data').value;
+  if(!raw.trim()){document.getElementById('parse-preview').textContent='';return;}
+  if(mode==='single'){
+    const n=raw.trim().split(/\r?\n/).filter(l=>parseFloat(l.trim())||l.trim()==='0').length;
+    document.getElementById('parse-preview').textContent=`${n} value(s) detected.`;
+  } else {
+    const pairs=parsePairs(raw);
+    document.getElementById('parse-preview').textContent=`${pairs.length} pair(s) detected.`;
+  }
+}
+
+function showError(msg){
+  const el=document.getElementById('input-error');
+  el.textContent=msg; el.style.display=msg?'block':'none';
+}
+
+// ── Parsers ──
+function parseSingle(raw,ref){
+  return raw.trim().split(/\r?\n/).map(l=>parseFloat(l.trim())).filter(n=>!isNaN(n))
+    .map(m=>({measured:m,reference:ref}));
+}
+function parsePairs(raw){
+  const pairs=[];
+  raw.trim().split(/\r?\n/).forEach(l=>{
+    const parts=l.split(/[,;\t]/).map(s=>s.trim());
+    if(parts.length<2) return;
+    const m=parseFloat(parts[0]), r=parseFloat(parts[1]);
+    if(!isNaN(m)&&!isNaN(r)) pairs.push({measured:m,reference:r});
+  });
+  return pairs;
+}
+
+// ── Stats ──
+function mean(arr){return arr.reduce((s,v)=>s+v,0)/arr.length;}
+function sd(arr){
+  if(arr.length<2) return 0;
+  const m=mean(arr);
+  return Math.sqrt(arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-1));
+}
+function fmt(n,d=3){return (n===null||n===undefined||isNaN(n))?'—':Number(n).toFixed(d);}
+
+let lastChart=null;
+
+function calculate(){
+  showError('');
+  if(lastChart){lastChart.destroy();lastChart=null;}
+  const mode=document.getElementById('sel-mode').value;
+  const raw=document.getElementById('txt-data').value;
+  if(!raw.trim()){showError('Please enter data.');return;}
+  const analyte=document.getElementById('inp-analyte').value.trim()||'Sample';
+  const unit=document.getElementById('inp-unit').value.trim();
+  const allowable=parseFloat(document.getElementById('inp-allowable').value);
+
+  let pairs=[];
+  if(mode==='single'){
+    const ref=parseFloat(document.getElementById('inp-ref').value);
+    if(isNaN(ref)){showError('Enter a reference value.');return;}
+    pairs=parseSingle(raw,ref);
+  } else {
+    pairs=parsePairs(raw);
+  }
+  if(pairs.length<2){showError('At least 2 valid data points required.');return;}
+
+  // Per-sample bias
+  const biases=pairs.map(p=>({
+    measured:p.measured,
+    reference:p.reference,
+    absBias:p.measured-p.reference,
+    pctBias:p.reference!==0?(p.measured-p.reference)/p.reference*100:NaN
+  }));
+
+  const pctArr=biases.map(b=>b.pctBias).filter(n=>!isNaN(n));
+  const n=pctArr.length;
+  const meanBias=mean(pctArr);
+  const sdBias=sd(pctArr);
+  const se=sdBias/Math.sqrt(n);
+  const tCrit=jStat.studentt.inv(0.975,n-1);
+  const ciLo=meanBias-tCrit*se, ciHi=meanBias+tCrit*se;
+
+  // One-sample t-test vs 0
+  const t=se>0?meanBias/se:0;
+  const df=n-1;
+  const pVal=2*(1-jStat.studentt.cdf(Math.abs(t),df));
+  const sig=pVal<0.05;
+
+  const hasLimit=!isNaN(allowable)&&allowable>0;
+  const pass=hasLimit?Math.abs(meanBias)<=allowable:null;
+
+  // Mean absolute % bias
+  const meanAbsPct=mean(pctArr.map(Math.abs));
+
+  let html=kpiGrid([
+    {label:'n',                 value:n,                    sub:'samples'},
+    {label:'Mean Bias',         value:fmt(meanBias,2)+'%',  sub:`95% CI [${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`},
+    {label:'SD of Bias',        value:fmt(sdBias,2)+'%',    sub:'variability of bias'},
+    {label:'Mean |Bias|',       value:fmt(meanAbsPct,2)+'%',sub:'mean absolute % bias'},
+    {label:'t-statistic',       value:fmt(t,3),             sub:`df=${df}, p=${pVal<0.001?'<0.001':fmt(pVal,3)}`},
+    {label:'Systematic Bias',   value:sig?'Significant':'Not significant', sub:'one-sample t-test vs 0'},
+  ]);
+
+  if(hasLimit) html+=verdictHtml(pass,`Mean bias ${fmt(meanBias,2)}%`,`allowable ±${fmt(allowable,1)}%`);
+
+  // t-test significance block
+  html+=`<div class="sig-row">
+    <span class="sig-label">Significance test:</span>
+    <span class="sig-val">t(${df}) = ${fmt(t,3)}, p = ${pVal<0.001?'<0.001':fmt(pVal,3)}</span>
+    <span class="badge ${sig?'badge-sig':'badge-ns'}">${sig?'Significant systematic bias':'No significant bias detected'}</span>
+    <span style="color:var(--muted);font-size:12px;">H₀: mean bias = 0</span>
+  </div>`;
+
+  // Bias chart
+  html+=`<div class="section-header">Individual % Bias (per sample)</div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="bias-chart"></canvas></div>`;
+
+  // Per-sample table
+  html+=`<div class="section-header">Per-Sample Results</div>`;
+  html+=`<div class="table-wrap"><table><thead><tr>
+    <th>#</th>
+    <th class="num">Measured</th>
+    <th class="num">Reference</th>
+    <th class="num">Abs. Bias</th>
+    <th class="num">% Bias</th>
+    <th>Flag</th>
+  </tr></thead><tbody>`;
+  biases.forEach((b,i)=>{
+    const flag=hasLimit&&Math.abs(b.pctBias)>allowable;
+    html+=`<tr>
+      <td>${i+1}</td>
+      <td class="num">${fmt(b.measured,4)}</td>
+      <td class="num">${fmt(b.reference,4)}</td>
+      <td class="num">${fmt(b.absBias,4)}</td>
+      <td class="num" style="color:${Math.abs(b.pctBias)>(hasLimit?allowable:Infinity)?'var(--bad)':'inherit'};font-weight:${flag?'700':'400'};">${fmt(b.pctBias,2)}%</td>
+      <td>${flag?'<span style="color:var(--bad);font-weight:700;">⚠ Exceeds limit</span>':''}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  document.getElementById('results-body').innerHTML=html;
+
+  // Draw chart
+  const labels=biases.map((_,i)=>i+1);
+  const barColors=biases.map(b=>
+    hasLimit&&Math.abs(b.pctBias)>allowable?'#c62828':
+    b.pctBias>0?'#1976d2':'#7c3aed'
+  );
+  const ctx=document.getElementById('bias-chart');
+  lastChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'% Bias',data:pctArr,backgroundColor:barColors,borderRadius:4},
+        {label:'Mean Bias',data:labels.map(()=>meanBias),type:'line',borderColor:'#2e7d32',borderWidth:2,borderDash:[],pointRadius:0,fill:false},
+        {label:'95% CI upper',data:labels.map(()=>ciHi),type:'line',borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'95% CI lower',data:labels.map(()=>ciLo),type:'line',borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
+        ...(hasLimit?[
+          {label:`+Allowable (${fmt(allowable,1)}%)`,data:labels.map(()=>allowable),type:'line',borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false},
+          {label:`-Allowable`,data:labels.map(()=>-allowable),type:'line',borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false},
+        ]:[]),
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:14,font:{size:11}}}},
+      scales:{
+        x:{title:{display:true,text:'Sample #'}},
+        y:{title:{display:true,text:'% Bias'},grid:{color:ctx=>'#e5e7eb'}}
+      }
+    }
+  });
+
+  window._lastResult={analyte,unit,n,meanBias,sdBias,ciLo,ciHi,t,df,pVal,sig,meanAbsPct,allowable,pass,biases};
+  document.querySelector('[data-tab="tab-results"]').click();
+}
+
+function kpiGrid(items){
+  return '<div class="kpi-grid">'+items.map(({label,value,sub})=>
+    `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`
+  ).join('')+'</div>';
+}
+function verdictHtml(pass,observed,limit){
+  return `<div class="verdict ${pass?'pass':'fail'}">${pass?'✓ PASS':'✗ FAIL'} — ${observed} is ${pass?'within':'outside'} allowable bias of ${limit}</div>`;
+}
+
+function exportExcel(){
+  const r=window._lastResult; if(!r) return;
+  const wb=XLSX.utils.book_new();
+  const summary=[
+    ['Analyte',r.analyte],['Unit',r.unit],[],
+    ['n',r.n],['Mean % Bias',r.meanBias],['SD of Bias',r.sdBias],
+    ['95% CI lower',r.ciLo],['95% CI upper',r.ciHi],
+    ['Mean |Bias|',r.meanAbsPct],
+    ['t-statistic',r.t],['df',r.df],['p-value',r.pVal],
+    ['Significant bias',r.sig?'Yes':'No'],
+    ...((!isNaN(r.allowable)&&r.allowable>0)?[['Allowable bias %',r.allowable],['Result',r.pass?'PASS':'FAIL']]:[]),
+  ];
+  const detail=[['#','Measured','Reference','Abs Bias','% Bias'],...r.biases.map((b,i)=>[i+1,b.measured,b.reference,b.absBias,b.pctBias])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(summary),'Summary');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(detail),'Per-Sample');
+  XLSX.writeFile(wb,`bias_${r.analyte||'results'}.xlsx`);
+}
+</script>
+</body>
+</html>

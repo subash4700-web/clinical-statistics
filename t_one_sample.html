@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>One-Sample t-test</title>
+
+  <!-- Chart + stats + Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --accent:#1976d2;
+      --warn:#b45309;
+      --bad:#c62828;
+      --good:#2e7d32;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body{ background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, sans-serif; margin:0; padding: 20px 16px 60px; }
+    .container{ max-width:1100px; margin: 0 auto; }
+    h1{ margin-bottom:6px; font-size: 1.6rem; }
+    .subtitle{ color:var(--muted); margin-top:0; }
+
+    .back-home{
+      display:inline-block;
+      margin-bottom:16px;
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:600;
+      font-size:14px;
+    }
+    .back-home:hover{ text-decoration:underline; }
+
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media (max-width: 900px){ .grid-2{ grid-template-columns:1fr; } }
+
+    textarea{
+      width:100%;
+      min-height:160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+    }
+    select, input[type="number"]{
+      width:100%;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+    }
+    .section-title{
+      font-weight:700;
+      margin:0 0 8px 0;
+      font-size: 14px;
+    }
+    .note{ color:var(--muted); font-size: 12.5px; margin-top:6px; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12.5px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color: var(--muted);
+    }
+    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+    button{
+      border:none;
+      border-radius:10px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .05s ease, opacity .15s ease;
+    }
+    button:active{ transform: translateY(1px); }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
+    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+
+    .tabs{ display:flex; gap:10px; margin: 12px 0 14px; }
+    .tab{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      cursor:pointer;
+      font-weight:700;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .tab-content{ display:none; }
+    .tab-content.active{ display:block; }
+
+    .alert{
+      border-radius:12px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size: 13px;
+      line-height:1.4;
+    }
+    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color: #7c2d12; }
+    .alert.bad{ border-color:#ef444455; background:#fef2f2; color: #7f1d1d; }
+    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color: #14532d; }
+
+    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
+    table{ width:100%; border-collapse:collapse; font-size: 13px; background:#fff; }
+    th, td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
+    th{ background:#f9fafb; font-weight:800; color:#374151; }
+    td.num, th.num{ text-align:right; font-family: ui-monospace, monospace; }
+    tr.outlier td{ background:#fff7ed; }
+    .small{ font-size:12px; color:var(--muted); }
+    .copybox{
+      display:flex; gap:10px; align-items:flex-start;
+      border:1px dashed var(--line);
+      padding:10px; border-radius:12px; background:#fff;
+    }
+    .copybox pre{
+      margin:0; white-space:pre-wrap; word-break:break-word;
+      font-size: 12.5px; line-height:1.5;
+      flex:1;
+    }
+
+    canvas{ max-width:100%; }
+    .viz-wrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .assump-grid{
+      display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;
+    }
+    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
+    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
+    .assump-item input{ margin-top:2px; }
+    .kpi-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr; } }
+    .kpi{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:#fff;
+    }
+    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
+    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
+  </style>
+</head>
+
+<body>
+
+
+<div class="container">
+  <h1 style="margin-bottom:6px;">One-Sample t-test</h1>
+  <p class="subtitle" style="margin-top:0;">Compare a sample mean to a known or hypothesized population mean (μ₀).</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab" data-tab="results">Results</div>
+  </div>
+
+  <!-- ================= INPUT TAB ================= -->
+  <div id="input" class="tab-content active">
+
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="section-title">Study context</div>
+        <div class="assump-grid">
+          <label class="assump-item">
+            <input type="checkbox" id="chkContinuous" checked />
+            <span>
+              <strong>Outcome is continuous</strong><br />
+              <span class="small">Numeric measurements (not categories)</span>
+            </span>
+          </label>
+
+          <label class="assump-item">
+            <input type="checkbox" id="chkIndep" checked />
+            <span>
+              <strong>Observations are independent</strong><br />
+              <span class="small">Each value comes from a different subject</span>
+            </span>
+          </label>
+
+          <label class="assump-item">
+            <input type="checkbox" id="chkMuKnown" checked />
+            <span>
+              <strong>μ₀ is a known reference</strong><br />
+              <span class="small">Not estimated from the same sample</span>
+            </span>
+          </label>
+
+          <label class="assump-item">
+            <input type="checkbox" id="chkOkCheck" checked />
+            <span>
+              <strong>Run assumption checks</strong><br />
+              <span class="small">Normality + extreme outliers</span>
+            </span>
+          </label>
+        </div>
+
+        <div style="margin-top:10px;">
+          <span class="pill">Tip: For n ≥ 30 the t-test is robust to mild non-normality (CLT).</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Test settings</div>
+
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Hypothesized mean (μ₀)</label>
+            <input type="number" id="mu0" value="0" step="any" />
+          </div>
+
+          <div>
+            <label class="small" style="font-weight:800;">Significance level (α)</label>
+            <select id="alpha">
+              <option value="0.05" selected>0.05</option>
+              <option value="0.01">0.01</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="small" style="font-weight:800;">Test type</label>
+          <select id="tail">
+            <option value="two" selected>Two-sided (μ ≠ μ₀)</option>
+            <option value="right">One-sided (μ &gt; μ₀)</option>
+            <option value="left">One-sided (μ &lt; μ₀)</option>
+          </select>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="assump-item">
+            <input type="checkbox" id="showEffect" checked />
+            <span><strong>Show effect size</strong> (Cohen's d)</span>
+          </label>
+          <label class="assump-item" style="margin-top:8px;">
+            <input type="checkbox" id="showViz" checked />
+            <span><strong>Show hypothesis visualisation</strong> (sampling distribution + CI vs μ₀)</span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Data input</div>
+
+      <label class="small" style="font-weight:800;">Sample values (one per row, or space/comma/semicolon/tab separated)</label>
+      <textarea id="dataInput" placeholder="Paste values here, e.g.:&#10;201.5&#10;199.4&#10;199.9&#10;200.2&#10;200.8"></textarea>
+
+      <div class="note">
+        Accepted: one value per row (Excel column paste), or space, comma, semicolon, tab separated. Header rows are ignored automatically.
+      </div>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="clearBtn">Clear</button>
+        <button class="btn-primary" id="runBtn">Run analysis</button>
+      </div>
+
+      <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
+    </div>
+
+    <!-- moved generation section below and collapsed -->
+    <details style="margin-top:16px;">
+      <summary style="font-weight:700; cursor:pointer;">Generate sample data</summary>
+      <div class="card" style="margin-top:8px;">
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Sample size (n)</label>
+            <input type="number" id="genN" value="20" min="1" step="1" />
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Distribution</label>
+            <select id="genDist">
+              <option value="normal" selected>Normal</option>
+              <option value="uniform">Uniform</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:10px;">
+          <div>
+            <label class="small" style="font-weight:800;">Mean / mid</label>
+            <input type="number" id="genMean" value="0" step="any" />
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">SD / half-range</label>
+            <input type="number" id="genSD" value="1" step="any" />
+            <div class="note small">For uniform distribution this is ± half‑range around the mid.</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" id="generateBtn">Generate</button>
+          <button class="btn-secondary" id="useGeneratedBtn">Use in analysis</button>
+        </div>
+        <div class="note">Generated values appear below. Clicking “Use in analysis” copies them into the data input box.</div>
+        <textarea id="generatedOutput" readonly style="margin-top:8px; min-height:120px;"></textarea>
+      </div>
+    </details>
+
+      <div class="note">
+        Accepted: one value per row (Excel column paste), or space, comma, semicolon, tab separated. Header rows are ignored automatically.
+      </div>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-ghost" id="clearBtn">Clear</button>
+        <button class="btn-primary" id="runBtn">Run analysis</button>
+      </div>
+
+      <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= RESULTS TAB ================= -->
+  <div id="results" class="tab-content">
+
+    <div id="statusArea" style="margin-bottom:12px;"></div>
+
+    <div class="kpi-grid" id="kpiGrid" style="display:none;">
+      <div class="kpi">
+        <div class="label">n (included / total)</div>
+        <div class="value" id="kpiN">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">t(df)</div>
+        <div class="value" id="kpiT">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">p-value</div>
+        <div class="value" id="kpiP">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:12px;">
+      <div class="card">
+        <div class="section-title">Summary</div>
+        <div class="table-wrap">
+          <table>
+            <tbody id="summaryTable"></tbody>
+          </table>
+        </div>
+        <div class="note" id="effectNote"></div>
+        <div class="note" style="margin-top:6px; color:#6b7280; font-size:11px;">† Reference range is shown for learning purposes only — it describes where individual data points fall, not where the true mean lies. It is not part of the one-sample t-test.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Clinical interpretation</div>
+        <div id="interpretBox" class="alert" style="margin-bottom:10px;">
+          Run the analysis to see interpretation.
+        </div>
+        <div class="section-title" style="margin-top:10px;">Reporting text</div>
+        <div class="copybox">
+          <pre id="reportText">—</pre>
+          <button class="btn-ghost" id="copyReportBtn">Copy</button>
+        </div>
+        <div class="note">This is a template. Ensure clinical context and units are included in your final report.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Assumption checks</div>
+      <div id="assumptionArea" class="note">Assumption checks will appear here.</div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Data review</div>
+      <div class="note">Flagged outliers are suggestions. You can include/exclude any row and the results will update.</div>
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="num">Value</th>
+              <th>Outlier</th>
+              <th>Include</th>
+            </tr>
+          </thead>
+          <tbody id="dataTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px; display:none;" id="vizCard">
+      <div class="section-title">Hypothesis visualisation</div>
+      <div class="note" style="margin-top:0;">
+        <strong style="color:#ef4444;">Red curve</strong> — sampling distribution of x̄ (width = SE = SD/√n). The blue shading and CI bar show the <strong>95% CI of the mean</strong>: where the true mean likely lies.<br>
+        <strong style="color:#6b7280;">Gray curve</strong> — distribution of individual data points (width = SD). The gray shading and bar show the <strong>95% reference range</strong>: where 95% of raw values fall.
+        <span style="color:#9ca3af; font-style:italic;"> The gray curve and reference range are included to illustrate the difference between individual variability and uncertainty about the mean — they are not part of the test.</span>
+      </div>
+      <!-- header row -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px; padding: 0 4px;">
+        <div>
+          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">What are we testing?</div>
+          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-top:2px;">Sample mean (x̄)</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">Does the CI include null?</div>
+          <div id="vizVerdict" style="font-size:13px; font-weight:900; margin-top:2px;">—</div>
+        </div>
+      </div>
+      <div class="viz-wrap" style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; position:relative; background:#f8fafc;">
+        <canvas id="tVizCanvas" height="270"></canvas>
+      </div>
+      <!-- footer verdict bar -->
+      <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+    </div>
+
+    <details class="card" style="margin-top:16px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px; color:var(--ink); list-style:none; display:flex; justify-content:space-between; align-items:center;">
+        <span class="section-title" style="margin:0;">How it works</span>
+        <span style="color:var(--muted); font-size:12px; font-weight:400;">click to expand</span>
+      </summary>
+      <div style="margin-top:12px; display:grid; gap:12px;">
+
+        <div style="background:#f8fafc; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#1e40af; margin-bottom:6px;">95% Confidence Interval of the Mean</div>
+          <div style="font-family:ui-monospace, monospace; font-size:13px; color:#1e3a5f; background:#eff6ff; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
+            CI = x̄ &plusmn; t<sub>n&minus;1,&thinsp;&alpha;/2</sub> &times; SE &nbsp;&nbsp;where&nbsp;&nbsp; SE = SD / &radic;n
+          </div>
+          <div style="font-size:12px; color:#374151;">
+            This interval answers: <em>"Where does the true population mean likely lie?"</em>
+            It narrows as n increases — more data means more certainty about the mean.
+            This is the quantity tested by the one-sample t-test.
+          </div>
+        </div>
+
+        <div style="background:#f8fafc; border-radius:8px; padding:12px 14px;">
+          <div style="font-weight:700; color:#4b5563; margin-bottom:6px;">95% Reference Range <span style="font-weight:400; font-size:11px; color:#9ca3af;">(for illustration only — not part of the test)</span></div>
+          <div style="font-family:ui-monospace, monospace; font-size:13px; color:#374151; background:#f3f4f6; border-radius:6px; padding:8px 12px; margin-bottom:6px;">
+            Reference range = x̄ &plusmn; t<sub>n&minus;1,&thinsp;&alpha;/2</sub> &times; SD
+          </div>
+          <div style="font-size:12px; color:#374151;">
+            This interval answers: <em>"Where do 95% of individual data points fall?"</em>
+            It does <strong>not</strong> narrow with larger n — individual values always scatter around the mean.
+            It is shown here solely to contrast with the CI and make the distinction visual.
+          </div>
+        </div>
+
+        <div style="background:#fefce8; border-radius:8px; padding:10px 14px; font-size:12px; color:#713f12;">
+          <strong>Key insight:</strong> The CI and reference range use the same formula shape, but SE (= SD/&radic;n) instead of SD.
+          With n = 30, SE is ~5.5&times; smaller than SD — which is why the red curve is much narrower than the gray curve and the CI is much tighter than the reference range.
+        </div>
+
+      </div>
+    </details>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Export</div>
+      <div class="note">PDF export opens the print dialog. Excel export includes raw data and calculations.</div>
+      <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
+        <button class="btn-secondary" id="exportPdfBtn">Export PDF</button>
+        <button class="btn-primary" id="exportXlsxBtn">Export Excel</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ========= Utilities ========= */
+const el = (id) => document.getElementById(id);
+
+function fmt(x, d=4){
+  if (x === null || x === undefined || Number.isNaN(x)) return "—";
+  const ax = Math.abs(x);
+  if (ax !== 0 && ax < 0.0001) return x.toExponential(2);
+  return Number(x).toFixed(d);
+}
+function fmtP(p){
+  if (p === null || p === undefined || Number.isNaN(p)) return "—";
+  if (p < 0.0001) return "< 0.0001";
+  return Number(p).toFixed(4);
+}
+
+function parseValues(text){
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const vals = [];
+  for (const line of lines){
+    const parts = line.split(/[\t,; ]+/).filter(Boolean);
+    for (const part of parts){
+      const v = Number(part);
+      if (Number.isFinite(v)) vals.push(v);
+    }
+  }
+  return vals;
+}
+
+// ---------- data generation helpers ----------
+function generateSampleData(){
+  const n = parseInt(el("genN").value, 10);
+  const dist = el("genDist").value;
+  const mid = parseFloat(el("genMean").value);
+  const sd = parseFloat(el("genSD").value);
+  if (!Number.isFinite(n) || n < 1) return [];
+  if (!Number.isFinite(mid) || !Number.isFinite(sd) || sd < 0) return [];
+  const arr = [];
+  for (let i = 0; i < n; i++){
+    let v;
+    if (dist === "normal"){
+      v = jStat.normal.sample(mid, sd);
+    } else { // uniform
+      v = mid + (Math.random() * 2 - 1) * sd;
+    }
+    arr.push(Number(v.toFixed(4)));
+  }
+  return arr;
+}
+
+function refreshGeneratedDisplay(){
+  const vals = generateSampleData();
+  el("generatedOutput").value = vals.join("\n");
+}
+
+function mean(arr){
+  const n = arr.length;
+  if (!n) return NaN;
+  return arr.reduce((s, v) => s + v, 0) / n;
+}
+function sdSample(arr){
+  const n = arr.length;
+  if (n < 2) return NaN;
+  const m = mean(arr);
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / (n - 1));
+}
+function quantile(sorted, q){
+  const n = sorted.length;
+  if (!n) return NaN;
+  const pos = (n - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if (sorted[base + 1] === undefined) return sorted[base];
+  return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+}
+function iqrOutliers(values){
+  const s = [...values].sort((a, b) => a - b);
+  const q1 = quantile(s, 0.25);
+  const q3 = quantile(s, 0.75);
+  const iqr = q3 - q1;
+  return { q1, q3, iqr, lo: q1 - 1.5 * iqr, hi: q3 + 1.5 * iqr };
+}
+
+// Jarque–Bera normality test
+function jarqueBeraP(values){
+  const n = values.length;
+  if (n < 3) return { jb: NaN, p: NaN };
+  const m = mean(values);
+  let m2=0, m3=0, m4=0;
+  for (const v of values){
+    const x = v - m;
+    m2 += x * x;
+    m3 += x * x * x;
+    m4 += x * x * x * x;
+  }
+  m2 /= n; m3 /= n; m4 /= n;
+  const s = Math.sqrt(m2);
+  if (s === 0) return { jb: NaN, p: NaN };
+  const skew = m3 / s ** 3;
+  const kurt = m4 / s ** 4;
+  const jb = (n / 6) * (skew ** 2 + 0.25 * (kurt - 3) ** 2);
+  return { jb, p: 1 - jStat.chisquare.cdf(jb, 2) };
+}
+
+/* ========= t-test engine ========= */
+function tCritical(alpha, tail, df){
+  if (tail === "two") return jStat.studentt.inv(1 - alpha / 2, df);
+  return jStat.studentt.inv(1 - alpha, df);
+}
+function tPValue(tObs, tail, df){
+  const cdf = jStat.studentt.cdf(tObs, df);
+  if (tail === "two") return Math.min(1, Math.max(0, 2 * Math.min(cdf, 1 - cdf)));
+  if (tail === "right") return 1 - cdf;
+  return cdf;
+}
+function cohenD(mean, mu0, sd){
+  if (!Number.isFinite(sd) || sd === 0) return NaN;
+  return (mean - mu0) / sd;
+}
+function dLabel(d){
+  const a = Math.abs(d);
+  if (!Number.isFinite(a)) return "";
+  if (a < 0.2) return "trivial";
+  if (a < 0.5) return "small";
+  if (a < 0.8) return "moderate";
+  return "large";
+}
+
+/* ========= Visualization — Sampling distribution + CI ========= */
+function renderTViz({ xbar, mu0, se, sd, n, df, alpha, ciLo, ciHi, refLo, refHi, p, tObs }){
+  const canvas = el("tVizCanvas");
+  if (!canvas) return;
+
+  // --- verdict UI ---
+  const mu0InCI = mu0 >= ciLo && mu0 <= ciHi;
+  const verdictEl = el("vizVerdict");
+  const footerEl  = el("vizFooter");
+  const ciPct     = Math.round((1 - alpha) * 100);
+
+  if (mu0InCI){
+    verdictEl.textContent = "YES — fail to reject H₀";
+    verdictEl.style.color = "#374151";
+    footerEl.style.background = "#f1f5f9";
+    footerEl.style.color      = "#374151";
+    footerEl.innerHTML = `H₀ not rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] includes μ₀ = ${fmt(mu0,4)}<br>
+      <span style="font-weight:400;font-size:12px;">The difference is not statistically significant (p = ${fmtP(p)})</span>`;
+  } else {
+    verdictEl.textContent = "NO — reject H₀";
+    verdictEl.style.color = "#15803d";
+    footerEl.style.background = "#ecfdf5";
+    footerEl.style.color      = "#14532d";
+    footerEl.innerHTML = `H₀ rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] does not include μ₀ = ${fmt(mu0,4)}<br>
+      <span style="font-weight:400;font-size:12px;">The difference is statistically significant (p = ${fmtP(p)})</span>`;
+  }
+
+  // --- canvas drawing ---
+  const W = canvas.parentElement.clientWidth || 700;
+  const H = 315;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+
+  // Layout
+  const padL = 60, padR = 40, padT = 50, padB = 100;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // x range: wide enough for sample distribution (±3 SD) plus mu0 and CI
+  const spread = Math.max(Math.abs(xbar - mu0), ciHi - ciLo) * 1.8 + Math.max(se * 4, sd * 3);
+  const xMin = Math.min(xbar, mu0, ciLo, refLo) - spread * 0.35;
+  const xMax = Math.max(xbar, mu0, ciHi, refHi) + spread * 0.35;
+
+  const toCanvasX = (v) => padL + ((v - xMin) / (xMax - xMin)) * plotW;
+
+  // Normal pdf scaled to SE (sampling distribution of x̄)
+  const normPDF = (x) => Math.exp(-0.5 * ((x - xbar) / se) ** 2) / (se * Math.sqrt(2 * Math.PI));
+  const step = (xMax - xMin) / 400;
+  let yMax = 0;
+  for (let x = xMin; x <= xMax; x += step) yMax = Math.max(yMax, normPDF(x));
+  const toCanvasY = (y) => padT + plotH - (y / yMax) * plotH * 0.88;
+  const baseY = toCanvasY(0);
+
+  // --- Background: sample data distribution (SD) ---
+  const samplePDF = (x) => Math.exp(-0.5 * ((x - xbar) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+  // fill
+  ctx.save();
+  ctx.beginPath();
+  let sfirst = true;
+  for (let x = xMin; x <= xMax + step; x += step){
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(samplePDF(x));
+    sfirst ? ctx.moveTo(cx, baseY) : ctx.lineTo(cx, cy);
+    sfirst = false;
+  }
+  ctx.lineTo(toCanvasX(xMax), baseY);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(156,163,175,0.18)";
+  ctx.fill();
+  ctx.restore();
+  // stroke
+  ctx.save();
+  ctx.beginPath();
+  sfirst = true;
+  for (let x = xMin; x <= xMax + step; x += step){
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(samplePDF(x));
+    sfirst ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    sfirst = false;
+  }
+  ctx.strokeStyle = "rgba(107,114,128,0.6)";
+  ctx.lineWidth   = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // --- CI shaded region on sample data distribution (gray curve, uses refLo/refHi = x̄ ± t·SD) ---
+  const refLoX = toCanvasX(refLo);
+  const refHiX = toCanvasX(refHi);
+  const ciLoX  = toCanvasX(ciLo);
+  const ciHiX  = toCanvasX(ciHi);
+
+  ctx.save();
+  ctx.beginPath();
+  for (let x = refLo; x <= refHi + step; x += step){
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(samplePDF(x));
+    if (x === refLo || cx < refLoX + 1) ctx.moveTo(cx, baseY);
+    ctx.lineTo(cx, cy);
+  }
+  ctx.lineTo(refHiX, baseY);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(107,114,128,0.28)";
+  ctx.fill();
+  ctx.restore();
+
+  // --- CI shaded region on sampling distribution (red curve) ---
+  ctx.save();
+  ctx.beginPath();
+  for (let x = ciLo; x <= ciHi + step; x += step){
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(normPDF(x));
+    if (x === ciLo || cx < ciLoX + 1) ctx.moveTo(cx, baseY);
+    ctx.lineTo(cx, cy);
+  }
+  ctx.lineTo(ciHiX, baseY);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(59,130,246,0.25)";
+  ctx.fill();
+  ctx.restore();
+
+  // --- full curve ---
+  ctx.save();
+  ctx.beginPath();
+  let first = true;
+  for (let x = xMin; x <= xMax + step; x += step){
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(normPDF(x));
+    first ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+    first = false;
+  }
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth   = 2.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // --- baseline ---
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(padL, baseY);
+  ctx.lineTo(padL + plotW, baseY);
+  ctx.strokeStyle = "#ef4444";
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // --- μ₀ dashed vertical line ---
+  const mu0X = toCanvasX(mu0);
+  ctx.save();
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.moveTo(mu0X, padT);
+  ctx.lineTo(mu0X, baseY);
+  ctx.strokeStyle = "#ca8a04";
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // μ₀ label
+  ctx.save();
+  ctx.font = "bold 12px system-ui, sans-serif";
+  ctx.fillStyle = "#92400e";
+  ctx.textAlign = "center";
+  ctx.fillText(`${fmt(mu0,4)} (H₀)`, mu0X, padT - 6);
+  ctx.restore();
+
+  // --- x̄ dot at peak ---
+  const xbarX = toCanvasX(xbar);
+  const xbarY = toCanvasY(normPDF(xbar));
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(xbarX, xbarY, 7, 0, Math.PI * 2);
+  ctx.fillStyle   = "#ef4444";
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth   = 2.5;
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // x̄ label above dot
+  ctx.save();
+  ctx.font = "bold 12px system-ui, sans-serif";
+  ctx.fillStyle = "#b91c1c";
+  ctx.textAlign = "center";
+  ctx.fillText(`x̄ = ${fmt(xbar, 2)}`, xbarX, xbarY - 14);
+  ctx.restore();
+
+  // --- Bar 1: Reference range on sample data distribution (gray) ---
+  const refBarY = baseY + 28;
+  ctx.save();
+  ctx.strokeStyle = "#6b7280";
+  ctx.lineWidth   = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(refLoX, refBarY);
+  ctx.lineTo(refHiX, refBarY);
+  ctx.stroke();
+  [refLoX, refHiX].forEach(x => {
+    ctx.beginPath();
+    ctx.moveTo(x, refBarY - 5);
+    ctx.lineTo(x, refBarY + 5);
+    ctx.stroke();
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = "bold 10px system-ui, sans-serif";
+  ctx.fillStyle = "#4b5563";
+  ctx.textAlign = "center";
+  ctx.fillText(`${ciPct}% reference range (sample data)`, (refLoX + refHiX) / 2, refBarY - 8);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = "600 10px system-ui, sans-serif";
+  ctx.fillStyle = "#374151";
+  ctx.textAlign = "center";
+  ctx.fillText(fmt(refLo, 2), refLoX, refBarY + 14);
+  ctx.fillText(fmt(refHi, 2), refHiX, refBarY + 14);
+  ctx.restore();
+
+  // --- Bar 2: CI of mean on sampling distribution (blue) ---
+  const ciBarY = baseY + 58;
+  ctx.save();
+  ctx.strokeStyle = "#3b82f6";
+  ctx.lineWidth   = 3;
+  ctx.beginPath();
+  ctx.moveTo(ciLoX, ciBarY);
+  ctx.lineTo(ciHiX, ciBarY);
+  ctx.stroke();
+  [ciLoX, ciHiX].forEach(x => {
+    ctx.beginPath();
+    ctx.moveTo(x, ciBarY - 5);
+    ctx.lineTo(x, ciBarY + 5);
+    ctx.stroke();
+  });
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = "bold 10px system-ui, sans-serif";
+  ctx.fillStyle = "#1d4ed8";
+  ctx.textAlign = "center";
+  ctx.fillText(`${ciPct}% CI of mean (sampling dist.)`, (ciLoX + ciHiX) / 2, ciBarY - 8);
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = "600 10px system-ui, sans-serif";
+  ctx.fillStyle = "#1e40af";
+  ctx.textAlign = "center";
+  ctx.fillText(fmt(ciLo, 2), ciLoX, ciBarY + 14);
+  ctx.fillText(fmt(ciHi, 2), ciHiX, ciBarY + 14);
+  ctx.restore();
+
+  // --- x-axis tick labels ---
+  ctx.save();
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.fillStyle = "#6b7280";
+  ctx.textAlign = "center";
+  const nTicks = 6;
+  for (let i = 0; i <= nTicks; i++){
+    const v  = xMin + (i / nTicks) * (xMax - xMin);
+    const cx = toCanvasX(v);
+    ctx.fillText(fmt(v, 1), cx, baseY + 13);
+  }
+  ctx.restore();
+
+  // x-axis title
+  ctx.save();
+  ctx.font = "bold 12px system-ui, sans-serif";
+  ctx.fillStyle = "#374151";
+  ctx.textAlign = "center";
+  ctx.fillText("Sample mean (x̄)", padL + plotW / 2, H - 6);
+  ctx.restore();
+
+  // --- Legend (top-left of plot) ---
+  const legX = padL + 8;
+  let legY = padT + 10;
+  const legItems = [
+    { color: "#ef4444",             dash: false, label: `Sampling dist. of x̄  (SE = ${fmt(se,3)})` },
+    { color: "rgba(107,114,128,0.8)", dash: true, label: `Sample data dist.  (SD = ${fmt(sd,3)})` },
+  ];
+  ctx.save();
+  ctx.font = "11px system-ui, sans-serif";
+  legItems.forEach(({ color, dash, label }) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 2;
+    if (dash) ctx.setLineDash([4, 3]); else ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    ctx.lineTo(legX + 22, legY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "left";
+    ctx.fillText(label, legX + 28, legY + 4);
+    legY += 16;
+  });
+  ctx.restore();
+
+  // "null excluded →" annotation if mu0 outside CI
+  if (!mu0InCI){
+    const annotX = mu0X + (mu0 < ciLo ? 6 : -6);
+    const annotDir = mu0 < ciLo ? "→ null excluded" : "null excluded ←";
+    const annotAlign = mu0 < ciLo ? "left" : "right";
+    ctx.save();
+    ctx.font = "italic 11px system-ui, sans-serif";
+    ctx.fillStyle = "#6b7280";
+    ctx.textAlign = annotAlign;
+    ctx.fillText(annotDir, annotX, baseY - 8);
+    ctx.restore();
+  }
+
+  // --- t-score diamond badge below CI bar ---
+  const tBadgeX = xbarX;
+  const tBadgeY = baseY + 78;
+  const side = 5;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(tBadgeX, tBadgeY - side);
+  ctx.lineTo(tBadgeX + side, tBadgeY);
+  ctx.lineTo(tBadgeX, tBadgeY + side);
+  ctx.lineTo(tBadgeX - side, tBadgeY);
+  ctx.closePath();
+  ctx.fillStyle   = "#111827";
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth   = 1.5;
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = "bold 11px system-ui, sans-serif";
+  ctx.fillStyle = "#111827";
+  ctx.textAlign = "center";
+  ctx.fillText(`t = ${fmt(tObs, 3)}`, tBadgeX, tBadgeY + side + 12);
+  ctx.restore();
+}
+
+/* ========= State ========= */
+let state = {
+  rows: [],     // [{ value, outlier, include }]
+  mu0: 0,
+  alpha: 0.05,
+  tail: "two",
+  results: null
+};
+
+/* ========= Compute ========= */
+function computeFromState(){
+  const included = state.rows.filter(r => r.include).map(r => r.value);
+  const nTotal = state.rows.length;
+  const n = included.length;
+
+  if (n < 2) return { error: "Need at least 2 included values to compute a one-sample t-test." };
+
+  const mu0   = state.mu0;
+  const xbar  = mean(included);
+  const sd    = sdSample(included);
+  const se    = sd / Math.sqrt(n);
+  const df    = n - 1;
+  const tObs  = (xbar - mu0) / se;
+  const alpha = state.alpha;
+  const tail  = state.tail;
+
+  const tCrit    = tCritical(alpha, tail, df);
+  const p        = tPValue(tObs, tail, df);
+  const tCritCI  = tCritical(alpha, "two", df);
+  const ciLo     = xbar - tCritCI * se;
+  const ciHi     = xbar + tCritCI * se;
+  const refLo    = xbar - tCritCI * sd;
+  const refHi    = xbar + tCritCI * sd;
+  const d        = cohenD(xbar, mu0, sd);
+  const normal   = jarqueBeraP(included);
+  const outStats = iqrOutliers(state.rows.map(r => r.value));
+
+  return { nTotal, n, mu0, xbar, sd, se, df, tObs, p, alpha, tail, tCrit, ciLo, ciHi, refLo, refHi, d, normal, outStats };
+}
+
+/* ========= Render ========= */
+function updateKpis(res){
+  el("kpiGrid").style.display = "grid";
+  el("kpiN").textContent = `${res.n} / ${res.nTotal}`;
+  el("kpiT").textContent = `${fmt(res.tObs, 3)} (${res.df})`;
+  el("kpiP").textContent = fmtP(res.p);
+}
+
+function buildSummaryTable(res){
+  const rows = [
+    ["Included values (n)", `${res.n} / ${res.nTotal}`],
+    ["Sample mean (x̄)", fmt(res.xbar, 6)],
+    ["Hypothesized mean (μ₀)", fmt(res.mu0, 6)],
+    ["Mean difference (x̄ − μ₀)", fmt(res.xbar - res.mu0, 6)],
+    ["SD", fmt(res.sd, 6)],
+    ["Standard error (SE)", fmt(res.se, 6)],
+    ["t statistic", fmt(res.tObs, 6)],
+    ["df", String(res.df)],
+    ["p-value", fmtP(res.p)],
+    [`95% CI of mean`, `[${fmt(res.ciLo, 6)}, ${fmt(res.ciHi, 6)}]`],
+    [`95% reference range †`, `[${fmt(res.refLo, 6)}, ${fmt(res.refHi, 6)}]`]
+  ];
+
+  if (el("showEffect").checked){
+    rows.push(["Cohen's d", `${fmt(res.d, 4)} (${dLabel(res.d)})`]);
+  }
+
+  el("summaryTable").innerHTML = rows.map(([k, v]) => `
+    <tr>
+      <td style="font-weight:800;color:#374151;">${k}</td>
+      <td class="num">${v}</td>
+    </tr>
+  `).join("");
+}
+
+function buildInterpretation(res){
+  const sig = res.p < res.alpha;
+  let boxClass = "alert" + (sig ? " good" : "");
+  let text = sig
+    ? `<strong>Statistically significant difference detected.</strong><br>
+       The sample mean differs significantly from μ₀ = ${fmt(res.mu0, 4)} (p ${res.p < 0.001 ? "&lt; 0.001" : "= " + fmtP(res.p)}).
+       Consider clinical relevance using the magnitude of difference and confidence interval.`
+    : `<strong>No statistically significant difference detected.</strong><br>
+       The data do not provide sufficient evidence that the sample mean differs from μ₀ = ${fmt(res.mu0, 4)} (p ${res.p < 0.001 ? "&lt; 0.001" : "= " + fmtP(res.p)}).
+       The confidence interval indicates plausible values for the true mean.`;
+
+  if (el("showEffect").checked && Number.isFinite(res.d)){
+    text += `<br><br><strong>Effect size:</strong> Cohen's d = ${fmt(res.d, 4)} (${dLabel(res.d)}).`;
+  }
+
+  el("interpretBox").className = boxClass;
+  el("interpretBox").innerHTML = text;
+
+  const tailLabel = res.tail === "two" ? "two-sided" : res.tail === "right" ? "one-sided (greater)" : "one-sided (less)";
+  const rep = [
+    `A one-sample t-test (${tailLabel}) was performed on ${res.n} observations against a hypothesized mean of ${fmt(res.mu0, 4)}.`,
+    `The sample mean was ${fmt(res.xbar, 3)} (95% CI [${fmt(res.ciLo, 3)}, ${fmt(res.ciHi, 3)}]).`,
+    `The test was ${sig ? "statistically significant" : "not statistically significant"}: t(${res.df}) = ${fmt(res.tObs, 3)}, p ${res.p < 0.001 ? "< 0.001" : "= " + fmtP(res.p)}.`,
+    ...(el("showEffect").checked ? [`Effect size: Cohen's d = ${fmt(res.d, 3)}.`] : [])
+  ].join(" ");
+
+  el("reportText").textContent = rep;
+}
+
+function buildAssumptions(res){
+  if (!el("chkOkCheck").checked){
+    el("assumptionArea").innerHTML = `Assumption checks are turned off. Enable "Run assumption checks" to show normality/outlier screening.`;
+    return;
+  }
+
+  const normalP = res.normal?.p;
+  let normalHtml = "";
+  if (Number.isFinite(normalP)){
+    normalHtml = normalP < 0.05
+      ? `<div class="alert warn" style="margin-top:10px;">
+           <strong>Normality warning.</strong><br>
+           Jarque–Bera test suggests non-normal data (p = ${fmtP(normalP)}).<br>
+           If n is small (&lt; 30), consider the <strong>Wilcoxon signed-rank test</strong> as a non-parametric alternative.
+         </div>`
+      : `<div class="alert good" style="margin-top:10px;">
+           <strong>Normality check:</strong> no strong evidence of non-normality (p = ${fmtP(normalP)}).
+         </div>`;
+  } else {
+    normalHtml = `<div class="note">Normality check requires at least 3 values and non-zero variance.</div>`;
+  }
+
+  const out = res.outStats;
+  const outHtml = `
+    <div class="note" style="margin-top:10px;">
+      Outliers are flagged using the IQR rule on all values:<br>
+      Q1 = ${fmt(out.q1, 4)}, Q3 = ${fmt(out.q3, 4)}, IQR = ${fmt(out.iqr, 4)}<br>
+      Bounds: [${fmt(out.lo, 4)}, ${fmt(out.hi, 4)}]
+    </div>
+  `;
+
+  el("assumptionArea").innerHTML = `
+    <div class="note">
+      The one-sample t-test assumes the data are approximately normally distributed (or n ≥ 30 by CLT) and that observations are independent.
+    </div>
+    ${normalHtml}
+    ${outHtml}
+  `;
+}
+
+function renderDataTable(){
+  const body = el("dataTable");
+  body.innerHTML = state.rows.map((r, idx) => `
+    <tr class="${r.outlier ? "outlier" : ""}">
+      <td>${idx + 1}</td>
+      <td class="num">${fmt(r.value, 4)}</td>
+      <td>${r.outlier ? "⚠ flagged" : ""}</td>
+      <td>
+        <input type="checkbox" data-i="${idx}" ${r.include ? "checked" : ""} />
+      </td>
+    </tr>
+  `).join("");
+
+  body.querySelectorAll('input[type="checkbox"][data-i]').forEach(cb => {
+    cb.addEventListener("change", (e) => {
+      state.rows[Number(e.target.dataset.i)].include = e.target.checked;
+      recomputeAndRender();
+    });
+  });
+}
+
+function recomputeAndRender(){
+  const res = computeFromState();
+  if (res.error){
+    el("statusArea").innerHTML = `<div class="alert bad"><strong>Cannot compute:</strong> ${res.error}</div>`;
+    el("kpiGrid").style.display = "none";
+    el("summaryTable").innerHTML = "";
+    el("dataTable").innerHTML = "";
+    el("assumptionArea").textContent = "—";
+    el("reportText").textContent = "—";
+    el("vizCard").style.display = "none";
+    state.results = null;
+    return;
+  }
+
+  state.results = res;
+  el("statusArea").innerHTML = "";
+  updateKpis(res);
+  buildSummaryTable(res);
+  buildInterpretation(res);
+  buildAssumptions(res);
+  renderDataTable();
+
+  if (el("showViz").checked){
+    el("vizCard").style.display = "block";
+    renderTViz({ xbar: res.xbar, mu0: res.mu0, se: res.se, sd: res.sd, n: res.n, df: res.df, alpha: res.alpha, ciLo: res.ciLo, ciHi: res.ciHi, refLo: res.refLo, refHi: res.refHi, p: res.p, tObs: res.tObs });
+  } else {
+    el("vizCard").style.display = "none";
+  }
+}
+
+/* ========= Run ========= */
+function run(){
+  el("inputError").style.display = "none";
+
+  if (!el("chkContinuous").checked){
+    el("inputError").style.display = "block";
+    el("inputError").innerHTML = "One-sample t-test requires a continuous numeric outcome.";
+    return;
+  }
+  if (!el("chkIndep").checked){
+    el("inputError").style.display = "block";
+    el("inputError").innerHTML = "If observations are not independent, the one-sample t-test may not be appropriate.";
+    return;
+  }
+  if (!el("chkMuKnown").checked){
+    el("inputError").style.display = "block";
+    el("inputError").innerHTML = "μ₀ should be a known reference value, not estimated from the same sample.";
+    return;
+  }
+
+  const values = parseValues(el("dataInput").value);
+  if (values.length < 2){
+    el("inputError").style.display = "block";
+    el("inputError").innerHTML = "Please enter at least 2 valid numeric values.";
+    return;
+  }
+
+  const mu0 = Number(el("mu0").value);
+  if (!Number.isFinite(mu0)){
+    el("inputError").style.display = "block";
+    el("inputError").innerHTML = "Please enter a valid hypothesized mean (μ₀).";
+    return;
+  }
+
+  state.mu0   = mu0;
+  state.alpha = Number(el("alpha").value);
+  state.tail  = el("tail").value;
+
+  const out = iqrOutliers(values);
+  state.rows = values.map(value => ({
+    value,
+    outlier: Number.isFinite(out.lo) && (value < out.lo || value > out.hi),
+    include: true
+  }));
+
+  document.querySelector('[data-tab="results"]').click();
+  setTimeout(() => recomputeAndRender(), 50);
+}
+
+/* ========= Export ========= */
+function exportXlsx(){
+  if (!state.results){
+    alert("Run the analysis first.");
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+
+  const totalRows = state.rows.length;
+  const lastRow = totalRows + 1;
+
+  /* =========================
+     SHEET 1: DATA
+  ========================== */
+
+  const dataAoA = [["Value", "Include", "Included_Value"]];
+
+  state.rows.forEach((r, i) => {
+    const excelRow = i + 2;
+    dataAoA.push([
+      r.value,
+      r.include ? "TRUE" : "FALSE",
+      { f: `=IF(B${excelRow}="TRUE",A${excelRow},"")` }
+    ]);
+  });
+
+  const wsData = XLSX.utils.aoa_to_sheet(dataAoA);
+
+  /* =========================
+     SHEET 2: CALCULATIONS
+  ========================== */
+
+  const valRange = `Data!C2:C${lastRow}`;
+
+  const calcAoA = [
+    ["One-Sample t-Test (Fully Dynamic)", ""],
+    ["alpha (α)", state.results.alpha],
+    ["μ₀ (hypothesized mean)", state.results.mu0],
+    ["", ""],
+    ["n", { f: `=COUNT(${valRange})` }],
+    ["Mean (x̄)", { f: `=AVERAGE(${valRange})` }],
+    ["SD (s)", { f: `=STDEV.S(${valRange})` }],
+    ["SE", { f: `=B7/SQRT(B5)` }],
+    ["df", { f: `=B5-1` }],
+    ["t statistic", { f: `=(B6-B3)/B8` }],
+    ["p-value (two-tailed)", { f: `=T.DIST.2T(ABS(B10),B9)` }],
+    ["t critical (two-tailed)", { f: `=T.INV.2T(B2,B9)` }],
+    ["CI low", { f: `=B6 - B12*B8` }],
+    ["CI high", { f: `=B6 + B12*B8` }],
+    ["Cohen's d", { f: `=(B6-B3)/B7` }]
+  ];
+
+  const wsCalc = XLSX.utils.aoa_to_sheet(calcAoA);
+
+  XLSX.utils.book_append_sheet(wb, wsData, "Data");
+  XLSX.utils.book_append_sheet(wb, wsCalc, "Calculations");
+
+  XLSX.writeFile(
+    wb,
+    `one_sample_t_test_dynamic_${new Date().toISOString().slice(0,10)}.xlsx`
+  );
+}
+
+/* ========= UI wiring ========= */
+document.addEventListener("DOMContentLoaded", () => {
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab, .tab-content").forEach(e => e.classList.remove("active"));
+      tab.classList.add("active");
+      el(tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  el("runBtn").addEventListener("click", run);
+
+  el("clearBtn").addEventListener("click", () => {
+    el("dataInput").value = "";
+    state.rows = [];
+    state.results = null;
+    el("inputError").style.display = "none";
+    el("statusArea").innerHTML = "";
+    el("kpiGrid").style.display = "none";
+    el("summaryTable").innerHTML = "";
+    el("dataTable").innerHTML = "";
+    el("assumptionArea").textContent = "—";
+    el("reportText").textContent = "—";
+    el("vizCard").style.display = "none";
+  });
+
+  el("copyReportBtn").addEventListener("click", async () => {
+    const text = el("reportText").textContent;
+    if (!text || text === "—") return;
+    try {
+      await navigator.clipboard.writeText(text);
+      el("copyReportBtn").textContent = "Copied";
+      setTimeout(() => el("copyReportBtn").textContent = "Copy", 900);
+    } catch {
+      alert("Copy failed (clipboard permissions).");
+    }
+  });
+
+  el("exportPdfBtn").addEventListener("click", () => window.print());
+  el("exportXlsxBtn").addEventListener("click", exportXlsx);
+
+  // generate/transfer events
+  el("generateBtn").addEventListener("click", () => {
+    refreshGeneratedDisplay();
+  });
+  ["genN","genDist"].forEach(id => el(id).addEventListener("change", refreshGeneratedDisplay));
+  ["genMean","genSD"].forEach(id => el(id).addEventListener("input", refreshGeneratedDisplay));
+  el("useGeneratedBtn").addEventListener("click", () => {
+    el("dataInput").value = el("generatedOutput").value;
+    // run the analysis right away and switch to results tab
+    run();
+    const resultsTab = document.querySelector('.tab[data-tab="results"]');
+    if (resultsTab) resultsTab.click();
+  });
+
+  el("showViz").addEventListener("change", () => {
+    if (state.results) recomputeAndRender();
+  });
+
+  // initial populate
+  refreshGeneratedDisplay();
+});
+</script>
+
+</body>
+</html>

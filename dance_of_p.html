@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dance of the p-values</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#2b6cb0;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;}
+
+    /* panel */
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+
+    /* form */
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=number]:focus,select:focus{border-color:var(--accent);}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+    .badge{display:inline-flex;align-items:center;gap:5px;background:#eef4ff;border:1px solid #c7d7fd;border-radius:7px;padding:5px 10px;font-size:12px;color:#2b4dbf;margin-top:8px;font-weight:700;}
+
+    .speed-row{display:grid;grid-template-columns:1fr 52px;gap:7px;align-items:center;}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+
+    /* buttons */
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-stop{background:#fff;border-color:#fca5a5;color:var(--warn);}
+    .btn-reset{background:#fff;border-color:#d1d5db;color:#6b7280;}
+    .btn.off{opacity:.35;pointer-events:none;}
+
+    /* stats */
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;}
+    .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-v{font-size:16px;font-weight:800;margin-top:2px;}
+    .stat-v.sig{color:var(--good);}
+    .stat-v.ns{color:var(--warn);}
+
+    .note-box{margin-top:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fbfcff;font-size:12px;line-height:1.5;color:#344054;}
+
+    /* chart area */
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;letter-spacing:0;}
+    .chart-bd{padding:12px 14px;}
+
+    .bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+    canvas{display:block;}
+    #forestCanvas{width:100%;height:360px;}
+    #histCanvas{width:100%;height:210px;}
+    #dHistCanvas{width:100%;height:210px;}
+
+    @media(max-width:1100px){.bottom-row{grid-template-columns:1fr 1fr;}}
+
+    .latest-summary{font-size:13px;color:#344054;line-height:1.65;}
+    .decision-sig{color:var(--good);font-weight:800;}
+    .decision-ns{color:var(--warn);font-weight:800;}
+
+    /* Cohen's d info button & popup */
+    .info-btn{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e0e7ff;border:none;cursor:pointer;font-size:10px;font-weight:800;color:#3730a3;padding:0;line-height:1;vertical-align:middle;margin-left:4px;position:relative;}
+    .info-btn:hover{background:#c7d2fe;}
+    .d-popup{display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);width:230px;background:#1e293b;color:#f1f5f9;border-radius:9px;padding:11px 13px;font-size:11.5px;line-height:1.6;z-index:100;box-shadow:0 4px 18px rgba(0,0,0,.25);pointer-events:none;}
+    .d-popup::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1e293b;}
+    .info-btn:hover .d-popup,.info-btn:focus .d-popup{display:block;}
+    .d-popup table{width:100%;border-collapse:collapse;margin-top:6px;}
+    .d-popup td{padding:2px 5px;}
+    .d-popup tr:not(:last-child) td{border-bottom:1px solid rgba(255,255,255,.08);}
+    .d-popup .dp-head{font-weight:800;color:#93c5fd;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}.bottom-row{grid-template-columns:1fr;}}
+
+    /* exercises */
+    .exercises{margin-bottom:20px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;position:relative;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f8faff;border:1px solid #c7d7fd;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#1e3a5f;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#1e40af;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧪 Dance of the p-values</h1>
+  <p class="subtitle">Repeat experiments under fixed true parameters — watch how CIs and p-values vary, and how p &lt; α fraction estimates power.</p>
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <!-- Exercise 1 -->
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">The dance begins</div>
+          <div class="ex-obj">Observe how p-values fluctuate even when the true effect never changes.</div>
+          <div class="ex-params">
+            <span class="ex-param">μc = 50</span>
+            <span class="ex-param">μe = 60</span>
+            <span class="ex-param">σ = 20</span>
+            <span class="ex-param">n = 25</span>
+            <span class="ex-param">δ = 0.50</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <!-- Exercise 2 -->
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Underpowered study</div>
+          <div class="ex-obj">A real effect exists — but the sample is too small to reliably detect it.</div>
+          <div class="ex-params">
+            <span class="ex-param">μc = 50</span>
+            <span class="ex-param">μe = 60</span>
+            <span class="ex-param">σ = 20</span>
+            <span class="ex-param">n = 8</span>
+            <span class="ex-param">δ = 0.50</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <!-- Exercise 3 -->
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Sample size &amp; power</div>
+          <div class="ex-obj">Increase n and watch power rise — significant results become the norm, not the exception.</div>
+          <div class="ex-params">
+            <span class="ex-param">μc = 50</span>
+            <span class="ex-param">μe = 60</span>
+            <span class="ex-param">σ = 20</span>
+            <span class="ex-param">n = 100</span>
+            <span class="ex-param">δ = 0.50</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <!-- Exercise 4 -->
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">False positives (H₀ is true)</div>
+          <div class="ex-obj">When there is no true effect, roughly 5% of experiments will still be significant — that is α in action.</div>
+          <div class="ex-params">
+            <span class="ex-param">μc = 50</span>
+            <span class="ex-param">μe = 50</span>
+            <span class="ex-param">σ = 20</span>
+            <span class="ex-param">n = 50</span>
+            <span class="ex-param">δ = 0.00</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <!-- Exercise 5 -->
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Statistical vs clinical significance</div>
+          <div class="ex-obj">A trivially small difference becomes highly significant with a large enough sample — but is it meaningful?</div>
+          <div class="ex-params">
+            <span class="ex-param">μc = 50.0</span>
+            <span class="ex-param">μe = 51.0</span>
+            <span class="ex-param">σ = 20</span>
+            <span class="ex-param">n = 500</span>
+            <span class="ex-param">δ = 0.05</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+
+      <!-- Instructions panel -->
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT -->
+    <div class="panel">
+      <div class="panel-hd">Simulation parameters</div>
+      <div class="panel-bd">
+
+        <label>Test type</label>
+        <select id="testType">
+          <option value="one">One-sample t-test</option>
+          <option value="two" selected>Two-sample t-test (independent)</option>
+        </select>
+
+        <!-- Two-sample means -->
+        <div id="twoBlock">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:8px 0 6px;padding:5px 8px;background:#f3f4f6;border-radius:6px;">
+            True population parameters — fixed, never observed by the study
+          </div>
+          <div class="row2">
+            <div><label>Control mean (μc)</label><input type="number" id="muC" value="50" step="1"></div>
+            <div><label>Experimental mean (μe)</label><input type="number" id="muE" value="60" step="1"></div>
+          </div>
+          <div class="row2">
+            <div><label>Control SD (σc)</label><input type="number" id="sigmaC" value="20" step="1" min=".001"></div>
+            <div><label>Experimental SD (σe)</label><input type="number" id="sigmaE" value="20" step="1" min=".001"></div>
+          </div>
+        </div>
+
+        <!-- One-sample means -->
+        <div id="oneBlock" style="display:none">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:8px 0 6px;padding:5px 8px;background:#f3f4f6;border-radius:6px;">
+            True population parameters — fixed, never observed by the study
+          </div>
+          <div class="row2">
+            <div><label>True mean (μ)</label><input type="number" id="muTrue" value="55" step="1"></div>
+            <div><label>Null mean (μ₀)</label><input type="number" id="mu0" value="50" step="1"></div>
+          </div>
+          <div><label>SD (σ)</label><input type="number" id="sigma1" value="20" step="1" min=".001"></div>
+        </div>
+
+        <div class="badge" title="True population effect size — computed from the parameters you set above, not from any sample">True effect (Cohen's δ) = <b id="cohensD">0.50</b></div>
+
+        <div class="row2" style="margin-top:10px">
+          <div>
+            <label>Significance (α)</label>
+            <select id="alpha">
+              <option value="0.10">0.10</option>
+              <option value="0.05" selected>0.05</option>
+              <option value="0.01">0.01</option>
+            </select>
+          </div>
+          <div>
+            <label>n per group</label>
+            <input type="number" id="nBox" min="5" max="500" value="100">
+          </div>
+        </div>
+
+        <label style="margin-top:10px">Speed (exp/sec)</label>
+        <div class="speed-row">
+          <input type="range" id="speedSlider" min="1" max="60" value="20">
+          <input type="number" id="speedBox" min="1" max="60" value="20">
+        </div>
+
+        <label>Forest window (last N)</label>
+        <div class="speed-row">
+          <input type="range" id="windowSlider" min="20" max="200" value="80" step="10">
+          <input type="number" id="windowBox" min="20" max="200" value="80" step="10">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="startBtn">▶ Start</button>
+          <button class="btn btn-stop" id="stopBtn">⏹ Stop</button>
+          <button class="btn btn-reset" id="resetBtn">↺ Reset</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-k">Experiments</div><div class="stat-v" id="kExp">0</div></div>
+          <div class="stat"><div class="stat-k">Est. Power</div><div class="stat-v" id="kPow">—</div></div>
+          <div class="stat"><div class="stat-k">Latest p</div><div class="stat-v" id="kP">—</div></div>
+          <div class="stat"><div class="stat-k">Latest t</div><div class="stat-v" id="kT">—</div></div>
+        </div>
+
+        <div class="note-box" id="noteBox">
+          If <b>Δ = 0</b>, p-values are uniform on (0,1). If <b>Δ ≠ 0</b>, they pile up near 0 — the fraction below α is the estimated power.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="charts-col">
+      <div class="chart-panel">
+        <div class="chart-hd">Forest of recent experiments <span>green = significant · dashed = H₀ (0)</span></div>
+        <div class="chart-bd"><canvas id="forestCanvas"></canvas></div>
+      </div>
+      <div class="bottom-row">
+        <div class="chart-panel">
+          <div class="chart-hd">p-value distribution <span>frequency histogram</span></div>
+          <div class="chart-bd"><canvas id="histCanvas"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-hd">Cohen's δ distribution <span>sample effect size per run</span></div>
+          <div class="chart-bd"><canvas id="dHistCanvas"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-hd">Latest experiment</div>
+          <div class="chart-bd"><div class="latest-summary" id="latestSummary">Press Start to begin.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
+function arrMean(a){let s=0;for(const v of a)s+=v;return s/a.length;}
+function arrSd(a){const m=arrMean(a);let s=0;for(const v of a){const d=v-m;s+=d*d;}return Math.sqrt(s/(a.length-1));}
+function normalSample(n,mu,sigma){
+  const out=[];
+  for(let i=0;i<n;i++){
+    let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
+    out.push(mu+sigma*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v));
+  }
+  return out;
+}
+
+/* state */
+let running=false, timerId=null;
+let totalExp=0, sigCount=0;
+let forest=[], latest=null;
+const pBins=[
+  {label:'p<.001',lo:0,hi:.001},
+  {label:'.001–.01',lo:.001,hi:.01},
+  {label:'.01–.05',lo:.01,hi:.05},
+  {label:'.05–.10',lo:.05,hi:.10},
+  {label:'≥.10',lo:.10,hi:2},
+];
+const binCounts=new Array(5).fill(0);
+
+const dBins=[
+  {label:'<0.2\nNegligible',lo:0,hi:.2},
+  {label:'0.2–0.49\nSmall',lo:.2,hi:.5},
+  {label:'0.5–0.79\nMedium',lo:.5,hi:.8},
+  {label:'≥0.8\nLarge',lo:.8,hi:Infinity},
+];
+const dBinCounts=new Array(4).fill(0);
+
+/* params */
+function getParams(){
+  const testType=$('testType').value;
+  const alpha=parseFloat($('alpha').value);
+  const n=clamp(parseInt($('nBox').value)||100,5,500);
+  const speed=clamp(parseInt($('speedBox').value)||20,1,60);
+  const windowN=clamp(parseInt($('windowBox').value)||80,20,200);
+  let muC,muE,mu0,sigmaC,sigmaE;
+  if(testType==='two'){
+    muC=parseFloat($('muC').value)||0;
+    muE=parseFloat($('muE').value)||0;
+    sigmaC=Math.max(.001,parseFloat($('sigmaC').value)||1);
+    sigmaE=Math.max(.001,parseFloat($('sigmaE').value)||1);
+    mu0=0;
+  } else {
+    muC=parseFloat($('muTrue').value)||0;
+    muE=muC; mu0=parseFloat($('mu0').value)||0;
+    sigmaC=sigmaE=Math.max(.001,parseFloat($('sigma1').value)||1);
+  }
+  return {testType,alpha,n,speed,windowN,muC,muE,mu0,sigmaC,sigmaE};
+}
+
+function updateCohensD(){
+  const {testType,muC,muE,mu0,sigmaC,sigmaE}=getParams();
+  let d;
+  if(testType==='two'){
+    const pooled=Math.sqrt((sigmaC*sigmaC+sigmaE*sigmaE)/2);
+    d=Math.abs(muE-muC)/pooled;
+  } else {
+    d=Math.abs(muC-mu0)/sigmaC;
+  }
+  $('cohensD').textContent=isFinite(d)?d.toFixed(2):'—';
+}
+
+/* simulation */
+function runOne(){
+  const {testType,alpha,n,mu0,muC,muE,sigmaC,sigmaE,windowN}=getParams();
+  let t,p,df,est,se,lo,hi,sampleD;
+
+  if(testType==='one'){
+    const x=normalSample(n,muC,sigmaC);
+    const xbar=arrMean(x),s=arrSd(x);
+    se=s/Math.sqrt(n); df=n-1;
+    t=(xbar-mu0)/se; est=xbar-mu0;
+    sampleD=Math.abs(xbar-mu0)/s;
+  } else {
+    const x1=normalSample(n,muC,sigmaC),x2=normalSample(n,muE,sigmaE);
+    const m1=arrMean(x1),m2=arrMean(x2),s1=arrSd(x1),s2=arrSd(x2);
+    const v1=s1*s1/n,v2=s2*s2/n;
+    se=Math.sqrt(v1+v2);
+    df=Math.pow(v1+v2,2)/(Math.pow(v1,2)/(n-1)+Math.pow(v2,2)/(n-1));
+    t=(m2-m1)/se; est=m2-m1;
+    const pooledSample=Math.sqrt((s1*s1+s2*s2)/2);
+    sampleD=Math.abs(m2-m1)/pooledSample;
+  }
+
+  p=2*(1-jStat.studentt.cdf(Math.abs(t),df));
+  const tcrit=jStat.studentt.inv(.975,df);
+  lo=est-tcrit*se; hi=est+tcrit*se;
+  const sig=p<alpha;
+
+  totalExp++; if(sig)sigCount++;
+  const bi=pBins.findIndex(b=>p>=b.lo&&p<b.hi);
+  if(bi>=0)binCounts[bi]++;
+  const dbi=dBins.findIndex(b=>sampleD>=b.lo&&sampleD<b.hi);
+  if(dbi>=0)dBinCounts[dbi]++;
+
+  latest={t,p,df,est,lo,hi,sig,sampleD};
+  forest.push({est,lo,hi,sig});
+  if(forest.length>windowN)forest.shift();
+}
+
+/* forest canvas — no resize on every frame */
+let forestW=0,forestH=0;
+function resizeForest(){
+  const canvas=$('forestCanvas');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.clientWidth,H=canvas.clientHeight;
+  if(W===forestW&&H===forestH)return false;
+  forestW=W;forestH=H;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  return true;
+}
+
+function drawForest(){
+  const canvas=$('forestCanvas');
+  const dpr=window.devicePixelRatio||1;
+  resizeForest();
+  const W=forestW,H=forestH;
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const N=forest.length;
+  if(N===0){
+    ctx.fillStyle='#9ca3af';ctx.font='13px system-ui';ctx.textAlign='center';
+    ctx.fillText('No data yet — press Start',W/2,H/2);return;
+  }
+
+  const PAD={l:10,r:12,t:8,b:28};
+  const pW=W-PAD.l-PAD.r,pH=H-PAD.t-PAD.b;
+
+  let xmin=Infinity,xmax=-Infinity;
+  for(const r of forest){xmin=Math.min(xmin,r.lo);xmax=Math.max(xmax,r.hi);}
+  const xpad=0.12*(xmax-xmin||1);
+  xmin=Math.min(xmin-xpad,-xpad*3);
+  xmax=Math.max(xmax+xpad, xpad*3);
+
+  const toX=v=>PAD.l+(v-xmin)/(xmax-xmin)*pW;
+  const toY=i=>PAD.t+pH-(i+0.5)/N*pH; // latest at top
+
+  // grid lines
+  ctx.strokeStyle='#f3f4f6';ctx.lineWidth=1;
+  const nTicks=5;
+  for(let i=0;i<=nTicks;i++){
+    const x=PAD.l+i/nTicks*pW;
+    ctx.beginPath();ctx.moveTo(x,PAD.t);ctx.lineTo(x,PAD.t+pH);ctx.stroke();
+  }
+
+  // x axis
+  ctx.strokeStyle='#d1d5db';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD.l,PAD.t+pH);ctx.lineTo(PAD.l+pW,PAD.t+pH);ctx.stroke();
+
+  // x labels
+  ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';
+  for(let i=0;i<=nTicks;i++){
+    const v=xmin+i*(xmax-xmin)/nTicks;
+    ctx.fillText(v.toFixed(1),PAD.l+i/nTicks*pW,H-6);
+  }
+
+  // H0 dashed line
+  const x0=toX(0);
+  ctx.save();ctx.strokeStyle='rgba(43,108,176,0.6)';ctx.lineWidth=1.5;
+  ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(x0,PAD.t);ctx.lineTo(x0,PAD.t+pH);ctx.stroke();
+  ctx.restore();
+
+  // CI rows
+  const rowH=pH/N;
+  const dotR=Math.max(1.5,Math.min(3.5,rowH*0.3));
+  const lw=Math.max(0.8,Math.min(2,rowH*0.22));
+
+  for(let i=0;i<N;i++){
+    const r=forest[i];
+    const y=toY(i);
+    const col=r.sig?'rgba(17,138,75,0.85)':'rgba(160,160,160,0.65)';
+    ctx.strokeStyle=col;ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(toX(r.lo),y);ctx.lineTo(toX(r.hi),y);ctx.stroke();
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.arc(toX(r.est),y,dotR,0,2*Math.PI);ctx.fill();
+  }
+}
+
+/* histogram */
+let histChart=null;
+function initHist(){
+  histChart=new Chart($('histCanvas').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:pBins.map(b=>b.label),
+      datasets:[{
+        data:[...binCounts],
+        backgroundColor:['rgba(17,138,75,.75)','rgba(17,138,75,.65)','rgba(245,158,11,.7)','rgba(180,180,180,.65)','rgba(160,160,160,.55)'],
+        borderWidth:0,borderRadius:4
+      }]
+    },
+    options:{
+      animation:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{font:{size:11}}},
+        y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},title:{display:true,text:'Frequency',font:{size:11}}}
+      }
+    }
+  });
+}
+
+let dHistChart=null;
+function initDHist(){
+  dHistChart=new Chart($('dHistCanvas').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:dBins.map(b=>b.label),
+      datasets:[{
+        data:[...dBinCounts],
+        backgroundColor:['rgba(156,163,175,.7)','rgba(59,130,246,.65)','rgba(245,158,11,.75)','rgba(220,38,38,.7)'],
+        borderWidth:0,borderRadius:4
+      }]
+    },
+    options:{
+      animation:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{font:{size:10},maxRotation:0}},
+        y:{beginAtZero:true,ticks:{precision:0,font:{size:11}},title:{display:true,text:'Frequency',font:{size:11}}}
+      }
+    }
+  });
+}
+
+/* render */
+function render(){
+  drawForest();
+  if(histChart){histChart.data.datasets[0].data=[...binCounts];histChart.update('none');}
+  if(dHistChart){dHistChart.data.datasets[0].data=[...dBinCounts];dHistChart.update('none');}
+
+  $('kExp').textContent=totalExp;
+  $('kPow').textContent=totalExp>0?(sigCount/totalExp).toFixed(2):'—';
+
+  if(latest){
+    const pStr=latest.p<.001?'<0.001':latest.p.toFixed(4);
+    $('kP').textContent=pStr;$('kP').className='stat-v '+(latest.sig?'sig':'ns');
+    $('kT').textContent=latest.t.toFixed(3);
+
+    const {alpha,testType,muC,muE,mu0,sigmaC,sigmaE}=getParams();
+
+    const decHtml=latest.sig
+      ?`<span class="decision-sig">Significant</span> — p ${latest.p<.001?'< 0.001':'= '+latest.p.toFixed(4)} &lt; α (${alpha})`
+      :`<span class="decision-ns">Not significant</span> — p = ${latest.p.toFixed(4)} ≥ α (${alpha})`;
+    const pooledPop=Math.sqrt((sigmaC*sigmaC+sigmaE*sigmaE)/2);
+    const popD=testType==='two'?Math.abs(muE-muC)/pooledPop:Math.abs(muC-mu0)/sigmaC;
+    const popDStr=isFinite(popD)?popD.toFixed(2):'—';
+    const sampDStr=isFinite(latest.sampleD)?latest.sampleD.toFixed(2):'—';
+
+    $('latestSummary').innerHTML=`
+      <div><b>Estimate:</b> ${latest.est.toFixed(3)}</div>
+      <div><b>95% CI:</b> [${latest.lo.toFixed(3)}, ${latest.hi.toFixed(3)}]</div>
+      <div><b>t =</b> ${latest.t.toFixed(3)} &nbsp;|&nbsp; <b>df =</b> ${latest.df.toFixed(1)}</div>
+      <div style="margin-top:6px">
+        <b>Sample δ (this run):</b> ${sampDStr}
+        <button class="info-btn" tabindex="0">ℹ
+          <div class="d-popup">
+            <div class="dp-head">Cohen's δ — original guidelines</div>
+            <table>
+              <tr><td>δ &lt; 0.2</td><td>Negligible</td></tr>
+              <tr><td>0.2 – 0.49</td><td>Small</td></tr>
+              <tr><td>0.5 – 0.79</td><td>Medium</td></tr>
+              <tr><td>≥ 0.8</td><td>Large</td></tr>
+            </table>
+            <div style="margin-top:7px;color:#94a3b8;font-size:10.5px">δ = |μe − μc| / pooled SD. Scale-free: comparable across outcomes and studies.</div>
+          </div>
+        </button>
+        &nbsp;<span style="color:var(--muted);font-size:11px">vs true population δ = ${popDStr}</span>
+      </div>
+      <div style="margin-top:8px">${decHtml}</div>
+      <div style="margin-top:10px;color:var(--muted);font-size:11px">
+        Power after ${totalExp} run${totalExp!==1?'s':''}: <b>${(sigCount/totalExp).toFixed(3)}</b>
+      </div>`;
+
+    const delta=testType==='two'?(muE-muC):(muC-mu0);
+    $('noteBox').innerHTML=Math.abs(delta)<1e-9
+      ?`<b>Δ = 0:</b> p-values are uniform on (0,1). You'll see false positives at rate α.`
+      :`<b>Δ ≠ 0:</b> p-values concentrate near 0. Fraction below α = estimated power <b>${(sigCount/totalExp).toFixed(2)}</b>.`;
+  }
+}
+
+/* loop */
+function tick(){
+  if(!running)return;
+  runOne();render();
+  const{speed}=getParams();
+  timerId=setTimeout(tick,Math.round(1000/speed));
+}
+
+function startSim(){
+  if(running)return;
+  running=true;
+  $('startBtn').classList.add('off');
+  $('stopBtn').classList.remove('off');
+  tick();
+}
+
+function stopSim(){
+  running=false;
+  if(timerId!==null){clearTimeout(timerId);timerId=null;}
+  $('startBtn').classList.remove('off');
+  $('stopBtn').classList.add('off');
+}
+
+function resetSim(){
+  stopSim();
+  totalExp=0;sigCount=0;binCounts.fill(0);dBinCounts.fill(0);
+  forest=[];latest=null;
+  $('kExp').textContent='0';$('kPow').textContent='—';
+  $('kP').textContent='—';$('kP').className='stat-v';
+  $('kT').textContent='—';
+  $('latestSummary').textContent='Press Start to begin.';
+  $('noteBox').textContent='If Δ = 0, p-values are uniform on (0,1). If Δ ≠ 0, they pile up near 0 — fraction below α is estimated power.';
+  render();
+  if(histChart){histChart.data.datasets[0].data=[...binCounts];histChart.update('none');}
+  if(dHistChart){dHistChart.data.datasets[0].data=[...dBinCounts];dHistChart.update('none');}
+}
+
+function syncPair(slId,boxId,min,max){
+  const sl=$(slId),bx=$(boxId);
+  sl.addEventListener('input',()=>{bx.value=clamp(+sl.value,min,max);updateCohensD();});
+  bx.addEventListener('input',()=>{const v=clamp(+bx.value||min,min,max);bx.value=v;sl.value=v;updateCohensD();});
+}
+
+/* ── exercises ── */
+const EXERCISES = {
+  1: {
+    muC:50, muE:60, sigmaC:20, sigmaE:20, n:25, alpha:'0.05', speed:15,
+    title:'The dance begins',
+    instructions:`
+      <b>Learning objective:</b> Understand that p-values vary randomly between experiments even when the true effect is fixed.<br><br>
+      <ol>
+        <li>Press <b>Start</b> and watch the forest plot. Each row is one experiment — same populations, different random sample.</li>
+        <li>Notice how some CIs cross the blue dashed line (H₀ = 0) and some don't — even though the true effect is always μe − μc = 10.</li>
+        <li>Watch the p-value in the readout jump up and down. This is the <b>dance of the p-values</b>.</li>
+        <li>After ~100 experiments, check the estimated power. With n = 25 and δ = 0.50, you should see power around 50–60%.</li>
+      </ol>
+      <b>Key insight:</b> The same true effect can produce p = 0.002 in one experiment and p = 0.31 in the next. A single p-value tells you very little on its own.`
+  },
+  2: {
+    muC:50, muE:60, sigmaC:20, sigmaE:20, n:8, alpha:'0.05', speed:15,
+    title:'Underpowered study',
+    instructions:`
+      <b>Learning objective:</b> A non-significant result does not mean there is no effect — the study may simply be too small to detect it.<br><br>
+      <ol>
+        <li>Press <b>Start</b>. The true effect is identical to Exercise 1 (δ = 0.50), but n has dropped from 25 to <b>8</b>.</li>
+        <li>Watch how rarely experiments reach significance. Most CIs are very wide — imprecise estimates.</li>
+        <li>After ~100 experiments, note the estimated power. With n = 8, power is roughly 20–25%.</li>
+        <li>This means <b>75–80% of experiments miss the real effect entirely</b> and return a non-significant result.</li>
+      </ol>
+      <b>Key insight:</b> "Not significant" ≠ "no effect." A study with low power has a high Type II error rate — it frequently fails to detect real differences.`
+  },
+  3: {
+    muC:50, muE:60, sigmaC:20, sigmaE:20, n:100, alpha:'0.05', speed:15,
+    title:'Sample size & power',
+    instructions:`
+      <b>Learning objective:</b> Increasing sample size increases power and makes significant results much more consistent.<br><br>
+      <ol>
+        <li>Press <b>Start</b>. The effect is identical to Exercises 1 and 2 (δ = 0.50), but n = <b>100</b>.</li>
+        <li>Compare the forest plot to Exercise 2 — notice how much <b>narrower the CIs are</b>. More data = more precision.</li>
+        <li>Significant results (green) now dominate. Check estimated power after ~100 runs — it should be around 90%.</li>
+        <li>Now try manually increasing n to 200 and press Reset → Start. Power climbs even further.</li>
+      </ol>
+      <b>Key insight:</b> Power is primarily controlled by sample size. This is why power calculations are essential when designing a study — before collecting any data.`
+  },
+  4: {
+    muC:50, muE:50, sigmaC:20, sigmaE:20, n:50, alpha:'0.05', speed:20,
+    title:'False positives — H₀ is true',
+    instructions:`
+      <b>Learning objective:</b> When there is no true effect, roughly 5% of experiments will still return p &lt; 0.05. This is α — the false positive rate.<br><br>
+      <ol>
+        <li>Press <b>Start</b>. μc = μe = 50, so the true difference is exactly <b>zero</b>. H₀ is true.</li>
+        <li>Watch the histogram — p-values should spread approximately <b>uniformly</b> across all bins.</li>
+        <li>After ~200 experiments, check estimated power. It should hover around <b>0.05</b> — i.e. 5% false positives.</li>
+        <li>Some experiments will still show green CIs (significant) purely by chance. These are <b>Type I errors</b>.</li>
+      </ol>
+      <b>Key insight:</b> If you run enough experiments on a null effect, 1 in 20 will be falsely significant at α = 0.05. This is the cost of using a threshold — not a flaw, but a property you must understand.`
+  },
+  5: {
+    muC:50, muE:51, sigmaC:20, sigmaE:20, n:500, alpha:'0.05', speed:15,
+    title:'Statistical vs clinical significance',
+    instructions:`
+      <b>Learning objective:</b> A large enough sample will detect even a trivially small difference as statistically significant — but that does not make it clinically meaningful.<br><br>
+      <ol>
+        <li>Press <b>Start</b>. The true difference is only <b>1 unit</b> (μe − μc = 1) with σ = 20. Cohen's δ ≈ 0.05 — a negligible effect.</li>
+        <li>With n = 500, this tiny difference will become significant reliably. Estimated power will be high.</li>
+        <li>Now ask: <b>does a difference of 1 unit matter clinically?</b> In most laboratory contexts, no.</li>
+        <li>Try reducing n to 50 — the same true effect disappears from the radar entirely.</li>
+      </ol>
+      <b>Key insight:</b> Statistical significance is not the same as clinical relevance. Always report effect size (Cohen's δ) alongside the p-value. A large n can make noise look like signal.`
+  }
+};
+
+function toggleExercises(){
+  const panel=$('exPanel'), btn=$('exToggle');
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'';
+  btn.classList.toggle('open',!open);
+}
+
+function loadExercise(num){
+  const ex=EXERCISES[num];
+  if(!ex) return;
+
+  // stop and reset
+  stopSim();
+  totalExp=0; sigCount=0; binCounts.fill(0); dBinCounts.fill(0);
+  forest=[]; latest=null;
+  $('kExp').textContent='0'; $('kPow').textContent='—';
+  $('kP').textContent='—'; $('kP').className='stat-v';
+  $('kT').textContent='—';
+  $('latestSummary').textContent='Parameters loaded — press Start to begin.';
+
+  // set params
+  $('testType').value='two';
+  $('twoBlock').style.display='';
+  $('oneBlock').style.display='none';
+  $('muC').value=ex.muC;
+  $('muE').value=ex.muE;
+  $('sigmaC').value=ex.sigmaC;
+  $('sigmaE').value=ex.sigmaE;
+  $('nBox').value=ex.n;
+  $('alpha').value=ex.alpha;
+  $('speedBox').value=ex.speed;
+  $('speedSlider').value=ex.speed;
+  updateCohensD();
+
+  // highlight active card
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  $('exCard'+num)?.classList.add('active');
+
+  // show instructions
+  const box=$('exInstructions');
+  box.innerHTML=`<b style="font-size:13px;color:#1e3a5f">Exercise ${num}: ${ex.title}</b><br><br>${ex.instructions}`;
+  box.classList.add('visible');
+
+  // redraw
+  if(histChart){histChart.data.datasets[0].data=[...binCounts];histChart.update('none');}
+  if(dHistChart){dHistChart.data.datasets[0].data=[...dBinCounts];dHistChart.update('none');}
+  forestW=0; forestH=0; drawForest();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  syncPair('speedSlider','speedBox',1,60);
+  syncPair('windowSlider','windowBox',20,200);
+
+  $('testType').addEventListener('change',()=>{
+    const two=$('testType').value==='two';
+    $('twoBlock').style.display=two?'':'none';
+    $('oneBlock').style.display=two?'none':'';
+    updateCohensD();
+  });
+
+  ['muC','muE','muTrue','mu0','sigmaC','sigmaE','sigma1','alpha'].forEach(id=>{
+    $(id).addEventListener('input',updateCohensD);
+  });
+
+  $('startBtn').addEventListener('click',startSim);
+  $('stopBtn').addEventListener('click',stopSim);
+  $('resetBtn').addEventListener('click',resetSim);
+
+  window.addEventListener('resize',()=>{forestW=0;forestH=0;drawForest();});
+
+  $('stopBtn').classList.add('off');
+  initHist();
+  initDHist();
+  updateCohensD();
+  drawForest();
+});
+</script>
+</body>
+</html>

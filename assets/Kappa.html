@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cohen’s Kappa</title>
+
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/qualitative.css">
+</head>
+
+<body>
+
+
+
+<div class="container">
+  <h1>📊 Cohen’s Kappa</h1>
+  <p class="subtitle">Inter-rater agreement for categorical data</p>
+
+  <!-- ================= Data input ================= -->
+  <div class="section">
+    <h3>Contingency table</h3>
+
+    <table class="data-table">
+      <tr>
+        <th></th>
+        <th>Rater B: Yes</th>
+        <th>Rater B: No</th>
+      </tr>
+      <tr>
+        <th>Rater A: Yes</th>
+        <td><input type="number" id="a" value="30"></td>
+        <td><input type="number" id="b" value="10"></td>
+      </tr>
+      <tr>
+        <th>Rater A: No</th>
+        <td><input type="number" id="c" value="5"></td>
+        <td><input type="number" id="d" value="55"></td>
+      </tr>
+    </table>
+  </div>
+
+  <button id="runBtn">Run analysis</button>
+
+  <!-- ================= Results ================= -->
+  <div id="results" class="section"></div>
+</div>
+
+<script src="assets/js/stats/helpers.js"></script>
+<script src="assets/js/stats/kappa.js"></script>
+
+</body>
+</html>

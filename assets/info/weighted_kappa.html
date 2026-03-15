@@ -1,0 +1,152 @@
+<div class="info-content">
+
+  <h2>Weighted Kappa</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#wk-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#wk-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#wk-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#wk-table" style="color:var(--accent); text-decoration:none; padding:2px 0;">Agreement Matrix</a>
+      <a href="#wk-weights" style="color:var(--accent); text-decoration:none; padding:2px 0;">Weighting Schemes</a>
+      <a href="#wk-formula" style="color:var(--accent); text-decoration:none; padding:2px 0;">Formula</a>
+      <a href="#wk-ci" style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Interval</a>
+      <a href="#wk-interpret" style="color:var(--accent); text-decoration:none; padding:2px 0;">Interpretation Scale</a>
+      <a href="#wk-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypothesis Test</a>
+      <a href="#wk-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#wk-limitations" style="color:var(--accent); text-decoration:none; padding:2px 0;">Limitations</a>
+      <a href="#wk-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#wk-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#wk-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#wk-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#wk-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#wk-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="wk-purpose">Purpose</h3>
+  <p>
+    Weighted kappa extends Cohen's kappa for <strong>ordinal categories</strong>,
+    allowing partial credit for near-agreement and penalising larger disagreements more than smaller ones.
+  </p>
+
+  <h3 id="wk-when">When to Use</h3>
+  <ul>
+    <li>Ordinal rating scales (e.g., mild / moderate / severe)</li>
+    <li>Clinical grading or staging systems</li>
+    <li>When the degree of disagreement matters — a one-step error is less serious than a three-step error</li>
+    <li>Anywhere standard κ would be used but the outcome is ordinal, not purely nominal</li>
+  </ul>
+
+  <h3 id="wk-idea">Key Idea</h3>
+  <p>
+    Disagreements are penalised according to how far apart the ratings are.
+    Minor disagreements (adjacent categories) receive small penalties; major disagreements (distant categories) receive large penalties.
+    This produces a κ<sub>w</sub> that reflects the severity-weighted reliability of the raters.
+  </p>
+
+  <h3 id="wk-table">Agreement Matrix</h3>
+  <p>
+    Data are arranged in a square ordinal matrix where rows = Rater 1 and columns = Rater 2.
+    <strong>Diagonal cells</strong> = perfect agreement (weight = 1.0).
+    <strong>Off-diagonal cells</strong> = disagreement, penalised according to their distance from the diagonal.
+  </p>
+
+  <h3 id="wk-weights">Weighting Schemes</h3>
+  <p><strong>Linear weights:</strong></p>
+  <p><strong>w<sub>ij</sub> = 1 − |i − j| / (k − 1)</strong></p>
+  <p>Treats all disagreements proportionally to their distance. Appropriate when each step difference is equally important.</p>
+
+  <p style="margin-top:8px;"><strong>Quadratic weights (most common):</strong></p>
+  <p><strong>w<sub>ij</sub> = 1 − (i − j)² / (k − 1)²</strong></p>
+  <p>Heavily penalises large disagreements. Equivalent to the intraclass correlation coefficient (ICC) for ordinal scales. Preferred in most clinical contexts.</p>
+  <p class="note">Choose the weighting scheme that reflects your clinical judgment about the relative severity of different degrees of disagreement.</p>
+
+  <h3 id="wk-formula">Formula</h3>
+  <p><strong>κ<sub>w</sub> = 1 − (Weighted observed disagreement / Weighted expected disagreement)</strong></p>
+  <p>Equivalently:</p>
+  <p><strong>κ<sub>w</sub> = (P<sub>o,w</sub> − P<sub>e,w</sub>) / (1 − P<sub>e,w</sub>)</strong></p>
+  <p>where P<sub>o,w</sub> and P<sub>e,w</sub> are the weighted observed and expected agreement proportions.</p>
+
+  <h3 id="wk-ci">Confidence Interval</h3>
+  <p>The 95% CI for κ<sub>w</sub> is computed using the asymptotic standard error for weighted kappa.</p>
+  <p><strong>95% CI: κ<sub>w</sub> ± 1.96 × SE(κ<sub>w</sub>)</strong></p>
+  <p class="note">Confidence intervals are asymptotic approximations — interpret cautiously for small N.</p>
+
+  <h3 id="wk-interpret">Interpretation Scale</h3>
+  <ul>
+    <li>κ<sub>w</sub> &lt; 0.20 → Poor agreement</li>
+    <li>0.21–0.40 → Fair agreement</li>
+    <li>0.41–0.60 → Moderate agreement</li>
+    <li>0.61–0.80 → Substantial agreement</li>
+    <li>0.81–1.00 → Almost perfect agreement</li>
+  </ul>
+  <p class="note">Weighted κ values are generally higher than unweighted κ because near-agreements receive partial credit.</p>
+
+  <h3 id="wk-hypotheses">Hypothesis Test</h3>
+  <p><strong>H₀:</strong> κ<sub>w</sub> = 0 (weighted agreement is no better than chance).</p>
+  <p><strong>H₁:</strong> κ<sub>w</sub> &gt; 0.</p>
+  <p>The test statistic is <strong>z = κ<sub>w</sub> / SE(κ<sub>w</sub>)</strong>.</p>
+
+  <h3 id="wk-assumptions">Assumptions</h3>
+  <ul>
+    <li>Exactly two raters</li>
+    <li>Ordinal outcome — categories have a meaningful order</li>
+    <li>Same ordinal categories used by both raters</li>
+    <li>Independent ratings</li>
+    <li>All subjects rated by both raters</li>
+  </ul>
+
+  <h3 id="wk-limitations">Limitations</h3>
+  <ul>
+    <li>Result depends on the chosen weighting scheme — report which scheme was used</li>
+    <li>Quadratic weighted κ equals ICC only under specific conditions</li>
+    <li>Like all κ statistics, affected by prevalence and marginal distributions</li>
+    <li>Only applicable to exactly two raters</li>
+  </ul>
+
+  <h3 id="wk-decision">Decision Rule</h3>
+  <p>Reject H₀ (κ<sub>w</sub> = 0) if <strong>p &lt; α</strong>. Use the κ<sub>w</sub> value and CI for practical interpretation.</p>
+
+  <h3 id="wk-viz">Visualisation Notes</h3>
+  <p>
+    The <strong>weighted agreement heatmap</strong> shows observed counts with colour-coded weight severity:
+  </p>
+  <ul>
+    <li><strong>Diagonal cells (blue, weight = 1.0):</strong> perfect agreement — both raters assigned the same category</li>
+    <li><strong>Off-diagonal cells:</strong> disagreements — colour reflects both the frequency AND the weight penalty. Cells far from the diagonal (large disagreements) appear darker red regardless of their count, because they contribute most to κ<sub>w</sub> reduction.</li>
+  </ul>
+  <p>
+    The weight penalty for each off-diagonal cell is displayed as text within the cell.
+    This allows you to see not just where disagreements occur, but how severely each type of disagreement
+    penalises the overall agreement score.
+  </p>
+
+  <h3 id="wk-clinical">Clinical Interpretation</h3>
+  <p>
+    Weighted kappa is particularly important in clinical settings where ordered categories represent severity or staging.
+    A rater who classifies "severe" as "mild" is making a more serious error than one who classifies "severe" as "moderate".
+    Report κ<sub>w</sub>, 95% CI, the weighting scheme used, and the number of subjects.
+  </p>
+
+  <h3 id="wk-reporting">Reporting Example</h3>
+  <p>
+    Weighted agreement between raters was substantial (κ<sub>w</sub> = 0.81, 95% CI: 0.72–0.90, p &lt; 0.001, quadratic weights).
+  </p>
+
+  <h3 id="wk-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Weighting scheme:</strong> Linear or quadratic weights</li>
+    <li><strong>Significance level (α):</strong> Configure for the hypothesis test</li>
+    <li><strong>Weighted heatmap:</strong> Toggle the visualisation on/off</li>
+  </ul>
+
+  <h3 id="wk-data">Generating Sample Data</h3>
+  <p>
+    Create synthetic 3×3 ordinal contingency tables (Low / Medium / High scale) with varying agreement patterns.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+    Explore how κ<sub>w</sub> changes under different agreement scenarios and weighting schemes.
+  </p>
+
+</div>

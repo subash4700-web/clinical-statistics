@@ -1,0 +1,131 @@
+<div class="info-content">
+
+  <h2>Fisher's Exact Test</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#fe-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#fe-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#fe-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#fe-table" style="color:var(--accent); text-decoration:none; padding:2px 0;">2×2 Table</a>
+      <a href="#fe-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#fe-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#fe-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#fe-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#fe-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#fe-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#fe-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#fe-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#fe-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#fe-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="fe-purpose">Purpose</h3>
+  <p>
+    Fisher's Exact Test evaluates whether two categorical variables are associated in a <strong>2×2 contingency table</strong>.
+    It is especially useful when sample sizes are small or expected cell counts are low (&lt; 5),
+    where the chi-square approximation may be unreliable.
+  </p>
+
+  <h3 id="fe-when">When to Use</h3>
+  <ul>
+    <li>Small sample sizes or rare outcomes</li>
+    <li>Sparse 2×2 tables where any expected cell count &lt; 5</li>
+    <li>Clinical microbiology: positivity rates, resistance vs. exposure, case-control comparisons</li>
+    <li>When exact probabilities are required rather than chi-square approximation</li>
+  </ul>
+
+  <h3 id="fe-idea">Key Idea</h3>
+  <p>
+    Fisher's test conditions on the <strong>fixed row and column totals</strong> (marginals) and
+    computes the exact probability of observing a table as extreme as, or more extreme than, the observed one
+    under the null hypothesis of no association.
+    Unlike the chi-square test, it makes no large-sample approximation.
+  </p>
+
+  <h3 id="fe-table">2×2 Table</h3>
+  <table border="1" cellpadding="8" cellspacing="0" style="margin-bottom:10px; font-size:13px;">
+    <tr><th></th><th>Outcome +</th><th>Outcome −</th><th>Row total</th></tr>
+    <tr><th>Exposed</th><td>a</td><td>b</td><td>a + b</td></tr>
+    <tr><th>Unexposed</th><td>c</td><td>d</td><td>c + d</td></tr>
+    <tr><th>Column total</th><td>a + c</td><td>b + d</td><td>N</td></tr>
+  </table>
+  <p>The probability of observing this exact table, given fixed marginals, follows a hypergeometric distribution.</p>
+
+  <h3 id="fe-hypotheses">Hypotheses</h3>
+  <p><strong>H₀:</strong> No association between the two variables (rows and columns are independent).</p>
+  <p><strong>H₁ (two-sided):</strong> There is an association.</p>
+  <p><strong>H₁ (one-sided):</strong> The association is in a specific direction (greater or less).</p>
+  <p class="note">
+    Two-sided p-values are computed as the sum of probabilities of all tables with probability ≤ the observed table.
+    This is the most common definition used in clinical practice.
+  </p>
+
+  <h3 id="fe-statistic">Test Statistic</h3>
+  <p>The exact probability of a specific 2×2 table given fixed marginals:</p>
+  <p><strong>P = (a+b)!(c+d)!(a+c)!(b+d)! / (N! · a! · b! · c! · d!)</strong></p>
+  <p>The p-value is the sum of probabilities of all tables at least as extreme as the observed.</p>
+
+  <h3 id="fe-effect">Effect Size</h3>
+  <p><strong>Odds Ratio (OR):</strong></p>
+  <p><strong>OR = (a × d) / (b × c)</strong></p>
+  <ul>
+    <li>OR = 1: no association</li>
+    <li>OR &gt; 1: exposure associated with increased odds of outcome</li>
+    <li>OR &lt; 1: exposure associated with decreased odds of outcome</li>
+  </ul>
+  <p class="note">
+    Always report the OR and its 95% confidence interval alongside the p-value.
+    For very small counts, confidence intervals may be wide even if p is small.
+  </p>
+
+  <h3 id="fe-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are independent</li>
+    <li>Both variables are binary (2×2 table)</li>
+    <li>Fixed marginal totals (the test conditions on these)</li>
+  </ul>
+
+  <h3 id="fe-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="fe-viz">Visualisation Notes</h3>
+  <p>
+    The <strong>contingency table heatmap</strong> shows each cell's count, expected value (under independence),
+    and colour-coded deviation intensity.
+    Orange/red cells indicate the strongest deviations from independence — these are the cells driving the association.
+    Blue cells are close to their expected values under H₀.
+    This makes it easy to identify which exposure–outcome combination is most discrepant.
+  </p>
+
+  <h3 id="fe-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant result provides evidence of an association between the two variables.
+    Report the odds ratio and confidence interval alongside the p-value.
+    Interpret results in the context of study design, selection bias, and potential confounding.
+    Statistical significance does not imply causation.
+  </p>
+
+  <h3 id="fe-reporting">Reporting Example</h3>
+  <p>
+    Fisher's exact test showed a significant association between exposure and outcome,
+    p = 0.0X (two-sided). OR = X.XX (95% CI: X.XX–X.XX).
+  </p>
+
+  <h3 id="fe-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Significance level (α):</strong> Choose 0.10, 0.05, or 0.01</li>
+    <li><strong>Alternative hypothesis:</strong> Two-sided, greater, or less</li>
+    <li><strong>Heatmap visualisation:</strong> Toggle on/off</li>
+  </ul>
+
+  <h3 id="fe-data">Generating Sample Data</h3>
+  <p>
+    Automatically create synthetic 2×2 contingency tables with independent, weakly associated, or strongly associated patterns.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+    Useful for exploring how the test behaves under different scenarios.
+  </p>
+
+</div>

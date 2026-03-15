@@ -1,0 +1,134 @@
+<div class="info-content">
+
+  <h2>Wilcoxon Signed-Rank Test</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#wx-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#wx-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#wx-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#wx-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#wx-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#wx-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#wx-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#wx-limitations" style="color:var(--accent); text-decoration:none; padding:2px 0;">Limitations</a>
+      <a href="#wx-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#wx-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#wx-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#wx-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#wx-outlier" style="color:var(--accent); text-decoration:none; padding:2px 0;">Outlier Handling</a>
+      <a href="#wx-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="wx-purpose">Purpose</h3>
+  <p>
+    The Wilcoxon signed-rank test compares <strong>paired samples</strong> using the ranks of absolute differences.
+    It is the non-parametric alternative to the paired t-test, used when the differences cannot be assumed to be normally distributed.
+  </p>
+
+  <h3 id="wx-when">When to Use</h3>
+  <ul>
+    <li>Paired or matched data (before vs. after, or matched pairs)</li>
+    <li>Differences are not assumed to be normally distributed</li>
+    <li>Data contains outliers or is ordinal</li>
+    <li>Small samples where normality cannot be verified</li>
+  </ul>
+
+  <h3 id="wx-idea">Key Idea</h3>
+  <p>
+    For each pair, compute the difference d<sub>i</sub> = After<sub>i</sub> − Before<sub>i</sub>.
+    Rank the <strong>absolute values</strong> of the non-zero differences, then assign signs.
+    The test asks: are the positive-rank sums and negative-rank sums balanced, or does one dominate?
+    Zero differences are excluded from the analysis.
+  </p>
+
+  <h3 id="wx-hypotheses">Hypotheses</h3>
+  <p><strong>Two-sided:</strong> H₀: Median difference = 0 &nbsp;|&nbsp; H₁: Median difference ≠ 0</p>
+  <p><strong>One-sided (greater):</strong> H₀: Median diff ≤ 0 &nbsp;|&nbsp; H₁: After &gt; Before</p>
+  <p><strong>One-sided (less):</strong> H₀: Median diff ≥ 0 &nbsp;|&nbsp; H₁: After &lt; Before</p>
+
+  <h3 id="wx-statistic">Test Statistic</h3>
+  <p><strong>W⁺</strong> = sum of ranks where d<sub>i</sub> &gt; 0 (positive ranks)</p>
+  <p><strong>W⁻</strong> = sum of ranks where d<sub>i</sub> &lt; 0 (negative ranks)</p>
+  <p><strong>W = min(W⁺, W⁻)</strong> — the smaller of the two rank sums is used for the exact test.</p>
+  <p>For large samples, W is converted to a standardized z-score using a normal approximation.</p>
+  <p class="note">
+    <strong>Computation methods:</strong> Exact p-values enumerate all sign permutations (2<sup>n</sup> combinations).
+    For larger n, the normal approximation is used automatically. Zero differences are always excluded.
+  </p>
+
+  <h3 id="wx-effect">Effect Size</h3>
+  <p>Matched-pairs rank-biserial correlation <strong>(r)</strong>:</p>
+  <p><strong>r = W⁺ / (n(n+1)/2)</strong> (rescaled to −1 to +1)</p>
+  <ul>
+    <li>|r| &lt; 0.3 = small &nbsp;|&nbsp; 0.3–0.5 = medium &nbsp;|&nbsp; &gt; 0.5 = large</li>
+  </ul>
+
+  <h3 id="wx-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are paired (same subjects measured twice, or matched pairs)</li>
+    <li>Outcome is at least ordinal — differences must be rankable</li>
+    <li>Pairs are independent of each other</li>
+    <li>Distribution of differences is symmetric (for median interpretation)</li>
+  </ul>
+
+  <h3 id="wx-limitations">Limitations</h3>
+  <ul>
+    <li>Less powerful than the paired t-test when differences are truly normally distributed</li>
+    <li>Ties and zeros reduce test precision; many zeros weaken the test considerably</li>
+    <li>Does not directly produce a confidence interval for the median difference in this app</li>
+  </ul>
+
+  <h3 id="wx-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="wx-viz">Visualisation Notes</h3>
+  <p>
+    <strong>Paired boxplots (Before / After):</strong> show the distributions of Before and After measurements side by side.
+    Medians, quartiles, and outliers are displayed. These show your actual data — skewness is expected and valid.
+  </p>
+  <p>
+    <strong>Differences boxplot:</strong> shows the distribution of d<sub>i</sub> = After − Before values that the test actually analyses.
+    A red zero-line reference is shown. The location and spread of this box relative to zero is what determines the test result.
+  </p>
+  <p>
+    <strong>The normal curve</strong> (when shown) represents the <em>sampling distribution of the test statistic</em>
+    under the null hypothesis — not your data.
+    It only appears when using the normal approximation for large samples.
+    The exact method does not require this curve.
+  </p>
+
+  <h3 id="wx-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant result indicates a systematic shift between the paired measurements.
+    Report the median and IQR for Before, After, and differences alongside the p-value and effect size.
+    Statistical significance alone does not establish clinical relevance.
+  </p>
+
+  <h3 id="wx-reporting">Reporting Example</h3>
+  <p>
+    A Wilcoxon signed-rank test showed a significant change from before to after,
+    W = X.XX, z = X.XX, p = 0.0X, r = X.XX.
+    Before median = X.X (IQR: X.X–X.X); After median = X.X (IQR: X.X–X.X).
+  </p>
+
+  <h3 id="wx-outlier">Outlier Handling</h3>
+  <p>
+    The tool flags potential outliers in the <strong>differences</strong> using the IQR rule.
+    You can include or exclude individual pairs using the interactive data table; results update in real time.
+    Useful for sensitivity analysis and identifying data entry errors or unusual responses.
+  </p>
+
+  <h3 id="wx-data">Generating Sample Data</h3>
+  <p>
+    An expandable "Generate sample paired data" panel appears in the Data &amp; Assumptions tab.
+    Specify sample size, distribution (skewed/log-normal, uniform, or exponential), before median, after median, spread, and pairing correlation.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+  </p>
+  <p class="note">
+    <strong>Tip:</strong> Higher pairing correlation (0.7–0.9) creates more realistic paired data where individual differences are consistent.
+  </p>
+
+</div>

@@ -1,0 +1,138 @@
+<div class="info-content">
+
+  <h2>Chi-Square Test of Independence</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#ci-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#ci-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#ci-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#ci-table" style="color:var(--accent); text-decoration:none; padding:2px 0;">Contingency Table</a>
+      <a href="#ci-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#ci-expected" style="color:var(--accent); text-decoration:none; padding:2px 0;">Expected Counts</a>
+      <a href="#ci-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#ci-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#ci-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#ci-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#ci-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Assumptions Are Violated</a>
+      <a href="#ci-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#ci-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#ci-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#ci-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#ci-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#ci-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="ci-purpose">Purpose</h3>
+  <p>
+    The chi-square test of independence assesses whether there is a statistically significant
+    <strong>association between two categorical variables</strong> in a contingency table.
+  </p>
+
+  <h3 id="ci-when">When to Use</h3>
+  <ul>
+    <li>Exposure vs. outcome studies (e.g., treatment vs. response)</li>
+    <li>Epidemiological contingency tables</li>
+    <li>Survey data: association between two categorical questions</li>
+    <li>Group comparisons on categorical outcomes</li>
+  </ul>
+
+  <h3 id="ci-idea">Key Idea</h3>
+  <p>
+    If two variables are independent, the distribution of one does not differ across levels of the other.
+    Expected counts are calculated under this null assumption.
+    The test quantifies how much the observed counts deviate from what independence predicts.
+  </p>
+
+  <h3 id="ci-table">Contingency Table</h3>
+  <p>For a 2×2 table, data are arranged as:</p>
+  <table border="1" cellpadding="6" cellspacing="0" style="margin-bottom:8px; font-size:13px;">
+    <tr><th></th><th>B₁</th><th>B₂</th><th>Row total</th></tr>
+    <tr><th>A₁</th><td>O₁₁</td><td>O₁₂</td><td>R₁</td></tr>
+    <tr><th>A₂</th><td>O₂₁</td><td>O₂₂</td><td>R₂</td></tr>
+    <tr><th>Column total</th><td>C₁</td><td>C₂</td><td>N</td></tr>
+  </table>
+  <p>Larger tables (r × c) follow the same structure, with r rows and c columns.</p>
+
+  <h3 id="ci-hypotheses">Hypotheses</h3>
+  <p><strong>H₀:</strong> The two variables are independent (no association).</p>
+  <p><strong>H₁:</strong> The two variables are associated.</p>
+
+  <h3 id="ci-expected">Expected Counts</h3>
+  <p>Under independence, expected count for each cell:</p>
+  <p><strong>E<sub>ij</sub> = (row total<sub>i</sub> × column total<sub>j</sub>) / N</strong></p>
+
+  <h3 id="ci-statistic">Test Statistic</h3>
+  <p><strong>χ² = Σ (O<sub>ij</sub> − E<sub>ij</sub>)² / E<sub>ij</sub></strong></p>
+
+  <h3 id="ci-df">Degrees of Freedom</h3>
+  <p><strong>df = (r − 1)(c − 1)</strong></p>
+  <p>where <em>r</em> = number of rows, <em>c</em> = number of columns.</p>
+
+  <h3 id="ci-effect">Effect Size</h3>
+  <p><strong>For 2×2 tables — Phi coefficient (φ):</strong></p>
+  <p><strong>φ = √(χ² / N)</strong></p>
+
+  <p style="margin-top:8px;"><strong>For larger tables — Cramér's V:</strong></p>
+  <p><strong>V = √(χ² / (N × min(r−1, c−1)))</strong></p>
+  <ul>
+    <li>&lt; 0.1 = negligible &nbsp;|&nbsp; 0.1–0.3 = small &nbsp;|&nbsp; 0.3–0.5 = medium &nbsp;|&nbsp; &gt; 0.5 = large</li>
+  </ul>
+
+  <h3 id="ci-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are independent</li>
+    <li>Both variables are categorical</li>
+    <li>Expected cell counts ≥ 5 in all cells</li>
+  </ul>
+
+  <h3 id="ci-violated">If Assumptions Are Violated</h3>
+  <ul>
+    <li>If any expected count &lt; 5, use <strong>Fisher's exact test</strong> (especially for 2×2 tables)</li>
+    <li>Combine sparse categories if clinically appropriate</li>
+  </ul>
+
+  <h3 id="ci-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="ci-viz">Visualisation Notes</h3>
+  <p>
+    <strong>Chi-square distribution:</strong> shows the sampling distribution of χ² under H₀,
+    with the rejection region (red) and the observed χ² statistic marked.
+  </p>
+  <p>
+    <strong>Bar chart:</strong> compares observed counts (blue) vs. expected counts (orange) for each cell in the table.
+    Cells with large discrepancies between observed and expected are driving the association.
+    This allows you to identify which combinations of categories deviate most from independence.
+  </p>
+
+  <h3 id="ci-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant result indicates an association between the two variables — they are not independent.
+    The strength of association should be evaluated using φ or Cramér's V.
+    Association does not imply causation; consider study design and potential confounders.
+  </p>
+
+  <h3 id="ci-reporting">Reporting Example</h3>
+  <p>
+    A chi-square test of independence showed a significant association between treatment and response,
+    χ²(1) = X.XX, p = 0.0X, Cramér's V = X.XX.
+  </p>
+
+  <h3 id="ci-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Significance level (α):</strong> Choose 0.10, 0.05, or 0.01</li>
+    <li><strong>Effect size:</strong> Toggle display of Cramér's V / φ</li>
+    <li><strong>Visualisation:</strong> Toggle chi-square distribution and bar chart</li>
+  </ul>
+
+  <h3 id="ci-data">Generating Sample Data</h3>
+  <p>
+    Create 2×2 tables with specific association patterns (independent, weak, moderate, strong).
+    Specify total sample size, base probability for the first row category, and noise level.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+  </p>
+
+</div>

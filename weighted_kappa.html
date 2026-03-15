@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weighted Cohen's Kappa</title>
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
+      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+    .container { max-width: 920px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
+    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
+    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
+      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* CARD */
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
+    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    @media (max-width: 760px) { .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* FORM */
+    select, input[type="number"], input[type="text"] {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; font-size: 13px; color: var(--ink);
+    }
+    label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
+
+    /* WEIGHT TOGGLE */
+    .weight-toggle { display: flex; gap: 8px; }
+    .weight-btn { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; color: var(--muted); font-weight: 700; font-size: 13px;
+      cursor: pointer; text-align: center; transition: all .15s; }
+    .weight-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
+      font-size: 13px; cursor: pointer; transition: transform .05s; }
+    button:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn-small { padding: 8px 12px; font-size: 12.5px; border-radius: 9px; }
+
+    /* ALERTS */
+    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
+      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
+    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
+    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+    @media (max-width: 760px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
+
+    /* TABLE */
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { background: #f9fafb; font-weight: 800; color: #374151; }
+    tr:last-child td, tr:last-child th { border-bottom: none; }
+
+    .ctable { border-collapse: separate; border-spacing: 0; }
+    .ctable th.axis { background: #eef2ff; color: #1f2937; font-weight: 900; }
+    .ctable th input[type="text"].axis-input {
+      width: 100%; background: transparent; border: none;
+      font-weight: 900; font-size: 13px; color: #1f2937; padding: 4px 2px;
+    }
+    .ctable th input[type="text"].label-input {
+      background: transparent; border: none; font-weight: 700;
+      font-size: 13px; color: #374151; padding: 4px 2px; width: 92px;
+    }
+    .ctable td input[type="number"] {
+      width: 78px; padding: 6px 8px; border: 1px solid var(--line);
+      border-radius: 8px; font-size: 14px; text-align: center; background: #fff;
+    }
+    .ctable td { padding: 8px 10px; }
+
+    .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+    .checkbox-group label { display: flex; align-items: center; gap: 8px; font-weight: 600; margin: 0; }
+    .checkbox-group input[type="checkbox"] { margin: 0; }
+
+    .collapsible-header { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; }
+    .collapsible-header::before { content: "▶"; transition: transform .2s; }
+    .collapsible-header.open::before { transform: rotate(90deg); }
+    .collapsible-content { display: none; margin-top: 12px; }
+    .collapsible-content.open { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Weighted Cohen's Kappa</h1>
+  <p class="subtitle">Inter-rater agreement for ordinal categories (ordinal scales)</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab" data-tab="analysis">Analysis</div>
+  </div>
+
+  <!-- ===== INPUT TAB ===== -->
+  <div id="input" class="tab-content active">
+
+    <!-- Study Context & Assumptions (top card) -->
+    <div class="card">
+      <div class="section-title">Study Context & Assumptions</div>
+      <p class="note" style="margin-top:0; margin-bottom:12px;">
+        Before running the test, verify that your study design meets the assumptions:
+      </p>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="assumption1" /> Two independent raters / observers</label>
+        <label><input type="checkbox" id="assumption2" /> Ordinal categories (categories have meaningful order)</label>
+        <label><input type="checkbox" id="assumption3" /> Disagreement severity matters (penalize large disagreements more)</label>
+        <label><input type="checkbox" id="assumption4" /> Sample size adequate for stable estimate</label>
+      </div>
+    </div>
+
+    <!-- Weight Scheme & Test Settings (side by side) -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Weighting Scheme</div>
+        <div class="weight-toggle">
+          <div class="weight-btn active" id="btnLinear" onclick="setWeight('linear', this)">
+            Linear weights
+          </div>
+          <div class="weight-btn" id="btnQuadratic" onclick="setWeight('quadratic', this)">
+            Quadratic weights
+          </div>
+        </div>
+        <div style="padding:10px; border-radius:8px; background:#eff6ff; border:1px solid #3b82f655; margin-top:10px; font-size:12.5px; color:#1e3a5f; line-height:1.5;">
+          <strong>Linear:</strong> Disagreements penalized proportionally (1 vs 2 = 1 penalty unit as 2 vs 3)<br />
+          <strong>Quadratic:</strong> Large disagreements penalized much more (1 vs 3 is very serious)
+        </div>
+        <input type="hidden" id="weightType" value="linear" />
+      </div>
+
+      <div class="card">
+        <div class="section-title">Test settings</div>
+        <div style="margin-top:12px;">
+          <label style="font-weight:700; font-size:13px; display:block; margin-bottom:6px;">Significance level (α)</label>
+          <select id="alpha" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:13px;">
+            <option value="0.05" selected>0.05</option>
+            <option value="0.01">0.01</option>
+            <option value="0.10">0.10</option>
+          </select>
+          <p class="note">Probability threshold for rejecting the null hypothesis</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="vizToggle" checked />
+            Show weighted heatmap
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contingency Table 3×3 -->
+    <div class="card">
+      <div class="section-title">Observed Counts — 3×3 Contingency Table</div>
+      <p class="note" style="margin-top:0; margin-bottom:12px;">
+        Rename category labels as needed. <strong>Diagonal cells represent agreement</strong> (both raters chose the same category).
+      </p>
+
+      <div class="table-wrap">
+        <table class="ctable" id="ctable"></table>
+      </div>
+
+      <p class="note">Weighted kappa accounts for disagreement severity; larger disagreements receive heavier penalties.</p>
+      <div id="inputError" class="alert bad" style="display:none;"></div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="runBtn" type="button">Run Analysis</button>
+        <button class="btn-ghost"   id="clearBtn" type="button">Clear Data</button>
+      </div>
+    </div>
+
+    <!-- Generate Sample Data -->
+    <div class="card">
+      <div class="collapsible-header" onclick="toggleCollapsible(this)">Generate Sample Data (3×3)</div>
+      <div class="collapsible-content" style="margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label for="numCases">Sample size</label>
+            <input type="number" id="numCases" value="60" min="10" max="300" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px;" />
+          </div>
+          <div>
+            <label for="datGen">Agreement pattern</label>
+            <select id="datGen" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:13px;">
+              <option value="high">High agreement (κw ≈ 0.8)</option>
+              <option value="moderate">Moderate agreement (κw ≈ 0.5)</option>
+              <option value="low">Low agreement (κw ≈ 0.2)</option>
+              <option value="chance">Chance agreement only</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn-primary" id="genDataBtn" type="button">Generate Data & Use</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /input -->
+
+  <!-- ===== ANALYSIS TAB ===== -->
+  <div id="analysis" class="tab-content">
+    <div id="results"></div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-title">Weighted Agreement Heatmap</div>
+      <div class="note">Weighted κ measures diagonal agreement (⬤ cells) with penalties for distance. Colors show how much diagonal cells deviate from expected by-chance distribution. Off-diagonal cells remain neutral as they represent disagreement with varying weight penalties.</div>
+      <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+        <canvas id="heatmapWkappa" height="480"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  let k = 3;
+  let rowLabels = ["Low", "Medium", "High"];
+  let colLabels = ["Low", "Medium", "High"];
+  let counts = [[0,0,0], [0,0,0], [0,0,0]];
+
+  function toggleCollapsible(el) {
+    el.classList.toggle("open");
+    el.nextElementSibling.classList.toggle("open");
+  }
+
+  function setWeight(scheme, el) {
+    document.getElementById("weightType").value = scheme;
+    document.querySelectorAll(".weight-btn").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  function buildTable() {
+    const table = document.getElementById("ctable");
+    const rowAxis = document.getElementById("rowAxisName")?.value || "Rater A";
+    const colAxis = document.getElementById("colAxisName")?.value || "Rater B";
+
+    let html = "<thead><tr><th></th>";
+    html += `<th class="axis" colspan="${k}"><input class="axis-input" type="text" value="${rowAxis}" /><br/>${colAxis}</th></tr><tr><th></th>`;
+    for (let j = 0; j < k; j++) {
+      html += `<th><input class="label-input" type="text" value="${rowLabels[j]}" id="colLabel_${j}" /></th>`;
+    }
+    html += "</tr></thead><tbody>";
+
+    for (let i = 0; i < k; i++) {
+      html += `<tr><th><input class="label-input" type="text" value="${colLabels[i]}" id="rowLabel_${i}" /></th>`;
+      for (let j = 0; j < k; j++) {
+        html += `<td><input type="number" min="0" value="${counts[i][j]}" id="c_${i}_${j}" /></td>`;
+      }
+      html += "</tr>";
+    }
+    html += "</tbody>";
+    table.innerHTML = html;
+  }
+
+  function readTable() {
+    for (let i = 0; i < k; i++) {
+      for (let j = 0; j < k; j++) {
+        counts[i][j] = parseInt(document.getElementById(`c_${i}_${j}`).value) || 0;
+      }
+      rowLabels[i] = document.getElementById(`rowLabel_${i}`).value || `L${i+1}`;
+      colLabels[i] = document.getElementById(`colLabel_${i}`).value || `L${i+1}`;
+    }
+  }
+
+  function weightsMatrix(wtype) {
+    const w = [];
+    for (let i = 0; i < k; i++) {
+      w[i] = [];
+      for (let j = 0; j < k; j++) {
+        const d = Math.abs(i - j);
+        const score = (wtype === "quadratic") ? (1 - (d/(k-1))**2) : (1 - d/(k-1));
+        w[i][j] = score;
+      }
+    }
+    return w;
+  }
+
+  function totalN(m) {
+    let s = 0;
+    for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) s += m[i][j];
+    return s;
+  }
+
+  function rowSums(m) { return m.map(r => r.reduce((a,b)=>a+b, 0)); }
+  function colSums(m) {
+    const out = [];
+    for (let j = 0; j < k; j++) {
+      let s = 0;
+      for (let i = 0; i < k; i++) s += m[i][j];
+      out.push(s);
+    }
+    return out;
+  }
+
+  function expectedMatrix(m) {
+    const N = totalN(m);
+    const r = rowSums(m);
+    const c = colSums(m);
+    const E = [];
+    for (let i = 0; i < k; i++) {
+      E[i] = [];
+      for (let j = 0; j < k; j++) {
+        E[i][j] = N === 0 ? 0 : (r[i] * c[j]) / N;
+      }
+    }
+    return E;
+  }
+
+  function weightedAgreement(m, W, N) {
+    if (N === 0) return 0;
+    let s = 0;
+    for (let i = 0; i < k; i++)
+      for (let j = 0; j < k; j++)
+        s += W[i][j] * m[i][j];
+    return s / N;
+  }
+
+  function calculateWeightedKappa(wtype) {
+    const W = weightsMatrix(wtype);
+    const N = totalN(counts);
+    const E = expectedMatrix(counts);
+    const Po = weightedAgreement(counts, W, N);
+    const Pe = weightedAgreement(E, W, N);
+    const kappa = (Pe === 1) ? NaN : (Po - Pe) / (1 - Pe);
+    return { kappa, Po, Pe, N, W, E };
+  }
+
+  function generateWeightedKappaData() {
+    const n = parseInt(document.getElementById("numCases").value) || 60;
+    const pattern = document.getElementById("datGen").value;
+    
+    counts = [[0,0,0], [0,0,0], [0,0,0]];
+    
+    for (let i = 0; i < n; i++) {
+      const raterA = Math.floor(Math.random() * 3);
+      let raterB;
+      
+      if (pattern === "high") {
+        raterB = Math.random() < 0.85 ? raterA : Math.floor(Math.random() * 3);
+      } else if (pattern === "moderate") {
+        raterB = Math.random() < 0.55 ? raterA : Math.floor(Math.random() * 3);
+      } else if (pattern === "low") {
+        raterB = Math.random() < 0.35 ? raterA : Math.floor(Math.random() * 3);
+      } else {
+        raterB = Math.floor(Math.random() * 3);
+      }
+      
+      counts[raterA][raterB]++;
+    }
+    
+    buildTable();
+  }
+
+  function renderWeightedHeatmap(W, rejectH0) {
+    const canvas = document.getElementById("heatmapWkappa");
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    const W_canvas = 800;
+    const H = 480;
+    canvas.width = W_canvas;
+    canvas.height = H;
+    ctx.clearRect(0, 0, W_canvas, H);
+
+    const N = totalN(counts);
+    const E = expectedMatrix(counts);
+    const maxCellSize = 110;
+    const cellSize = Math.min(maxCellSize, (W_canvas / 2 - 80) / k - 8);
+    const gap = 8;
+    const margin = 60;
+    const startY = 60;
+    
+    // Helper function to draw a cell in the observed table
+    function drawWeightedCell(x, y, value, expected, weight, isAgreement, label) {
+      const deviation = value - expected;
+      const maxExpected = Math.max(...E.flat());
+      const normDeviation = maxExpected > 0 ? deviation / maxExpected : 0;
+      
+      let bgColor, borderColor, borderWidth, textColor;
+      
+      if (isAgreement) {
+        if (deviation > 0.1 * maxExpected) {
+          bgColor = "rgba(37, 99, 235, 0.8)";
+          borderColor = "#1e40af";
+          borderWidth = 3;
+          textColor = "#1e3a8a";
+        } else {
+          bgColor = "rgba(96, 165, 250, 0.35)";
+          borderColor = "#3b82f6";
+          borderWidth = 2;
+          textColor = "#1e40af";
+        }
+      } else {
+        bgColor = "rgba(241, 245, 249, 0.8)";
+        borderColor = "#cbd5e1";
+        borderWidth = 1;
+        textColor = "#475569";
+      }
+      
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(x, y, cellSize, cellSize);
+      
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = borderWidth;
+      ctx.strokeRect(x, y, cellSize, cellSize);
+      
+      // Agreement marker
+      if (isAgreement) {
+        ctx.fillStyle = textColor;
+        ctx.font = "16px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("⬤", x + cellSize / 2, y + 18);
+      }
+      
+      // Value
+      ctx.fillStyle = textColor;
+      ctx.font = "bold 15px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(String(value), x + cellSize / 2, y + cellSize / 2 + (isAgreement ? 5 : 0));
+      
+      // Weight
+      ctx.fillStyle = "#64748b";
+      ctx.font = "10px system-ui";
+      ctx.fillText(`w:${weight.toFixed(2)}`, x + cellSize / 2, y + cellSize - 12);
+    }
+    
+    // Helper function to draw a cell in the expected table
+    function drawExpectedCell(x, y, expected, weight, isAgreement) {
+      ctx.fillStyle = "rgba(248, 250, 252, 0.9)";
+      ctx.fillRect(x, y, cellSize, cellSize);
+      
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, cellSize, cellSize);
+      
+      // Agreement marker
+      if (isAgreement) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "14px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("⬤", x + cellSize / 2, y + 16);
+      }
+      
+      // Expected value
+      ctx.fillStyle = "#64748b";
+      ctx.font = "14px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(expected.toFixed(1), x + cellSize / 2, y + cellSize / 2 + (isAgreement ? 5 : 0));
+      
+      // Weight
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "10px system-ui";
+      ctx.fillText(`w:${weight.toFixed(2)}`, x + cellSize / 2, y + cellSize - 12);
+    }
+
+    // Draw Observed table
+    const obsStartX = margin;
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 13px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Observed", obsStartX + (k * (cellSize + gap) - gap) / 2, 30);
+    
+    for (let i = 0; i < k; i++) {
+      for (let j = 0; j < k; j++) {
+        const x = obsStartX + j * (cellSize + gap);
+        const y = startY + i * (cellSize + gap);
+        const isAgreement = (i === j);
+        drawWeightedCell(x, y, counts[i][j], E[i][j], W[i][j], isAgreement, `${i},${j}`);
+      }
+    }
+    
+    // Draw Expected table
+    const expStartX = obsStartX + k * (cellSize + gap) + 50;
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 13px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Expected (by chance)", expStartX + (k * (cellSize + gap) - gap) / 2, 30);
+    
+    for (let i = 0; i < k; i++) {
+      for (let j = 0; j < k; j++) {
+        const x = expStartX + j * (cellSize + gap);
+        const y = startY + i * (cellSize + gap);
+        const isAgreement = (i === j);
+        drawExpectedCell(x, y, E[i][j], W[i][j], isAgreement);
+      }
+    }
+
+    // Row labels (left of observed table)
+    ctx.fillStyle = "#374151";
+    ctx.font = "bold 11px system-ui";
+    ctx.textAlign = "right";
+    for (let i = 0; i < k; i++) {
+      ctx.fillText(rowLabels[i], obsStartX - 8, startY + i * (cellSize + gap) + cellSize / 2 + 4);
+    }
+
+    // Column labels (above observed table)
+    ctx.textAlign = "center";
+    for (let j = 0; j < k; j++) {
+      ctx.fillText(colLabels[j], obsStartX + j * (cellSize + gap) + cellSize / 2, startY - 8);
+    }
+    
+    // Column labels (above expected table)
+    for (let j = 0; j < k; j++) {
+      ctx.fillText(colLabels[j], expStartX + j * (cellSize + gap) + cellSize / 2, startY - 8);
+    }
+
+    // Legend
+    const legendY = startY + k * (cellSize + gap) + 30;
+    const legendX = 20;
+    const boxSize = 18;
+    
+    // Strong agreement
+    ctx.fillStyle = "rgba(37, 99, 235, 0.8)";
+    ctx.fillRect(legendX, legendY, boxSize, boxSize);
+    ctx.strokeStyle = "#1e40af";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(legendX, legendY, boxSize, boxSize);
+    
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 12px system-ui";
+    ctx.textAlign = "left";
+    ctx.fillText("Agreement > expected (diagonal ⬤)", legendX + boxSize + 8, legendY + 13);
+    
+    // Weak agreement
+    ctx.fillStyle = "rgba(96, 165, 250, 0.35)";
+    ctx.fillRect(legendX, legendY + 24, boxSize, boxSize);
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(legendX, legendY + 24, boxSize, boxSize);
+    ctx.fillText("Agreement ≤ expected (diagonal ⬤)", legendX + boxSize + 8, legendY + 37);
+    
+    // Disagreement
+    ctx.fillStyle = "rgba(241, 245, 249, 0.8)";
+    ctx.fillRect(legendX, legendY + 48, boxSize, boxSize);
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(legendX, legendY + 48, boxSize, boxSize);
+    ctx.fillText("Disagreement (off-diagonal)", legendX + boxSize + 8, legendY + 61);
+  }
+
+  document.getElementById("genDataBtn").addEventListener("click", generateWeightedKappaData);
+
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    counts = [[0,0,0], [0,0,0], [0,0,0]];
+    buildTable();
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("inputError").style.display = "none";
+  });
+
+  document.getElementById("runBtn").addEventListener("click", () => {
+    readTable();
+    const N = totalN(counts);
+    if (N === 0) {
+      const err = document.getElementById("inputError");
+      err.style.display = "block";
+      err.textContent = "Please enter at least one observation before running the analysis.";
+      return;
+    }
+    document.getElementById("inputError").style.display = "none";
+
+    const wtype = document.getElementById("weightType").value;
+    const result = calculateWeightedKappa(wtype);
+    const alpha = parseFloat(document.getElementById("alpha").value);
+    const rejectH0 = result.kappa > 0;
+    
+    const interp = !Number.isFinite(result.kappa) ? "Undefined" :
+      (result.kappa < 0) ? "Poor" :
+      (result.kappa < 0.20) ? "Slight" :
+      (result.kappa < 0.40) ? "Fair" :
+      (result.kappa < 0.60) ? "Moderate" :
+      (result.kappa < 0.80) ? "Substantial" : "Almost perfect";
+
+    const badgeClass = (!Number.isFinite(result.kappa)) ? "warn" : (result.kappa < 0.6) ? "warn" : "good";
+
+    let html = `<div class="card">`;
+    html += `<div class="kpi-grid">`;
+    html += `<div class="kpi"><div class="label">Weighted κ</div><div class="value">${Number.isFinite(result.kappa) ? result.kappa.toFixed(4) : "—"}</div></div>`;
+    html += `<div class="kpi"><div class="label">Observed (Pₒ)</div><div class="value">${result.Po.toFixed(4)}</div></div>`;
+    html += `<div class="kpi"><div class="label">Expected (Pₑ)</div><div class="value">${result.Pe.toFixed(4)}</div></div>`;
+    html += `<div class="kpi"><div class="label">N</div><div class="value">${N}</div></div>`;
+    html += `</div>`;
+    html += `<div class="alert ${badgeClass}"><strong>Interpretation:</strong> ${interp} agreement. (${wtype} weights)</div>`;
+    html += `</div>`;
+
+    document.getElementById("results").innerHTML = html;
+    
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector('[data-tab="analysis"]').classList.add("active");
+    document.getElementById("analysis").classList.add("active");
+
+    setTimeout(() => {
+      renderWeightedHeatmap(result.W, rejectH0);
+    }, 50);
+  });
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  buildTable();
+</script>
+
+</body>
+</html>

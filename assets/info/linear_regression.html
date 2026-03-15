@@ -1,0 +1,221 @@
+<div class="info-content">
+
+  <h2>Correlation &amp; Linear Regression</h2>
+
+  <h3>Purpose</h3>
+  <p>
+    This tool quantifies the linear relationship between two continuous variables
+    (correlation) and fits a prediction line through the data (simple linear regression).
+    It reports Pearson and Spearman correlation coefficients, regression coefficients
+    with confidence intervals, R², and diagnostic plots.
+  </p>
+
+  <h3>When to use this tool</h3>
+  <ul>
+    <li>Investigating whether two continuous measurements are linearly related</li>
+    <li>Predicting one variable from another (e.g., dose → response)</li>
+    <li>Quantifying the strength and direction of association</li>
+    <li>Reporting correlation in method-comparison or biomarker studies</li>
+  </ul>
+
+  <h3>Key Concepts</h3>
+
+  <h4>Pearson Correlation (r)</h4>
+  <p>
+    Measures the strength of the <em>linear</em> relationship between two variables.
+    Ranges from &minus;1 (perfect negative) to +1 (perfect positive); 0 indicates no linear association.
+  </p>
+  <p>
+    <strong>r = Σ[(xᵢ − x̄)(yᵢ − ȳ)] / √[Σ(xᵢ − x̄)² · Σ(yᵢ − ȳ)²]</strong>
+  </p>
+  <p>
+    Requires both variables to be approximately normally distributed. Sensitive to outliers.
+  </p>
+
+  <h4>Spearman Correlation (ρ)</h4>
+  <p>
+    A rank-based alternative to Pearson r. Robust to non-normality and outliers.
+    Detects any monotonic (not just linear) relationship. Preferred when data are
+    ordinal or clearly non-normal.
+  </p>
+
+  <h4>Confidence Interval for r (Fisher z-transformation)</h4>
+  <p>
+    The CI for Pearson r is constructed by transforming r to Fisher's z, computing
+    a normal-theory interval, then back-transforming:
+  </p>
+  <p>
+    <strong>z = arctanh(r),&nbsp; SE(z) = 1/√(n−3)</strong>
+  </p>
+  <p>
+    Reliable for n ≥ 10. Not available for Spearman (approximation only).
+  </p>
+
+  <h3>Simple Linear Regression</h3>
+
+  <h4>Model</h4>
+  <p>
+    <strong>ŷ = a + b · x</strong>
+  </p>
+  <p>
+    Estimated by Ordinary Least Squares (OLS), which minimises the sum of squared residuals.
+  </p>
+
+  <h4>Coefficients</h4>
+  <ul>
+    <li><strong>Slope (b):</strong> Change in ŷ for a one-unit increase in x. The key inferential target.</li>
+    <li><strong>Intercept (a):</strong> Predicted value of y when x = 0. May not be clinically meaningful if x = 0 is outside the data range.</li>
+  </ul>
+
+  <h4>Standard Errors &amp; t-tests</h4>
+  <p>
+    Each coefficient is tested against zero using a t-statistic with <strong>df = n − 2</strong>:
+  </p>
+  <p>
+    <strong>t = estimate / SE</strong>
+  </p>
+
+  <h4>Confidence Interval for the Slope</h4>
+  <p>
+    The CI gives a range of plausible values for the true slope in the population.
+    For example, a 95% CI of [0.65, 1.01] means: <em>"If we repeated this study many
+    times, 95% of the calculated intervals would contain the true slope."</em>
+    In practice, it tells you how precisely the slope is estimated — a narrow interval
+    means high precision, a wide interval means uncertainty.
+  </p>
+  <p>
+    It is calculated as:
+    <strong>b ± t* · SE<sub>b</sub></strong>,
+    where t* is the critical t-value for the chosen significance level (e.g., t* ≈ 2.0
+    for 95% CI with moderate sample sizes) and SE<sub>b</sub> is the standard error
+    of the slope — smaller when you have more data or a wider spread of X values.
+  </p>
+  <p>
+    If the CI does not include 0, the slope is statistically significant at the chosen α.
+  </p>
+
+  <h3>Goodness-of-Fit</h3>
+  <ul>
+    <li>
+      <strong>R²:</strong> Proportion of variance in Y explained by X.
+      R² = r² for simple linear regression.
+    </li>
+    <li>
+      <strong>Adjusted R²:</strong> Penalises for model complexity; equals R² for simple regression
+      but is reported for consistency.
+    </li>
+    <li>
+      <strong>RMSE:</strong> Root Mean Square Error — average deviation of observed points
+      from the regression line, in the same units as Y.
+    </li>
+  </ul>
+
+  <h3>Hypotheses</h3>
+  <p><strong>H₀:</strong> b = 0 (X does not predict Y; population slope is zero)</p>
+  <p><strong>H₁:</strong> b ≠ 0 (X linearly predicts Y)</p>
+  <p>
+    The p-value for the slope is equivalent to the p-value for Pearson r (both use
+    the same t-statistic with df = n − 2).
+  </p>
+
+  <h3>Assumptions</h3>
+  <ul>
+    <li>Both variables are continuous (interval or ratio scale)</li>
+    <li>The relationship is linear — check the scatterplot</li>
+    <li>Observations are independent</li>
+    <li>Residuals are approximately normally distributed with constant variance (homoscedasticity)</li>
+    <li>No severe outliers or influential points</li>
+  </ul>
+
+  <h3>Diagnostic Plots</h3>
+  <ul>
+    <li>
+      <strong>Scatterplot &amp; regression line:</strong> Visually confirms linearity and identifies outliers.
+      The confidence band shows uncertainty around the fitted line (not a prediction interval).
+    </li>
+    <li>
+      <strong>Residual plot (Residuals vs Fitted values):</strong>
+      A residual is the difference between what the model predicted and what was actually observed:
+      <strong>residual = observed y − predicted ŷ</strong>.
+      The residual plot shows these differences on the Y-axis against the fitted (predicted) values on the X-axis.
+      <br><br>
+      <strong>What to look for:</strong>
+      <ul>
+        <li><strong>Good sign — random scatter around zero:</strong> Points are spread randomly above and below the zero line with no clear pattern. This means the model fits well and the assumptions hold.</li>
+        <li><strong>Bad sign — funnel shape (spread increases):</strong> Residuals get larger as fitted values increase. This is called heteroscedasticity — the variance is not constant, which violates a key regression assumption.</li>
+        <li><strong>Bad sign — curved pattern:</strong> A U-shape or arch indicates the true relationship is not linear, and a straight line is not the best fit for your data.</li>
+        <li><strong>Bad sign — one or two extreme points:</strong> Large residuals far from zero are outliers that the model predicts poorly and may be worth investigating.</li>
+      </ul>
+      Think of the residual plot as a quality check — it reveals problems that R² alone cannot show.
+      <br><br>
+      <strong>Is this like a Bland-Altman plot?</strong><br>
+      They look similar — both plot a difference on the Y-axis with a zero reference line — but they answer different questions:
+      <ul>
+        <li>The <strong>residual plot</strong> asks: <em>"Is a straight line a good model for my data?"</em> The Y-axis shows observed minus predicted (residual), and the X-axis shows the model's fitted values. It is a model diagnostic tool.</li>
+        <li>The <strong>Bland-Altman plot</strong> asks: <em>"Do two measurement methods agree well enough to be used interchangeably?"</em> The Y-axis shows Method A minus Method B, and the X-axis shows the mean of both methods. It is a clinical agreement tool.</li>
+      </ul>
+      If you are using regression for method comparison, you would use the residual plot to validate the model, then interpret the slope and intercept clinically. However, Bland-Altman is generally preferred for pure method comparison because it focuses on clinically meaningful agreement — not model fit.
+    </li>
+  </ul>
+
+  <h3>Correlation Strength Interpretation</h3>
+  <table border="1" cellpadding="6" cellspacing="0">
+    <tr><th>|r|</th><th>Interpretation</th></tr>
+    <tr><td>&lt; 0.10</td><td>Negligible</td></tr>
+    <tr><td>0.10 – 0.29</td><td>Weak</td></tr>
+    <tr><td>0.30 – 0.49</td><td>Moderate</td></tr>
+    <tr><td>0.50 – 0.69</td><td>Strong</td></tr>
+    <tr><td>&ge; 0.70</td><td>Very strong</td></tr>
+  </table>
+
+  <h3>Important Cautions</h3>
+  <ul>
+    <li><strong>Correlation ≠ causation.</strong> A significant r or slope does not imply that X causes Y.</li>
+    <li><strong>Extrapolation:</strong> Predictions outside the observed range of X are unreliable.</li>
+    <li><strong>Outliers:</strong> A single influential point can substantially change r and the slope.</li>
+    <li><strong>Restriction of range:</strong> Correlation underestimates association if the data cover only a narrow slice of the true range.</li>
+  </ul>
+
+  <h3>Reporting Example</h3>
+  <p>
+    There was a strong positive linear relationship between systolic blood pressure and
+    age (r = 0.72, 95% CI [0.61, 0.81], p &lt; 0.001). Simple linear regression showed
+    that each additional year of age was associated with an increase of 0.83 mmHg
+    in systolic blood pressure (b = 0.83, SE = 0.09, 95% CI [0.65, 1.01], t(98) = 9.2,
+    p &lt; 0.001, R² = 0.52).
+  </p>
+
+  <h3>Tool Features</h3>
+
+  <h4>Study Context</h4>
+  <p>Verify assumptions before running the analysis:</p>
+  <ul>
+    <li>Both variables are continuous</li>
+    <li>Linear relationship expected (verify with scatterplot)</li>
+    <li>Observations are independent</li>
+    <li>Approximately normal (required for Pearson; Spearman is robust)</li>
+  </ul>
+
+  <h4>Settings</h4>
+  <ul>
+    <li><strong>Significance level (α):</strong> 0.05 or 0.01</li>
+    <li><strong>Confidence band:</strong> Toggle display of the CI band around the regression line</li>
+    <li><strong>Residual plot:</strong> Toggle the residuals vs fitted values diagnostic plot</li>
+  </ul>
+
+  <h4>Data Input</h4>
+  <p>
+    Enter X and Y values one per line (or comma/semicolon/tab-separated).
+    Rows are paired — X[1] is matched with Y[1].
+    Both columns must have equal length and at least 3 pairs.
+  </p>
+
+  <h4>Sample Data Generator</h4>
+  <p>Generates correlated normal data with a target Pearson r:</p>
+  <ul>
+    <li><strong>n:</strong> Sample size</li>
+    <li><strong>Target r:</strong> Desired correlation (&minus;0.999 to 0.999)</li>
+    <li><strong>X mean / SD:</strong> Parameters for the X distribution</li>
+  </ul>
+
+</div>

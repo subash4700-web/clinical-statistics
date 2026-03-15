@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chi-Square Distribution Explorer</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+
+<style>
+body { margin:0; font-family:system-ui; background:#fff; }
+
+.wrapper {
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  min-height:100vh;
+}
+
+.controls {
+  padding:20px;
+  border-right:2px solid #eee;
+}
+
+.chart-area {
+  padding:20px;
+}
+
+label { font-weight:600; margin-top:10px; display:block; }
+input, select { width:100%; padding:6px; margin-bottom:10px; }
+
+.result {
+  background:#f3f3f3;
+  padding:12px;
+  border-radius:8px;
+  font-weight:600;
+  line-height:1.4;
+}
+
+canvas {
+  width:100% !important;
+  height:75vh !important;
+}
+
+.small { font-size:0.9rem; color:#555; }
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="controls">
+
+<h2>Chi-Square Distribution Explorer</h2>
+
+<label>Mode</label>
+<select id="mode">
+  <option value="alpha">α → Critical Value</option>
+  <option value="chisq">χ² → p-value</option>
+</select>
+
+<label>Degrees of Freedom (df)</label>
+<input type="range" id="dfSlider" min="1" max="50" value="5">
+<input type="number" id="df" value="5" min="1" max="200">
+
+<hr>
+
+<div id="alphaBlock">
+  <label>α (Right Tail)</label>
+  <input type="range" id="alphaSlider" min="0.001" max="0.2" step="0.001" value="0.05">
+  <input type="number" id="alpha" value="0.05" step="0.001">
+  <div class="small">Right tail: P(χ² ≥ χ²<sub>crit</sub>) = α</div>
+</div>
+
+<div id="chisqBlock" style="display:none;">
+  <label>χ² Value</label>
+  <input type="range" id="chisqSlider" min="0.1" max="40" step="0.1" value="10">
+  <input type="number" id="chisq" value="10" step="0.1">
+</div>
+
+<hr>
+
+<label>
+  <input type="checkbox" id="compare">
+  Compare second df
+</label>
+
+<div id="compareBlock" style="display:none;">
+  <label>Second df</label>
+  <input type="range" id="df2Slider" min="1" max="50" value="10">
+  <input type="number" id="df2" value="10">
+</div>
+
+<hr>
+
+<label>Axis Font Size</label>
+<input type="range" id="fontSlider" min="10" max="26" value="16">
+<div id="fontValue" class="small">16 px</div>
+
+<div class="result" id="output"></div>
+
+</div>
+
+<div class="chart-area">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+const el = id => document.getElementById(id);
+let chart;
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+function compute(){
+  const df = parseInt(el("df").value, 10) || 1;
+  const mode = el("mode").value;
+
+  const alpha = clamp(parseFloat(el("alpha").value) || 0.05, 0.001, 0.2);
+  const chisq = Math.max(parseFloat(el("chisq").value) || 0.1, 0);
+
+  let crit = null;
+  let p = null;
+
+  if(mode === "alpha"){
+    crit = jStat.chisquare.inv(1 - alpha, df);
+    el("output").innerHTML =
+      `df = ${df}<br>
+       χ²<sub>crit</sub> = ${crit.toFixed(4)}<br>
+       Right-tail area (α) = ${alpha.toFixed(3)}`;
+  } else {
+    p = 1 - jStat.chisquare.cdf(chisq, df);
+    el("output").innerHTML =
+      `df = ${df}<br>
+       χ² = ${chisq.toFixed(3)}<br>
+       p-value (right tail) = ${p.toFixed(6)}`;
+  }
+
+  return { df, mode, alpha, chisq, crit };
+}
+
+function buildCurve(df, maxX){
+  const step = maxX / 700;
+  const curve = [];
+  for(let x = 0.0001; x <= maxX; x += step){
+    curve.push({ x, y: jStat.chisquare.pdf(x, df) });
+  }
+  return curve;
+}
+
+function buildShade(df, maxX, threshold){
+  const step = maxX / 700;
+  const shade = [];
+  for(let x = 0.0001; x <= maxX; x += step){
+    const y = jStat.chisquare.pdf(x, df);
+    shade.push({ x, y: (x >= threshold) ? y : 0 });
+  }
+  return shade;
+}
+
+function draw(){
+  const res = compute();
+
+  // Dynamic x-range: show most of the mass
+  const maxX = jStat.chisquare.inv(0.999, res.df);
+
+  const curveA = buildCurve(res.df, maxX);
+
+  const threshold = (res.mode === "alpha") ? res.crit : res.chisq;
+  const shadeA = buildShade(res.df, maxX, threshold);
+
+  const datasets = [
+    {
+      label: `χ²(df=${res.df})`,
+      data: curveA,
+      borderColor: "#1976d2",
+      borderWidth: 3,
+      pointRadius: 0,
+      fill: false
+    },
+    {
+      label: "Right tail",
+      data: shadeA,
+      backgroundColor: "rgba(255,0,0,0.30)",
+      borderColor: "transparent",
+      pointRadius: 0,
+      fill: true
+    }
+  ];
+
+  // Optional comparison curve
+  if(el("compare").checked){
+    const df2 = parseInt(el("df2").value, 10) || 1;
+    const curveB = buildCurve(df2, maxX);
+    datasets.push({
+      label: `χ²(df=${df2})`,
+      data: curveB,
+      borderColor: "#555",
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false
+    });
+  }
+
+  chart.data.datasets = datasets;
+  chart.options.scales.x.min = 0;
+  chart.options.scales.x.max = maxX;
+  chart.update();
+}
+
+function init(){
+  const ctx = el("chart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: { datasets: [] },
+    options: {
+      animation: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { type: "linear", title: { display: true, text: "χ² values" } },
+        y: { display: false }
+      }
+    }
+  });
+}
+
+/* --- Mode toggle --- */
+function updateModeUI(){
+  const mode = el("mode").value;
+  el("alphaBlock").style.display = (mode === "alpha") ? "block" : "none";
+  el("chisqBlock").style.display = (mode === "chisq") ? "block" : "none";
+}
+
+/* --- Compare toggle --- */
+function updateCompareUI(){
+  el("compareBlock").style.display = el("compare").checked ? "block" : "none";
+}
+
+/* --- Wiring (ONE-WAY sync, no loops) --- */
+// df
+el("dfSlider").addEventListener("input", () => {
+  el("df").value = el("dfSlider").value;
+  draw();
+});
+el("df").addEventListener("input", () => {
+  const v = Math.max(parseInt(el("df").value || "1", 10), 1);
+  el("df").value = v;
+  el("dfSlider").value = clamp(v, parseInt(el("dfSlider").min,10), parseInt(el("dfSlider").max,10));
+  draw();
+});
+
+// alpha
+el("alphaSlider").addEventListener("input", () => {
+  el("alpha").value = el("alphaSlider").value;
+  draw();
+});
+el("alpha").addEventListener("input", () => {
+  const v = clamp(parseFloat(el("alpha").value || "0.05"), 0.001, 0.2);
+  el("alpha").value = v.toFixed(3);
+  el("alphaSlider").value = v;
+  draw();
+});
+
+// chisq
+el("chisqSlider").addEventListener("input", () => {
+  el("chisq").value = el("chisqSlider").value;
+  draw();
+});
+el("chisq").addEventListener("input", () => {
+  const v = Math.max(parseFloat(el("chisq").value || "0.1"), 0);
+  el("chisq").value = v;
+  el("chisqSlider").value = v;
+  draw();
+});
+
+// df2 compare
+el("compare").addEventListener("change", () => {
+  updateCompareUI();
+  draw();
+});
+el("df2Slider").addEventListener("input", () => {
+  el("df2").value = el("df2Slider").value;
+  draw();
+});
+el("df2").addEventListener("input", () => {
+  const v = Math.max(parseInt(el("df2").value || "1", 10), 1);
+  el("df2").value = v;
+  el("df2Slider").value = clamp(v, parseInt(el("df2Slider").min,10), parseInt(el("df2Slider").max,10));
+  draw();
+});
+
+// mode
+el("mode").addEventListener("change", () => {
+  updateModeUI();
+  draw();
+});
+
+// font size
+el("fontSlider").addEventListener("input", () => {
+  const size = parseInt(el("fontSlider").value, 10);
+  el("fontValue").textContent = `${size} px`;
+  chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
+  chart.options.scales.x.ticks.font = { size };
+  chart.options.scales.x.title.font = { size: size + 2 };
+  chart.update();
+});
+
+init();
+updateModeUI();
+updateCompareUI();
+
+// Initial sync
+el("dfSlider").value = el("df").value;
+el("alphaSlider").value = el("alpha").value;
+el("chisqSlider").value = el("chisq").value;
+el("df2Slider").value = el("df2").value;
+
+draw();
+</script>
+
+</body>
+</html>

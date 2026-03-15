@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dilution Calculator</title>
+  <style>
+    :root {
+      --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
+    }
+    body{background:var(--bg);color:var(--ink);margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+    .container{max-width:1100px;padding:20px;}
+    .subtitle{color:var(--muted);margin-top:0;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+    select,input[type="number"],input[type="text"]{
+      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
+      box-sizing:border-box;background:#fff;font-size:14px;color:var(--ink);
+    }
+    input:focus,select:focus{outline:none;border-color:var(--accent);}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;}
+    .section-title{font-weight:700;margin:0 0 10px 0;font-size:14px;}
+    .note{color:var(--muted);font-size:12.5px;margin-top:6px;}
+    .small{font-size:12px;color:var(--muted);}
+    .field-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;display:block;}
+    hr{border:none;border-top:1px solid var(--line);margin:16px 0;}
+
+    button{border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px;transition:transform .05s ease,opacity .15s ease;}
+    button:active{transform:translateY(1px);}
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-accent{background:#0d5fa9;color:#fff;}
+    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+    .btn-sm{padding:6px 10px;font-size:12px;}
+
+    .tabs{display:flex;gap:10px;margin:12px 0 14px;flex-wrap:wrap;}
+    .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
+    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .tab-content{display:none;}
+    .tab-content.active{display:block;}
+
+    .alert{border-radius:12px;padding:10px 12px;border:1px solid var(--line);background:#fff;font-size:13px;line-height:1.5;}
+    .alert.warn{border-color:#f59e0b55;background:#fffbeb;color:#7c2d12;}
+    .alert.bad{border-color:#ef444455;background:#fef2f2;color:#7f1d1d;}
+    .alert.good{border-color:#22c55e55;background:#ecfdf5;color:#14532d;}
+    .alert.info{border-color:#3b82f655;background:#eff6ff;color:#1e3a5f;}
+
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;}
+    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
+    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
+    th{background:#f9fafb;font-weight:800;color:#374151;}
+    td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
+    tr:last-child td{border-bottom:none;}
+    tr.total-row td{background:#f0f7ff;font-weight:700;border-top:2px solid var(--accent);}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    @media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr;}}
+    .kpi{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;}
+    .kpi .label{color:var(--muted);font-size:12px;font-weight:700;}
+    .kpi .value{font-size:15px;font-weight:900;margin-top:4px;font-family:ui-monospace,monospace;}
+
+    /* ── Range bar (shared) ── */
+    .range-wrap{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f9fafb;margin-top:8px;}
+    .range-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;}
+    .range-track{position:relative;height:8px;background:#e5e7eb;border-radius:999px;margin-bottom:4px;}
+    .range-zone{position:absolute;height:100%;}
+    .range-zone.z-low     {background:#ef4444;opacity:.35;border-radius:999px 0 0 999px;}
+    .range-zone.z-caution {background:#f59e0b;opacity:.45;}
+    .range-zone.z-ok      {background:#22c55e;opacity:.5;}
+    .range-zone.z-high    {background:#f59e0b;opacity:.45;}
+    .range-zone.z-toohigh {background:#ef4444;opacity:.35;border-radius:0 999px 999px 0;}
+    .range-marker{position:absolute;top:-4px;width:5px;height:16px;border-radius:3px;transform:translateX(-50%);background:var(--accent);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);z-index:2;transition:left .25s;}
+    .range-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:ui-monospace,monospace;}
+    .range-status{font-size:12.5px;font-weight:700;margin-top:4px;}
+
+    /* ── Input-unit combo ── */
+    .input-unit{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;}
+    .input-unit:focus-within{border-color:var(--accent);}
+    .input-unit input{flex:1;border:none;border-radius:0;padding:8px 10px;outline:none;font-size:14px;min-width:0;}
+    .input-unit select{border:none;border-left:1px solid var(--line);border-radius:0;padding:8px 6px;background:#f9fafb;font-size:12px;outline:none;color:var(--muted);cursor:pointer;width:auto;}
+
+    /* ── Reaction planner ── */
+    .rxn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px;}
+    .rxn-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;transition:opacity .15s;}
+    .rxn-item.disabled{opacity:.4;}
+    .rxn-item input[type="checkbox"]{accent-color:var(--accent);flex-shrink:0;}
+    .rxn-item label{font-size:13px;flex:1;cursor:pointer;}
+    .rxn-item .rxn-n{width:52px;padding:4px 6px;font-size:13px;border:1px solid var(--line);border-radius:8px;text-align:center;flex-shrink:0;}
+
+    /* ── Sample table ── */
+    .spl-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .spl-table th,.spl-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+    .spl-table th{background:#f9fafb;font-weight:700;color:#374151;font-size:12px;}
+    .spl-table tr:last-child td{border-bottom:none;}
+    .spl-table td input[type="text"],.spl-table td input[type="number"]{padding:4px 7px;font-size:13px;border:1px solid var(--line);border-radius:7px;width:100%;box-sizing:border-box;}
+    .spl-table td input:focus{border-color:var(--accent);outline:none;}
+    .spl-table td select{padding:4px 6px;font-size:12px;border:1px solid var(--line);border-radius:7px;background:#fff;}
+    .spl-table td.num{text-align:right;font-family:ui-monospace,monospace;}
+    .working-source{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#ecfdf5;border:1px solid #22c55e55;color:#14532d;}
+
+    /* ── Template range indicator (in wizard) ── */
+    .tpl-range-wrap{padding:8px 10px;border:1px solid #fcd34d;border-radius:8px;background:#fffdf0;margin-top:8px;}
+    .tpl-range-row{display:flex;justify-content:space-between;font-size:11px;color:#92400e;margin-bottom:4px;font-weight:600;}
+    .tpl-range-track{position:relative;height:7px;background:#e5e7eb;border-radius:999px;margin-bottom:3px;}
+    .tpl-range-ticks{display:flex;justify-content:space-between;font-size:10px;color:#a16207;font-family:ui-monospace,monospace;}
+    .tpl-range-status{font-size:11.5px;font-weight:700;margin-top:3px;}
+
+    /* ── Flags ── */
+    .tpl-flag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;cursor:pointer;user-select:none;white-space:nowrap;}
+    .tpl-flag.too-high  {background:#fef3c7;border:1px solid #f59e0b;color:#92400e;}
+    .tpl-flag.ok-diluted{background:#ecfdf5;border:1px solid #22c55e;color:#14532d;}
+    .tpl-flag.ok-normal {background:#f0fdf4;border:1px solid #86efac;color:#166534;}
+    .tpl-flag.no-target {background:#f3f4f6;border:1px solid #d1d5db;color:var(--muted);}
+
+    /* ── Dilution wizard ── */
+    .tpl-dil-row{background:#fffdf5;}
+    .tpl-dil-row td{padding:0!important;border-bottom:1px solid var(--line);}
+    .tpl-dil-inner{padding:10px 14px;}
+    .dil-wizard{border:1px solid #fcd34d;border-radius:10px;background:#fffef7;padding:12px;}
+    .dil-wizard .dw-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .dil-wizard .dw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:8px;align-items:end;}
+    @media(max-width:700px){.dil-wizard .dw-grid{grid-template-columns:1fr;}}
+    .dil-wizard .dw-result{border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.6;margin-top:6px;}
+    .dil-wizard .dw-result.good{background:#ecfdf5;border:1px solid #22c55e55;color:#14532d;}
+    .dil-wizard .dw-result.warn{background:#fffbeb;border:1px solid #f59e0b55;color:#7c2d12;}
+    .dil-wizard label.dw-label{font-size:11px;font-weight:700;color:#92400e;display:block;margin-bottom:3px;}
+    .dil-wizard input,.dil-wizard select{font-size:12px;padding:5px 7px;border:1px solid #fcd34d;border-radius:7px;background:#fff;}
+    .dil-wizard .input-unit{border:1px solid #fcd34d;}
+    .dil-wizard .input-unit input{font-size:12px;padding:5px 7px;}
+    .dil-wizard .input-unit select{font-size:12px;padding:5px 6px;}
+
+    /* Live volume-to-PCR preview */
+    .vol-preview{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;padding:5px 10px;font-size:12px;color:#1e3a5f;margin-top:6px;flex-wrap:wrap;}
+    .vol-preview strong{font-family:ui-monospace,monospace;font-size:13px;color:var(--accent);}
+
+    /* Transfer button + badge */
+    .transfer-btn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+    .transfer-btn:hover{background:#0d5fa9;}
+    .transferred-badge{display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;border:1px solid #22c55e55;border-radius:7px;padding:3px 8px;font-size:11px;color:#14532d;font-weight:700;}
+
+    /* ── Protocol section (bottom) ── */
+    .dil-protocol-item{border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#fffdf5;}
+    .dil-protocol-item .dpi-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .dil-protocol-item .dpi-name{font-weight:700;font-size:14px;flex:1;}
+    .dpi-calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+    @media(max-width:700px){.dpi-calc-grid{grid-template-columns:1fr;}}
+    .dpi-calc-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;}
+    .dpi-calc-box .dpi-calc-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+    .dpi-calc-box .dpi-calc-eq{font-family:ui-monospace,monospace;font-size:12px;color:var(--accent);margin-bottom:2px;}
+    .dpi-calc-box .dpi-calc-val{font-size:13px;font-weight:700;color:var(--ink);}
+    .dpi-steps{font-size:13px;line-height:1.9;color:var(--ink);}
+    .dpi-steps strong{color:var(--accent);}
+    .dpi-steps .step-pill{display:inline-block;background:#e0edff;border-radius:5px;padding:0 5px;font-size:11px;font-weight:700;color:var(--accent);margin-right:4px;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 style="margin-bottom:6px;">Dilution Calculator</h1>
+  <p class="subtitle">Quick dilution and serial dilution.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-simple">Quick Dilution</div>
+    <div class="tab" data-tab="tab-serial">Serial Dilution</div>
+  </div>
+
+  <!-- ══════════════ TAB 1: PRIMER DILUTION ══════════════ -->
+  <div id="tab-primers" class="tab-content">
+    <div id="primer-pending-banner" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:none;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:#1e40af;font-weight:700;">🧪 Setting up dilution for: <span id="primer-pending-name" style="color:var(--accent);">—</span></span>
+      <span style="font-size:12px;color:var(--muted);">Calculate below, then click "Transfer to PCR Setup" at the bottom.</span>
+      <button class="btn-ghost btn-sm" style="margin-left:auto;font-size:11px;" onclick="cancelPrimerSetup()">✕ Cancel</button>
+    </div>
+    <div style="max-width:640px;">
+
+      <!-- Step 1 -->
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 1 — Your stock</div>
+      <div class="card" style="margin-bottom:12px;">
+        <label class="field-label">Stock concentration</label>
+        <div class="input-unit" style="max-width:280px;">
+          <input type="number" id="p-stock" value="100" min="0" oninput="calcPrimers()">
+          <select id="p-stock-unit" onchange="calcPrimers()">
+            <option value="1" selected>μM</option>
+            <option value="1">pmol/μl</option>
+            <option value="0.001">nM</option>
+            <option value="1000">mM</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 2 — What you need in each reaction</div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="grid-2" style="gap:12px;margin-bottom:12px;">
+          <div>
+            <label class="field-label">Final primer concentration in reaction</label>
+            <div class="input-unit">
+              <input type="number" id="p-final" value="0.2" min="0" step="0.05" oninput="calcPrimers()">
+              <select id="p-final-unit" onchange="calcPrimers()">
+                <option value="1" selected>μM</option>
+                <option value="0.001">nM</option>
+              </select>
+            </div>
+            <div id="range-bar-wrap"></div>
+          </div>
+          <div>
+            <label class="field-label">Total reaction volume</label>
+            <div class="input-unit">
+              <input type="number" id="p-rxn-vol" value="25" min="0" oninput="calcPrimers()">
+              <select><option>μl</option></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Volume of primer to add per reaction</label>
+            <div class="input-unit">
+              <input type="number" id="p-add-vol" value="1" min="0" step="0.25" oninput="calcPrimers()">
+              <select><option>μl</option></select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Required working solution concentration</label>
+            <div id="p-working-display" style="padding:8px 10px;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;font-weight:700;font-family:ui-monospace,monospace;color:var(--accent);font-size:14px;">—</div>
+            <div class="note" style="margin-top:4px;">Calculated from your reaction settings</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 3 — How much working solution to prepare</div>
+      <div class="card" style="margin-bottom:14px;">
+        <label class="field-label">Volume of working solution to prepare</label>
+        <div class="input-unit" style="max-width:280px;">
+          <input type="number" id="p-working-vol" value="100" min="0" oninput="calcPrimers()">
+          <select id="p-working-vol-unit" onchange="calcPrimers()"><option value="1">μl</option><option value="1000">ml</option></select>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- KPIs + protocol -->
+    <div class="kpi-grid" id="primer-kpis" style="display:none;max-width:640px;">
+      <div class="kpi"><div class="label">TAKE FROM STOCK</div><div class="value" id="kpi-stock-vol">—</div></div>
+      <div class="kpi"><div class="label">ADD WATER / BUFFER</div><div class="value" id="kpi-water-vol">—</div></div>
+      <div class="kpi"><div class="label">DILUTION FACTOR</div><div class="value" id="kpi-df">—</div></div>
+      <div class="kpi"><div class="label">FINAL [PRIMER] IN RXN</div><div class="value" id="kpi-final-conc">—</div></div>
+    </div>
+    <div id="primer-steps"></div>
+    <div id="primer-transfer-section" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- ══════════════ TAB 2: PCR SETUP ══════════════ -->
+  <div id="tab-reactions" class="tab-content">
+
+    <!-- ── Step 1: Reaction Settings ── -->
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 1 — Reaction settings</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="grid-3" style="gap:12px;">
+        <div>
+          <label class="field-label">Total reaction volume</label>
+          <div class="input-unit">
+            <input type="number" id="rxn-vol-plan" value="25" min="1" oninput="calcReactions()">
+            <select><option>μl</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Template volume per reaction</label>
+          <div class="input-unit">
+            <input type="number" id="tpl-vol-plan" value="2" min="0" step="0.5" oninput="calcReactions()">
+            <select><option>μl</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Pipetting overage (%)</label>
+          <input type="number" id="overage-pct" value="10" min="0" max="50" oninput="calcReactions()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Samples & Controls ── -->
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 2 — Samples &amp; controls</div>
+
+    <!-- Controls -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:10px;">Controls</div>
+      <div id="controls-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;"></div>
+      <div id="add-control-inline" style="display:none;margin-top:10px;display:none;align-items:center;gap:8px;">
+        <input id="new-control-name" type="text" placeholder="Control name…" style="font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;width:200px;">
+        <button class="btn-ghost btn-sm" onclick="confirmAddControl()">Add</button>
+        <button class="btn-ghost btn-sm" onclick="cancelAddControl()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Target range -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="section-title">Template Concentration Target Range</div>
+      <div class="grid-3" style="gap:8px;margin-bottom:8px;">
+        <div>
+          <label class="field-label">Min (lower limit)</label>
+          <div class="input-unit">
+            <input type="number" id="tpl-range-min" placeholder="e.g. 1" min="0" step="any" oninput="calcReactions()">
+            <select id="tpl-range-unit" onchange="syncRangeUnits()">
+              <option>ng/μl</option><option>copies/μl</option><option>μg/ml</option><option>nM</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Optimal (target)</label>
+          <div class="input-unit">
+            <input type="number" id="tpl-target-conc" placeholder="e.g. 5" min="0" step="any" oninput="calcReactions()">
+            <select id="tpl-target-unit" onchange="syncRangeUnits()">
+              <option>ng/μl</option><option>copies/μl</option><option>μg/ml</option><option>nM</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Max (upper limit)</label>
+          <div class="input-unit">
+            <input type="number" id="tpl-range-max" placeholder="e.g. 20" min="0" step="any" oninput="calcReactions()">
+            <select id="tpl-range-max-unit" onchange="syncRangeUnits()">
+              <option>ng/μl</option><option>copies/μl</option><option>μg/ml</option><option>nM</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="tpl-global-range-bar"></div>
+      <p class="note" style="margin-top:4px;">Samples above max are flagged for dilution. Set only Optimal to use it as a single target.</p>
+    </div>
+
+    <!-- Samples -->
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div class="section-title" style="margin:0;">Samples / Templates</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-primary btn-sm" onclick="addSampleRowManual()">+ Add sample</button>
+          <button class="btn-ghost btn-sm" onclick="clearSampleConcs()">Clear conc.</button>
+        </div>
+      </div>
+      <p class="note" style="margin-bottom:10px;">Add each sample manually. Samples above max are flagged — click the status badge to open the dilution wizard.</p>
+      <div class="table-wrap">
+        <table class="spl-table" id="spl-table">
+          <thead>
+            <tr>
+              <th style="width:32px;">#</th>
+              <th>Sample name</th>
+              <th style="min-width:150px;">Stock conc.</th>
+              <th style="min-width:150px;">Working sol.</th>
+              <th style="min-width:80px;">Unit</th>
+              <th style="min-width:90px;">Final in rxn</th>
+              <th style="min-width:140px;">Status</th>
+              <th style="width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody id="spl-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Master Mix ── -->
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 3 — Master mix</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <p class="note" style="margin:0;">H₂O is auto-calculated to fill remaining volume. Master mix excludes template.</p>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost btn-sm" onclick="addReagent()">+ Add reagent</button>
+          <button class="btn-ghost btn-sm" onclick="resetReagents()">↺ Reset</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;">
+          <thead>
+            <tr>
+              <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:left;">Reagent</th>
+              <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:70px;">Stock conc.</th>
+              <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:left;min-width:75px;">Unit / ×</th>
+              <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:110px;">Per rxn (μl)</th>
+              <th id="mm-header-total" style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:130px;">× — reactions</th>
+              <th style="padding:7px 10px;background:#f9fafb;border-bottom:1px solid var(--line);min-width:80px;"></th>
+              <th style="padding:7px 10px;background:#f9fafb;border-bottom:1px solid var(--line);width:32px;"></th>
+            </tr>
+          </thead>
+          <tbody id="mm-tbody"></tbody>
+        </table>
+        <datalist id="unit-list">
+          <option value="×">
+          <option value="µM">
+          <option value="mM">
+          <option value="M">
+          <option value="U/µl">
+          <option value="ng/µl">
+          <option value="µg/µl">
+          <option value="mg/mL">
+          <option value="µl">
+        </datalist>
+      </div>
+    </div>
+
+    <!-- Strip layout -->
+    <div id="strip-layout" style="margin-bottom:16px;"></div>
+
+    <!-- Protocol output table -->
+    <div id="protocol-output" style="margin-bottom:16px;"></div>
+
+    <div id="rxn-results"></div>
+    <div id="dil-protocol" style="margin-top:16px;"></div>
+    <div id="primer-protocol" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- ══════════════ TAB 3: QUICK DILUTION ══════════════ -->
+  <div id="tab-simple" class="tab-content active">
+
+    <!-- Primary flow -->
+    <div class="card" style="max-width:560px;margin-bottom:14px;">
+      <div class="section-title">Quick Dilution</div>
+      <p class="note" style="margin-bottom:16px;">Enter your stock, the concentration you need, and the volume you want to make — get step-by-step instructions instantly.</p>
+
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">What you have</div>
+      <div style="margin-bottom:14px;">
+        <label class="field-label">Stock concentration</label>
+        <div class="input-unit">
+          <input type="number" id="q-c1" placeholder="e.g. 100" oninput="calcQuick()">
+          <select id="q-unit" onchange="calcQuick()">
+            <option>μM</option><option>mM</option><option>nM</option>
+            <option>ng/μl</option><option>μg/ml</option><option>mg/ml</option><option>%</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">What you need</div>
+      <div class="grid-2" style="gap:10px;margin-bottom:16px;">
+        <div>
+          <label class="field-label">Target concentration</label>
+          <div class="input-unit">
+            <input type="number" id="q-c2" placeholder="e.g. 10" oninput="calcQuick()">
+            <span id="q-unit-echo" style="padding:8px 10px;font-size:12px;color:var(--muted);background:#f9fafb;border-left:1px solid var(--line);white-space:nowrap;">μM</span>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Final volume to prepare</label>
+          <div class="input-unit">
+            <input type="number" id="q-v2" placeholder="e.g. 100" oninput="calcQuick()">
+            <select id="q-vunit" onchange="calcQuick()">
+              <option value="1">μl</option><option value="1000">ml</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="quick-result"></div>
+    </div>
+
+    <!-- Advanced: solve for any unknown -->
+    <details style="max-width:560px;">
+      <summary style="cursor:pointer;font-weight:700;font-size:13px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:12px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px;">
+        <span>▶</span> Advanced — solve for any unknown (C₁V₁ = C₂V₂)
+      </summary>
+      <div class="card" style="border-top:none;border-radius:0 0 12px 12px;margin-top:2px;">
+        <p class="note" style="margin-bottom:12px;">Fill in any three values and leave the unknown blank.</p>
+        <div class="grid-2" style="margin-bottom:12px;">
+          <div>
+            <label class="field-label">C₁ — Stock concentration</label>
+            <div class="input-unit">
+              <input type="number" id="s-c1" placeholder="e.g. 100" oninput="calcSimple()">
+              <select id="s-unit" onchange="calcSimple()">
+                <option>μM</option><option>mM</option><option>nM</option><option>mg/ml</option><option>%</option><option>×</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">V₁ — Volume to take (blank = solve)</label>
+            <div class="input-unit">
+              <input type="number" id="s-v1" placeholder="blank to solve" oninput="calcSimple()">
+              <select id="s-v-unit" onchange="calcSimple()">
+                <option value="1">μl</option><option value="1000">ml</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label">C₂ — Target concentration</label>
+            <div class="input-unit">
+              <input type="number" id="s-c2" placeholder="e.g. 10" oninput="calcSimple()">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">V₂ — Final volume (blank = solve)</label>
+            <div class="input-unit">
+              <input type="number" id="s-v2" placeholder="blank to solve" oninput="calcSimple()">
+            </div>
+          </div>
+        </div>
+        <div id="simple-result"></div>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- ══════════════ TAB 4: SERIAL DILUTION ══════════════ -->
+  <div id="tab-serial" class="tab-content">
+    <div class="card" style="max-width:560px;margin-bottom:16px;">
+      <div class="section-title">Serial Dilution Scheme</div>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div>
+          <label class="field-label">Starting concentration</label>
+          <div class="input-unit">
+            <input type="number" id="ser-start" value="1000" oninput="calcSerial()">
+            <select id="ser-unit"><option>μM</option><option>nM</option><option>mM</option><option>μg/ml</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Dilution factor per step</label>
+          <div class="input-unit">
+            <input type="number" id="ser-factor" value="10" min="2" oninput="calcSerial()">
+            <select><option>×</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Number of dilution steps</label>
+          <div class="input-unit">
+            <input type="number" id="ser-steps" value="6" min="1" max="12" oninput="calcSerial()">
+            <select><option>steps</option></select>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Volume per tube</label>
+          <div class="input-unit">
+            <input type="number" id="ser-vol" value="100" oninput="calcSerial()">
+            <select id="ser-vol-unit"><option value="1">μl</option><option value="1000">ml</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="serial-result"></div>
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════ */
+function el(id){ return document.getElementById(id); }
+function fv(id){ return parseFloat(el(id).value); }
+function fvd(id,def){ const v=parseFloat(el(id)?.value); return isNaN(v)?def:v; }
+function fmt(n,sig=4){
+  if(n===undefined||isNaN(n)||!isFinite(n)) return '—';
+  if(Math.abs(n)<0.001&&n!==0) return n.toExponential(2);
+  if(Math.abs(n)>=10000) return n.toExponential(2);
+  return parseFloat(n.toPrecision(sig)).toString();
+}
+
+/* ══════════════════════════════════════════════════════
+   PRIMER RANGE BAR
+══════════════════════════════════════════════════════ */
+function renderPrimerRangeBar(concUM){
+  const wrap=el('range-bar-wrap');
+  if(isNaN(concUM)||concUM<=0){wrap.innerHTML='';return;}
+
+  // Scale dynamically: always show the marker with comfortable room on the right
+  // Fixed zones end at 1.0 μM; if value exceeds 0.75 μM, extend scale to value × 1.4
+  const SCALE = Math.max(1.0, concUM * 1.4);
+  const pct = x => Math.min(100, Math.max(0, (x / SCALE) * 100));
+  const scaleLbl = SCALE > 1.0 ? fmt(SCALE, 2) : '1';
+
+  let status, color;
+  if(concUM < 0.05)     {status='⚠ Too low — may reduce efficiency';            color='var(--bad)';}
+  else if(concUM <= 0.1){status='△ Low-end — acceptable for most targets';       color='var(--warn)';}
+  else if(concUM <= 0.3){status='✓ Optimal range (0.1–0.3 μM)';                color='var(--good)';}
+  else if(concUM <= 0.5){status='△ Acceptable — monitor specificity';           color='var(--warn)';}
+  else                  {status='⚠ High — risk of primer-dimers & off-targets';  color='var(--bad)';}
+
+  wrap.innerHTML=`
+    <div class="range-wrap">
+      <div class="range-row">
+        <span>Primer final concentration</span>
+        <span style="color:${color};font-weight:800;">${fmt(concUM)} μM</span>
+      </div>
+      <div class="range-track">
+        <div class="range-zone z-low"     style="left:0%;width:${pct(0.05)}%"></div>
+        <div class="range-zone z-caution" style="left:${pct(0.05)}%;width:${pct(0.1)-pct(0.05)}%"></div>
+        <div class="range-zone z-ok"      style="left:${pct(0.1)}%;width:${pct(0.3)-pct(0.1)}%"></div>
+        <div class="range-zone z-high"    style="left:${pct(0.3)}%;width:${pct(0.5)-pct(0.3)}%"></div>
+        <div class="range-zone z-toohigh" style="left:${pct(0.5)}%;width:${100-pct(0.5)}%"></div>
+        <div class="range-marker"         style="left:${pct(concUM)}%;background:${color};"></div>
+      </div>
+      <div class="range-ticks">
+        <span>0</span><span>0.05</span><span>0.1</span><span>0.2★</span><span>0.3</span><span>0.5</span>
+        ${SCALE > 1.0 ? `<span style="color:${color};font-weight:700;">${fmt(concUM,2)} ▲</span>` : ''}
+        <span>${scaleLbl} μM</span>
+      </div>
+      <div class="range-status" style="color:${color}">${status}</div>
+      <div class="note" style="margin-top:4px;">Standard: 0.1–0.5 μM · Optimal: 0.2 μM · Multiplex: 0.05–0.2 μM</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TEMPLATE RANGE BAR (generic — used in wizard + global)
+   opts: { min, target, max, current, unit, wrapClass, trackClass, tickClass, statusClass, label }
+══════════════════════════════════════════════════════ */
+function renderTemplateRangeBar(container, opts){
+  const {minV, targetV, maxV, currentV, unit, label='Template final conc.'} = opts;
+  const hasRange = (!isNaN(minV)&&minV>0) || (!isNaN(maxV)&&maxV>0);
+  const hasTarget = !isNaN(targetV)&&targetV>0;
+
+  if(!hasRange&&!hasTarget){ container.innerHTML=''; return; }
+  if(isNaN(currentV)&&currentV!==0){ container.innerHTML=''; return; }
+
+  // Determine scale: use max*1.5 or target*3
+  const scaleMax = (!isNaN(maxV)&&maxV>0) ? maxV*1.5 : (hasTarget ? targetV*3 : 10);
+  const pct = v => Math.min(100,Math.max(0,(v/scaleMax)*100));
+
+  // Zone boundaries
+  const lo   = (!isNaN(minV)&&minV>0)    ? minV    : 0;
+  const tgt  = hasTarget                   ? targetV : ((lo+(!isNaN(maxV)&&maxV>0?maxV:lo*3))/2);
+  const hi   = (!isNaN(maxV)&&maxV>0)    ? maxV    : (hasTarget ? targetV*2 : scaleMax);
+
+  // Status
+  let status, color;
+  if(!isNaN(currentV)){
+    if(currentV<lo&&lo>0)        {status=`⚠ Below min (${fmt(lo)} ${unit})`;      color='var(--bad)';}
+    else if(currentV<=tgt*0.7)   {status='△ Low-end of range';                      color='var(--warn)';}
+    else if(currentV<=hi)        {status='✓ Within target range';                   color='var(--good)';}
+    else                          {status=`⚠ Above max (${fmt(hi)} ${unit}) — dilute`; color='var(--bad)';}
+  }
+
+  container.innerHTML=`
+    <div class="tpl-range-wrap">
+      <div class="tpl-range-row">
+        <span>${label}</span>
+        <span style="color:${color};font-weight:800;">${!isNaN(currentV)?fmt(currentV)+' '+unit:''}</span>
+      </div>
+      <div class="tpl-range-track range-track" style="height:7px;">
+        ${lo>0?`<div class="range-zone z-low" style="left:0%;width:${pct(lo)}%;border-radius:999px 0 0 999px;"></div>`:''}
+        <div class="range-zone z-ok" style="left:${pct(lo)}%;width:${pct(hi)-pct(lo)}%;"></div>
+        <div class="range-zone z-toohigh" style="left:${pct(hi)}%;width:${100-pct(hi)}%;border-radius:0 999px 999px 0;"></div>
+        ${hasTarget?`<div class="range-marker" style="left:${pct(tgt)}%;background:#22c55e;width:3px;height:14px;top:-3px;border:2px solid #fff;box-shadow:none;"></div>`:''}
+        ${!isNaN(currentV)?`<div class="range-marker" style="left:${pct(currentV)}%;background:${color};"></div>`:''}
+      </div>
+      <div class="tpl-range-ticks">
+        ${lo>0?`<span>${fmt(lo)}</span>`:'<span>0</span>'}
+        ${hasTarget?`<span style="color:#166534;">★${fmt(tgt)}</span>`:''}
+        <span>${fmt(hi)}</span>
+        <span>${fmt(scaleMax)} ${unit}</span>
+      </div>
+      <div class="tpl-range-status" style="color:${color}">${status||''}</div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 1: PRIMER DILUTION
+══════════════════════════════════════════════════════ */
+function calcPrimers(){
+  const stockConc  = fv('p-stock');
+  const workingVol = fv('p-working-vol');
+  const finalConc  = fv('p-final');
+  const rxnVol     = fv('p-rxn-vol');
+  const addVol     = fv('p-add-vol');
+  const finalConcUM = finalConc * parseFloat(el('p-final-unit').value);
+  const volUnit    = el('p-working-vol-unit').options[el('p-working-vol-unit').selectedIndex].text;
+
+  renderPrimerRangeBar(isNaN(finalConcUM) ? NaN : finalConcUM);
+
+  // Calculate working concentration from reaction requirements
+  const workingConc = (!isNaN(finalConc) && !isNaN(rxnVol) && !isNaN(addVol) && addVol > 0)
+    ? (finalConc * rxnVol) / addVol
+    : NaN;
+
+  // Update the calculated working concentration display
+  el('p-working-display').textContent = isNaN(workingConc) ? '—' : fmt(workingConc) + ' μM';
+
+  if([stockConc, workingConc, workingVol, finalConc, rxnVol, addVol].some(isNaN)){
+    el('primer-kpis').style.display = 'none';
+    el('primer-steps').innerHTML = '';
+    return;
+  }
+
+  if(workingConc >= stockConc){
+    el('primer-kpis').style.display = 'none';
+    el('primer-steps').innerHTML = `<div class="alert bad" style="max-width:640px;">⚠ Stock concentration (${fmt(stockConc)} μM) is too low — working solution would need ${fmt(workingConc)} μM. Increase stock concentration or add more primer volume per reaction.</div>`;
+    return;
+  }
+
+  const stockNeeded = (workingConc * workingVol) / stockConc;
+  const waterNeeded = workingVol - stockNeeded;
+  const df          = stockConc / workingConc;
+
+  el('primer-kpis').style.display = 'grid';
+  el('kpi-stock-vol').textContent  = fmt(stockNeeded) + ' ' + volUnit;
+  el('kpi-water-vol').textContent  = fmt(Math.max(0, waterNeeded)) + ' ' + volUnit;
+  el('kpi-df').textContent         = fmt(df) + '×';
+  el('kpi-final-conc').textContent = fmt(finalConcUM) + ' μM';
+
+  el('primer-steps').innerHTML = `
+    <div class="card" style="max-width:640px;">
+      <div class="section-title">Protocol</div>
+      <div class="alert good" style="font-size:13.5px;line-height:2;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#166534;margin-bottom:6px;">Instructions</div>
+        <div>① Take &nbsp;<strong style="font-size:15px;">${fmt(stockNeeded)} ${volUnit}</strong>&nbsp; of stock (${fmt(stockConc)} μM)</div>
+        <div>② Add &nbsp;<strong style="font-size:15px;">${fmt(Math.max(0,waterNeeded))} ${volUnit}</strong>&nbsp; of nuclease-free water / buffer</div>
+        <div>③ Mix → <strong>${fmt(workingVol)} ${volUnit}</strong> working solution at <strong>${fmt(workingConc)} μM</strong> (${fmt(df)}× dilution)</div>
+        <div>④ Add &nbsp;<strong style="font-size:15px;">${fmt(addVol)} μl</strong>&nbsp; per ${fmt(rxnVol)} μl reaction → <strong>${fmt(finalConcUM)} μM</strong> final</div>
+      </div>
+      <p class="note">C₁V₁ = C₂V₂ &nbsp;→&nbsp; ${fmt(stockConc)} × ${fmt(stockNeeded)} = ${fmt(workingConc)} × ${fmt(workingVol)}</p>
+    </div>`;
+
+  const rxnVolPlan = el('rxn-vol-plan');
+  if(rxnVolPlan && !rxnVolPlan.value) rxnVolPlan.value = rxnVol;
+  const primerVolPlan = el('primer-vol-plan');
+  if(primerVolPlan && !primerVolPlan.value) primerVolPlan.value = addVol;
+  calcReactions();
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 2: PCR SETUP — MASTER MIX
+══════════════════════════════════════════════════════ */
+const DEFAULT_REAGENTS=[
+  {name:'PCR Buffer (10×)',        stockConc:10, stockUnit:'×',    vol:2.5},
+  {name:'dNTPs',                   stockConc:10, stockUnit:'mM',   vol:2.5},
+  {name:'Fwd Primer',              stockConc:10, stockUnit:'µM',   vol:1.0, isPrimer:true},
+  {name:'Rev Primer',              stockConc:10, stockUnit:'µM',   vol:1.0, isPrimer:true},
+  {name:'Taq Polymerase',          stockConc:5,  stockUnit:'U/µl', vol:0.2},
+];
+let reagents=DEFAULT_REAGENTS.map(r=>({...r}));
+
+function buildMMTable(){
+  const tbody=el('mm-tbody');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  const rxnVol=fvd('rxn-vol-plan',25);
+  reagents.forEach((r,i)=>{
+    const isAuto=(r.stockUnit==='×'&&r.stockConc>0);
+    const effVol=isAuto?rxnVol/r.stockConc:(r.vol||0);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);">
+        <input type="text" value="${r.name}" style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:100%;box-sizing:border-box;"
+          onchange="reagents[${i}].name=this.value;">
+      </td>
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;">
+        <input type="number" value="${r.stockConc??''}" min="0" step="any" placeholder="—"
+          style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:62px;text-align:right;font-family:ui-monospace,monospace;"
+          oninput="reagents[${i}].stockConc=parseFloat(this.value)||0;buildMMTable();">
+      </td>
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);">
+        <input type="text" list="unit-list" value="${r.stockUnit||''}" placeholder="unit"
+          style="font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;width:68px;"
+          onchange="reagents[${i}].stockUnit=this.value;buildMMTable();">
+      </td>
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;">
+        ${isAuto
+          ? `<span style="font-size:13px;font-family:ui-monospace,monospace;color:#2563eb;font-weight:700;padding:4px 8px;background:#eff6ff;border-radius:7px;display:inline-block;">${fmt(effVol)} μl</span>`
+          : `<input type="number" value="${r.vol}" min="0" step="0.1"
+              style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:70px;text-align:right;font-family:ui-monospace,monospace;"
+              oninput="reagents[${i}].vol=parseFloat(this.value)||0;calcMM();">`
+        }
+      </td>
+      <td id="mm-row-total-${i}" style="padding:5px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;color:var(--muted);">—</td>
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);">
+        ${r.isPrimer?`<button class="btn-ghost btn-sm" style="padding:2px 7px;font-size:11px;${primerProtocols.find(p=>p.reagentIdx===i)?'color:#15803d;border-color:#22c55e;':''}" title="Open Primer Dilution tab to set up this primer" onclick="openPrimerSetup(${i})">${primerProtocols.find(p=>p.reagentIdx===i)?'✓ Set up':'Set up →'}</button>`:''}
+      </td>
+      <td style="padding:5px 8px;border-bottom:1px solid var(--line);">
+        <button class="btn-ghost btn-sm" style="padding:2px 6px;font-size:11px;" onclick="removeReagent(${i})">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  // H₂O row (auto-calculated)
+  const waterTr=document.createElement('tr');
+  waterTr.style.background='#f0f7ff';
+  waterTr.innerHTML=`
+    <td colspan="3" style="padding:7px 10px;border-bottom:1px solid var(--line);font-weight:700;">dH₂O <span style="font-size:11px;color:var(--muted);font-weight:400;">(auto)</span> <span style="font-size:12px;color:var(--muted);font-weight:400;">— fills to total vol − template vol</span></td>
+    <td id="mm-water-per" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;font-weight:700;">—</td>
+    <td id="mm-water-total" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;font-weight:700;">—</td>
+    <td style="border-bottom:1px solid var(--line);"></td>
+    <td style="border-bottom:1px solid var(--line);"></td>`;
+  tbody.appendChild(waterTr);
+  // Total row
+  const totalTr=document.createElement('tr');
+  totalTr.style.cssText='background:#f0f7ff;font-weight:700;border-top:2px solid var(--accent);';
+  totalTr.innerHTML=`
+    <td colspan="3" style="padding:7px 10px;font-weight:700;">Master mix total <span style="font-size:11px;color:var(--muted);font-weight:400;">(per tube, excl. template)</span></td>
+    <td id="mm-total-per" style="padding:7px 10px;text-align:right;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">—</td>
+    <td id="mm-total-total" style="padding:7px 10px;text-align:right;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">—</td>
+    <td></td>
+    <td></td>`;
+  tbody.appendChild(totalTr);
+  calcMM();
+}
+
+function calcMM(){
+  const rxnVol = fvd('rxn-vol-plan',25);
+  const tplVol = fvd('tpl-vol-plan',2);
+  const ovPct  = parseFloat(el('overage-pct')?.value)||0;
+  const nControls=CONTROLS.filter(c=>c.checked).length;
+  const nSamples=el('spl-tbody')?.querySelectorAll('tr.spl-data-row').length||0;
+  const nBase=nControls+nSamples;
+  const n=nBase>0 ? Math.ceil(nBase*stripRuns*(1+ovPct/100)) : 0;
+  if(el('mm-header-total')) el('mm-header-total').textContent=n>0?`× ${n} reactions`:'× — reactions';
+  const effVols=reagents.map(r=>(r.stockUnit==='×'&&r.stockConc>0)?rxnVol/r.stockConc:(r.vol||0));
+  const sumVol=effVols.reduce((s,v)=>s+v,0);
+  const mmPerRxn=rxnVol-tplVol;
+  const waterVol=Math.max(0,mmPerRxn-sumVol);
+  reagents.forEach((r,i)=>{
+    const c=el(`mm-row-total-${i}`);
+    if(c) c.textContent=n>0?fmt(effVols[i]*n)+' μl':'—';
+  });
+  if(el('mm-water-per'))   el('mm-water-per').textContent=fmt(waterVol)+' μl';
+  if(el('mm-water-total')) el('mm-water-total').textContent=n>0?fmt(waterVol*n)+' μl':'—';
+  if(el('mm-total-per'))   el('mm-total-per').textContent=fmt(mmPerRxn)+' μl';
+  if(el('mm-total-total')) el('mm-total-total').textContent=n>0?fmt(mmPerRxn*n)+' μl':'—';
+}
+
+function addReagent(){
+  reagents.push({name:'New Reagent',stockConc:null,stockUnit:'',vol:0});
+  buildMMTable();
+}
+function openPrimerSetup(i){
+  pendingPrimerTransfer={idx:i, name:reagents[i].name};
+  // Switch to Primer Dilution tab
+  document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelector('.tab[data-tab="tab-primers"]').classList.add('active');
+  el('tab-primers').classList.add('active');
+  updatePrimerSetupBanner();
+  updatePrimerTransferSection();
+}
+function cancelPrimerSetup(){
+  pendingPrimerTransfer=null;
+  updatePrimerSetupBanner();
+  updatePrimerTransferSection();
+}
+function updatePrimerSetupBanner(){
+  const banner=el('primer-pending-banner');
+  if(!banner)return;
+  if(pendingPrimerTransfer){
+    el('primer-pending-name').textContent=pendingPrimerTransfer.name;
+    banner.style.display='flex';
+  } else {
+    banner.style.display='none';
+  }
+}
+function updatePrimerTransferSection(){
+  const sec=el('primer-transfer-section');
+  if(!sec)return;
+  if(!pendingPrimerTransfer){ sec.innerHTML=''; return; }
+  // Check if we have a valid primer calculation
+  const stockConc=fv('p-stock'), workingVol=fv('p-working-vol');
+  const addVol=fvd('p-add-vol',1), rxnVol=fvd('p-rxn-vol',25), finalConc=fv('p-final');
+  const workingConc=(!isNaN(finalConc)&&!isNaN(rxnVol)&&!isNaN(addVol)&&addVol>0)?(finalConc*rxnVol)/addVol:NaN;
+  const canTransfer=!isNaN(stockConc)&&!isNaN(workingConc)&&!isNaN(workingVol)&&stockConc>0&&workingConc>0&&workingConc<stockConc;
+  sec.innerHTML=canTransfer
+    ? `<div style="background:#f0fdf4;border:1px solid #22c55e55;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:700;color:#14532d;">Ready to transfer for <em>${pendingPrimerTransfer.name}</em></span>
+        <span style="font-size:12px;color:var(--muted);">Working sol. ${fmt(workingConc)} µM · add ${fmt(addVol)} µl/rxn</span>
+        <button class="transfer-btn" style="margin-left:auto;" onclick="transferPrimerToPCR()">↗ Transfer to PCR Setup</button>
+      </div>`
+    : `<div style="background:#f9fafb;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);">
+        Complete the primer dilution calculation above, then click Transfer to PCR Setup.
+      </div>`;
+}
+function transferPrimerToPCR(){
+  if(!pendingPrimerTransfer)return;
+  const stockConc=fv('p-stock');
+  const workingVol=fv('p-working-vol');
+  const addVol=fvd('p-add-vol',1);
+  const rxnVol=fvd('p-rxn-vol',25);
+  const finalConc=fv('p-final');
+  const unit=el('p-final-unit').options[el('p-final-unit').selectedIndex].text;
+  const volUnit=el('p-working-vol-unit').options[el('p-working-vol-unit').selectedIndex].text;
+  const workingConc=(finalConc*rxnVol)/addVol;
+  const stockNeeded=(workingConc*workingVol)/stockConc;
+  const waterNeeded=workingVol-stockNeeded;
+  const df=stockConc/workingConc;
+  const finalInRxn=(workingConc*addVol)/rxnVol;
+  const {idx,name}=pendingPrimerTransfer;
+  // Update reagent row vol
+  reagents[idx].vol=addVol;
+  reagents[idx].stockUnit='µl';
+  // Store protocol
+  primerProtocols=primerProtocols.filter(p=>p.reagentIdx!==idx);
+  primerProtocols.push({reagentIdx:idx,name,stockConc,workingConc,workingVol,stockNeeded,waterNeeded,df,addVol,finalInRxn,unit,volUnit});
+  pendingPrimerTransfer=null;
+  updatePrimerSetupBanner();
+  updatePrimerTransferSection();
+  // Switch back to PCR Setup
+  document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelector('.tab[data-tab="tab-reactions"]').classList.add('active');
+  el('tab-reactions').classList.add('active');
+  buildMMTable();
+  renderPrimerProtocols();
+}
+function renderPrimerProtocols(){
+  const container=el('primer-protocol');
+  if(!container)return;
+  if(primerProtocols.length===0){container.innerHTML='';return;}
+  let html=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div class="section-title" style="margin:0;">Primer Dilution Protocols</div>
+        <button class="btn-ghost btn-sm" onclick="primerProtocols=[];buildMMTable();renderPrimerProtocols();" style="font-size:11px;">Clear all</button>
+      </div>`;
+  primerProtocols.forEach(p=>{
+    html+=`
+      <div class="dil-protocol-item" style="border-color:#c4b5fd;background:#faf5ff;">
+        <div class="dpi-header">
+          <div class="dpi-name">🧪 ${p.name}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="small">DF: ${fmt(p.df)}×</span>
+            <button class="btn-ghost btn-sm" style="padding:2px 6px;font-size:10px;" onclick="primerProtocols=primerProtocols.filter(p=>p.reagentIdx!==${p.reagentIdx});buildMMTable();renderPrimerProtocols();">✕</button>
+          </div>
+        </div>
+        <div class="dpi-calc-grid">
+          <div class="dpi-calc-box">
+            <div class="dpi-calc-title">Step 1 — Working solution</div>
+            <div class="dpi-calc-eq">Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> stock (${fmt(p.stockConc)} µM)</div>
+            <div class="dpi-calc-eq">+ <strong>${fmt(Math.max(0,p.waterNeeded))} ${p.volUnit}</strong> water/buffer</div>
+            <div class="dpi-calc-val">→ <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> at <strong>${fmt(p.workingConc)} µM</strong></div>
+          </div>
+          <div class="dpi-calc-box">
+            <div class="dpi-calc-title">Step 2 — Per reaction</div>
+            <div class="dpi-calc-eq">Add <strong>${fmt(p.addVol)} µl</strong> working sol. per reaction</div>
+            <div class="dpi-calc-val">→ <strong>${fmt(p.finalInRxn)} ${p.unit}</strong> in reaction</div>
+          </div>
+        </div>
+        <div class="step-list">
+          <span class="step-pill">1</span> Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> of stock (${fmt(p.stockConc)} µM) + <strong>${fmt(Math.max(0,p.waterNeeded))} ${p.volUnit}</strong> water → <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> working solution at <strong>${fmt(p.workingConc)} µM</strong><br>
+          <span class="step-pill">2</span> Add <strong>${fmt(p.addVol)} µl</strong> per ${fvd('rxn-vol-plan',25)} µl PCR reaction → <strong>${fmt(p.finalInRxn)} ${p.unit}</strong> final
+        </div>
+      </div>`;
+  });
+  html+='</div>';
+  container.innerHTML=html;
+}
+function removeReagent(i){
+  reagents.splice(i,1);
+  buildMMTable();
+}
+function resetReagents(){
+  reagents=DEFAULT_REAGENTS.map(r=>({...r}));
+  buildMMTable();
+}
+
+function renderProtocolOutput(){
+  const outEl=el('protocol-output');
+  if(!outEl)return;
+  const rxnVol=fvd('rxn-vol-plan',25);
+  const tplVol=fvd('tpl-vol-plan',2);
+  const mmVol=rxnVol-tplVol;
+  const reactions=[];
+  CONTROLS.forEach(ctrl=>{
+    if(!ctrl.checked)return;
+    let tplDesc='—';
+    if(ctrl.id==='ntc')  tplDesc=`${fmt(tplVol)} μl H₂O`;
+    else if(ctrl.id==='nort') tplDesc=`${fmt(tplVol)} μl sample (no RT)`;
+    else if(ctrl.id==='pos')  tplDesc=`${fmt(tplVol)} μl positive ctrl`;
+    else if(ctrl.id==='neg')  tplDesc=`${fmt(tplVol)} μl H₂O`;
+    reactions.push({label:ctrl.label,color:ctrl.color,bg:ctrl.bg,tplDesc});
+  });
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach((row,si)=>{
+    const name=row.querySelector('input[type="text"]').value||`S${si+1}`;
+    reactions.push({label:name,color:'#1976d2',bg:'#eff6ff',tplDesc:`${fmt(tplVol)} μl ${name}`});
+  });
+  if(!reactions.length){outEl.innerHTML='';return;}
+  const thCells=reactions.map(r=>`<th style="padding:6px 10px;background:${r.bg};color:${r.color};border-bottom:2px solid ${r.color};border-left:1px solid var(--line);font-weight:700;text-align:center;min-width:80px;">${r.label}</th>`).join('');
+  const mmCells=reactions.map(()=>`<td style="padding:6px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);text-align:center;font-family:ui-monospace,monospace;font-weight:700;">${fmt(mmVol)} μl</td>`).join('');
+  const tplCells=reactions.map(r=>`<td style="padding:6px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);text-align:center;font-size:12px;color:var(--muted);">${r.tplDesc}</td>`).join('');
+  const totCells=reactions.map(()=>`<td style="padding:6px 10px;border-left:1px solid var(--line);text-align:center;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">${fmt(rxnVol)} μl</td>`).join('');
+  outEl.innerHTML=`
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px;">Protocol — Per Tube Setup</div>
+      <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse;font-size:13px;background:#fff;min-width:300px;">
+          <thead><tr>
+            <th style="padding:6px 10px;background:#f9fafb;border-bottom:2px solid var(--line);text-align:left;min-width:130px;">Reagent</th>
+            ${thCells}
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">Master mix</td>${mmCells}
+            </tr>
+            <tr>
+              <td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">Template DNA</td>${tplCells}
+            </tr>
+            <tr style="background:#f0f7ff;">
+              <td style="padding:6px 10px;font-weight:700;">Total</td>${totCells}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 2: PCR SETUP — CONTROLS & SAMPLES
+══════════════════════════════════════════════════════ */
+const CONTROLS=[
+  {id:'ntc',  label:'NTC',         desc:'No Template Control',      color:'#4b5563',bg:'#f3f4f6',checked:true,  fixed:true},
+  {id:'nort', label:'NoRT',        desc:'No Reverse Transcriptase', color:'#b45309',bg:'#fffbeb',checked:false, fixed:true},
+  {id:'het',  label:'Heterozygote',desc:'Heterozygous Control',     color:'#7c3aed',bg:'#f5f3ff',checked:false, fixed:true},
+  {id:'hom',  label:'Homozygote',  desc:'Homozygous Control',       color:'#0369a1',bg:'#f0f9ff',checked:false, fixed:true},
+];
+let customControlCounter=0;
+const CUSTOM_COLORS=['#0f766e','#b45309','#be185d','#15803d','#b91c1c','#1d4ed8','#7c3aed','#c2410c'];
+
+function addCustomControl(){
+  const panel=el('add-control-inline');
+  panel.style.display='flex';
+  el('new-control-name').value='';
+  el('new-control-name').focus();
+}
+function confirmAddControl(){
+  const name=el('new-control-name').value.trim();
+  if(!name) return;
+  const color=CUSTOM_COLORS[customControlCounter%CUSTOM_COLORS.length];
+  customControlCounter++;
+  CONTROLS.push({id:'custom-'+Date.now(), label:name, desc:'Custom Control', color, bg:'#f9fafb', checked:true, fixed:false});
+  el('add-control-inline').style.display='none';
+  buildControls();
+  calcReactions();
+}
+function cancelAddControl(){
+  el('add-control-inline').style.display='none';
+}
+// Persistent storage for accepted dilution protocols
+let acceptedProtocols=[];
+let primerProtocols=[];
+let pendingPrimerTransfer=null; // {idx, name} — which reagent row is being set up
+let sampleCounter=0;
+let stripRuns=1;
+
+function buildControls(){
+  const row=el('controls-row');
+  if(!row)return;
+  row.innerHTML='';
+  CONTROLS.forEach((ctrl,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;';
+    const cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=ctrl.checked;cb.id='ctrl-'+ctrl.id;
+    cb.style.cssText='accent-color:'+ctrl.color+';cursor:pointer;flex-shrink:0;';
+    cb.onchange=()=>{CONTROLS[i].checked=cb.checked;calcReactions();};
+    const lbl=document.createElement('label');
+    lbl.htmlFor='ctrl-'+ctrl.id;lbl.style.cssText='cursor:pointer;';
+    const nameSpan=document.createElement('div');
+    nameSpan.style.cssText='font-size:13px;font-weight:700;color:'+ctrl.color+';';
+    nameSpan.textContent=ctrl.label;
+    const descSpan=document.createElement('div');
+    descSpan.style.cssText='font-size:11px;color:var(--muted);font-weight:400;';
+    descSpan.textContent=ctrl.desc;
+    lbl.appendChild(nameSpan);lbl.appendChild(descSpan);
+    div.appendChild(cb);div.appendChild(lbl);
+    if(!ctrl.fixed){
+      const rm=document.createElement('button');
+      rm.textContent='×';
+      rm.style.cssText='margin-left:4px;border:none;background:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 2px;line-height:1;';
+      rm.title='Remove control';
+      rm.onclick=(e)=>{e.stopPropagation();CONTROLS.splice(i,1);buildControls();calcReactions();};
+      div.appendChild(rm);
+    }
+    row.appendChild(div);
+  });
+
+  // "+ Add Control" button
+  const addBtn=document.createElement('button');
+  addBtn.textContent='+ Add Control';
+  addBtn.style.cssText='padding:8px 14px;border:1px dashed var(--line);border-radius:10px;background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;';
+  addBtn.onmouseenter=()=>addBtn.style.color='var(--accent)';
+  addBtn.onmouseleave=()=>addBtn.style.color='var(--muted)';
+  addBtn.onclick=addCustomControl;
+  row.appendChild(addBtn);
+}
+
+function addSampleRowManual(){
+  addSampleRow(sampleCounter++);
+  renumberSampleRows();
+  calcReactions();
+}
+
+function renumberSampleRows(){
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach((row,i)=>{
+    const td=row.querySelector('td:first-child');
+    if(td)td.textContent=i+1;
+  });
+}
+
+function buildStripLayout(){
+  const baseReactions=[];
+  CONTROLS.forEach(ctrl=>{
+    if(ctrl.checked)baseReactions.push({
+      label:ctrl.label,shortLabel:ctrl.label.substring(0,4),
+      color:ctrl.color,bg:ctrl.bg,desc:ctrl.desc||ctrl.label
+    });
+  });
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach((row,si)=>{
+    const name=row.querySelector('input[type="text"]').value||`S${si+1}`;
+    baseReactions.push({
+      label:name,shortLabel:name.substring(0,5),
+      color:'#1976d2',bg:'#eff6ff',desc:name
+    });
+  });
+  const stripEl=el('strip-layout');
+  if(!baseReactions.length){stripEl.innerHTML='';return;}
+
+  // Repeat layout for multiple runs
+  const reactions=[];
+  for(let r=0;r<stripRuns;r++) reactions.push(...baseReactions);
+
+  const strips=[];
+  for(let i=0;i<reactions.length;i+=8)strips.push(reactions.slice(i,i+8));
+  const ovPct=parseFloat(el('overage-pct')?.value)||0;
+  const totalWithOv=Math.ceil(reactions.length*(1+ovPct/100));
+
+  let html=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="margin:0;">Strip Layout</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <label style="font-size:12px;font-weight:700;color:var(--muted);">Runs</label>
+          <input type="number" value="${stripRuns}" min="1" max="20"
+            style="width:52px;padding:4px 8px;font-size:13px;border:1px solid var(--line);border-radius:8px;text-align:center;"
+            oninput="stripRuns=Math.max(1,parseInt(this.value)||1);buildStripLayout();">
+        </div>
+        <div class="small">${reactions.length} wells · ${strips.length} strip${strips.length!==1?'s':''} · ${ovPct}% overage → ${totalWithOv} total</div>
+      </div>
+    </div>
+    <p class="note" style="margin-bottom:12px;">Controls first, then samples in order. Each run repeats the full layout. Each strip = 8 wells.</p>`;
+
+  // Group strips by run for visual separation
+  const stripsPerRun=Math.ceil(baseReactions.length/8);
+  strips.forEach((strip,si)=>{
+    const runIdx=Math.floor(si/stripsPerRun);
+    const stripInRun=si%stripsPerRun;
+    const isRunStart=stripInRun===0&&si>0;
+    if(isRunStart){
+      html+=`<div style="border-top:2px dashed #e5e7eb;margin:8px 0 8px 60px;"></div>`;
+    }
+    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);min-width:52px;text-align:right;padding-right:4px;">${stripRuns>1?`R${runIdx+1}·S${stripInRun+1}`:`Strip ${si+1}`}</div>
+      <div style="display:flex;gap:3px;">`;
+    for(let wi=0;wi<8;wi++){
+      const rxn=strip[wi];
+      const wellNum=si*8+wi+1;
+      if(rxn){
+        html+=`<div title="${rxn.desc} — well ${wellNum}" style="width:50px;height:46px;border-radius:7px;background:${rxn.bg};border:2px solid ${rxn.color};display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${rxn.color};text-align:center;line-height:1.3;overflow:hidden;padding:2px;box-sizing:border-box;cursor:default;">
+          <div style="opacity:0.55;font-size:8px;margin-bottom:1px;">${wellNum}</div>
+          <div style="word-break:break-all;">${rxn.shortLabel}</div>
+        </div>`;
+      } else {
+        html+=`<div style="width:50px;height:46px;border-radius:7px;background:#f9fafb;border:2px dashed #e5e7eb;"></div>`;
+      }
+    }
+    html+=`</div></div>`;
+  });
+  html+=`</div>`;
+  stripEl.innerHTML=html;
+}
+
+function syncRangeUnits(){
+  // Keep all three unit selects in sync
+  const u=el('tpl-range-unit').value;
+  el('tpl-target-unit').value=u;
+  el('tpl-range-max-unit').value=u;
+  calcReactions();
+}
+
+function getTargetRange(){
+  const unit  = el('tpl-range-unit').value;
+  const minV  = fv('tpl-range-min');
+  const optV  = fv('tpl-target-conc');
+  const maxV  = fv('tpl-range-max');
+  return {minV,optV,maxV,unit};
+}
+
+/* ── Sample rows ── */
+
+function addSampleRow(i){
+  const tbody=el('spl-tbody');
+  const tr=document.createElement('tr');
+  tr.className='spl-data-row';
+  tr.dataset.idx=i;
+  tr._wizardOpen=false;
+  tr._transferred=false;
+  tr.innerHTML=`
+    <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+    <td><input type="text" placeholder="Sample ${i+1}" oninput="calcReactions()"></td>
+    <td><input class="spl-stock" type="number" placeholder="—" min="0" step="any" oninput="calcReactions()" style="font-family:ui-monospace,monospace;"></td>
+    <td>
+      <input class="spl-working" type="number" placeholder="—" min="0" step="any" readonly style="font-family:ui-monospace,monospace;background:#f9fafb;color:var(--muted);">
+      <span id="spl-working-src-${i}" class="working-source" style="display:none;">from protocol</span>
+    </td>
+    <td><select onchange="calcReactions()" style="font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;background:#fff;">
+      <option>ng/μl</option><option>copies/μl</option><option>μg/ml</option><option>nM</option>
+    </select></td>
+    <td id="spl-final-${i}" class="num"><span class="small">—</span></td>
+    <td id="spl-status-${i}"><span class="small">—</span></td>
+    <td><button class="btn-ghost btn-sm" onclick="removeSampleRow(this)" style="padding:3px 7px;font-size:11px;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeSampleRow(btn){
+  const tr=btn.closest('tr.spl-data-row');
+  const next=tr.nextElementSibling;
+  if(next&&next.classList.contains('tpl-dil-row'))next.remove();
+  tr.remove();
+  renumberSampleRows();
+  calcReactions();
+}
+
+function clearSampleConcs(){
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach(row=>{
+    const stockInput=row.querySelector('input.spl-stock');
+    const workingInput=row.querySelector('input.spl-working');
+    const sourceBadge=row.querySelector('.working-source');
+    if(stockInput)stockInput.value='';
+    if(workingInput)workingInput.value='';
+    if(sourceBadge)sourceBadge.style.display='none';
+    row._transferred=false;
+  });
+  acceptedProtocols=[];
+  calcReactions();
+}
+
+function getEffectiveRowConc(rowEl){
+  const stockConc=parseFloat(rowEl.querySelector('input.spl-stock')?.value);
+  const workingConc=parseFloat(rowEl.querySelector('input.spl-working')?.value);
+  if(rowEl._transferred&&!isNaN(workingConc)&&workingConc>0)return workingConc;
+  return stockConc;
+}
+
+/* ── Wizard ── */
+function calcMaxAllowed(){
+  const {maxV,optV}=getTargetRange();
+  const tplVol=fvd('tpl-vol-plan',2);
+  const rxnVol=fvd('rxn-vol-plan',25);
+  // max stock conc that, when tplVol μl added to rxnVol μl, gives ≤ maxV in reaction
+  const limit = (!isNaN(maxV)&&maxV>0) ? maxV : ((!isNaN(optV)&&optV>0) ? optV : NaN);
+  if(isNaN(limit)||limit<=0)return NaN;
+  return limit*rxnVol/tplVol;
+}
+
+function getSampleRow(idx){
+  return document.querySelector('tr.spl-data-row[data-idx="'+idx+'"]');
+}
+function toggleWizardByIdx(idx){
+  const row=getSampleRow(idx);
+  if(row) toggleWizard(row,idx);
+}
+function closeWizardByIdx(idx){
+  const row=getSampleRow(idx);
+  if(row) closeWizard(row);
+}
+function toggleWizard(rowEl,idx){
+  if(rowEl._wizardOpen){closeWizard(rowEl);}else{openWizard(rowEl,idx);}
+}
+function openWizard(rowEl,idx){
+  rowEl._wizardOpen=true;
+  insertWizardRow(rowEl,idx);
+  updateStatusCell(rowEl,idx);
+}
+function closeWizard(rowEl){
+  rowEl._wizardOpen=false;
+  const next=rowEl.nextElementSibling;
+  if(next&&next.classList.contains('tpl-dil-row'))next.remove();
+  updateStatusCell(rowEl,parseInt(rowEl.dataset.idx));
+  renderDilProtocol();
+}
+
+function insertWizardRow(rowEl,idx){
+  const existNext=rowEl.nextElementSibling;
+  if(existNext&&existNext.classList.contains('tpl-dil-row'))existNext.remove();
+
+  const {optV,maxV,unit}=getTargetRange();
+  const stockConc=parseFloat(rowEl.querySelector('input.spl-stock').value);
+  const rowUnit=rowEl.querySelector('select').value;
+  const tplVol=fvd('tpl-vol-plan',2);
+  const rxnVol=fvd('rxn-vol-plan',25);
+
+  // Default working conc = maxAllowed (so user can add tplVol directly)
+  const maxAllowed=calcMaxAllowed();
+  const defaultTarget=(!isNaN(maxAllowed)&&maxAllowed>0)?parseFloat(maxAllowed.toPrecision(3)):'';
+  const defaultVol=100;
+
+  const tr=document.createElement('tr');
+  tr.className='tpl-dil-row';
+  tr.id=`wiz-row-${idx}`;
+  tr.innerHTML=`
+    <td colspan="8">
+      <div class="tpl-dil-inner">
+        <div class="dil-wizard" id="wiz-${idx}">
+          <div class="dw-title">
+            <span>🔬</span>
+            <span>Template Dilution Wizard — <span style="font-weight:400;" id="wiz-sname-${idx}">${rowEl.querySelector('input[type="text"]').value||'Sample '+(idx+1)}</span></span>
+            <button class="btn-ghost btn-sm" onclick="closeWizardByIdx(${idx})" style="margin-left:auto;padding:2px 8px;font-size:11px;">✕ Close</button>
+          </div>
+
+          <div class="dw-grid">
+            <div>
+              <label class="dw-label">Stock concentration</label>
+              <div class="input-unit">
+                <input type="number" id="wiz-stock-${idx}" value="${isNaN(stockConc)?'':stockConc}" min="0" oninput="calcWizard(${idx})">
+                <select id="wiz-stock-unit-${idx}" onchange="calcWizard(${idx})">
+                  <option ${rowUnit==='ng/μl'?'selected':''}>ng/μl</option>
+                  <option ${rowUnit==='copies/μl'?'selected':''}>copies/μl</option>
+                  <option ${rowUnit==='μg/ml'?'selected':''}>μg/ml</option>
+                  <option ${rowUnit==='nM'?'selected':''}>nM</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="dw-label">Working solution concentration (after dilution)</label>
+              <div class="input-unit">
+                <input type="number" id="wiz-target-${idx}" value="${defaultTarget}" min="0" step="any" oninput="calcWizard(${idx})">
+                <select id="wiz-target-unit-${idx}" onchange="calcWizard(${idx})">
+                  <option ${rowUnit==='ng/μl'?'selected':''}>ng/μl</option>
+                  <option ${rowUnit==='copies/μl'?'selected':''}>copies/μl</option>
+                  <option ${rowUnit==='μg/ml'?'selected':''}>μg/ml</option>
+                  <option ${rowUnit==='nM'?'selected':''}>nM</option>
+                </select>
+              </div>
+              <!-- Live volume-to-PCR preview -->
+              <div id="wiz-vol-preview-${idx}" style="margin-top:6px;"></div>
+            </div>
+            <div>
+              <label class="dw-label">Volume input mode</label>
+              <select id="wiz-mode-${idx}" onchange="updateWizardModeUI(${idx});calcWizard(${idx})">
+                <option value="final" selected>Specify final working volume</option>
+                <option value="stock">Specify stock volume to pipette</option>
+              </select>
+            </div>
+            <div>
+              <label class="dw-label" id="wiz-vol-label-${idx}">Working solution volume to prepare</label>
+              <div class="input-unit">
+                <input type="number" id="wiz-vol-${idx}" value="${defaultVol}" min="0.01" step="any" oninput="calcWizard(${idx})">
+                <select id="wiz-vol-unit-${idx}" onchange="calcWizard(${idx})">
+                  <option>μl</option><option>ml</option>
+                </select>
+              </div>
+              <div id="wiz-vol-hint-${idx}" class="small" style="margin-top:4px;">Final total volume of working solution.</div>
+            </div>
+          </div>
+
+          <!-- Range bar for this sample's final conc in reaction -->
+          <div id="wiz-rangebar-${idx}" style="margin-bottom:8px;"></div>
+
+          <div id="wiz-result-${idx}"></div>
+
+          <!-- Transfer button -->
+          <div id="wiz-transfer-wrap-${idx}" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </td>`;
+
+  rowEl.insertAdjacentElement('afterend',tr);
+  updateWizardModeUI(idx);
+  calcWizard(idx);
+}
+
+function updateWizardModeUI(idx){
+  const mode=el(`wiz-mode-${idx}`)?.value||'final';
+  const hint=el(`wiz-vol-hint-${idx}`);
+  const volLabel=el(`wiz-vol-label-${idx}`);
+  const volInput=el(`wiz-vol-${idx}`);
+  if(volLabel){
+    volLabel.textContent = mode==='stock' ? 'Stock volume to pipette' : 'Working solution volume to prepare';
+  }
+  if(hint){
+    hint.textContent = mode==='stock'
+      ? 'Chosen stock volume; final working volume is calculated automatically.'
+      : 'Final total volume of working solution.';
+  }
+  if(volInput && (!volInput.value || parseFloat(volInput.value)<=0)){
+    volInput.value = mode==='stock' ? '10' : '100';
+  }
+}
+
+function calcWizard(idx){
+  const stockConc  = parseFloat(el(`wiz-stock-${idx}`)?.value);
+  const targetConc = parseFloat(el(`wiz-target-${idx}`)?.value);
+  const mode       = el(`wiz-mode-${idx}`)?.value||'final';
+  const inputVol   = parseFloat(el(`wiz-vol-${idx}`)?.value);
+  const resEl      = el(`wiz-result-${idx}`);
+  const unit       = el(`wiz-target-unit-${idx}`)?.value||'ng/μl';
+  const volUnit    = el(`wiz-vol-unit-${idx}`)?.value||'μl';
+  if(!resEl)return;
+
+  const tplVol = fvd('tpl-vol-plan',2);
+  const rxnVol = fvd('rxn-vol-plan',25);
+  const {minV,optV,maxV} = getTargetRange();
+
+  // ── Live vol-to-PCR preview (updates as working conc changes) ──
+  const previewEl=el(`wiz-vol-preview-${idx}`);
+  if(previewEl&&!isNaN(targetConc)&&targetConc>0&&!isNaN(stockConc)&&stockConc>0){
+    // How many μl of working solution needed per reaction to hit optV (or maxV) in rxnVol
+    const targetFinal = (!isNaN(optV)&&optV>0)?optV:((!isNaN(maxV)&&maxV>0)?maxV:NaN);
+    if(!isNaN(targetFinal)){
+      const volNeeded = (targetFinal*rxnVol)/targetConc;
+      const finalIfTplVol = (targetConc*tplVol)/rxnVol;
+      const rangeOk = (!isNaN(maxV)&&maxV>0)?(finalIfTplVol<=maxV):true;
+      previewEl.innerHTML=`
+        <div class="vol-preview">
+          <span>To reach <strong>${fmt(targetFinal)} ${unit}</strong> in ${fmt(rxnVol)} μl rxn:</span>
+          <span>add <strong>${fmt(volNeeded)} μl</strong> of working sol.</span>
+          <span style="color:var(--muted);">or: ${fmt(tplVol)} μl → <strong style="color:${rangeOk?'var(--good)':'var(--bad)'}">${fmt(finalIfTplVol)} ${unit}</strong></span>
+        </div>`;
+    } else {
+      const finalIfTplVol = (targetConc*tplVol)/rxnVol;
+      previewEl.innerHTML=`<div class="vol-preview">Adding ${fmt(tplVol)} μl working sol. → <strong>${fmt(finalIfTplVol)} ${unit}</strong> in ${fmt(rxnVol)} μl rxn</div>`;
+    }
+  } else {
+    if(previewEl)previewEl.innerHTML='';
+  }
+
+  // ── Range bar for final conc ──
+  const rangeBarEl=el(`wiz-rangebar-${idx}`);
+  if(rangeBarEl&&!isNaN(targetConc)&&targetConc>0){
+    const finalConc=(targetConc*tplVol)/rxnVol;
+    renderTemplateRangeBar(rangeBarEl,{minV,targetV:optV,maxV,currentV:finalConc,unit,label:'Final template conc. in reaction (using '+fmt(tplVol)+' μl)'});
+  } else if(rangeBarEl){
+    rangeBarEl.innerHTML='';
+  }
+
+  // ── Validate ──
+  if(isNaN(stockConc)||isNaN(targetConc)||isNaN(inputVol)||stockConc<=0||targetConc<=0||inputVol<=0){
+    resEl.innerHTML=`<div class="dw-result warn">Enter stock concentration, working concentration, and a valid volume input.</div>`;
+    el(`wiz-transfer-wrap-${idx}`).innerHTML='';
+    renderDilProtocol();
+    return;
+  }
+  if(targetConc>=stockConc){
+    resEl.innerHTML=`<div class="dw-result warn">⚠ Working concentration (${fmt(targetConc)} ${unit}) must be lower than stock (${fmt(stockConc)} ${unit}).</div>`;
+    el(`wiz-transfer-wrap-${idx}`).innerHTML='';
+    renderDilProtocol();
+    return;
+  }
+
+  let stockNeeded, workingVol, waterNeeded;
+  if(mode==='stock'){
+    stockNeeded = inputVol;
+    workingVol = (stockNeeded*stockConc)/targetConc;
+    waterNeeded = workingVol-stockNeeded;
+  } else {
+    workingVol = inputVol;
+    stockNeeded = (targetConc*workingVol)/stockConc;
+    waterNeeded = workingVol-stockNeeded;
+  }
+  const df          = stockConc/targetConc;
+  const finalConc   = (targetConc*tplVol)/rxnVol;
+
+  // store result
+  const wizRow=el(`wiz-row-${idx}`);
+  if(wizRow){
+    wizRow._result={stockConc,targetConc,workingVol,stockNeeded,waterNeeded,df,finalConc,unit,volUnit,tplVol,rxnVol,inputMode:mode,inputVol};
+  }
+
+  const modeLine = mode==='stock'
+    ? `Using <strong>${fmt(stockNeeded)} ${volUnit}</strong> stock input, make total <strong>${fmt(workingVol)} ${volUnit}</strong> working solution.`
+    : `Preparing <strong>${fmt(workingVol)} ${volUnit}</strong> final working solution.`;
+
+  resEl.innerHTML=`
+    <div class="dw-result good">
+      <strong>Take ${fmt(stockNeeded)} ${volUnit}</strong> of stock (${fmt(stockConc)} ${unit})
+      + <strong>${fmt(waterNeeded)} ${volUnit}</strong> water/buffer
+      → ${fmt(workingVol)} ${volUnit} working solution at <strong>${fmt(targetConc)} ${unit}</strong>
+      <span style="color:var(--muted);font-size:11px;">(${fmt(df)}× dilution · C₁V₁=C₂V₂: ${fmt(stockConc)}×${fmt(stockNeeded)}=${fmt(targetConc)}×${fmt(workingVol)})</span><br>
+      <span style="color:var(--muted);font-size:11px;">${modeLine}</span><br>
+      Add <strong>${fmt(tplVol)} μl</strong> per reaction → <strong>${fmt(finalConc)} ${unit}</strong> in ${fmt(rxnVol)} μl reaction
+    </div>`;
+
+  // Transfer button
+  const rowEl=document.querySelector(`tr.spl-data-row[data-idx='${idx}']`);
+  const tw=el(`wiz-transfer-wrap-${idx}`);
+  if(tw){
+    if(rowEl&&rowEl._transferred){
+      tw.innerHTML=`<span class="transferred-badge">✓ Transferred to PCR planner</span>
+        <button class="btn-ghost btn-sm" style="margin-left:8px;font-size:11px;" onclick="transferWizardResult(${idx},true)">↺ Re-transfer</button>`;
+    } else {
+      tw.innerHTML=`<button class="transfer-btn" onclick="transferWizardResult(${idx})">
+        ↗ Transfer results to PCR planner (working conc: ${fmt(targetConc)} ${unit}, add ${fmt(tplVol)} μl/rxn)
+      </button>`;
+    }
+  }
+
+  renderDilProtocol();
+}
+
+function transferWizardResult(idx, reTransfer){
+  const wizRow=el(`wiz-row-${idx}`);
+  if(!wizRow||!wizRow._result)return;
+  const r=wizRow._result;
+
+  // Write working conc to dedicated working-solution column (stock remains unchanged)
+  const rowEl=document.querySelector(`tr.spl-data-row[data-idx='${idx}']`);
+  if(rowEl){
+    const workingInput=rowEl.querySelector('input.spl-working');
+    const sourceBadge=el(`spl-working-src-${idx}`);
+    if(workingInput)workingInput.value = r.targetConc;
+    if(sourceBadge)sourceBadge.style.display='inline-flex';
+    rowEl._transferred=true;
+  }
+
+  // Store in persistent protocols array
+  const sampleName=rowEl?rowEl.querySelector('input[type="text"]').value||`Sample ${idx+1}`:`Sample ${idx+1}`;
+  if(reTransfer){
+    // Remove old entry for this sample
+    acceptedProtocols=acceptedProtocols.filter(p=>p._idx!==idx);
+  }
+  // Only add if not already in accepted list
+  if(!acceptedProtocols.find(p=>p._idx===idx)){
+    acceptedProtocols.push({name:sampleName,_idx:idx,...r});
+  }
+
+  calcReactions();
+
+  // Update transfer button
+  const tw=el(`wiz-transfer-wrap-${idx}`);
+  if(tw){
+    tw.innerHTML=`<span class="transferred-badge">✓ Transferred — working sol. ${fmt(r.targetConc)} ${r.unit} applied to working column</span>
+      <button class="btn-ghost btn-sm" style="margin-left:8px;font-size:11px;" onclick="transferWizardResult(${idx},true)">↺ Re-transfer</button>`;
+  }
+  
+  renderDilProtocol();
+}
+
+/* ── Status cell ── */
+function calcMinAllowed(){
+  const {minV}=getTargetRange();
+  const tplVol=fvd('tpl-vol-plan',2);
+  const rxnVol=fvd('rxn-vol-plan',25);
+  if(isNaN(minV)||minV<=0)return NaN;
+  return minV*rxnVol/tplVol;
+}
+
+function getRowStatus(rowEl){
+  const stockConc=getEffectiveRowConc(rowEl);
+  const {minV,optV,maxV}=getTargetRange();
+  const hasAnyTarget=(!isNaN(maxV)&&maxV>0)||(!isNaN(optV)&&optV>0)||(!isNaN(minV)&&minV>0);
+  if(isNaN(stockConc)||stockConc<=0)return 'no-conc';
+  if(!hasAnyTarget)return 'no-target';
+  const maxAllowed=calcMaxAllowed();
+  const minAllowed=calcMinAllowed();
+  if(!isNaN(maxAllowed)&&maxAllowed>0&&stockConc>maxAllowed)return 'too-high';
+  if(!isNaN(minAllowed)&&minAllowed>0&&stockConc<minAllowed)return 'too-low';
+  return 'ok';
+}
+
+function updateStatusCell(rowEl,idx){
+  const statusEl=el(`spl-status-${idx}`);
+  const finalEl=el(`spl-final-${idx}`);
+  if(!statusEl)return;
+  const status=getRowStatus(rowEl);
+  const isOpen=rowEl._wizardOpen;
+  const tplVol=fvd('tpl-vol-plan',2);
+  const rxnVol=fvd('rxn-vol-plan',25);
+
+  if(finalEl){
+    const sc=getEffectiveRowConc(rowEl);
+    const unit=rowEl.querySelector('select').value;
+    if(!isNaN(sc)&&sc>0){
+      const fc=(sc*tplVol)/rxnVol;
+      finalEl.innerHTML=`<span style="font-family:ui-monospace,monospace;font-size:12px;">${fmt(fc)} ${unit}</span>`;
+    } else {
+      finalEl.innerHTML='<span class="small">—</span>';
+    }
+  }
+
+  if(status==='too-high'){
+    statusEl.innerHTML=`
+      <span class="tpl-flag ${isOpen?'ok-diluted':'too-high'}"
+        onclick="toggleWizardByIdx(${idx})"
+        title="Click to open dilution wizard">
+        ${isOpen?'🔬 Diluting ▲':'⚠ Too high — dilute ▼'}
+      </span>`;
+  } else if(status==='too-low'){
+    const sc=getEffectiveRowConc(rowEl);
+    const fc=(sc*tplVol)/rxnVol;
+    const unit=rowEl.querySelector('select').value;
+    const {minV}=getTargetRange();
+    statusEl.innerHTML=`<span class="tpl-flag" style="background:#fef2f2;border:1px solid #ef4444;color:#7f1d1d;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;" title="Final ${fmt(fc)} ${unit} — below min ${fmt(minV)} ${unit}">⚠ Too low (${fmt(fc)} ${unit})</span>`;
+  } else if(status==='ok'){
+    const sc=getEffectiveRowConc(rowEl);
+    const fc=(sc*tplVol)/rxnVol;
+    const unit=rowEl.querySelector('select').value;
+    statusEl.innerHTML=`<span class="tpl-flag ok-normal" title="${fmt(fc)} ${unit} in reaction">✓ OK (${fmt(fc)} ${unit})</span>`;
+  } else if(status==='no-target'){
+    statusEl.innerHTML=`<span class="tpl-flag no-target" title="Set a target range to enable status">— set target</span>`;
+  } else {
+    statusEl.innerHTML=`<span class="small">—</span>`;
+  }
+}
+
+/* ── Main reaction calc ── */
+function calcReactions(){
+  const rxnVol    = fvd('rxn-vol-plan',25);
+  const tplVol    = fvd('tpl-vol-plan',2);
+  const overage   = (fv('overage-pct')||0)/100;
+  const {minV,optV,maxV,unit} = getTargetRange();
+
+  // Render global range bar (showing target range only, no current val)
+  renderTemplateRangeBar(el('tpl-global-range-bar'),{
+    minV,targetV:optV,maxV,currentV:NaN,unit,
+    label:'Target template concentration in reaction'
+  });
+
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach(row=>{
+    const idx=parseInt(row.dataset.idx);
+    updateStatusCell(row,idx);
+    if(row._wizardOpen){
+      const wiz=el(`wiz-stock-${idx}`);
+      if(wiz){
+        const sc=row.querySelector('input.spl-stock').value;
+        if(sc&&!row._transferred) wiz.value=sc;
+        calcWizard(idx);
+      }
+    }
+  });
+
+  el('rxn-results').innerHTML='';
+
+  buildStripLayout();
+  calcMM();
+  renderProtocolOutput();
+  renderDilProtocol();
+}
+
+/* ── Dilution protocol + calculation notes ── */
+function renderDilProtocol(){
+  const container=el('dil-protocol');
+  const items=[];
+  
+  // Add accepted/transferred protocols first
+  items.push(...acceptedProtocols);
+  
+  // Add currently open wizard results (that haven't been transferred yet)
+  el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach(rowEl=>{
+    const idx=parseInt(rowEl.dataset.idx);
+    const wizRow=el(`wiz-row-${idx}`);
+    // Only add if it's open, has a result, and hasn't been transferred yet
+    if(wizRow&&wizRow._result && !rowEl._transferred){
+      const name=rowEl.querySelector('input[type="text"]').value||`Sample ${idx+1}`;
+      items.push({name,_idx:idx,...wizRow._result});
+    }
+  });
+  
+  if(!items.length){container.innerHTML='';return;}
+
+  const {optV,maxV,unit:tUnit}=getTargetRange();
+
+  let html=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div class="section-title" style="margin:0;">Template Dilution Protocol</div>
+        <button class="btn-ghost btn-sm" onclick="acceptedProtocols=[];renderDilProtocol();" style="font-size:11px;">Clear all</button>
+      </div>
+      <p class="note" style="margin-bottom:14px;">Accumulated protocols below are used as the reference for each sample’s working-solution value after transfer.</p>`;
+
+  items.forEach((item,n)=>{
+    const tplVol=fvd('tpl-vol-plan',2);
+    const rxnVol=fvd('rxn-vol-plan',25);
+    html+=`
+      <div class="dil-protocol-item">
+        <div class="dpi-header">
+          <div class="dpi-name">🔬 ${item.name}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="small">Dilution factor: ${fmt(item.df)}×</span>
+            <button class="btn-ghost btn-sm" style="padding:2px 6px;font-size:10px;" onclick="acceptedProtocols=acceptedProtocols.filter(p=>p._idx!==${item._idx});renderDilProtocol();">✕</button>
+          </div>
+        </div>
+
+        <!-- Calculation notes grid -->
+        <div class="dpi-calc-grid">
+          <div class="dpi-calc-box">
+            <div class="dpi-calc-title">Step 1 — Make working solution</div>
+            <div class="dpi-calc-eq">C₁ × V₁ = C₂ × V₂</div>
+            <div class="dpi-calc-eq">${fmt(item.stockConc)} × V₁ = ${fmt(item.targetConc)} × ${fmt(item.workingVol)}</div>
+            <div class="dpi-calc-val">V₁ (stock) = <strong>${fmt(item.stockNeeded)} ${item.volUnit}</strong></div>
+            <div class="dpi-calc-val" style="color:var(--muted);font-size:12px;">Water = ${fmt(item.workingVol)} − ${fmt(item.stockNeeded)} = <strong>${fmt(item.waterNeeded)} ${item.volUnit}</strong></div>
+          </div>
+          <div class="dpi-calc-box">
+            <div class="dpi-calc-title">Step 2 — Final conc. in PCR reaction</div>
+            <div class="dpi-calc-eq">C_final = C_working × V_template / V_reaction</div>
+            <div class="dpi-calc-eq">${fmt(item.targetConc)} × ${fmt(tplVol)} / ${fmt(rxnVol)}</div>
+            <div class="dpi-calc-val">C_final = <strong>${fmt(item.finalConc)} ${item.unit}</strong></div>
+            ${(!isNaN(optV)&&optV>0)?`<div style="color:var(--muted);font-size:12px;">Target: ${fmt(optV)} ${tUnit||item.unit}${(!isNaN(maxV)&&maxV>0)?' | Max: '+fmt(maxV)+' '+(tUnit||item.unit):''}</div>`:''}
+          </div>
+        </div>
+
+        <!-- Protocol steps -->
+        <div class="dpi-steps">
+          <span class="step-pill">1</span>
+          Take <strong>${fmt(item.stockNeeded)} ${item.volUnit}</strong> of stock
+          (${fmt(item.stockConc)} ${item.unit})
+          + <strong>${fmt(item.waterNeeded)} ${item.volUnit}</strong> nuclease-free water
+          → <strong>${fmt(item.workingVol)} ${item.volUnit}</strong> working solution at <strong>${fmt(item.targetConc)} ${item.unit}</strong><br>
+          <span class="step-pill">2</span>
+          Add <strong>${fmt(tplVol)} μl</strong> of working solution to each ${fmt(rxnVol)} μl PCR reaction
+          → final concentration: <strong>${fmt(item.finalConc)} ${item.unit}</strong>
+        </div>
+      </div>`;
+  });
+
+  html+=`</div>`;
+  container.innerHTML=html;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 3: QUICK DILUTION
+══════════════════════════════════════════════════════ */
+function calcQuick(){
+  const c1   = parseFloat(el('q-c1').value);
+  const c2   = parseFloat(el('q-c2').value);
+  const v2   = parseFloat(el('q-v2').value);
+  const unit = el('q-unit').value;
+  const vSel = el('q-vunit');
+  const vLabel = vSel.options[vSel.selectedIndex].text;
+  el('q-unit-echo').textContent = unit;
+
+  const res = el('quick-result');
+  if(isNaN(c1)||isNaN(c2)||isNaN(v2)){ res.innerHTML=''; return; }
+
+  if(c1<=0||c2<=0||v2<=0){
+    res.innerHTML=`<div class="alert bad">All values must be greater than zero.</div>`;
+    return;
+  }
+  if(c2>=c1){
+    res.innerHTML=`<div class="alert bad">Target concentration (${c2} ${unit}) must be lower than stock concentration (${c1} ${unit}).</div>`;
+    return;
+  }
+
+  const v1      = (c2 * v2) / c1;
+  const diluent = v2 - v1;
+  const df      = c1 / c2;
+
+  res.innerHTML=`
+    <div class="alert good" style="line-height:2;font-size:13.5px;">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#166534;margin-bottom:8px;">Instructions</div>
+      <div>① Take &nbsp;<strong style="font-size:15px;">${fmt(v1)} ${vLabel}</strong>&nbsp; of stock (${c1} ${unit})</div>
+      <div>② Add &nbsp;<strong style="font-size:15px;">${fmt(diluent)} ${vLabel}</strong>&nbsp; of diluent</div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid #22c55e44;font-size:12px;color:#166534;">
+        Final volume: ${fmt(v2)} ${vLabel} &nbsp;·&nbsp; Final concentration: ${c2} ${unit} &nbsp;·&nbsp; Dilution factor: ${fmt(df)}×
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 3 ADVANCED: SIMPLE C1V1
+══════════════════════════════════════════════════════ */
+function calcSimple(){
+  const c1=parseFloat(el('s-c1').value),v1=parseFloat(el('s-v1').value);
+  const c2=parseFloat(el('s-c2').value),v2=parseFloat(el('s-v2').value);
+  const unit=el('s-unit').value;
+  const vLabel=el('s-v-unit').options[el('s-v-unit').selectedIndex].text;
+  const known=[!isNaN(c1),!isNaN(v1),!isNaN(c2),!isNaN(v2)];
+  const res=el('simple-result');
+  if(known.filter(x=>!x).length!==1){
+    res.innerHTML=`<div class="alert info">Fill in exactly 3 values — leave the unknown blank.</div>`;
+    return;
+  }
+  let result,label,diluent=null;
+  if(!known[0])     {result=(c2*v2)/v1; label=`C₁ = ${fmt(result)} ${unit}`;}
+  else if(!known[1]){result=(c2*v2)/c1; diluent=Math.max(0,v2-result); label=`V₁ = ${fmt(result)} ${vLabel}`;}
+  else if(!known[2]){result=(c1*v1)/v2; label=`C₂ = ${fmt(result)} ${unit}`;}
+  else              {result=(c1*v1)/c2; diluent=Math.max(0,result-v1); label=`V₂ = ${fmt(result)} ${vLabel}`;}
+  const df=(c1&&c2)?c1/c2:null;
+  res.innerHTML=`
+    <div class="alert good" style="margin-top:4px;">
+      <strong>${label}</strong><br>
+      ${diluent!==null?`Add ${fmt(diluent)} ${vLabel} of diluent.<br>`:''}
+      ${df?`Dilution factor: ${fmt(df)}×`:''}
+    </div>
+    <p class="note" style="margin-top:8px;">C₁V₁ = C₂V₂</p>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 4: SERIAL DILUTION
+══════════════════════════════════════════════════════ */
+function calcSerial(){
+  const start=parseFloat(el('ser-start').value);
+  const factor=parseFloat(el('ser-factor').value);
+  const steps=Math.min(12,Math.max(1,parseInt(el('ser-steps').value)||1));
+  const vol=parseFloat(el('ser-vol').value);
+  const vLabel=el('ser-vol-unit').options[el('ser-vol-unit').selectedIndex].text;
+  const unit=el('ser-unit').value;
+  const res=el('serial-result');
+  if(isNaN(start)||isNaN(factor)||isNaN(vol)){res.innerHTML='';return;}
+  const tv=vol/factor,dil=vol-tv;
+  let rows='',conc=start;
+  for(let i=0;i<=steps;i++){
+    rows+=`<tr>
+      <td>${i===0?'<strong>Stock</strong>':`D${i}`}</td>
+      <td class="num"><strong>${fmt(conc)} ${unit}</strong></td>
+      <td>${i===0?'—':`Take ${fmt(tv)} ${vLabel} from ${i===1?'stock':'D'+(i-1)} + ${fmt(dil)} ${vLabel} diluent`}</td>
+      <td class="num">${fmt(vol)} ${vLabel}</td>
+    </tr>`;
+    conc/=factor;
+  }
+  res.innerHTML=`
+    <div class="card">
+      <div class="section-title">Serial Dilution Scheme</div>
+      <div class="alert info" style="margin-bottom:12px;">
+        Transfer <strong>${fmt(tv)} ${vLabel}</strong> into <strong>${fmt(dil)} ${vLabel}</strong> diluent per step · ${factor}× per step · ${fmt(vol)} ${vLabel}/tube
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tube</th><th class="num">Concentration</th><th>Preparation</th><th class="num">Volume</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB WIRING + INIT
+══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
+      tab.classList.add('active');
+      el(tab.dataset.tab).classList.add('active');
+    });
+  });
+  el('new-control-name').addEventListener('keydown',e=>{
+    if(e.key==='Enter') confirmAddControl();
+    if(e.key==='Escape') cancelAddControl();
+  });
+
+  // Switch to tab specified in URL hash (e.g. #tab-reactions, #tab-primers)
+  const hash = window.location.hash.slice(1);
+  if(hash){
+    const hashContent = el(hash);
+    if(hashContent){
+      document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
+      const hashTab = document.querySelector(`.tab[data-tab="${hash}"]`);
+      if(hashTab) hashTab.classList.add('active');
+      hashContent.classList.add('active');
+    }
+  }
+
+  buildControls();
+  buildMMTable();
+  addSampleRowManual();
+  calcPrimers();
+  calcSerial();
+  calcReactions();
+});
+</script>
+</body>
+</html>

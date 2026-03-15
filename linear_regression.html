@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Correlation & Linear Regression</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="assets/css/base.css">
+  <style>
+    :root { --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#1976d2; }
+    body { background:var(--bg); color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .container { max-width:1100px; margin:18px auto; padding:0 16px 40px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:14px; }
+    textarea { width:100%; min-height:140px; box-sizing:border-box;
+      font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;
+      padding:10px; border-radius:8px; border:1px solid var(--line); }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:860px){ .grid-2{ grid-template-columns:1fr; } }
+    .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+    button { border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    .btn-primary  { background:var(--accent); color:#fff; }
+    .btn-ghost    { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .btn-secondary{ background:#111827; color:#fff; }
+    .btn-sm { padding:6px 10px; font-size:12px; }
+    .note { color:var(--muted); font-size:13px; margin-top:6px; }
+    .tabs { display:flex; gap:10px; margin:12px 0 14px; }
+    .tab { padding:8px 12px; border-radius:999px; border:1px solid var(--line);
+      background:#fff; cursor:pointer; font-weight:700; color:var(--muted); font-size:13px; }
+    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .section-title { font-weight:700; margin:0 0 10px; font-size:14px; }
+    .assump-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
+    @media(max-width:860px){ .assump-grid{ grid-template-columns:1fr; } }
+    .assump-item { display:flex; gap:10px; align-items:flex-start; }
+    .assump-item input[type=checkbox] { margin-top:3px; flex-shrink:0; }
+    .small { font-size:12px; color:var(--muted); }
+    select, input[type="number"], input[type="text"] {
+      padding:8px 10px; border:1px solid var(--line); border-radius:10px;
+      background:#fff; width:100%; box-sizing:border-box; }
+    .alert { border-radius:12px; padding:10px 12px; border:1px solid var(--line);
+      background:#fff; font-size:13px; line-height:1.6; }
+    .alert.bad { border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead tr { background:#f9fafb; border-bottom:2px solid var(--line); }
+    th { padding:9px 10px; text-align:left; font-weight:700; }
+    td { padding:9px 10px; border-bottom:1px solid var(--line); }
+    tr:last-child td { border-bottom:none; }
+    .num { text-align:right; }
+    .eqbox { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;
+      padding:11px 14px; font-size:15px; font-weight:700; margin-bottom:12px; }
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:14px; }
+    .stat-box { background:#f9fafb; border-radius:10px; padding:12px; text-align:center; }
+    .stat-val { font-size:20px; font-weight:900; color:var(--accent); }
+    .stat-lbl { font-size:11px; color:var(--muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 style="margin-bottom:4px;">Correlation &amp; Linear Regression</h1>
+  <p class="note">Quantifies the linear relationship between two continuous variables and fits a prediction line.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data &amp; presumptions</div>
+    <div class="tab" data-tab="results">Analysis</div>
+  </div>
+
+  <!-- ── INPUT TAB ── -->
+  <div id="input" class="tab-content active">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Study context</div>
+        <div class="assump-grid">
+          <label class="assump-item">
+            <input type="checkbox" checked>
+            <span><strong>Both variables are continuous</strong><br>
+              <span class="small">Ratio or interval scale</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked>
+            <span><strong>Linear relationship expected</strong><br>
+              <span class="small">Verify with scatterplot</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked>
+            <span><strong>Observations are independent</strong><br>
+              <span class="small">Each pair from a different subject</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked>
+            <span><strong>Approximately normal (for Pearson)</strong><br>
+              <span class="small">Use Spearman for non-normal data</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Settings</div>
+        <label class="small" style="font-weight:800;">Significance level (α)</label>
+        <select id="alpha" style="margin-bottom:12px;">
+          <option value="0.05" selected>0.05 (95% confidence)</option>
+          <option value="0.01">0.01 (99% confidence)</option>
+        </select>
+        <label class="assump-item" style="margin-bottom:8px;">
+          <input type="checkbox" id="showCI" checked>
+          <span><strong>Show confidence band</strong> on regression line</span>
+        </label>
+        <label class="assump-item" style="margin-bottom:8px;">
+          <input type="checkbox" id="showResid" checked>
+          <span><strong>Show residual plot</strong></span>
+        </label>
+        <label class="assump-item" style="margin-bottom:8px;">
+          <input type="checkbox" id="showThresh" onchange="toggleThreshInputs()">
+          <span><strong>Discrimination threshold</strong><br>
+            <span class="small">Compute sensitivity, specificity, PPV &amp; NPV</span></span>
+        </label>
+        <div id="threshInputs" style="display:none;margin-top:8px;padding:10px;background:#f9fafb;border-radius:8px;border:1px solid var(--line);">
+          <div class="grid-2" style="gap:8px;">
+            <div>
+              <label class="small" style="font-weight:800;" id="threshXLabel">X threshold</label>
+              <input type="number" id="threshX" step="any" placeholder="e.g. 6.5">
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;" id="threshYLabel">Y threshold</label>
+              <input type="number" id="threshY" step="any" placeholder="e.g. 6.5">
+            </div>
+          </div>
+          <p class="note" style="margin-top:6px;">TP: X ≥ threshold <em>and</em> Y ≥ threshold &nbsp;·&nbsp; X = reference / gold standard axis</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Data input</div>
+      <p class="note" style="margin-top:0;">One value per line. Rows are paired — X[1] is paired with Y[1].</p>
+      <div class="grid-2" style="margin-bottom:8px;">
+        <div>
+          <label class="small" style="font-weight:800;">X variable label</label>
+          <input type="text" id="xLabel" value="X" style="margin-bottom:8px;">
+          <label class="small" style="font-weight:800;">X values</label>
+          <textarea id="xData" placeholder="1&#10;2&#10;3&#10;4&#10;5"></textarea>
+        </div>
+        <div>
+          <label class="small" style="font-weight:800;">Y variable label</label>
+          <input type="text" id="yLabel" value="Y" style="margin-bottom:8px;">
+          <label class="small" style="font-weight:800;">Y values</label>
+          <textarea id="yData" placeholder="2.1&#10;3.9&#10;6.2&#10;7.8&#10;10.1"></textarea>
+        </div>
+      </div>
+      <div class="note">Accepted separators: newline, comma, semicolon, tab.</div>
+      <div class="btn-row">
+        <button class="btn-ghost" id="clearBtn">Clear</button>
+        <button class="btn-primary" id="runBtn">Run analysis</button>
+      </div>
+      <div id="inputError" class="alert bad" style="display:none;margin-top:10px;"></div>
+    </div>
+
+    <details class="card">
+      <summary style="cursor:pointer;font-weight:700;font-size:14px;user-select:none;">
+        Generate sample data
+      </summary>
+      <div style="margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Sample size (n)</label>
+            <input type="number" id="genN" value="30" min="5" step="1">
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Target correlation (r)</label>
+            <input type="number" id="genR" value="0.75" min="-0.999" max="0.999" step="0.05">
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">X mean</label>
+            <input type="number" id="genXMean" value="10" step="any">
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">X SD</label>
+            <input type="number" id="genXSD" value="3" min="0.01" step="any">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn-ghost btn-sm" id="generateBtn">Generate</button>
+          <button class="btn-secondary btn-sm" id="useGeneratedBtn" style="display:none;">Use in analysis</button>
+        </div>
+        <div class="note">Generated values appear below.</div>
+        <div class="grid-2" style="margin-top:8px;">
+          <textarea id="genOutX" readonly style="min-height:80px;background:#f9fafb;font-size:11px;"></textarea>
+          <textarea id="genOutY" readonly style="min-height:80px;background:#f9fafb;font-size:11px;"></textarea>
+        </div>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- ── RESULTS TAB ── -->
+  <div id="results" class="tab-content">
+    <div id="resultsContent">
+      <p class="note" style="text-align:center;padding:40px;">Run the analysis to see results.</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/js/stats/helpers.js"></script>
+<script src="assets/js/stats/linear_regression.js"></script>
+<script>
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+
+  function toggleThreshInputs() {
+    const show = document.getElementById('showThresh').checked;
+    document.getElementById('threshInputs').style.display = show ? 'block' : 'none';
+  }
+
+  // Keep threshold labels in sync with variable labels
+  ['xLabel','yLabel'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const xLbl = document.getElementById('xLabel').value.trim() || 'X';
+      const yLbl = document.getElementById('yLabel').value.trim() || 'Y';
+      document.getElementById('threshXLabel').textContent = `${xLbl} threshold`;
+      document.getElementById('threshYLabel').textContent = `${yLbl} threshold`;
+    });
+  });
+
+  document.getElementById('runBtn').addEventListener('click', () => {
+    runAnalysis();
+    document.querySelector('[data-tab="results"]').click();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('xData').value = '';
+    document.getElementById('yData').value = '';
+    document.getElementById('inputError').style.display = 'none';
+  });
+
+  document.getElementById('generateBtn').addEventListener('click', generateSample);
+
+  document.getElementById('useGeneratedBtn').addEventListener('click', () => {
+    document.getElementById('xData').value = document.getElementById('genOutX').value;
+    document.getElementById('yData').value = document.getElementById('genOutY').value;
+  });
+</script>
+</body>
+</html>

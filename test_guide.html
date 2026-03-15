@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .guide-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      gap: 20px;
+    }
+
+    /* Breadcrumb trail */
+    .breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      max-width: 680px;
+      width: 100%;
+      min-height: 28px;
+    }
+    .crumb {
+      font-size: 12px;
+      color: #6b7280;
+      background: #e5e7eb;
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+    .crumb.choice {
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 500;
+    }
+    .crumb-sep {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* Main card */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      padding: 28px 32px;
+      max-width: 680px;
+      width: 100%;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .card .info-hint {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      padding: 10px 14px;
+      background: #f9fafb;
+      border-left: 3px solid #93c5fd;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Option buttons */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .opt-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      text-align: left;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .opt-btn:hover {
+      border-color: #1976d2;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+    .opt-btn .opt-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Result card */
+    .result-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      max-width: 680px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .result-header {
+      background: linear-gradient(135deg, #1976d2, #1e40af);
+      padding: 24px 28px;
+      color: #fff;
+    }
+    .result-header .result-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .75;
+      margin-bottom: 6px;
+    }
+    .result-header h2 {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .result-body {
+      padding: 22px 28px;
+    }
+    .result-desc {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .result-note {
+      font-size: 13px;
+      color: #6b7280;
+      background: #fefce8;
+      border-left: 3px solid #fbbf24;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    /* Path summary */
+    .path-summary {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+    .path-pill {
+      background: #f3f4f6;
+      border-radius: 20px;
+      padding: 2px 10px;
+      color: #6b7280;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-open {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s;
+    }
+    .btn-open:hover { background: #1565c0; }
+    .btn-restart {
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-restart:hover { background: #e5e7eb; }
+
+    /* Back / restart bar */
+    .nav-bar {
+      display: flex;
+      gap: 10px;
+      max-width: 680px;
+      width: 100%;
+    }
+    .btn-back {
+      background: none;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-back:hover { border-color: #9ca3af; color: #374151; }
+    .btn-back:disabled { opacity: .3; cursor: default; }
+
+    /* Start screen */
+    .start-intro {
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto 4px;
+    }
+    .start-intro .icon-big {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+    .start-intro h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+    .start-intro p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.7;
+    }
+
+    /* Progress dots */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      max-width: 680px;
+      width: 100%;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e5e7eb;
+    }
+    .dot.done { background: #93c5fd; }
+    .dot.active { background: #1976d2; width: 20px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="guide-wrap" id="guideWrap">
+  <!-- Rendered by JS -->
+</div>
+
+<script>
+// ─── Decision tree ────────────────────────────────────────────────────────────
+const TREE = {
+
+  start: {
+    question: "What is the goal of your analysis?",
+    info: "Select the category that best describes what you are trying to do.",
+    options: [
+      { label: "Compare groups or test a hypothesis — quantitative or categorical data",                        icon: "📐", next: "data_type" },
+      { label: "Evaluate whether a method meets its performance specifications (imprecision, bias, agreement)", icon: "🔬", next: "ap_specs"  }
+    ]
+  },
+
+  ap_specs: {
+    question: "Do you have defined performance specifications?",
+    info: "Performance specifications (kravspecifikationer) define the maximum allowable imprecision, bias, or total error a method may have. They are derived from biological variation, regulatory requirements, EQAS/RIQAS peer data, or manufacturer claims. Without defined specifications, results can still be reported — but there is no objective pass/fail criterion.",
+    options: [
+      { label: "Yes — I have defined allowable limits (CV%, bias%, total error)",         icon: "✅", next: "ap_goal" },
+      { label: "No — I want to characterise performance without a predefined target",      icon: "📊", next: "ap_goal" }
+    ]
+  },
+
+  data_type: {
+    question: "What type of data are you working with?",
+    info: "The data type determines which family of statistical tests is appropriate.",
+    options: [
+      { label: "Quantitative — continuous or numerical measurements",   icon: "📏", next: "quant_groups" },
+      { label: "Qualitative — categorical, nominal, or ordinal labels", icon: "🏷️", next: "qual_type"   },
+      { label: "Exploring a relationship between two variables",        icon: "📈", next: "relationships" }
+    ]
+  },
+
+  // ── Analytical Performance branch ────────────────────────────────────────
+  ap_goal: {
+    question: "Which performance characteristic are you evaluating?",
+    info: "A complete method validation evaluates all three: precision (random error), bias (systematic error), and method agreement. Each maps to a specific performance specification and CLSI EP guideline.",
+    options: [
+      { label: "Precision — random error, reproducibility of repeated measurements",       icon: "🎯", next: "ap_precision_type"  },
+      { label: "Trueness / Bias — systematic error against a reference value or method",   icon: "⚖️", next: "ap_bias"            },
+      { label: "Method comparison — agreement or equivalence between two methods",         icon: "🔀", next: "ap_method_goal"     }
+    ]
+  },
+
+  ap_precision_type: {
+    question: "What type of precision study are you conducting?",
+    info: "Repeatability: measurements within a single run. Intermediate precision: measurements across multiple runs or days (CLSI EP5-A3).",
+    options: [
+      { label: "Repeatability — within a single run, same operator and conditions",          icon: "🔁", next: "precision_rep"  },
+      { label: "Intermediate precision — across multiple runs, days, or operators",          icon: "📅", next: "precision_ip"   }
+    ]
+  },
+
+  precision_rep: {
+    result: {
+      test: "Precision Analysis — Repeatability",
+      file: "precision.html",
+      description: "Evaluates within-run reproducibility (random error). Calculates SD, CV%, and 95% CI per CLSI EP5-A3. Westgard rules are checked automatically and outliers can be excluded interactively.",
+      note: "Select 'Repeatability' in the tool and enter your allowable imprecision CV% (from your performance specification) to receive an automatic PASS/FAIL verdict. One value per line."
+    }
+  },
+
+  precision_ip: {
+    result: {
+      test: "Precision Analysis — Intermediate Precision",
+      file: "precision.html",
+      description: "Evaluates total within-laboratory precision across runs and days (CLSI EP5-A3). Decomposes total variance into within-run (Sw) and between-run (Sb) components. The total CV% (St) is what should be compared against the performance specification.",
+      note: "Select 'Intermediate Precision' in the tool and enter your allowable total CV% to get a PASS/FAIL verdict. Recommended design: 5 days × 2 runs/day × 2 replicates. Enter data as 'Day1, value' per line."
+    }
+  },
+
+  ap_bias: {
+    result: {
+      test: "Bias & Trueness",
+      file: "bias.html",
+      description: "Evaluates systematic error (bias) against a reference value, reference method, or certified reference material. Calculates absolute and relative bias (%) with confidence intervals.",
+      note: "Enter your allowable bias (from your performance specification) to receive a PASS/FAIL verdict. The 95% CI for bias should lie entirely within the allowable bias limit for the method to pass."
+    }
+  },
+
+  ap_method_goal: {
+    question: "What is the primary goal of the method comparison?",
+    options: [
+      { label: "Assess clinical interchangeability — limits of agreement between two methods", icon: "↕️", next: "ap_bland_altman"   },
+      { label: "Quantify proportional and constant bias — fit a comparison regression line",   icon: "📉", next: "ap_passing_bablok" }
+    ]
+  },
+
+  ap_bland_altman: {
+    result: {
+      test: "Method Comparison — Bland-Altman Analysis",
+      file: "method_comparison.html",
+      description: "Plots the difference between two methods against their mean. Calculates limits of agreement (mean difference ± 1.96 SD). Answers: can these two methods be used interchangeably in clinical practice?",
+      note: "Define an acceptable difference limit before analysis. If the limits of agreement fall entirely within this pre-specified limit, the methods can be considered clinically interchangeable."
+    }
+  },
+
+  ap_passing_bablok: {
+    result: {
+      test: "Method Comparison — Regression Analysis",
+      file: "method_comparison.html",
+      description: "Fits a regression line to compare two measurement methods. Provides slope and intercept with 95% CI to detect proportional (slope ≠ 1) and constant (intercept ≠ 0) systematic bias.",
+      note: "Passing-Bablok regression is preferred when both methods have measurement error. Ordinary linear regression assumes the reference method is error-free, which is rarely the case in clinical laboratory comparisons."
+    }
+  },
+
+  // ── Quantitative branch ──────────────────────────────────────────────────
+  quant_groups: {
+    question: "How many groups or conditions are you comparing?",
+    options: [
+      { label: "One group — comparing to a known or hypothesised value", icon: "1️⃣", next: "one_sample_norm" },
+      { label: "Two groups or conditions",                               icon: "2️⃣", next: "two_paired"       },
+      { label: "Three or more groups",                                   icon: "3️⃣", next: "many_groups_norm" }
+    ]
+  },
+
+  one_sample_norm: {
+    question: "Is your data approximately normally distributed?",
+    info: "Check with a Shapiro–Wilk test or histogram. With n ≥ 30, the central limit theorem makes the t-test robust even for non-normal data.",
+    options: [
+      { label: "Yes — normally distributed",            icon: "✅", next: "one_sample"    },
+      { label: "No, but n ≥ 30 — CLT applies",          icon: "📊", next: "one_sample"    },
+      { label: "No — and n < 30, clearly skewed",       icon: "⚠️", next: "one_sample_np" }
+    ]
+  },
+
+  one_sample: {
+    result: {
+      test: "One-Sample T-Test",
+      file: "t_one_sample.html",
+      description: "Tests whether the mean of a single sample differs significantly from a specified reference value.",
+      note: "Assumes approximately normal data or n ≥ 30 (central limit theorem applies)."
+    }
+  },
+
+  one_sample_np: {
+    result: {
+      test: "Wilcoxon Signed-Rank Test (one-sample use)",
+      file: "wilcoxon.html",
+      description: "Non-parametric alternative for a one-sample test. Subtract the reference value from each observation, then test whether the median of those differences is zero using the Wilcoxon signed-rank test.",
+      note: "Subtract your reference/hypothesised value from every observation first. The test then evaluates whether the median difference is zero."
+    }
+  },
+
+  two_paired: {
+    question: "Are the two groups paired or matched?",
+    info: "Paired: same subjects measured twice, or subjects individually matched 1:1.\nIndependent: entirely different subjects in each group.",
+    options: [
+      { label: "Paired — same subjects or individually matched", icon: "🔗", next: "paired_norm"      },
+      { label: "Independent — different subjects in each group", icon: "↔️", next: "independent_norm" }
+    ]
+  },
+
+  paired_norm: {
+    question: "Are the pairwise differences approximately normally distributed?",
+    info: "Check with a Shapiro–Wilk test or histogram of the differences. With n ≥ 30, the central limit theorem makes the paired t-test robust even for non-normal differences.",
+    options: [
+      { label: "Yes — normally distributed",       icon: "✅", next: "paired_t" },
+      { label: "No, but n ≥ 30 — CLT applies",     icon: "📊", next: "paired_t" },
+      { label: "No — and n < 30, clearly skewed",  icon: "⚠️", next: "wilcoxon" }
+    ]
+  },
+
+  paired_t: {
+    result: {
+      test: "Paired T-Test",
+      file: "paired_t_test.html",
+      description: "Compares the mean of pairwise differences between two related measurements. Analyses the distribution of differences directly.",
+      note: "Report the mean difference, 95% CI, and effect size (Cohen's d)."
+    }
+  },
+
+  wilcoxon: {
+    result: {
+      test: "Wilcoxon Signed-Rank Test",
+      file: "wilcoxon.html",
+      description: "Non-parametric alternative to the paired t-test. Tests whether the median difference is zero using signed ranks.",
+      note: "Preferred when differences are clearly non-normal or n is small."
+    }
+  },
+
+  independent_norm: {
+    question: "Are the data in each group approximately normally distributed?",
+    info: "Check with Shapiro–Wilk or histograms per group. With n ≥ 30 per group, the central limit theorem makes the t-test robust even for non-normal data.",
+    options: [
+      { label: "Yes — normally distributed",            icon: "✅", next: "independent_t" },
+      { label: "No, but n ≥ 30 per group — CLT applies", icon: "📊", next: "independent_t" },
+      { label: "No — and n < 30, clearly skewed",       icon: "⚠️", next: "mann_whitney"   }
+    ]
+  },
+
+  independent_t: {
+    result: {
+      test: "Independent Samples T-Test",
+      file: "two_sample_t_test_independent.html",
+      description: "Compares the means of two independent groups. Uses pooled or Welch variance depending on the equality of variances.",
+      note: "Report mean difference, 95% CI, and Cohen's d."
+    }
+  },
+
+  mann_whitney: {
+    result: {
+      test: "Mann–Whitney U Test",
+      file: "mann_whitney.html",
+      description: "Non-parametric test comparing rank distributions of two independent groups. Does not assume normality.",
+      note: "Reports the probability that a random value from group A exceeds one from group B."
+    }
+  },
+
+  many_groups_norm: {
+    question: "Is your data approximately normally distributed across groups?",
+    info: "Check normality per group with Shapiro–Wilk or histograms. With n ≥ 15–20 per group, ANOVA is generally robust even for moderately non-normal data.",
+    options: [
+      { label: "Yes — normally distributed",              icon: "✅", next: "many_groups"    },
+      { label: "No, but n ≥ 15–20 per group — CLT applies", icon: "📊", next: "many_groups"    },
+      { label: "No — and n < 15, clearly skewed",         icon: "⚠️", next: "many_groups_np" }
+    ]
+  },
+
+  many_groups: {
+    question: "How many independent factors are involved?",
+    info: "A factor is an independent variable with two or more levels (e.g., treatment group, time point).",
+    options: [
+      { label: "One factor",  icon: "1️⃣", next: "anova_one" },
+      { label: "Two factors", icon: "2️⃣", next: "anova_two" }
+    ]
+  },
+
+  many_groups_np: {
+    result: {
+      test: "Kruskal–Wallis Test (not yet available)",
+      file: null,
+      description: "For non-normal data across three or more independent groups, the Kruskal–Wallis test is the non-parametric equivalent of one-way ANOVA. It compares rank distributions across groups without assuming normality.",
+      note: "This test is not yet in the app. Alternatives: (1) transform data (log, square root) and use One-Way ANOVA, (2) use Mann–Whitney U for pairwise group comparisons, or (3) use One-Way ANOVA if n per group is sufficient (≥ 15–20) — ANOVA is moderately robust to non-normality."
+    }
+  },
+
+  anova_one: {
+    result: {
+      test: "One-Way ANOVA",
+      file: "anova.html",
+      description: "Compares means across three or more independent groups defined by a single categorical factor.",
+      note: "If significant, follow up with post-hoc tests (Tukey, Bonferroni) to identify which groups differ."
+    }
+  },
+
+  anova_two: {
+    result: {
+      test: "Two-Way ANOVA",
+      file: "two_way_anova.html",
+      description: "Examines the effects of two independent factors and their interaction on a continuous outcome.",
+      note: "Always check the interaction term first — if significant, interpret main effects with caution."
+    }
+  },
+
+  // ── Qualitative branch ───────────────────────────────────────────────────
+  qual_type: {
+    question: "What is the goal of your qualitative analysis?",
+    options: [
+      { label: "Compare observed category frequencies to an expected distribution", icon: "📊", next: "chi_gof"      },
+      { label: "Test for an association between two categorical variables",         icon: "🔍", next: "assoc_paired"  },
+      { label: "Assess agreement between two raters or methods",                   icon: "✏️", next: "rater_scale"   }
+    ]
+  },
+
+  chi_gof: {
+    result: {
+      test: "Chi-Square Goodness of Fit",
+      file: "Chi_GOF.html",
+      description: "Tests whether the observed distribution of a single categorical variable matches a specified theoretical distribution.",
+      note: "All expected cell counts should be ≥ 5 for the chi-square approximation to be reliable."
+    }
+  },
+
+  assoc_paired: {
+    question: "Are the observations paired or independent?",
+    info: "Paired: the same subjects appear in both conditions (e.g., two tests on same patient, before vs after).\nIndependent: different subjects in each group.",
+    options: [
+      { label: "Paired — same subjects measured twice",   icon: "🔗", next: "mcnemar"   },
+      { label: "Independent — different subjects",        icon: "↔️", next: "assoc_size" }
+    ]
+  },
+
+  mcnemar: {
+    result: {
+      test: "McNemar Test",
+      file: "mcnemar.html",
+      description: "Tests for a systematic difference in paired binary proportions — e.g., comparing two diagnostic tests on the same patients or before vs. after treatment.",
+      note: "Only discordant pairs (where the two measurements disagree) contribute to the test."
+    }
+  },
+
+  assoc_size: {
+    question: "Are all expected cell counts ≥ 5?",
+    info: "Expected count = (row total × column total) / N. If any cell has an expected count < 5, the chi-square approximation may be unreliable.",
+    options: [
+      { label: "Yes — all expected counts ≥ 5",             icon: "✅", next: "chi_independence" },
+      { label: "No — at least one expected count < 5",      icon: "⚠️", next: "fisher"           }
+    ]
+  },
+
+  chi_independence: {
+    result: {
+      test: "Chi-Square Test of Independence",
+      file: "Chi_independence.html",
+      description: "Tests whether two categorical variables are associated in a contingency table. Works for 2×2 and larger tables.",
+      note: "Quantify strength of association with Cramér's V (or φ for 2×2 tables)."
+    }
+  },
+
+  fisher: {
+    result: {
+      test: "Fisher's Exact Test",
+      file: "fisher_exact.html",
+      description: "Exact test for association in a 2×2 contingency table — preferred when expected cell counts are small or the sample size is limited.",
+      note: "Computes exact probabilities using the hypergeometric distribution. Report the odds ratio and 95% CI."
+    }
+  },
+
+  rater_scale: {
+    question: "What is the measurement scale of the ratings?",
+    info: "Nominal: unordered categories (e.g., benign / malignant, positive / negative).\nOrdinal: ordered categories where the degree of disagreement matters (e.g., mild / moderate / severe).",
+    options: [
+      { label: "Nominal — unordered categories",                               icon: "🔵", next: "kappa"          },
+      { label: "Ordinal — ordered categories (severity, staging, grade)",     icon: "🟠", next: "weighted_kappa" }
+    ]
+  },
+
+  kappa: {
+    result: {
+      test: "Cohen's Kappa",
+      file: "kappa.html",
+      description: "Measures inter-rater agreement between two raters on nominal categorical outcomes, corrected for chance agreement.",
+      note: "κ ≥ 0.61 is generally considered acceptable in clinical practice."
+    }
+  },
+
+  weighted_kappa: {
+    result: {
+      test: "Weighted Kappa",
+      file: "weighted_kappa.html",
+      description: "Extends Cohen's kappa for ordinal scales, applying penalties proportional to the distance of disagreement between rater categories.",
+      note: "Quadratic weights are preferred in most clinical contexts. Report which weighting scheme was used."
+    }
+  },
+
+  // ── Relationships branch ─────────────────────────────────────────────────
+  relationships: {
+    result: {
+      test: "Correlation & Linear Regression",
+      file: "linear_regression.html",
+      description: "Models the linear relationship between a continuous predictor and a continuous outcome, and quantifies association strength (Pearson r).",
+      note: "Correlation describes association strength; regression describes the predictive relationship. Neither implies causation."
+    }
+  }
+};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let history = [];   // stack of { nodeId, label } for each step taken
+let current = "start";
+
+// ─── Depth estimate (for progress dots) ─────────────────────────────────────
+const MAX_DEPTH = 5;
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+function render() {
+  const wrap = document.getElementById("guideWrap");
+  wrap.innerHTML = "";
+
+  const node = TREE[current];
+  const isStart = (current === "start");
+  const isResult = !!node.result;
+
+  // ── Breadcrumb ──
+  const bc = document.createElement("div");
+  bc.className = "breadcrumb";
+  if (history.length === 0) {
+    bc.innerHTML = `<span class="crumb">Start</span>`;
+  } else {
+    history.forEach((h, i) => {
+      if (i > 0) bc.innerHTML += `<span class="crumb-sep">›</span>`;
+      bc.innerHTML += `<span class="crumb choice">${truncate(h.label, 30)}</span>`;
+    });
+  }
+  wrap.appendChild(bc);
+
+  // ── Progress bar ──
+  const pb = document.createElement("div");
+  pb.className = "progress-bar";
+  for (let i = 0; i < MAX_DEPTH; i++) {
+    const d = document.createElement("div");
+    d.className = "dot" + (i < history.length ? " done" : i === history.length && !isResult ? " active" : "");
+    pb.appendChild(d);
+  }
+  wrap.appendChild(pb);
+
+  // ── Content ──
+  if (isResult) {
+    renderResult(wrap, node.result);
+  } else {
+    renderQuestion(wrap, node, isStart);
+  }
+
+  // ── Nav bar ──
+  if (!isStart) {
+    const nav = document.createElement("div");
+    nav.className = "nav-bar";
+
+    const back = document.createElement("button");
+    back.className = "btn-back";
+    back.innerHTML = "← Back";
+    back.onclick = goBack;
+    if (history.length === 0) back.disabled = true;
+    nav.appendChild(back);
+
+    const restart = document.createElement("button");
+    restart.className = "btn-back";
+    restart.innerHTML = "↺ Restart";
+    restart.onclick = goRestart;
+    nav.appendChild(restart);
+
+    wrap.appendChild(nav);
+  }
+}
+
+function renderQuestion(wrap, node, isStart) {
+  if (isStart) {
+    // Hero intro
+    const intro = document.createElement("div");
+    intro.className = "start-intro";
+    intro.innerHTML = `
+      <div class="icon-big">🧭</div>
+      <h1>Statistical Test Guide</h1>
+      <p>Answer a few short questions about your goal and data. The guide covers both hypothesis testing and analytical performance evaluation — and will recommend the most appropriate tool and open it directly.</p>
+      <div style="margin-top:14px;background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;text-align:left;font-size:13px;color:#78350f;line-height:1.6;">
+        <strong>This is a general guide.</strong> Recommendations are based on standard statistical principles and common clinical laboratory practice. Always verify the choice against your specific study design, sample size, data distribution, and institutional requirements before proceeding.
+      </div>
+    `;
+    wrap.appendChild(intro);
+  }
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `<div class="card-label">${isStart ? "Step 1" : "Question"}</div>
+    <h2>${node.question}</h2>`;
+
+  if (node.info) {
+    const hint = document.createElement("div");
+    hint.className = "info-hint";
+    hint.textContent = node.info;
+    card.appendChild(hint);
+  }
+
+  const opts = document.createElement("div");
+  opts.className = "options";
+
+  node.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<span class="opt-icon">${opt.icon || "▸"}</span><span>${opt.label}</span>`;
+    btn.onclick = () => choose(opt);
+    opts.appendChild(btn);
+  });
+
+  card.appendChild(opts);
+  wrap.appendChild(card);
+}
+
+function renderResult(wrap, result) {
+  const card = document.createElement("div");
+  card.className = "result-card";
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "result-header";
+  if (!result.file) {
+    header.style.background = "linear-gradient(135deg, #374151, #1f2937)";
+  }
+  header.innerHTML = `
+    <div class="result-label">${result.file ? "Recommended Test" : "Recommended Test — Not Yet Available"}</div>
+    <h2>${result.test}</h2>
+  `;
+  card.appendChild(header);
+
+  // Body
+  const body = document.createElement("div");
+  body.className = "result-body";
+
+  // Decision path
+  if (history.length > 0) {
+    const path = document.createElement("div");
+    path.className = "path-summary";
+    path.innerHTML = `<span style="color:#9ca3af;font-size:12px;margin-right:4px;">Path:</span>`;
+    history.forEach((h, i) => {
+      if (i > 0) path.innerHTML += `<span style="color:#d1d5db;font-size:11px;">›</span>`;
+      path.innerHTML += `<span class="path-pill">${truncate(h.label, 28)}</span>`;
+    });
+    body.appendChild(path);
+  }
+
+  const desc = document.createElement("p");
+  desc.className = "result-desc";
+  desc.textContent = result.description;
+  body.appendChild(desc);
+
+  if (result.note) {
+    const note = document.createElement("div");
+    note.className = "result-note";
+    note.textContent = result.note;
+    body.appendChild(note);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "result-actions";
+
+  if (result.file) {
+    const openBtn = document.createElement("button");
+    openBtn.className = "btn-open";
+    openBtn.innerHTML = `<span>Open ${result.test}</span> <span>→</span>`;
+    openBtn.onclick = () => openTool(result.file, result.test);
+    actions.appendChild(openBtn);
+  }
+
+  const restartBtn = document.createElement("button");
+  restartBtn.className = "btn-restart";
+  restartBtn.textContent = "↺ Start Over";
+  restartBtn.onclick = goRestart;
+  actions.appendChild(restartBtn);
+
+  body.appendChild(actions);
+  card.appendChild(body);
+  wrap.appendChild(card);
+}
+
+// ─── Actions ─────────────────────────────────────────────────────────────────
+function choose(opt) {
+  history.push({ nodeId: current, label: opt.label });
+  current = opt.next;
+  render();
+}
+
+function goBack() {
+  if (history.length === 0) return;
+  const prev = history.pop();
+  current = prev.nodeId;
+  render();
+}
+
+function goRestart() {
+  history = [];
+  current = "start";
+  render();
+}
+
+function openTool(file, title) {
+  try {
+    // When loaded inside app.html as an iframe, call parent's loadTool
+    if (window.parent && window.parent.loadTool) {
+      // Find the matching sidebar button via title match
+      const btns = window.parent.document.querySelectorAll(".sidebar button");
+      let matchBtn = null;
+      btns.forEach(b => {
+        if (b.getAttribute("onclick") && b.getAttribute("onclick").includes(file)) {
+          matchBtn = b;
+        }
+      });
+      window.parent.loadTool(file, title, matchBtn);
+    } else {
+      window.location.href = file;
+    }
+  } catch (e) {
+    window.location.href = file;
+  }
+}
+
+// ─── Utility ─────────────────────────────────────────────────────────────────
+function truncate(str, n) {
+  return str.length <= n ? str : str.slice(0, n - 1) + "…";
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

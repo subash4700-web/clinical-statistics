@@ -1,0 +1,148 @@
+<div class="info-content">
+
+  <h2>One-Way ANOVA</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#an-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#an-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#an-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#an-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#an-decomp" style="color:var(--accent); text-decoration:none; padding:2px 0;">Variance Decomposition</a>
+      <a href="#an-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#an-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#an-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#an-posthoc" style="color:var(--accent); text-decoration:none; padding:2px 0;">Post-Hoc Tests</a>
+      <a href="#an-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#an-normality" style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality Check</a>
+      <a href="#an-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Assumptions Are Violated</a>
+      <a href="#an-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#an-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#an-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#an-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#an-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="an-purpose">Purpose</h3>
+  <p>
+    One-Way ANOVA tests whether the means of <strong>three or more independent groups</strong> differ significantly.
+  </p>
+
+  <h3 id="an-when">When to Use</h3>
+  <ul>
+    <li>Comparing laboratory values across multiple patient groups</li>
+    <li>Evaluating different treatment conditions simultaneously</li>
+    <li>Comparing more than two analytical methods</li>
+  </ul>
+
+  <h3 id="an-idea">Key Idea</h3>
+  <p>
+    ANOVA compares variability <strong>between groups</strong> to variability <strong>within groups</strong>.
+    If between-group variability is large relative to within-group variability, evidence suggests that not all group means are equal.
+    A significant ANOVA only tells you that <em>at least one</em> group differs — post-hoc tests identify which ones.
+  </p>
+
+  <h3 id="an-hypotheses">Hypotheses</h3>
+  <p><strong>H₀:</strong> μ₁ = μ₂ = ... = μ<sub>k</sub></p>
+  <p><strong>H₁:</strong> At least one group mean differs from the others.</p>
+
+  <h3 id="an-decomp">Variance Decomposition</h3>
+  <p>Total variability is partitioned into:</p>
+  <p><strong>SS<sub>Total</sub> = SS<sub>Between</sub> + SS<sub>Within</sub></strong></p>
+  <ul>
+    <li><strong>SS<sub>Between</sub></strong> — variation attributable to group differences</li>
+    <li><strong>SS<sub>Within</sub></strong> — variation within groups (residual / error)</li>
+  </ul>
+
+  <h3 id="an-statistic">Test Statistic</h3>
+  <p><strong>F = MS<sub>Between</sub> / MS<sub>Within</sub></strong></p>
+  <ul>
+    <li><strong>MS<sub>Between</sub></strong> = SS<sub>Between</sub> / df<sub>between</sub></li>
+    <li><strong>MS<sub>Within</sub></strong> = SS<sub>Within</sub> / df<sub>within</sub></li>
+  </ul>
+  <p>Large F indicates group means differ more than expected by chance.</p>
+
+  <h3 id="an-df">Degrees of Freedom</h3>
+  <p><strong>df<sub>between</sub> = k − 1</strong></p>
+  <p><strong>df<sub>within</sub> = N − k</strong></p>
+  <p>where <em>k</em> = number of groups, <em>N</em> = total sample size.</p>
+
+  <h3 id="an-effect">Effect Size</h3>
+  <p>Eta squared <strong>(η²)</strong>:</p>
+  <p><strong>η² = SS<sub>Between</sub> / SS<sub>Total</sub></strong></p>
+  <ul>
+    <li>0.01 = small &nbsp;|&nbsp; 0.06 = medium &nbsp;|&nbsp; 0.14 = large</li>
+  </ul>
+  <p class="note">η² tends to overestimate the population effect in small samples. Partial η² or ω² are preferred for unbiased estimates.</p>
+
+  <h3 id="an-posthoc">Post-Hoc Tests</h3>
+  <p>
+    A significant ANOVA result indicates that groups differ but does not specify which pairs.
+    Post-hoc tests control the familywise error rate across multiple comparisons:
+  </p>
+  <ul>
+    <li><strong>Tukey's HSD</strong> — recommended for equal group sizes; controls familywise error well</li>
+    <li><strong>Bonferroni</strong> — conservative; divides α by the number of comparisons</li>
+    <li><strong>Games-Howell</strong> — preferred when variances are unequal</li>
+  </ul>
+  <p>Each post-hoc comparison produces a mean difference, confidence interval, and adjusted p-value.</p>
+
+  <h3 id="an-assumptions">Assumptions</h3>
+  <ul>
+    <li>Groups are independent</li>
+    <li>Outcome is continuous</li>
+    <li>Residuals are approximately normally distributed within each group</li>
+    <li>Homogeneity of variances across groups (Levene's test)</li>
+  </ul>
+
+  <h3 id="an-normality">Normality Check</h3>
+  <p>
+    Normality is assessed on <strong>residuals</strong> (observed − group mean) using Shapiro–Wilk and Q–Q plots per group.
+  </p>
+  <p class="note">
+    For n ≥ 30 per group, ANOVA is robust to mild non-normality due to the Central Limit Theorem.
+    Variance homogeneity (Levene's test) is more critical than normality for valid F-tests.
+  </p>
+
+  <h3 id="an-violated">If Assumptions Are Violated</h3>
+  <ul>
+    <li>Use <strong>Welch's ANOVA</strong> if group variances are unequal (more robust than standard ANOVA)</li>
+    <li>Consider the <strong>Kruskal–Wallis test</strong> as a non-parametric alternative</li>
+    <li>Inspect residual plots and check for outliers</li>
+  </ul>
+
+  <h3 id="an-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>. Then apply post-hoc tests to identify differing pairs.</p>
+
+  <h3 id="an-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant ANOVA result indicates that at least one group mean differs from the others.
+    It does <strong>not</strong> identify which groups differ — post-hoc comparisons are required.
+    Consider effect size (η²) and the magnitude of differences alongside the p-value.
+  </p>
+
+  <h3 id="an-viz">Visualisation Notes</h3>
+  <p>
+    The visualisation shows the <strong>distribution</strong> for each group using their actual standard deviations.
+    Wider curves indicate higher within-group variability; narrower curves indicate lower variability.
+    The grand mean (dashed line) represents the overall mean across all groups under H₀.
+    Arrows indicate the between-group spread relative to within-group spread — the conceptual basis of the F-ratio.
+  </p>
+
+  <h3 id="an-reporting">Reporting Example</h3>
+  <p>
+    A one-way ANOVA showed a significant difference between groups,
+    F(df<sub>between</sub>, df<sub>within</sub>) = X.XX, p = 0.0X, η² = X.XX.
+    Post-hoc Tukey comparisons revealed that Group A differed significantly from Group C (p = 0.0X).
+  </p>
+
+  <h3 id="an-data">Generating Sample Data</h3>
+  <p>
+    An expandable "Generate sample data for all groups" panel appears below the main data entry box.
+    Specify sample size per group, distribution (normal or uniform), and individual mean and SD for each group.
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load the data.
+  </p>
+
+</div>

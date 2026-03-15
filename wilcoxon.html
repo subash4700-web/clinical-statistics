@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wilcoxon signed-rank</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <link rel="stylesheet" href="assets/css/base.css">
+
+  <style>
+    /* Lean copy of paired_t_test styles for consistent look */
+    :root{ --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#1976d2; }
+    body{ background:var(--bg); color:var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .container{ max-width:1000px; margin:18px auto; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+    textarea{ width:100%; min-height:140px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; padding:10px; border-radius:8px; border:1px solid var(--line); }
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+    .btn-row{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+    button{ border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .note{ color:var(--muted); font-size:13px; margin-top:8px; }
+    .tabs{ display:flex; gap:10px; margin: 12px 0 14px; }
+    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; color:var(--muted); font-size:13px; }
+    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .tab-content{ display:none; }
+    .tab-content.active{ display:block; }
+    .section-title{ font-weight:700; margin:0 0 8px 0; font-size:14px; }
+    .assump-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
+    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
+    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
+    .assump-item input{ margin-top:2px; }
+    .small{ font-size:12px; color:var(--muted); }
+    .pill{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--muted); }
+    select, input[type="number"]{ padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; width:100%; }
+    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .alert{ border-radius:12px; padding:10px 12px; border:1px solid var(--line); background:#fff; font-size:13px; line-height:1.6; }
+    .alert.bad{ border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
+    .btn-sm{ padding:6px 10px; font-size:12px; }
+    .btn-secondary{ background:#111827; color:#fff; opacity:0.9; }
+    table th{ font-weight:700; text-align:left; }
+    table td{ padding:8px; border-bottom:1px solid var(--line); }
+    table tbody tr:hover{ background:#f9fafb; }
+    .num{ text-align:right; }
+    .table-wrap{ max-height:400px; overflow-y:auto; border:1px solid var(--line); border-radius:8px; }
+    .table-wrap table{ width:100%; border-collapse:collapse; font-size:13px; }
+    .table-wrap thead{ position:sticky; top:0; background:#f9fafb; border-bottom:2px solid var(--line); z-index:10; }
+    .table-wrap thead th{ padding:10px 12px; }
+    .table-wrap tbody td{ padding:10px 12px; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 style="margin-bottom:6px;">Wilcoxon signed-rank test</h1>
+    <p class="note">Nonparametric test comparing paired observations (e.g., before vs after).</p>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="input">Data & presumptions</div>
+      <div class="tab" data-tab="results">Results</div>
+    </div>
+
+    <div id="input" class="tab-content active">
+      
+      <div class="grid-2">
+        <!-- Study context -->
+        <div class="card">
+          <div class="section-title">Study context</div>
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" id="chkPaired" checked />
+              <span>
+                <strong>Observations are paired</strong><br>
+                <span class="small">Same subjects measured twice</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkContinuous" checked />
+              <span>
+                <strong>Outcome is numeric or ordinal</strong><br>
+                <span class="small">Differences can be ranked</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkNonNormal" checked />
+              <span>
+                <strong>Data may be non-normal / skewed</strong><br>
+                <span class="small">Non-parametric alternative to paired t-test</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkOkCheck" checked />
+              <span>
+                <strong>Run descriptive checks</strong><br>
+                <span class="small">Summary statistics for differences</span>
+              </span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Tip: Wilcoxon tests whether the median difference differs from zero.</span>
+          </div>
+        </div>
+
+        <!-- Test settings -->
+        <div class="card">
+          <div class="section-title">Test settings</div>
+          <div class="grid-2">
+            <div>
+              <label class="small" style="font-weight:800;">Significance level (α)</label>
+              <select id="alpha">
+                <option value="0.05" selected>0.05</option>
+                <option value="0.01">0.01</option>
+              </select>
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">Test type</label>
+              <select id="tail">
+                <option value="two" selected>Two-sided</option>
+                <option value="right">One-sided (After &gt; Before)</option>
+                <option value="left">One-sided (After &lt; Before)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label class="small" style="font-weight:800;">Computation method</label>
+            <select id="methodType">
+              <option value="auto" selected>Automatic (exact if feasible, else normal approx.)</option>
+              <option value="exact">Exact (sign permutation — slow for large n)</option>
+              <option value="normal">Normal approximation</option>
+            </select>
+            <div class="note">Exact method enumerates all sign permutations; use for small samples.</div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label class="assump-item">
+              <input type="checkbox" id="showEffect" checked />
+              <span><strong>Show effect size</strong> (matched-pairs rank-biserial correlation)</span>
+            </label>
+            <label class="assump-item" style="margin-top:6px;">
+              <input type="checkbox" id="showViz" checked />
+              <span><strong>Show hypothesis visualisation</strong></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data input -->
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Data input</div>
+        <label class="small" style="font-weight:800;">Enter paired data (two columns: Before After, one pair per row)</label>
+        <textarea id="pairs" placeholder="Before After&#10;12 13&#10;10 9&#10;14 15&#10;8 11"></textarea>
+        <div class="note">Accepted separators: tab, space, comma. Headers are skipped automatically.</div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" id="clearBtn">Clear</button>
+          <button class="btn-primary" id="runBtn">Run analysis</button>
+        </div>
+        <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
+      </div>
+
+      <!-- Generate sample data section -->
+      <details class="card" style="margin-top:16px;">
+        <summary style="cursor:pointer; font-weight:700; font-size:14px; user-select:none;">
+          Generate sample paired data
+        </summary>
+        <div style="margin-top:12px;">
+          <div class="grid-2">
+            <div>
+              <label class="small" style="font-weight:800;">Sample size (n pairs)</label>
+              <input type="number" id="genN" value="20" min="1" step="1" style="width:100%;"/>
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">Distribution</label>
+              <select id="genDist" style="width:100%;">
+                <option value="skewed" selected>Skewed (log-normal)</option>
+                <option value="uniform">Uniform</option>
+                <option value="exponential">Exponential</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div>
+              <label class="small" style="font-weight:800;">Before median</label>
+              <input type="number" id="genMedianBefore" value="10" step="any" style="width:100%;"/>
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">After median</label>
+              <input type="number" id="genMedianAfter" value="12" step="any" style="width:100%;"/>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top:10px;">
+            <div>
+              <label class="small" style="font-weight:800;">Spread parameter</label>
+              <input type="number" id="genSpread" value="3" step="any" min="0.1" style="width:100%;"/>
+              <div class="note">Controls variability/skewness</div>
+            </div>
+            <div>
+              <label class="small" style="font-weight:800;">Pairing correlation</label>
+              <input type="number" id="genCorr" value="0.7" step="0.1" min="0" max="1" style="width:100%;"/>
+              <div class="note">0 = independent, 1 = perfect match</div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn-ghost btn-sm" id="generateBtn">Generate</button>
+            <button class="btn-secondary btn-sm" id="useGeneratedBtn" style="display:none;">Use in analysis</button>
+          </div>
+          <div class="note">Generated values appear below.</div>
+          <textarea id="generatedOutput" readonly style="margin-top:8px; min-height:100px; background:#f9fafb; font-size:11px;"></textarea>
+        </div>
+      </details>
+
+    </div>
+
+    <div id="results" class="tab-content">
+      
+      <!-- Outlier screening section -->
+      <div class="card" style="display:none;" id="outlierCard">
+        <div class="section-title">Data review (differences)</div>
+        <div class="note">Flagged outliers are suggestions. You can include/exclude any row and the results will update.</div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="num">Before</th>
+                <th class="num">After</th>
+                <th class="num">Difference</th>
+                <th>Outlier</th>
+                <th>Include</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Dynamic results content -->
+      <div id="resultsContent"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/stats/helpers.js"></script>
+  <script src="assets/js/stats/wilcoxon_signed_rank.js"></script>
+  <script>
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const name = tab.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const el = document.getElementById(name);
+        if (el) el.classList.add('active');
+      });
+    });
+  </script>
+  
+</body>
+</html>

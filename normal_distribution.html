@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Normal and t Distribution Explorer</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --card:#ffffff;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --accent:#1976d2;
+    --accent2:#1565c0;
+    --red:#c62828;
+    --green:#2e7d32;
+    --warn:#b45309;
+  }
+
+  body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); }
+  .back-home{
+    display:inline-block;
+    padding:12px 18px;
+    text-decoration:none;
+    color:var(--accent2);
+    font-weight:800;
+  }
+
+  .container{ max-width:1200px; margin:0 auto; padding:16px 16px 28px; }
+  h1{ margin:6px 0 6px; }
+  .subtitle{ margin:0 0 10px; color:var(--muted); }
+
+  .tabs{
+    display:flex; gap:10px; margin: 12px 0 14px; flex-wrap:wrap;
+  }
+  .tab{
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-weight:800;
+    color:var(--muted);
+    font-size:13px;
+    user-select:none;
+  }
+  .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 380px 1fr;
+    gap:16px;
+    align-items:start;
+  }
+  @media (max-width: 980px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+  }
+  .section-title{
+    font-weight:900;
+    margin:0 0 10px;
+    font-size:14px;
+  }
+  .small{ font-size:12.5px; color:var(--muted); }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    color: var(--muted);
+  }
+
+  label{ font-weight:900; display:block; margin-top:10px; font-size:12.5px; }
+  input, select{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-sizing:border-box;
+    background:#fff;
+    margin-top:4px;
+  }
+  input[type="range"]{ padding:0; }
+
+  hr{ border:none; border-top:1px solid var(--line); margin:14px 0; }
+
+  .result{
+    background:#f9fafb;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    font-weight:800;
+    line-height:1.35;
+    font-size:13px;
+  }
+
+  .mode-row{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
+  }
+  .mode-btn{
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-weight:900;
+    color:var(--muted);
+    font-size:12.5px;
+    user-select:none;
+  }
+  .mode-btn.active{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+  }
+
+  .legend{
+    display:flex; gap:14px; flex-wrap:wrap;
+    font-size:12.5px; font-weight:800; color:var(--muted);
+    align-items:center; margin-bottom:8px;
+  }
+  .legend-item{ display:flex; align-items:center; gap:6px; }
+  .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
+  .dot.blue{ background:var(--accent); }
+  .dot.red{ background:var(--red); }
+  .dot.shadeblue{ background:rgba(25,118,210,.25); border:1px solid rgba(25,118,210,.35); }
+  .dot.shadered{ background:rgba(198,40,40,.25); border:1px solid rgba(198,40,40,.35); }
+  .dot.obs{ background:#111827; }
+
+  .chart-wrap{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+  }
+
+  canvas{
+    width:100% !important;
+    height:66vh !important;
+    max-height:720px;
+  }
+  @media (max-width: 980px){
+    canvas{
+      height:52vh !important;
+      max-height:none;
+    }
+  }
+
+  .formula{
+    font-family: "Times New Roman", serif;
+    background:#fafafa;
+    padding:10px 12px;
+    border-left:4px solid #ccc;
+    margin:10px 0;
+    border-radius:10px;
+  }
+</style>
+</head>
+
+<body>
+<a href="quantitative_analysis.html" class="back-home">← Back to quantitative tests</a>
+
+<div class="container">
+  <h1>Normal & t Distribution Explorer</h1>
+  <p class="subtitle">Calculator + comparison tool (Normal vs t) in one place</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="explorer">Explorer</div>
+    <div class="tab" data-tab="formulas">Formulas</div>
+  </div>
+
+  <!-- ================= EXPLORER TAB ================= -->
+  <div id="explorer" class="tab-content active">
+
+    <div class="layout">
+
+      <!-- LEFT: controls -->
+      <div class="card">
+        <div class="section-title">Tool</div>
+
+        <div class="mode-row">
+          <div class="mode-btn active" id="btnToolCalc">Calculator</div>
+          <div class="mode-btn" id="btnToolCompare">Normal vs t</div>
+        </div>
+
+        <div class="small" style="margin-top:-4px;">
+          Calculator preserves your original features. Normal vs t overlays two standardised distributions and highlights rejection regions.
+        </div>
+
+        <!-- ================= CALCULATOR CONTROLS (ORIGINAL IDs PRESERVED) ================= -->
+        <div id="calcControls" style="margin-top:12px;">
+
+          <div class="section-title">Calculator settings</div>
+
+          <label>Data type</label>
+          <select id="dataType">
+            <option value="population">Population</option>
+            <option value="sample">Sample (t)</option>
+          </select>
+
+          <label>Mean</label>
+          <input type="number" id="mean" value="100" step="1">
+          <input type="range" id="meanSlider" min="-200" max="200" step="1" value="100">
+
+          <label>Standard deviation (SD)</label>
+          <input type="number" id="sd" value="10" step="0.01" min="0.0001">
+          <input type="range" id="sdSlider" min="0.01" max="50" step="0.01" value="10">
+
+          <div id="sampleBlock" style="display:none">
+            <label>Sample size (n)</label>
+            <input type="number" id="n" value="30">
+          </div>
+
+          <hr>
+
+          <label>Analysis type</label>
+          <select id="analysis">
+            <option value="percent">Percent → score</option>
+            <option value="score">Score → percent</option>
+            <option value="range">Between two values</option>
+          </select>
+
+          <label>Tail type</label>
+          <select id="tail">
+            <option value="two">Two-tailed</option>
+            <option value="one">One-tailed</option>
+          </select>
+
+          <div id="directionBlock" style="display:none">
+            <label>Direction (one-tailed)</label>
+            <select id="direction">
+              <option value="right">Right</option>
+              <option value="left">Left</option>
+            </select>
+          </div>
+
+          <div id="percentBlock">
+            <label id="alphaLabel">α (alpha)</label>
+            <input type="number" id="percent" value="0.05" step="0.001" min="0.0001" max="0.9999">
+            <input type="range" id="percentSlider" min="0.0001" max="0.9999" step="0.0001" value="0.05">
+            <div id="alphaNote" class="small" style="margin-top:6px;"></div>
+          </div>
+
+          <div id="scoreBlock" style="display:none">
+            <label>Score</label>
+            <input type="number" id="score" value="1.96" step="0.01">
+            <input type="range" id="scoreSlider" min="-4" max="4" step="0.01" value="1.96">
+          </div>
+
+          <div id="intervalTypeBlock" style="display:none">
+            <label>Interval-type</label>
+            <select id="intervalType">
+              <option value="x">Between two X-values</option>
+              <option value="z" class="opt-z">Between Z-values</option>
+              <option value="t" class="opt-t">Between t-values</option>
+            </select>
+          </div>
+
+          <div id="rangeBlock" style="display:none">
+            <label>From (X)</label>
+            <input type="number" id="x1" value="95">
+            <label>To (X)</label>
+            <input type="number" id="x2" value="105">
+          </div>
+
+          <label>Axis font size</label>
+          <input type="range" id="fontSizeSlider" min="10" max="30" value="16">
+          <div id="fontSizeValue" class="small" style="margin-top:6px;">16 px</div>
+
+          <div class="result" id="output" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- ================= COMPARE CONTROLS ================= -->
+        <div id="compareControls" style="display:none; margin-top:12px;">
+          <div class="section-title">Normal vs t (standardised)</div>
+
+          <div class="pill">Blue = Normal (Z). Red = Student’s t (df = n − 1).</div>
+
+          <label>α (significance level)</label>
+          <input type="range" id="cmpAlphaSlider" min="0.001" max="0.20" step="0.001" value="0.05">
+          <div class="small" id="cmpAlphaDisplay">α = 0.050</div>
+
+          <label>Tail type</label>
+          <select id="cmpTail">
+            <option value="two" selected>Two-tailed</option>
+            <option value="right">One-tailed (right)</option>
+            <option value="left">One-tailed (left)</option>
+          </select>
+
+          <label>Sample size for t (n)</label>
+          <input type="range" id="cmpN" min="2" max="200" step="1" value="5">
+          <div class="small" id="cmpNDisplay">n = 5 (df = 4)</div>
+
+          <label style="display:flex; align-items:center; gap:10px; margin-top:12px;">
+            <input type="checkbox" id="cmpShowObs" style="width:auto; margin:0;">
+            <span>Show observed statistic</span>
+          </label>
+
+          <div id="cmpObsBlock" style="display:none;">
+            <label>Observed stat (Z / t)</label>
+            <input type="range" id="cmpObs" min="-6" max="6" step="0.05" value="2.1">
+            <div class="small" id="cmpObsDisplay">Observed = 2.10</div>
+          </div>
+
+          <div class="result" id="cmpOutput" style="margin-top:12px;"></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: chart -->
+      <div class="card">
+        <div class="section-title">Visualisation</div>
+
+        <div id="compareLegend" class="legend" style="display:none;">
+          <div class="legend-item"><span class="dot blue"></span>Normal (Z)</div>
+          <div class="legend-item"><span class="dot red"></span>Student’s t</div>
+          <div class="legend-item"><span class="dot shadeblue"></span>Rejection (Z)</div>
+          <div class="legend-item"><span class="dot shadered"></span>Rejection (t)</div>
+          <div class="legend-item" id="obsLegendItem" style="display:none;"><span class="dot obs"></span>Observed</div>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div class="small" id="chartHint" style="margin-top:10px;">
+          In Calculator mode, the shaded region matches the selected analysis. In Compare mode, shaded regions show the rejection region(s).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FORMULAS TAB ================= -->
+  <div id="formulas" class="tab-content">
+    <div class="card">
+      <h2 style="margin-top:0;">Formulas used in this tool</h2>
+
+      <h3>Population (Normal distribution)</h3>
+      <p class="small">
+        Use this when the population standard deviation <strong>σ</strong> is treated as known (or assumed known).
+      </p>
+
+      <div class="formula">
+        <strong>Standardization:</strong><br>
+        Z = (X − μ) / σ
+      </div>
+
+      <div class="formula">
+        <strong>Back-transform:</strong><br>
+        X = μ + Z · σ
+      </div>
+
+      <div class="formula">
+        <strong>Probability between two X-values:</strong><br>
+        P(a ≤ X ≤ b) = Φ(Z₂) − Φ(Z₁)
+      </div>
+
+      <hr>
+
+      <h3>Sample (t distribution)</h3>
+      <p class="small">
+        Use this when the population σ is unknown and we substitute the sample SD <strong>s</strong>.
+        The distribution depends on degrees of freedom.
+      </p>
+
+      <div class="formula">
+        <strong>Standard error:</strong><br>
+        SE = s / √n
+      </div>
+
+      <div class="formula">
+        <strong>Standardization:</strong><br>
+        t = (X − μ) / (s / √n)
+      </div>
+
+      <div class="formula">
+        <strong>Degrees of freedom:</strong><br>
+        df = n − 1
+      </div>
+
+      <div class="formula">
+        <strong>Back-transform:</strong><br>
+        X = μ + t · (s / √n)
+      </div>
+
+      <div class="formula">
+        <strong>Probability between two limits:</strong><br>
+        P(a ≤ X ≤ b) = Fₜ(t₂) − Fₜ(t₁)
+      </div>
+
+      <p class="small">
+        Here, Φ is the standard normal CDF and Fₜ is the Student's t CDF.
+      </p>
+
+      <hr>
+
+      <h3>Compare tool: Normal vs t</h3>
+      <p class="small">
+        In Compare mode, we overlay the <strong>standard normal</strong> and a <strong>Student’s t</strong> distribution
+        (df = n − 1) on the same standardised axis, and show the rejection region for a chosen α and tail type.
+      </p>
+      <div class="formula">
+        Two-tailed critical values:<br>
+        Z<sub>crit</sub> = Φ<sup>−1</sup>(1 − α/2), &nbsp;&nbsp;
+        t<sub>crit</sub> = F<sub>t</sub><sup>−1</sup>(1 − α/2; df)
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ========= Utilities ========= */
+const el=id=>document.getElementById(id);
+let chart;
+let toolMode = "calc"; // "calc" | "compare"
+
+function fmt(x){ return Number(x).toFixed(4); }
+
+/* Tabs (kept from original logic, adapted to new layout) */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+    // ensure chart resizes nicely when switching tabs
+    setTimeout(()=>{ if(chart) chart.resize(); }, 50);
+  });
+});
+
+/* ===== Original UI logic (preserved) ===== */
+function updateUI(){
+  const useT = el("dataType").value==="sample";
+  const interval = el("intervalType");
+  const analysisVal = el("analysis").value;
+  const tailVal = el("tail").value;
+
+  el("intervalTypeBlock").style.display = analysisVal==="range" ? "block" : "none";
+
+  if(interval){
+    const optZ = interval.querySelector('option[value="z"]');
+    const optT = interval.querySelector('option[value="t"]');
+
+    if(useT){
+      optZ.disabled = true; optZ.hidden = true;
+      optT.disabled = false; optT.hidden = false;
+      if(interval.value === "z") interval.value = "x";
+    } else {
+      optT.disabled = true; optT.hidden = true;
+      optZ.disabled = false; optZ.hidden = false;
+      if(interval.value === "t") interval.value = "x";
+    }
+  }
+
+  el("sampleBlock").style.display = useT ? "block" : "none";
+  el("directionBlock").style.display = tailVal==="one" ? "block" : "none";
+  el("percentBlock").style.display = analysisVal==="percent" ? "block" : "none";
+  el("scoreBlock").style.display = analysisVal==="score" ? "block" : "none";
+  el("rangeBlock").style.display = analysisVal==="range" ? "block" : "none";
+
+  if(analysisVal==="percent"){
+    const alpha = parseFloat(el("percent").value);
+    const conf = (1 - alpha) * 100;
+    if(tailVal==="two"){
+      el("alphaNote").textContent = `α = ${alpha.toFixed(4)} → confidence level: ${conf.toFixed(2)}%`;
+    } else {
+      el("alphaNote").textContent = `α = ${alpha.toFixed(4)} → ${(alpha*100).toFixed(2)}% in one tail`;
+    }
+  }
+}
+
+function compute(){
+  const mean=parseFloat(el("mean").value);
+  const sd=parseFloat(el("sd").value);
+  const n=parseFloat(el("n").value||2);
+
+  if(!isFinite(mean) || !isFinite(sd) || sd <= 0) return null;
+
+  const df=n-1;
+  const useT=el("dataType").value==="sample";
+  const analysisVal = el("analysis").value;
+  const tailVal = el("tail").value;
+  const dirVal = el("direction").value;
+
+  const scale = useT ? sd / Math.sqrt(n) : sd;
+  const label = useT ? "t" : "Z";
+
+  let shadedArea=0;
+  let zVals=[];
+  let shadingMode="between";
+
+  /* ===== Percent (alpha) -> score ===== */
+  if(analysisVal==="percent"){
+    const alpha = Math.max(0.0001, Math.min(0.9999, parseFloat(el("percent").value)));
+
+    if(tailVal==="two"){
+      const z=useT?
+        jStat.studentt.inv(1-alpha/2,df):
+        jStat.normal.inv(1-alpha/2,0,1);
+      zVals=[-z,z];
+      shadedArea = 1 - alpha;
+      shadingMode = "between";
+
+      const xCrit1 = mean + zVals[0]*scale;
+      const xCrit2 = mean + zVals[1]*scale;
+
+      el("output").innerHTML =
+        `Central area (confidence): ${(shadedArea*100).toFixed(2)}%<br>`+
+        `${label}<sub>crit</sub> = ±${z.toFixed(4)}<br>`+
+        `X limits: ${xCrit1.toFixed(4)} to ${xCrit2.toFixed(4)}`;
+    } else {
+      const critZ = useT ? jStat.studentt.inv(1-alpha, df) : jStat.normal.inv(1-alpha, 0, 1);
+      zVals=[critZ];
+
+      if(dirVal==="right"){
+        shadingMode="left"; // non-rejection
+        const xCrit = mean + critZ*scale;
+        shadedArea = 1 - alpha;
+        el("output").innerHTML =
+          `Non-rejection area (left of crit): ${(shadedArea*100).toFixed(2)}%<br>`+
+          `${label}<sub>crit</sub> = ${critZ.toFixed(4)}<br>`+
+          `X critical value: ${xCrit.toFixed(4)}`;
+      } else {
+        shadingMode="right";
+        const xCrit = mean - critZ*scale;
+        shadedArea = 1 - alpha;
+        el("output").innerHTML =
+          `Non-rejection area (right of crit): ${(shadedArea*100).toFixed(2)}%<br>`+
+          `${label}<sub>crit</sub> = -${critZ.toFixed(4)}<br>`+
+          `X critical value: ${xCrit.toFixed(4)}`;
+        zVals=[-critZ];
+      }
+    }
+  }
+
+  /* ===== Score -> percent ===== */
+  if(analysisVal==="score"){
+    const score = parseFloat(el("score").value);
+    if(!isFinite(score)) return null;
+
+    let p;
+    if(tailVal==="two"){
+      const cdf = useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score, 0, 1);
+      const upper = 1 - cdf;
+      const lower = useT ? jStat.studentt.cdf(-score, df) : jStat.normal.cdf(-score, 0, 1);
+      p = lower + upper;
+      shadedArea = p;
+      zVals=[-Math.abs(score), Math.abs(score)];
+      shadingMode="between";
+      el("output").innerHTML =
+        `Two-tailed p-value (outside ±score): ${p.toFixed(6)}<br>`+
+        `Score = ±${Math.abs(score).toFixed(4)}`;
+    } else {
+      if(dirVal==="right"){
+        p = 1 - (useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score,0,1));
+        shadedArea = p;
+        zVals=[score];
+        shadingMode="right";
+        el("output").innerHTML =
+          `Right-tailed p-value: ${p.toFixed(6)}<br>`+
+          `Score = ${score.toFixed(4)}`;
+      } else {
+        p = (useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score,0,1));
+        shadedArea = p;
+        zVals=[score];
+        shadingMode="left";
+        el("output").innerHTML =
+          `Left-tailed p-value: ${p.toFixed(6)}<br>`+
+          `Score = ${score.toFixed(4)}`;
+      }
+    }
+  }
+
+  /* ===== Between two values ===== */
+  if(analysisVal==="range"){
+    const x1=parseFloat(el("x1").value);
+    const x2=parseFloat(el("x2").value);
+    if(!isFinite(x1)||!isFinite(x2)) return null;
+
+    const intervalType = el("intervalType").value;
+    let z1,z2,prob;
+
+    if(intervalType==="x"){
+      z1=(x1-mean)/scale;
+      z2=(x2-mean)/scale;
+    } else if(intervalType==="z"){
+      z1=x1; z2=x2;
+    } else {
+      z1=x1; z2=x2;
+    }
+
+    const cdf = (z)=> useT ? jStat.studentt.cdf(z,df) : jStat.normal.cdf(z,0,1);
+    prob = Math.max(0, Math.min(1, cdf(z2) - cdf(z1)));
+
+    shadedArea = prob;
+    zVals=[z1,z2];
+    shadingMode="between";
+
+    const xa = mean + z1*scale;
+    const xb = mean + z2*scale;
+
+    el("output").innerHTML =
+      `P(between) = ${(prob*100).toFixed(2)}%<br>`+
+      `Standardised: ${label} from ${z1.toFixed(4)} to ${z2.toFixed(4)}<br>`+
+      `X limits: ${xa.toFixed(4)} to ${xb.toFixed(4)}`;
+  }
+
+  return { mean, sd, df, useT, zVals, shadingMode };
+}
+
+/* ===== Chart init (preserved structure, but made legend-friendly) ===== */
+function initChart(){
+  const ctx=el("chart").getContext("2d");
+
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{datasets:[]},
+    options:{
+      animation:false,
+      plugins:{
+        legend:{ display:false }, // we use our own legend row in compare mode
+        tooltip:{ enabled:false }
+      },
+      scales:{
+        x:{
+          type:"linear",
+          position:"bottom",
+          title:{display:true,text:"X values",font:{size:20,weight:"bold"}},
+          ticks:{font:{size:16,weight:"bold"}}
+        },
+        xZ:{
+          type:"linear",
+          position:"bottom",
+          title:{display:true,text:"Z values",font:{size:18,weight:"bold"}},
+          ticks:{
+            stepSize:1,
+            font:{size:14,weight:"bold"},
+            callback:(value)=>Number(value).toFixed(1)
+          },
+          grid:{drawOnChartArea:false}
+        },
+        y:{display:false}
+      }
+    }
+  });
+}
+
+/* ===== Original builder (preserved) ===== */
+function buildChart(res){
+  const mean=res.mean;
+  const sd=res.sd;
+  const df=res.df;
+  const useT=res.useT;
+  const shadingMode=res.shadingMode;
+
+  const scale = useT ? sd / Math.sqrt(el("n").value) : sd;
+
+  const left=mean-4*scale;
+  const right=mean+4*scale;
+
+  chart.options.scales.x.min = left;
+  chart.options.scales.x.max = right;
+  chart.options.scales.xZ.min = (left - mean) / scale;
+  chart.options.scales.xZ.max = (right - mean) / scale;
+
+  const step=(right-left)/500;
+
+  let curve=[];
+  let shade=[];
+
+  for(let x=left;x<=right;x+=step){
+    const z=(x-mean)/scale;
+    const y=useT ? jStat.studentt.pdf(z,df) : jStat.normal.pdf(z,0,1);
+    curve.push({x,y});
+
+    let include=false;
+
+    if(shadingMode==="between" && res.zVals.length===2){
+      const x1=mean+res.zVals[0]*scale;
+      const x2=mean+res.zVals[1]*scale;
+      if(x>=Math.min(x1,x2) && x<=Math.max(x1,x2)) include=true;
+    }
+    if(shadingMode==="left" && res.zVals.length===1){
+      const xLimit=mean+res.zVals[0]*scale;
+      if(x<=xLimit) include=true;
+    }
+    if(shadingMode==="right" && res.zVals.length===1){
+      const xLimit=mean+res.zVals[0]*scale;
+      if(x>=xLimit) include=true;
+    }
+
+    if(include) shade.push({x,y});
+    else shade.push({x,y:0});
+  }
+
+  chart.data.datasets=[
+    {
+      data:curve,
+      borderColor:"#1976d2",
+      borderWidth:3,
+      pointRadius:0,
+      fill:false
+    },
+    {
+      data:shade,
+      backgroundColor:"rgba(255,0,0,0.25)",
+      borderWidth:0,
+      fill:true,
+      pointRadius:0
+    }
+  ];
+
+  chart.options.scales.x.title.text = "X values";
+  chart.options.scales.xZ.display = true;
+  chart.options.scales.xZ.title.text = useT ? "t values" : "Z values";
+
+  chart.update();
+}
+
+/* ===== Compare tool (new) ===== */
+function buildCompareChart(){
+  const alpha = parseFloat(el("cmpAlphaSlider").value);
+  const tail = el("cmpTail").value;
+  const n = parseInt(el("cmpN").value, 10);
+  const df = Math.max(1, n - 1);
+
+  const showObs = el("cmpShowObs").checked;
+  const obs = parseFloat(el("cmpObs").value);
+
+  // axis range similar to your compare tool screenshot
+  const xmin = -4.5;
+  const xmax = 4.5;
+  const step = (xmax - xmin) / 700;
+
+  const zCurve=[];
+  const tCurve=[];
+  const zShade=[];
+  const tShade=[];
+  const zLines=[];
+  const tLines=[];
+  const obsLine=[];
+
+  // critical values
+  let zCritPos, tCritPos, zCritNeg=null, tCritNeg=null;
+
+  if(tail==="two"){
+    zCritPos = jStat.normal.inv(1 - alpha/2, 0, 1);
+    tCritPos = jStat.studentt.inv(1 - alpha/2, df);
+    zCritNeg = -zCritPos;
+    tCritNeg = -tCritPos;
+  } else if(tail==="right"){
+    zCritPos = jStat.normal.inv(1 - alpha, 0, 1);
+    tCritPos = jStat.studentt.inv(1 - alpha, df);
+  } else { // left
+    zCritPos = jStat.normal.inv(alpha, 0, 1);     // negative
+    tCritPos = jStat.studentt.inv(alpha, df);     // negative
+  }
+
+  // helper rejection check
+  function inReject(x, critPos, critNeg){
+    if(tail==="two"){
+      return (x <= critNeg) || (x >= critPos);
+    }
+    if(tail==="right"){
+      return x >= critPos;
+    }
+    return x <= critPos; // left
+  }
+
+  for(let x=xmin; x<=xmax; x+=step){
+    const yz = jStat.normal.pdf(x,0,1);
+    const yt = jStat.studentt.pdf(x,df);
+
+    zCurve.push({x, y: yz});
+    tCurve.push({x, y: yt});
+
+    const rz = inReject(x, zCritPos, zCritNeg);
+    const rt = inReject(x, tCritPos, tCritNeg);
+
+    zShade.push({x, y: rz ? yz : 0});
+    tShade.push({x, y: rt ? yt : 0});
+  }
+
+  // vertical line datasets (Chart.js: two points with same x)
+  function vline(x, yMax){
+    return [{x, y:0}, {x, y:yMax}];
+  }
+  // compute a reasonable yMax
+  const yMax = Math.max(
+    jStat.normal.pdf(0,0,1),
+    jStat.studentt.pdf(0,df)
+  ) * 1.1;
+
+  // crit lines
+  zLines.push({ data: vline(zCritPos, yMax), borderColor:"rgba(25,118,210,.75)", borderWidth:2, pointRadius:0 });
+  tLines.push({ data: vline(tCritPos, yMax), borderColor:"rgba(198,40,40,.75)", borderWidth:2, pointRadius:0 });
+
+  if(tail==="two"){
+    zLines.push({ data: vline(zCritNeg, yMax), borderColor:"rgba(25,118,210,.75)", borderWidth:2, pointRadius:0 });
+    tLines.push({ data: vline(tCritNeg, yMax), borderColor:"rgba(198,40,40,.75)", borderWidth:2, pointRadius:0 });
+  }
+
+  // observed line
+  if(showObs){
+    obsLine.push({
+      data: vline(obs, yMax),
+      borderColor:"#111827",
+      borderWidth:3,
+      pointRadius:0
+    });
+  }
+
+  // Reconfigure axes for standardised compare
+  chart.options.scales.x.min = xmin;
+  chart.options.scales.x.max = xmax;
+  chart.options.scales.x.title.text = "Standardised value (Z / t)";
+  chart.options.scales.xZ.display = false;
+
+  // datasets order: curves, shades, lines, obs
+  const datasets = [
+    { data: zCurve, borderColor:"#1976d2", borderWidth:3, pointRadius:0, fill:false },
+    { data: tCurve, borderColor:"#c62828", borderWidth:3, pointRadius:0, fill:false },
+    { data: zShade, backgroundColor:"rgba(25,118,210,0.22)", borderWidth:0, pointRadius:0, fill:true },
+    { data: tShade, backgroundColor:"rgba(198,40,40,0.22)", borderWidth:0, pointRadius:0, fill:true },
+    ...zLines,
+    ...tLines,
+    ...obsLine
+  ];
+
+  chart.data.datasets = datasets;
+  chart.update();
+
+  // UI text
+  el("cmpAlphaDisplay").textContent = `α = ${alpha.toFixed(3)}`;
+  el("cmpNDisplay").textContent = `n = ${n} (df = ${df})`;
+  el("cmpObsDisplay").textContent = `Observed = ${obs.toFixed(2)}`;
+
+  const zText = (tail==="two") ? `±${zCritPos.toFixed(3)}` : `${zCritPos.toFixed(3)}`;
+  const tText = (tail==="two") ? `±${tCritPos.toFixed(3)}` : `${tCritPos.toFixed(3)}`;
+
+  // A small decision hint if observed is enabled
+  let decision = "";
+  if(showObs){
+    const rejZ = inReject(obs, zCritPos, zCritNeg);
+    const rejT = inReject(obs, tCritPos, tCritNeg);
+    decision = `<br>Observed: Z ${rejZ ? "✅ reject" : "❌ do not reject"}; t ${rejT ? "✅ reject" : "❌ do not reject"}`;
+  }
+
+  el("cmpOutput").innerHTML =
+    `Critical values<br>`+
+    `Z<sub>crit</sub> = ${zText} &nbsp;&nbsp; | &nbsp;&nbsp; t<sub>crit</sub>(df=${df}) = ${tText}`+
+    decision;
+}
+
+/* ===== Tool mode switching ===== */
+function setToolMode(next){
+  toolMode = next;
+
+  // buttons
+  el("btnToolCalc").classList.toggle("active", next==="calc");
+  el("btnToolCompare").classList.toggle("active", next==="compare");
+
+  // panes
+  el("calcControls").style.display = (next==="calc") ? "block" : "none";
+  el("compareControls").style.display = (next==="compare") ? "block" : "none";
+  el("compareLegend").style.display = (next==="compare") ? "flex" : "none";
+  el("obsLegendItem").style.display = (next==="compare" && el("cmpShowObs").checked) ? "flex" : "none";
+
+  // rebuild chart
+  if(next==="calc"){
+    updateUI();
+    const res = compute();
+    if(res) buildChart(res);
+  } else {
+    buildCompareChart();
+  }
+}
+
+/* ===== Wire up original linked sliders (preserved behavior) ===== */
+function linkNumberAndSlider(numId, sliderId, fn){
+  const num=el(numId), slider=el(sliderId);
+  if(!num || !slider) return;
+
+  num.addEventListener("input", ()=>{
+    slider.value = num.value;
+    fn();
+  });
+  slider.addEventListener("input", ()=>{
+    num.value = slider.value;
+    fn();
+  });
+}
+
+/* ===== Boot ===== */
+initChart();
+
+/* Original input interactions but ONLY inside calculator controls */
+function recalcCalc(){
+  updateUI();
+  const res = compute();
+  if(res) buildChart(res);
+}
+
+document.querySelectorAll("#calcControls input, #calcControls select")
+.forEach(e=>e.addEventListener("input", ()=>{ if(toolMode==="calc") recalcCalc(); }));
+
+/* Link paired sliders in calculator */
+linkNumberAndSlider("mean","meanSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
+linkNumberAndSlider("sd","sdSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
+linkNumberAndSlider("percent","percentSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
+linkNumberAndSlider("score","scoreSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
+
+/* Axis font size slider (calculator only, but safe to apply always) */
+el("fontSizeSlider").addEventListener("input", function(){
+  const size = parseInt(this.value, 10);
+  el("fontSizeValue").innerHTML = size + " px";
+
+  chart.options.scales.x.ticks.font  = { size: size,   weight: "bold" };
+  chart.options.scales.xZ.ticks.font = { size: Math.max(10, size-2), weight: "bold" };
+
+  chart.options.scales.x.title.font  = { size: Math.max(14, size+4), weight:"bold" };
+  chart.options.scales.xZ.title.font = { size: Math.max(12, size+2), weight:"bold" };
+
+  chart.update();
+});
+
+/* Compare controls listeners */
+function recalcCompare(){
+  if(toolMode!=="compare") return;
+  el("obsLegendItem").style.display = el("cmpShowObs").checked ? "flex" : "none";
+  buildCompareChart();
+}
+
+el("cmpAlphaSlider").addEventListener("input", recalcCompare);
+el("cmpTail").addEventListener("input", recalcCompare);
+el("cmpN").addEventListener("input", recalcCompare);
+el("cmpShowObs").addEventListener("change", ()=>{
+  el("cmpObsBlock").style.display = el("cmpShowObs").checked ? "block" : "none";
+  recalcCompare();
+});
+el("cmpObs").addEventListener("input", recalcCompare);
+
+/* Tool mode buttons */
+el("btnToolCalc").addEventListener("click", ()=> setToolMode("calc"));
+el("btnToolCompare").addEventListener("click", ()=> setToolMode("compare"));
+
+/* Initial render */
+updateUI();
+const res0 = compute();
+if(res0) buildChart(res0);
+</script>
+
+</body>
+</html>

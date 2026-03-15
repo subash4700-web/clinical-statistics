@@ -1,0 +1,40 @@
+{
+  "name": "electron-app",
+  "version": "1.0.19",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "prebuild": "node scripts/bump-build-version.js",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.clinicalstats.app",
+    "productName": "Clinical Statistics",
+    "mac": {
+      "icon": "icon.icns",
+      "target": "dmg",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "jstat": "^1.9.6",
+    "xlsx": "^0.18.5"
+  }
+}

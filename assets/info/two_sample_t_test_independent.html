@@ -1,0 +1,135 @@
+<div class="info-content">
+
+  <h2>Independent Two-Sample t-test</h2>
+
+  <!-- Index table -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#it-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#it-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#it-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#it-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#it-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#it-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#it-ci" style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Intervals</a>
+      <a href="#it-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#it-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#it-normality" style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality Check</a>
+      <a href="#it-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Assumptions Are Violated</a>
+      <a href="#it-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#it-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#it-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#it-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="it-purpose">Purpose</h3>
+  <p>
+    The independent two-sample t-test evaluates whether the means of two independent groups differ significantly.
+  </p>
+
+  <h3 id="it-when">When to Use</h3>
+  <ul>
+    <li>Comparing biomarker levels between diseased and control patients</li>
+    <li>Evaluating two analytical methods on different sample sets</li>
+    <li>Comparing treatment vs. placebo laboratory outcomes</li>
+  </ul>
+
+  <h3 id="it-idea">Key Idea</h3>
+  <p>
+    Compute the difference of group means (Δ̄ = x̄₁ − x̄₂) and ask: how many standard errors is it from zero?
+    If that distance is large relative to chance variation, H₀ is rejected.
+    Unlike the paired test, between-subject variability cannot be removed — both within-group variance and sample sizes determine the standard error.
+  </p>
+
+  <h3 id="it-hypotheses">Hypotheses</h3>
+  <p><strong>Two-sided:</strong> H₀: μ₁ = μ₂ &nbsp;|&nbsp; H₁: μ₁ ≠ μ₂</p>
+  <p><strong>One-sided (greater):</strong> H₀: μ₁ ≤ μ₂ &nbsp;|&nbsp; H₁: μ₁ &gt; μ₂</p>
+  <p><strong>One-sided (less):</strong> H₀: μ₁ ≥ μ₂ &nbsp;|&nbsp; H₁: μ₁ &lt; μ₂</p>
+
+  <h3 id="it-statistic">Test Statistic</h3>
+  <p><strong>Welch version (default — unequal variances assumed):</strong></p>
+  <p><strong>t = (x̄₁ − x̄₂) / √(s₁²/n₁ + s₂²/n₂)</strong></p>
+
+  <p style="margin-top:8px;"><strong>Pooled version (equal variances assumed):</strong></p>
+  <p><strong>t = (x̄₁ − x̄₂) / (s<sub>p</sub> √(1/n₁ + 1/n₂))</strong></p>
+  <p>where <strong>s<sub>p</sub> = √[((n₁−1)s₁² + (n₂−1)s₂²) / (n₁+n₂−2)]</strong></p>
+
+  <h3 id="it-df">Degrees of Freedom</h3>
+  <p><strong>Pooled:</strong> df = n₁ + n₂ − 2</p>
+  <p><strong>Welch:</strong> df estimated via the Welch–Satterthwaite approximation.</p>
+
+  <h3 id="it-ci">Confidence Intervals</h3>
+  <p><strong>95% CI of Δ̄ = (x̄₁ − x̄₂):</strong></p>
+  <p><strong>Δ̄ ± t<sub>df, α/2</sub> × SE</strong></p>
+  <p class="note">
+    Answers: <em>"Where does the true difference of means likely lie?"</em>
+    Narrows as n₁ + n₂ increases. This is the interval displayed in the hypothesis visualisation and tested by the independent t-test.
+  </p>
+
+  <p style="margin-top:10px;"><strong>95% Reference range of pairwise differences</strong> <em style="color:#6b7280;">(shown for illustration only — not part of the test)</em><strong>:</strong></p>
+  <p><strong>Δ̄ ± t<sub>df, α/2</sub> × s<sub>p</sub></strong></p>
+  <p class="note">
+    Answers: <em>"Where would individual pairwise differences typically fall if one observation were drawn from each group?"</em>
+    Does <strong>not</strong> narrow with larger n — individual variability is fixed.
+    Shown in the hypothesis visualisation only to contrast with the CI above.
+  </p>
+
+  <h3 id="it-effect">Effect Size</h3>
+  <p>Cohen's <strong>d</strong> (standardized mean difference):</p>
+  <p><strong>d = (x̄₁ − x̄₂) / s<sub>p</sub></strong></p>
+  <ul>
+    <li>0.2 = small &nbsp;|&nbsp; 0.5 = medium &nbsp;|&nbsp; 0.8 = large</li>
+  </ul>
+
+  <h3 id="it-assumptions">Assumptions</h3>
+  <ul>
+    <li>Groups are independent (different subjects)</li>
+    <li>Outcome is continuous</li>
+    <li>Approximately normal distribution within each group (especially important for small n)</li>
+    <li>No extreme outliers</li>
+    <li>Equal variances required only for the pooled version (use Welch otherwise)</li>
+  </ul>
+
+  <h3 id="it-normality">Normality Check</h3>
+  <p>
+    Normality is assessed <strong>separately for each group</strong> using the Shapiro–Wilk test and Q–Q plots.
+  </p>
+  <p class="note">
+    For n ≥ 30 per group, the t-test is robust to mild non-normality due to the Central Limit Theorem.
+    Welch's t-test is recommended as the default even when variances appear equal.
+  </p>
+
+  <h3 id="it-violated">If Assumptions Are Violated</h3>
+  <ul>
+    <li>Use <strong>Welch's t-test</strong> if variances are unequal (it is the recommended default)</li>
+    <li>Consider the <strong>Mann–Whitney U test</strong> as a non-parametric alternative</li>
+    <li>Inspect for outliers and data-entry errors</li>
+  </ul>
+
+  <h3 id="it-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="it-clinical">Clinical Interpretation</h3>
+  <p>
+    A statistically significant result indicates evidence of a difference between group means.
+    Statistical significance does not imply clinical relevance — consider the effect size (Cohen's d)
+    and confidence interval when evaluating practical importance.
+  </p>
+
+  <h3 id="it-reporting">Reporting Example</h3>
+  <p>
+    An independent t-test showed a significant difference between groups,
+    t(df) = X.XX, p = 0.0X, d = X.XX, 95% CI [L, U].
+  </p>
+
+  <h3 id="it-data">Generating Sample Data</h3>
+  <p>
+    Expandable "Generate Group 1 data" and "Generate Group 2 data" panels appear below the
+    main data entry boxes. Specify sample size, distribution (normal or uniform), mean, and
+    standard deviation for each group. Click <strong>Generate</strong> to preview values and
+    <strong>Use in analysis</strong> to load them.
+  </p>
+
+</div>

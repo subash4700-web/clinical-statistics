@@ -1,0 +1,30 @@
+<h2>PCR Tool</h2>
+<p>This tool provides an integrated workflow for sequence-focused assay planning:</p>
+<ul>
+	<li>Search by <strong>rs number</strong> (dbSNP) and fetch genomic context from NCBI</li>
+	<li>Load local <strong>FASTA window</strong> around the mutation position</li>
+	<li>Show <strong>variant details</strong>: likely consequence, population frequency, mutation type, and WT→variant nucleotide changes</li>
+	<li>Design basic <strong>forward/reverse flanking primers</strong></li>
+	<li>Annotate <strong>restriction enzyme recognition sites</strong> on the same sequence view</li>
+</ul>
+
+<h3>Data Source</h3>
+<ul>
+	<li>NCBI E-utilities <code>esummary</code> for SNP metadata (chromosome + position)</li>
+	<li>NCBI E-utilities <code>efetch</code> for FASTA retrieval from chromosome accession</li>
+</ul>
+
+<h3>Primer Design Notes</h3>
+<ul>
+	<li><strong>Primer3-like algorithm</strong> with nearest-neighbor thermodynamics for accurate Tm calculation</li>
+	<li>Evaluates self-complementarity (primer-dimer detection)</li>
+	<li>Checks for hairpin structures (3' end complementarity)</li>
+	<li>Analyzes 3' end stability and avoids long repeats</li>
+	<li>Generates <strong>multiple primer candidates</strong> with different positions and lengths (16-30 bp)</li>
+	<li>Shows quality metrics for each candidate pair (Tm, GC%, penalties, amplicon size)</li>
+	<li>Allows BLAST checking of individual candidates for specificity verification</li>
+	<li>Intended for planning/education; validate in wet-lab before use</li>
+</ul>
+
+<h3>Important</h3>
+<p>Sequence retrieval may fail if NCBI rate limits requests or if a specific rs entry lacks resolvable chromosome mapping in this MVP implementation.</p>

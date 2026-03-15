@@ -1,0 +1,133 @@
+<div class="info-content">
+
+  <h2>One-Sample t-test</h2>
+
+  <!-- Index table -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#os-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#os-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#os-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#os-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#os-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#os-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#os-ci" style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Intervals</a>
+      <a href="#os-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#os-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#os-normality" style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality Check</a>
+      <a href="#os-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Normality Is Violated</a>
+      <a href="#os-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#os-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#os-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#os-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="os-purpose">Purpose</h3>
+  <p>
+    The one-sample t-test evaluates whether the mean of a single sample differs from a
+    hypothesized population mean <strong>μ<sub>0</sub></strong>.
+  </p>
+
+  <h3 id="os-when">When to Use</h3>
+  <ul>
+    <li>Checking whether a measurement process meets a target value (quality control)</li>
+    <li>Comparing a sample mean to a known benchmark or reference value</li>
+    <li>Testing whether a mean change score differs from zero</li>
+  </ul>
+
+  <h3 id="os-idea">Key Idea</h3>
+  <p>
+    Compute the sample mean x̄ and ask: how many standard errors is it away from μ<sub>0</sub>?
+    If that distance is large relative to chance variation, the test rejects H₀.
+  </p>
+
+  <h3 id="os-hypotheses">Hypotheses</h3>
+  <p><strong>Two-sided:</strong> H₀: μ = μ<sub>0</sub> &nbsp;|&nbsp; H₁: μ ≠ μ<sub>0</sub></p>
+  <p><strong>One-sided (greater):</strong> H₀: μ ≤ μ<sub>0</sub> &nbsp;|&nbsp; H₁: μ &gt; μ<sub>0</sub></p>
+  <p><strong>One-sided (less):</strong> H₀: μ ≥ μ<sub>0</sub> &nbsp;|&nbsp; H₁: μ &lt; μ<sub>0</sub></p>
+
+  <h3 id="os-statistic">Test Statistic</h3>
+  <p><strong>t = (x̄ − μ<sub>0</sub>) / SE</strong> &nbsp; where &nbsp; <strong>SE = s / √n</strong></p>
+  <ul>
+    <li><strong>x̄</strong> = sample mean</li>
+    <li><strong>s</strong> = sample standard deviation</li>
+    <li><strong>n</strong> = sample size</li>
+  </ul>
+
+  <h3 id="os-df">Degrees of Freedom</h3>
+  <p><strong>df = n − 1</strong></p>
+
+  <h3 id="os-ci">Confidence Intervals</h3>
+  <p><strong>95% CI of the mean:</strong></p>
+  <p><strong>x̄ ± t<sub>n−1, α/2</sub> × SE</strong> &nbsp; where &nbsp; SE = s / √n</p>
+  <p class="note">
+    Answers: <em>"Where does the true population mean likely lie?"</em>
+    Narrows as n increases. This is the interval displayed in the hypothesis visualisation and tested by the one-sample t-test.
+  </p>
+
+  <p style="margin-top:10px;"><strong>95% Reference range</strong> <em style="color:#6b7280;">(shown for illustration only — not part of the test)</em><strong>:</strong></p>
+  <p><strong>x̄ ± t<sub>n−1, α/2</sub> × s</strong></p>
+  <p class="note">
+    Answers: <em>"Where do 95% of individual data points fall?"</em>
+    Does <strong>not</strong> narrow with larger n — individual values always scatter around the mean.
+    Shown in the hypothesis visualisation only to contrast with the CI above.
+  </p>
+
+  <h3 id="os-effect">Effect Size</h3>
+  <p>Cohen's <strong>d</strong> (standardized mean difference):</p>
+  <p><strong>d = (x̄ − μ<sub>0</sub>) / s</strong></p>
+  <ul>
+    <li>0.2 = small &nbsp;|&nbsp; 0.5 = medium &nbsp;|&nbsp; 0.8 = large</li>
+  </ul>
+
+  <h3 id="os-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are independent</li>
+    <li>Outcome is continuous (or approximately interval-scale)</li>
+    <li>Population distribution is approximately normal (especially important for small n)</li>
+    <li>No extreme outliers that dominate the mean</li>
+  </ul>
+
+  <h3 id="os-normality">Normality Check</h3>
+  <p>
+    The Shapiro–Wilk test checks whether the sample plausibly comes from a normal distribution.
+    A Q–Q plot visually compares observed quantiles to theoretical normal quantiles.
+  </p>
+  <p class="note">
+    With very small n, normality tests have limited power. With large n, they can detect
+    tiny deviations. Combine the test result, the Q–Q plot, and domain knowledge.
+  </p>
+
+  <h3 id="os-violated">If Normality Is Violated</h3>
+  <ul>
+    <li>Consider the <strong>Wilcoxon signed-rank test</strong> as a non-parametric alternative</li>
+    <li>Inspect for outliers and data-entry errors</li>
+    <li>Consider transformations (log, square root) if meaningful for your data</li>
+  </ul>
+
+  <h3 id="os-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>.</p>
+
+  <h3 id="os-clinical">Clinical Interpretation</h3>
+  <p>
+    A statistically significant result means the sample mean is unlikely under H₀.
+    Statistical significance does not imply clinical relevance — consider the magnitude
+    of difference (effect size) and the confidence interval alongside the p-value.
+  </p>
+
+  <h3 id="os-reporting">Reporting Example</h3>
+  <p>
+    A one-sample t-test showed that the sample mean differed significantly from μ₀ = X.X,
+    t(df) = X.XX, p = 0.0X, d = X.XX, 95% CI [L, U].
+  </p>
+
+  <h3 id="os-data">Generating Sample Data</h3>
+  <p>
+    An expandable "Generate sample data" panel appears below the main data entry box.
+    Specify the desired n, distribution (normal or uniform), mean, and standard deviation.
+    Click <strong>Generate</strong> to preview values and <strong>Use in analysis</strong> to load them.
+  </p>
+
+</div>

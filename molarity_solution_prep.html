@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Molarity & Solution Prep</title>
+  <style>
+    :root { --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#1976d2; }
+    body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink);}
+    .container{ max-width:920px; margin:0 auto; padding:22px 18px 44px;}
+    h1{ margin:0 0 6px; font-size:22px; font-weight:900;}
+    .subtitle{ margin:0 0 16px; color:var(--muted);}
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin:12px 0;}
+    .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;}
+    .field{ flex:1 1 220px;}
+    label{ display:block; font-weight:800; font-size:13px; margin:0 0 6px;}
+    input[type="number"], select{
+      width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:14px;
+    }
+    .tabs{ display:flex; gap:10px; margin-top:8px; }
+    .tab{ padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:900; color:var(--muted); font-size:13px; }
+    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .pane{ display:none; }
+    .pane.active{ display:block; }
+    .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    button{ border:none; border-radius:10px; padding:10px 18px; font-weight:800; cursor:pointer; font-size:13px; }
+    .primary{ background:var(--accent); color:#fff; }
+    .ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); }
+    .kpi-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:12px; }
+    @media (max-width:820px){ .kpi-grid{ grid-template-columns:1fr; } }
+    .kpi{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fff; }
+    .kpi .lab{ color:var(--muted); font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
+    .kpi .val{ font-weight:950; font-size:18px; margin-top:4px;}
+    .note{ color:var(--muted); font-size:12.5px; line-height:1.5; margin-top:10px;}
+    .alert{ border:1px solid #ef444455; background:#fef2f2; color:#7f1d1d; border-radius:12px; padding:10px 14px; margin-top:10px; display:none;}
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Molarity & Solution Prep</h1>
+    <p class="subtitle">Calculate grams needed to prepare a solution from solid.</p>
+
+    <div class="card">
+      <!-- Removed dilute tab - use dilution_calculator.html instead -->
+
+      <!-- Pane 1: Solid to make molar solution -->
+      <div id="massPane" class="pane active" style="margin-top:12px;">
+        <div class="row">
+          <div class="field">
+            <label for="mw">Molecular weight (g/mol)</label>
+            <input id="mw" type="number" min="0" step="any" value="180.16"/>
+          </div>
+
+          <div class="field">
+            <label for="cVal">Target concentration</label>
+            <input id="cVal" type="number" min="0" step="any" value="0.1"/>
+          </div>
+          <div class="field">
+            <label for="cUnit">Concentration unit</label>
+            <select id="cUnit">
+              <option value="M" selected>M</option>
+              <option value="mM">mM</option>
+              <option value="uM">µM</option>
+              <option value="nM">nM</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="vVal">Final volume</label>
+            <input id="vVal" type="number" min="0" step="any" value="100"/>
+          </div>
+          <div class="field">
+            <label for="vUnit">Volume unit</label>
+            <select id="vUnit">
+              <option value="L">L</option>
+              <option value="mL" selected>mL</option>
+              <option value="uL">µL</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="calcMassBtn" type="button">Calculate grams</button>
+          <button class="ghost" id="clearMassBtn" type="button">Clear</button>
+        </div>
+
+        <div id="massOut"></div>
+      </div>
+
+      <div id="err" class="alert"></div>
+
+      <p class="note">
+        Tip: always confirm units match. This tool converts common molarity and volume units internally.
+      </p>
+    </div>
+  </div>
+
+<script>
+  function showError(msg){
+    const el = document.getElementById("err");
+    el.style.display = "block";
+    el.textContent = msg;
+  }
+  function clearError(){
+    const el = document.getElementById("err");
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
+  function molToM(val, unit){
+    const x = Number(val);
+    if(!Number.isFinite(x)) return NaN;
+    if(unit === "M") return x;
+    if(unit === "mM") return x * 1e-3;
+    if(unit === "uM") return x * 1e-6;
+    if(unit === "nM") return x * 1e-9;
+    return NaN;
+  }
+
+  function volToL(val, unit){
+    const x = Number(val);
+    if(!Number.isFinite(x)) return NaN;
+    if(unit === "L") return x;
+    if(unit === "mL") return x * 1e-3;
+    if(unit === "uL") return x * 1e-6;
+    return NaN;
+  }
+
+  function LToBestVol(L){
+    // return a readable unit/value
+    if(!Number.isFinite(L)) return {v:NaN,u:""};
+    if(L >= 1) return {v:L, u:"L"};
+    if(L >= 1e-3) return {v:L*1e3, u:"mL"};
+    return {v:L*1e6, u:"µL"};
+  }
+
+  function fmt(x, d=6){
+    if(!Number.isFinite(x)) return "—";
+    return x.toFixed(d);
+  }
+
+  // ---- Mass (solid) ----
+  document.getElementById("calcMassBtn").addEventListener("click", () => {
+    clearError();
+    const mw = Number(document.getElementById("mw").value);
+    const c = molToM(document.getElementById("cVal").value, document.getElementById("cUnit").value);
+    const V = volToL(document.getElementById("vVal").value, document.getElementById("vUnit").value);
+
+    if(!(mw>0)) { showError("Molecular weight must be > 0."); return; }
+    if(!(c>=0)) { showError("Target concentration must be ≥ 0."); return; }
+    if(!(V>0)) { showError("Final volume must be > 0."); return; }
+
+    const moles = c * V;
+    const grams = moles * mw;
+
+    // choose best mass unit
+    let massVal = grams, massUnit = "g";
+    if (grams < 1e-3) { massVal = grams * 1e6; massUnit = "µg"; }
+    else if (grams < 1) { massVal = grams * 1e3; massUnit = "mg"; }
+
+    const out = `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="lab">Moles needed</div><div class="val"><span class="mono">${fmt(moles, 8)}</span> mol</div></div>
+        <div class="kpi"><div class="lab">Mass to weigh</div><div class="val"><span class="mono">${fmt(massVal, 4)}</span> ${massUnit}</div></div>
+        <div class="kpi"><div class="lab">Mass (grams)</div><div class="val"><span class="mono">${fmt(grams, 6)}</span> g</div></div>
+      </div>
+      <p class="note"><strong>Recipe:</strong> Weigh <span class="mono">${fmt(massVal,4)} ${massUnit}</span>, dissolve, then bring to a final volume of <span class="mono">${document.getElementById("vVal").value} ${document.getElementById("vUnit").value}</span>.</p>
+    `;
+    document.getElementById("massOut").innerHTML = out;
+  });
+
+  document.getElementById("clearMassBtn").addEventListener("click", () => {
+    ["mw","cVal","vVal"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("massOut").innerHTML = "";
+    clearError();
+  });
+</script>
+</body>
+</html>

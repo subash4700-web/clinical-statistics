@@ -1,0 +1,121 @@
+<div class="info-content">
+
+  <h2>Chi-Square Goodness-of-Fit Test</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#gof-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#gof-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#gof-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#gof-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#gof-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#gof-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#gof-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#gof-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#gof-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Assumptions Are Violated</a>
+      <a href="#gof-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#gof-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visualisation Notes</a>
+      <a href="#gof-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#gof-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#gof-settings" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Settings</a>
+      <a href="#gof-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="gof-purpose">Purpose</h3>
+  <p>
+    The chi-square goodness-of-fit test evaluates whether an observed categorical distribution
+    differs significantly from a specified theoretical or expected distribution.
+  </p>
+
+  <h3 id="gof-when">When to Use</h3>
+  <ul>
+    <li>Comparing observed frequencies to known population proportions</li>
+    <li>Testing fairness of a process (e.g., expected equal distribution across categories)</li>
+    <li>Model validation for categorical outcomes</li>
+    <li>Verifying expected laboratory classification distributions</li>
+  </ul>
+
+  <h3 id="gof-idea">Key Idea</h3>
+  <p>
+    For each category <em>i</em>, compute the expected count: <strong>E<sub>i</sub> = N · p<sub>i</sub></strong>,
+    where N is the total sample size and p<sub>i</sub> is the expected proportion.
+    The test quantifies how far the observed counts deviate from the expected counts across all categories.
+  </p>
+
+  <h3 id="gof-hypotheses">Hypotheses</h3>
+  <p><strong>H₀:</strong> The observed distribution follows the expected (theoretical) distribution.</p>
+  <p><strong>H₁:</strong> The observed distribution differs from the expected distribution.</p>
+
+  <h3 id="gof-statistic">Test Statistic</h3>
+  <p><strong>χ² = Σ (O<sub>i</sub> − E<sub>i</sub>)² / E<sub>i</sub></strong></p>
+  <p>Large χ² values indicate that observed counts deviate substantially from expected counts.</p>
+
+  <h3 id="gof-df">Degrees of Freedom</h3>
+  <p><strong>df = k − 1</strong></p>
+  <p>where <em>k</em> is the number of categories. If parameters were estimated from the data, df must be reduced accordingly.</p>
+
+  <h3 id="gof-effect">Effect Size</h3>
+  <p>Cohen's <strong>w</strong>:</p>
+  <p><strong>w = √(χ² / N)</strong></p>
+  <ul>
+    <li>0.10 = small &nbsp;|&nbsp; 0.30 = medium &nbsp;|&nbsp; 0.50 = large</li>
+  </ul>
+
+  <h3 id="gof-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are independent</li>
+    <li>Categories are mutually exclusive and exhaustive</li>
+    <li>Expected proportions are specified <em>a priori</em> (not from the data)</li>
+    <li>Expected count ≥ 5 in every category</li>
+  </ul>
+
+  <h3 id="gof-violated">If Assumptions Are Violated</h3>
+  <ul>
+    <li>Combine categories to increase expected counts above 5</li>
+    <li>Use exact multinomial tests for small samples</li>
+    <li>Verify expected proportions are theoretically justified, not data-derived</li>
+  </ul>
+
+  <h3 id="gof-decision">Decision Rule</h3>
+  <p>Reject H₀ if <strong>p &lt; α</strong>, equivalently if <strong>χ² &gt; χ²<sub>critical</sub></strong>.</p>
+
+  <h3 id="gof-viz">Visualisation Notes</h3>
+  <p>
+    <strong>Chi-square distribution:</strong> shows the sampling distribution of χ² under H₀,
+    with the rejection region (red) and the observed χ² statistic marked.
+    A large observed χ² falling in the red region indicates rejection of H₀.
+  </p>
+  <p>
+    <strong>Bar chart:</strong> side-by-side comparison of observed counts (blue) vs. expected counts (orange) for each category.
+    Large discrepancies between blue and orange bars indicate the categories driving the significant result.
+  </p>
+
+  <h3 id="gof-clinical">Clinical Interpretation</h3>
+  <p>
+    A significant result indicates that the observed categorical distribution deviates from the expected distribution.
+    Statistical significance does not quantify the magnitude of deviation — report Cohen's w for practical importance.
+  </p>
+
+  <h3 id="gof-reporting">Reporting Example</h3>
+  <p>
+    A chi-square goodness-of-fit test showed a significant deviation from the expected distribution,
+    χ²(df) = X.XX, p = 0.0X, w = X.XX.
+  </p>
+
+  <h3 id="gof-settings">Test Settings</h3>
+  <ul>
+    <li><strong>Significance level (α):</strong> Choose 0.10, 0.05, or 0.01</li>
+    <li><strong>Effect size:</strong> Toggle display of Cohen's w</li>
+    <li><strong>Visualisation:</strong> Toggle chi-square distribution and bar chart displays</li>
+  </ul>
+
+  <h3 id="gof-data">Generating Sample Data</h3>
+  <p>
+    Specify number of categories (2–10), sample size, distribution pattern (uniform, skewed, gradual decline, or random),
+    and noise level (none = perfect fit, low/medium/high = increasing deviation from expected).
+    Click <strong>Generate</strong> to preview and <strong>Use in analysis</strong> to load.
+  </p>
+
+</div>

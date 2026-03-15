@@ -1,0 +1,58 @@
+/* =========================
+   Tables
+   ========================= */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.data-table th {
+  background: #f0f0f0;
+  font-weight: 600;
+}
+
+/* =========================
+   Inputs
+   ========================= */
+
+input[type="number"],
+input[type="text"],
+select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 1rem;
+}
+
+input:disabled {
+  background: #f5f5f5;
+  color: #999;
+}
+
+/* =========================
+   Results
+   ========================= */
+
+#results h3 {
+  margin-top: 0;
+}
+
+#results p {
+  margin: 6px 0;
+}
+
+/* =========================
+   Interpretation highlight
+   ========================= */
+
+#results b {
+  color: #000;
+}

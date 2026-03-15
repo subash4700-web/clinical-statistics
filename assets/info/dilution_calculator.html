@@ -1,0 +1,142 @@
+<h2>Dilution Calculator</h2>
+
+<p>
+The dilution calculator helps determine how to prepare solutions of a desired concentration 
+from a stock (higher concentration) solution. It is commonly used in clinical laboratories, 
+research settings, and quality control procedures.
+</p>
+
+<hr>
+
+<h3>Core Formula</h3>
+
+<p>The calculator is based on the standard dilution equation:</p>
+
+<p style="font-weight:600; font-size:16px;">
+C₁ × V₁ = C₂ × V₂
+</p>
+
+<ul>
+  <li><strong>C₁</strong> = Initial (stock) concentration</li>
+  <li><strong>V₁</strong> = Volume of stock solution needed</li>
+  <li><strong>C₂</strong> = Final (desired) concentration</li>
+  <li><strong>V₂</strong> = Final total volume</li>
+</ul>
+
+<p>
+The equation assumes accurate pipetting and complete mixing.
+</p>
+
+<hr>
+
+<h3>Common Use Cases</h3>
+
+<ul>
+  <li>Preparing calibration standards</li>
+  <li>Creating quality control samples</li>
+  <li>Serial dilutions for microbiology or ELISA</li>
+  <li>Drug preparation and pharmacy compounding</li>
+  <li>Analytical chemistry sample prep</li>
+</ul>
+
+<hr>
+
+<h3>Serial Dilutions</h3>
+
+<p>
+A serial dilution involves repeated stepwise dilutions (e.g., 1:10 → 1:100 → 1:1000).
+</p>
+
+<p>
+For a 1:n dilution:
+</p>
+
+<p style="font-weight:600;">
+Dilution factor = Final volume / Stock volume
+</p>
+
+<p>
+Example (1:10 dilution):
+</p>
+
+<ul>
+  <li>1 mL stock + 9 mL diluent → 10 mL total</li>
+</ul>
+
+<p>
+Each additional 1:10 step multiplies the total dilution factor.
+</p>
+
+<hr>
+
+<h3>Units and Consistency</h3>
+
+<p>
+All concentration units must match (e.g., mg/mL with mg/mL).
+All volume units must match (e.g., mL with mL).
+</p>
+
+<p>
+The calculator does not convert units automatically — ensure consistency before calculating.
+</p>
+
+<hr>
+
+<h3>Clinical Considerations</h3>
+
+<ul>
+  <li>Always account for pipetting error and instrument precision.</li>
+  <li>Very small volumes (&lt;10 µL) may introduce significant inaccuracy.</li>
+  <li>Verify stability of diluted solutions over time.</li>
+  <li>Label all prepared dilutions clearly with concentration and date.</li>
+</ul>
+
+<hr>
+
+<h3>Practical Example</h3>
+
+<p>
+You have a stock solution of 100 mg/mL and need 20 mL at 10 mg/mL.
+</p>
+
+<p>
+Using C₁V₁ = C₂V₂:
+</p>
+
+<p style="font-weight:600;">
+V₁ = (C₂ × V₂) / C₁  
+V₁ = (10 × 20) / 100 = 2 mL
+</p>
+
+<p>
+Add 18 mL diluent to 2 mL stock to obtain 20 mL at 10 mg/mL.
+</p>
+
+<hr>
+
+<h3>PCR Template Concentration Reference</h3>
+
+<p>
+  The concentration that matters is what ends up <strong>in the reaction</strong> — not the stock.
+  With a 25 µl reaction and 2 µl template, the stock is diluted 12.5×.
+</p>
+
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>Template type</th><th>Typical range (in reaction)</th><th>Optimal</th></tr>
+  <tr><td>Genomic DNA</td><td>1–50 ng/µl</td><td>5–20 ng/µl</td></tr>
+  <tr><td>Plasmid / circular DNA</td><td>0.1–10 ng/µl</td><td>1–5 ng/µl</td></tr>
+  <tr><td>cDNA (RT-PCR)</td><td>1–10 ng/µl equivalent</td><td>Variable — use 1:5 to 1:20 dilution of RT</td></tr>
+  <tr><td>PCR product (re-amplification)</td><td>0.01–1 ng/µl</td><td>&lt; 1 ng/µl</td></tr>
+</table>
+
+<p>
+  Excess template (&gt;100 ng/µl in reaction) can inhibit amplification.
+  Too little template increases the risk of no amplification or stochastic failure.
+</p>
+
+<hr>
+
+<p style="font-size:13px; color:#6B7280;">
+This tool is intended for educational and laboratory planning purposes.
+Always follow institutional SOPs and regulatory guidelines when preparing clinical reagents.
+</p>

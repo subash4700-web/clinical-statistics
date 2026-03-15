@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://clinical-stats-api.vercel.app https://api.keygen.sh;">
+  <title>License Activation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1f2e;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .card {
+      background: #fff;
+      color: #111827;
+      border-radius: 18px;
+      padding: 44px 40px 36px;
+      width: 440px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+
+    .app-icon {
+      width: 64px;
+      height: 64px;
+      background: #1976d2;
+      border-radius: 16px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-name {
+      font-size: 19px;
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .app-subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .field-label {
+      display: block;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 7px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 0.1em;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s;
+      text-transform: uppercase;
+      color: #111827;
+      background: #fff;
+    }
+
+    input[type="text"]:focus { border-color: #1976d2; }
+    input[type="text"]::placeholder { color: #d1d5db; letter-spacing: 0.05em; }
+
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 13px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    button:hover:not(:disabled) { background: #1565c0; }
+    button:disabled { opacity: 0.55; cursor: default; }
+
+    .status {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: left;
+      display: none;
+    }
+
+    .status.error   { background: #fef2f2; color: #7f1d1d; border: 1px solid #fca5a5; display: block; }
+    .status.success { background: #f0fdf4; color: #14532d; border: 1px solid #86efac; display: block; }
+    .status.info    { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; display: block; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 24px 0 16px;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .footer-row a {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .footer-row a:hover { text-decoration: underline; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #f3f4f6;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #9ca3af;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      width: auto;
+      margin-top: 0;
+    }
+
+    .tab.active { color: #1976d2; border-bottom-color: #1976d2; }
+    .tab:hover:not(.active):not(:disabled) { color: #374151; background: none; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s;
+      color: #111827;
+      background: #fff;
+    }
+
+    input[type="email"]:focus { border-color: #1976d2; }
+    input[type="email"]::placeholder { color: #d1d5db; }
+
+    .code-inputs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .code-inputs input {
+      width: 44px;
+      height: 52px;
+      font-size: 22px;
+      font-weight: 900;
+      font-family: ui-monospace, monospace;
+      text-align: center;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      color: #111827;
+      background: #fff;
+      transition: border-color 0.15s;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .code-inputs input:focus { border-color: #1976d2; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="app-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="12" width="4" height="9" rx="1"/>
+        <rect x="10" y="6" width="4" height="15" rx="1"/>
+        <rect x="17" y="2" width="4" height="19" rx="1"/>
+      </svg>
+    </div>
+
+    <div class="app-name">Clinical Statistics Toolkit</div>
+    <div class="app-subtitle" id="cardSubtitle">Activate your license to continue</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabKey" onclick="switchTab('key')">License Key</button>
+      <button class="tab" id="tabInstitution" onclick="switchTab('institution')">Institutional Access</button>
+    </div>
+
+    <!-- License key view -->
+    <div class="view active" id="viewKey">
+      <label class="field-label" for="licenseKey">License Key</label>
+      <input type="text" id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="64"/>
+      <button id="activateBtn" onclick="activate()">Activate</button>
+      <div class="status" id="statusKey"></div>
+    </div>
+
+    <!-- Institution email view -->
+    <div class="view" id="viewInstitution">
+      <div id="stepEmail">
+        <label class="field-label" for="instEmail">Institutional Email</label>
+        <input type="email" id="instEmail" placeholder="you@institution.dk" autocomplete="off"/>
+        <button id="sendCodeBtn" onclick="sendCode()">Send Verification Code</button>
+        <div class="status" id="statusInst"></div>
+      </div>
+
+      <div id="stepCode" style="display:none;">
+        <label class="field-label">Enter the 6-digit code sent to your email</label>
+        <div class="code-inputs">
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+          <input type="text" maxlength="1" class="code-digit" inputmode="numeric" pattern="[0-9]"/>
+        </div>
+        <button id="verifyCodeBtn" onclick="verifyCode()" style="margin-top:16px;">Verify Code</button>
+        <div class="status" id="statusCode"></div>
+        <div style="text-align:center;margin-top:12px;">
+          <a style="font-size:12px;color:#1976d2;cursor:pointer;" onclick="backToEmail()">Send a new code</a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="footer-row">
+      <span>Need a license?</span>
+      <a onclick="openPurchase()">Purchase access</a>
+    </div>
+  </div>
+
+  <script>
+    let instEmail = '';
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const stored = await window.licenseAPI.getStoredKey();
+      if (stored) document.getElementById('licenseKey').value = stored;
+
+      // Code digit auto-advance
+      document.querySelectorAll('.code-digit').forEach((input, i, all) => {
+        input.addEventListener('input', () => {
+          input.value = input.value.replace(/\D/g, '');
+          if (input.value && i < all.length - 1) all[i + 1].focus();
+        });
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Backspace' && !input.value && i > 0) all[i - 1].focus();
+          if (e.key === 'Enter') verifyCode();
+        });
+      });
+    });
+
+    document.getElementById('licenseKey').addEventListener('keydown', e => {
+      if (e.key === 'Enter') activate();
+    });
+
+    document.getElementById('instEmail').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendCode();
+    });
+
+    function switchTab(tab) {
+      document.getElementById('viewKey').classList.toggle('active', tab === 'key');
+      document.getElementById('viewInstitution').classList.toggle('active', tab === 'institution');
+      document.getElementById('tabKey').classList.toggle('active', tab === 'key');
+      document.getElementById('tabInstitution').classList.toggle('active', tab === 'institution');
+    }
+
+    async function activate() {
+      const key = document.getElementById('licenseKey').value.trim();
+      if (!key) { showStatus('statusKey', 'Please enter your license key.', 'error'); return; }
+
+      const btn = document.getElementById('activateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Validating\u2026';
+      showStatus('statusKey', 'Connecting to license server\u2026', 'info');
+
+      try {
+        const result = await window.licenseAPI.validate(key);
+        if (result.valid) {
+          showStatus('statusKey', 'License activated. Opening app\u2026', 'success');
+        } else {
+          showStatus('statusKey', result.detail || 'Invalid license key. Please check and try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Activate';
+        }
+      } catch (e) {
+        showStatus('statusKey', 'Unexpected error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Activate';
+      }
+    }
+
+    async function sendCode() {
+      const email = document.getElementById('instEmail').value.trim();
+      if (!email) { showStatus('statusInst', 'Please enter your institutional email.', 'error'); return; }
+
+      const btn = document.getElementById('sendCodeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending\u2026';
+      showStatus('statusInst', '', '');
+
+      const result = await window.licenseAPI.sendCode(email);
+      if (result.sent) {
+        instEmail = email;
+        document.getElementById('stepEmail').style.display = 'none';
+        document.getElementById('stepCode').style.display = 'block';
+        document.querySelectorAll('.code-digit')[0].focus();
+      } else {
+        showStatus('statusInst', result.error || 'Failed to send code.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Send Verification Code';
+      }
+    }
+
+    async function verifyCode() {
+      const digits = Array.from(document.querySelectorAll('.code-digit')).map(i => i.value).join('');
+      if (digits.length < 6) { showStatus('statusCode', 'Please enter all 6 digits.', 'error'); return; }
+
+      const btn = document.getElementById('verifyCodeBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying\u2026';
+      showStatus('statusCode', '', '');
+
+      const result = await window.licenseAPI.verifyCode(instEmail, digits);
+      if (result.verified) {
+        showStatus('statusCode', 'Verified. Opening app\u2026', 'success');
+      } else {
+        showStatus('statusCode', result.error || 'Verification failed.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Verify Code';
+      }
+    }
+
+    function backToEmail() {
+      document.getElementById('stepCode').style.display = 'none';
+      document.getElementById('stepEmail').style.display = 'block';
+      document.getElementById('sendCodeBtn').disabled = false;
+      document.getElementById('sendCodeBtn').textContent = 'Send Verification Code';
+      document.querySelectorAll('.code-digit').forEach(i => i.value = '');
+      showStatus('statusInst', '', '');
+    }
+
+    function showStatus(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function openPurchase() {
+      window.licenseAPI.openExternal('https://your-purchase-url.com');
+    }
+  </script>
+</body>
+</html>

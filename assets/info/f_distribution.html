@@ -1,0 +1,130 @@
+<div class="info-content">
+
+  <h2>F Distribution Explorer</h2>
+
+  <h3>Purpose</h3>
+  <p>
+    The F distribution explorer visualizes the F distribution and allows
+    interactive exploration of critical values, tail probabilities, and
+    variance ratios. It supports comparison of two F distributions with
+    different degrees of freedom.
+  </p>
+
+  <h3>Key Learning Objectives</h3>
+  <ul>
+    <li>Understand how the F distribution depends on two degrees of freedom (df₁, df₂)</li>
+    <li>Interpret right-tailed critical regions used in hypothesis testing</li>
+    <li>Connect F statistics to p-values</li>
+    <li>Understand the role of F in ANOVA and variance testing</li>
+    <li>Recognize how increasing degrees of freedom affects distribution shape</li>
+  </ul>
+
+  <h3>What Is the F Distribution?</h3>
+  <p>
+    The F distribution arises from the ratio of two independent chi-square
+    variables divided by their respective degrees of freedom.
+  </p>
+
+  <p>
+    If:
+  </p>
+  <p>
+    <strong>
+      F = (χ²₁ / df₁) / (χ²₂ / df₂)
+    </strong>
+  </p>
+
+  <p>
+    then F follows an F distribution with:
+  </p>
+  <ul>
+    <li><strong>df₁</strong> = numerator degrees of freedom</li>
+    <li><strong>df₂</strong> = denominator degrees of freedom</li>
+  </ul>
+
+  <h3>Key Properties</h3>
+  <ul>
+    <li>F ≥ 0 (never negative)</li>
+    <li>Right-skewed, especially for small df</li>
+    <li>Becomes less skewed as degrees of freedom increase</li>
+    <li>Shape depends on both df₁ and df₂</li>
+  </ul>
+
+  <h3>Connection to Variance Testing</h3>
+  <p>
+    The F statistic is commonly used to compare two sample variances:
+  </p>
+  <p>
+    <strong>F = s₁² / s₂²</strong>
+  </p>
+  <p>
+    Under the null hypothesis of equal variances, this ratio follows an
+    F distribution with:
+  </p>
+  <ul>
+    <li>df₁ = n₁ − 1</li>
+    <li>df₂ = n₂ − 1</li>
+  </ul>
+
+  <h3>Connection to ANOVA</h3>
+  <p>
+    In ANOVA, the F statistic compares variability between groups to
+    variability within groups:
+  </p>
+  <p>
+    <strong>F = MS<sub>between</sub> / MS<sub>within</sub></strong>
+  </p>
+  <p>
+    A large F value suggests that group means are not all equal.
+  </p>
+
+  <h3>Critical Values and Tail Areas</h3>
+  <p>
+    In most applications, the rejection region lies in the <strong>right tail</strong>.
+  </p>
+  <p>
+    Right-tail critical value:
+  </p>
+  <p>
+    <strong>P(F ≥ F<sub>crit</sub>) = α</strong>
+  </p>
+  <p>
+    Left-tail probabilities may be interpreted directly or by taking
+    reciprocals of F values in variance comparisons.
+  </p>
+
+  <h3>Decision Rule</h3>
+  <p>
+    Reject H₀ if:
+  </p>
+  <p>
+    <strong>F ≥ F<sub>crit</sub></strong>
+  </p>
+  <p>
+    or equivalently:
+  </p>
+  <p>
+    <strong>p &lt; α</strong>
+  </p>
+
+  <h3>Clinical Relevance</h3>
+  <p>
+    F distributions are central to:
+  </p>
+  <ul>
+    <li>ANOVA for comparing multiple clinical groups</li>
+    <li>Testing equality of analytical variances</li>
+    <li>Model evaluation in regression analysis</li>
+  </ul>
+  <p>
+    Understanding how degrees of freedom influence the distribution
+    improves interpretation of laboratory and clinical research results.
+  </p>
+
+  <h3>Reporting Example</h3>
+  <p>
+    An ANOVA showed a significant difference between groups,
+    F(df₁, df₂) = X.XX, p = 0.0X.
+  </p>
+
+</div>

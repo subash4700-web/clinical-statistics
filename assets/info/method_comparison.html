@@ -1,0 +1,207 @@
+<div class="info-content">
+
+  <h2>Method Comparison Analysis</h2>
+
+  <!-- Index -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#mc-purpose"     style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#mc-when"        style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#mc-idea"        style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#mc-ba"          style="color:var(--accent); text-decoration:none; padding:2px 0;">Bland-Altman Analysis</a>
+      <a href="#mc-loa"         style="color:var(--accent); text-decoration:none; padding:2px 0;">Limits of Agreement</a>
+      <a href="#mc-te"          style="color:var(--accent); text-decoration:none; padding:2px 0;">Total Error</a>
+      <a href="#mc-regression"  style="color:var(--accent); text-decoration:none; padding:2px 0;">Regression Analysis</a>
+      <a href="#mc-cvdiff"      style="color:var(--accent); text-decoration:none; padding:2px 0;">CV on Differences</a>
+      <a href="#mc-correlation" style="color:var(--accent); text-decoration:none; padding:2px 0;">Correlation Warning</a>
+      <a href="#mc-normality"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality of Differences</a>
+      <a href="#mc-specs"       style="color:var(--accent); text-decoration:none; padding:2px 0;">Performance Specifications</a>
+      <a href="#mc-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#mc-clinical"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#mc-reporting"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#mc-data"        style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="mc-purpose">Purpose</h3>
+  <p>
+    Method comparison analysis evaluates <strong>agreement</strong> between two quantitative measurement methods.
+    It determines whether a new or alternative method produces results that are clinically equivalent to a reference method —
+    i.e. whether the two methods can be used interchangeably in clinical practice.
+  </p>
+
+  <h3 id="mc-when">When to Use</h3>
+  <ul>
+    <li>Validation of a new laboratory method or analyser before clinical release</li>
+    <li>Comparison of point-of-care vs. central laboratory instruments</li>
+    <li>Reagent lot or calibrator lot verification</li>
+    <li>Instrument replacement or relocation studies</li>
+    <li>Verification of manufacturer's performance claims (CLSI EP09)</li>
+  </ul>
+
+  <h3 id="mc-idea">Key Idea</h3>
+  <p>
+    Two methods may be highly correlated yet systematically disagree. Agreement analysis asks not <em>"do they correlate?"</em>
+    but <em>"how large are the differences between methods, and are those differences clinically acceptable?"</em>
+    The Bland-Altman approach directly analyses the magnitude and distribution of pairwise differences.
+  </p>
+
+  <h3 id="mc-ba">Bland-Altman Analysis</h3>
+  <p>
+    The Bland-Altman plot displays, for each sample, the difference between methods (Y-axis) against the mean of the two methods (X-axis).
+    This reveals whether disagreement is constant across the measurement range or increases with concentration (proportional bias).
+  </p>
+  <p><strong>Bias (mean difference):</strong></p>
+  <p><strong>d̄ = mean(Method A − Method B)</strong></p>
+  <ul>
+    <li>Positive d̄: Method A reads higher on average</li>
+    <li>Negative d̄: Method A reads lower on average</li>
+    <li>Compare d̄ against your predefined allowable bias (from performance specifications)</li>
+  </ul>
+  <p><strong>Relative (%) Bland-Altman:</strong> Use when differences increase proportionally with concentration.
+  Differences are expressed as (A − B) / mean × 100%. Preferred for analytes with wide concentration ranges.</p>
+
+  <h3 id="mc-loa">Limits of Agreement (LoA)</h3>
+  <p><strong>LoA = d̄ ± Z × SD<sub>d</sub></strong></p>
+  <ul>
+    <li><strong>Z = 1.96</strong> → 95% LoA (most common)</li>
+    <li><strong>Z = 2.58</strong> → 99% LoA</li>
+    <li>SD<sub>d</sub> = standard deviation of the individual differences</li>
+  </ul>
+  <p>
+    The LoA describe the range within which 95% of individual differences between the two methods are expected to fall.
+    For clinical interchangeability, the entire LoA interval should lie within the predefined acceptable difference limit.
+  </p>
+  <p class="note">
+    LoA are estimates — they carry uncertainty. For small n, consider reporting 95% CIs for the LoA bounds themselves.
+    The tool displays the Bland-Altman plot with LoA lines, TAE bands, and optional total error band overlaid.
+  </p>
+
+  <h3 id="mc-te">Total Error (TE)</h3>
+  <p>
+    Total error combines systematic error (bias) and random error (imprecision) into a single performance metric:
+  </p>
+  <p><strong>TE = |d̄| + Z × SD<sub>d</sub></strong></p>
+  <ul>
+    <li>Z = 1.65 (90th percentile one-sided) is conventional for TE calculations</li>
+    <li>Compare TE against <strong>TAE</strong> — Total Allowable Error from your performance specification</li>
+    <li>If TE ≤ TAE: analytical performance is acceptable</li>
+  </ul>
+  <p class="note">
+    TAE is derived from biological variation (desirable: TE ≤ 0.5 CV<sub>I</sub> + 1.65 × CV<sub>I</sub> × 0.5 + |bias|),
+    from EQAS/RIQAS peer targets, or from regulatory/manufacturer specifications.
+  </p>
+
+  <h3 id="mc-regression">Regression Analysis</h3>
+  <p>
+    Regression quantifies the mathematical relationship between methods, revealing <strong>proportional</strong> and <strong>constant</strong> systematic bias.
+  </p>
+  <p><strong>y = slope × x + intercept</strong></p>
+  <ul>
+    <li><strong>slope = 1, intercept = 0</strong>: perfect agreement</li>
+    <li><strong>slope ≠ 1</strong>: proportional bias — disagreement grows with concentration</li>
+    <li><strong>intercept ≠ 0</strong>: constant bias — fixed offset across the range</li>
+  </ul>
+  <p><strong>Ordinary Least Squares (OLS)</strong> — minimises vertical residuals. Assumes the X-method is error-free.
+  Appropriate only when Method X is a true reference standard with negligible measurement error.</p>
+  <p><strong>Deming Regression</strong> — accounts for measurement error in both methods (uses variance ratio λ).
+  Preferred in clinical laboratory method comparisons where both methods have imprecision.
+  Set λ = ratio of variance of Method Y to variance of Method X.</p>
+
+  <h3 id="mc-cvdiff">CV on Differences</h3>
+  <p>
+    CV on differences expresses the variability of pairwise differences relative to the grand mean of all measurements.
+    It quantifies repeatability or agreement independently of between-sample biological variation.
+  </p>
+  <p><strong>CV = SD<sub>d</sub> / x̄ × 100%</strong></p>
+  <p>
+    When each pair represents <em>duplicate measurements of the same sample</em> (e.g. CLSI EP5/EP15 duplicate design),
+    apply the √2 correction to estimate within-method precision:
+  </p>
+  <p><strong>CV<sub>within</sub> = (SD<sub>d</sub> / √2) / x̄ × 100%</strong></p>
+  <p class="note">
+    The √2 correction applies because the variance of a difference between two independent measurements with the same
+    within-method variance σ² is Var(d) = 2σ², so σ = SD<sub>d</sub> / √2.
+  </p>
+
+  <h3 id="mc-correlation">Correlation — Not Agreement</h3>
+  <p>
+    Pearson r and R² measure <strong>association</strong>, not agreement. Two methods can have near-perfect correlation (r ≈ 1)
+    yet show clinically unacceptable systematic differences. Always use Bland-Altman or regression — not r alone — to
+    judge method interchangeability.
+  </p>
+  <ul>
+    <li><strong>R²</strong> = proportion of variance in Y explained by X</li>
+    <li><strong>Spearman ρ</strong> = rank-based association (robust to outliers)</li>
+  </ul>
+
+  <h3 id="mc-normality">Normality of Differences</h3>
+  <p>
+    Bland-Altman LoA are valid when the differences are approximately normally distributed.
+    The tool provides a Q-Q plot and histogram of differences to assess this assumption.
+  </p>
+  <p class="note">
+    Mild non-normality has little impact on LoA with n ≥ 30. For severely skewed differences,
+    consider log-transforming the data before analysis or reporting nonparametric LoA (2.5th–97.5th percentile of differences).
+  </p>
+
+  <h3 id="mc-specs">Performance Specifications</h3>
+  <p>
+    Define your acceptance criteria <strong>before</strong> running the comparison. Sources:
+  </p>
+  <ul>
+    <li><strong>Biological variation</strong> — desirable allowable bias: ≤ 0.25 × √(CV<sub>I</sub>² + CV<sub>G</sub>²)</li>
+    <li><strong>EQAS / RIQAS targets</strong> — peer group performance benchmarks</li>
+    <li><strong>Manufacturer's claim</strong> — stated bias and imprecision from the IFU</li>
+    <li><strong>Regulatory / accreditation body</strong> — e.g. CLIA, ISO 15189 requirements</li>
+    <li><strong>Clinical decision thresholds</strong> — bias that would not alter a clinical decision</li>
+  </ul>
+
+  <h3 id="mc-assumptions">Assumptions</h3>
+  <ul>
+    <li>Paired measurements on the <strong>same samples</strong> — same patient material, same time point</li>
+    <li>Samples should span the <strong>full clinical measurement range</strong> — at least 40 samples is recommended (CLSI EP09)</li>
+    <li>Both methods must measure the <strong>same measurand</strong></li>
+    <li>Differences are approximately normally distributed (for LoA interpretation)</li>
+    <li>Independent observations — no repeated use of the same sample</li>
+  </ul>
+
+  <h3 id="mc-clinical">Clinical Interpretation</h3>
+  <p>Address these questions in order:</p>
+  <ul>
+    <li>Is the mean bias clinically acceptable (within the allowable bias specification)?</li>
+    <li>Are the LoA entirely within the acceptable difference limit?</li>
+    <li>Is TE ≤ TAE?</li>
+    <li>Is there evidence of proportional bias (slope ≠ 1) or constant bias (intercept ≠ 0)?</li>
+    <li>Does the Bland-Altman plot show a trend — does disagreement increase with concentration?</li>
+  </ul>
+  <p class="note">
+    Statistical significance of bias does not equal clinical unacceptability. A very small bias may be
+    statistically significant with n = 100 but clinically irrelevant. Always interpret alongside the CI and LoA.
+  </p>
+
+  <h3 id="mc-reporting">Reporting Example</h3>
+  <p>
+    Method comparison (n = 50) showed a mean bias of 0.12 mmol/L (95% CI: 0.04–0.20). Limits of agreement
+    ranged from −0.31 to 0.55 mmol/L, within the predefined acceptable difference limit of ±0.60 mmol/L.
+    Calculated total error was 0.43 mmol/L, below the TAE of 0.60 mmol/L.
+    Deming regression (λ = 1) showed no significant proportional bias (slope = 1.02, 95% CI: 0.98–1.06)
+    and negligible constant bias (intercept = 0.04, 95% CI: −0.03–0.11).
+    The new method demonstrates acceptable clinical agreement.
+  </p>
+
+  <h3 id="mc-data">Generating Sample Data</h3>
+  <p>
+    The <strong>Generate sample data</strong> panel (below the discrimination threshold card in the input tab) lets you simulate
+    paired measurements with configurable parameters:
+  </p>
+  <ul>
+    <li><strong>Biological CV%</strong> — drives between-sample spread (scatter on the XY plot)</li>
+    <li><strong>Analytical imprecision CV%</strong> — within-method noise applied independently to each measurement</li>
+    <li><strong>Constant bias</strong> — fixed offset between methods (shifts mean difference on Bland-Altman)</li>
+    <li><strong>Proportional bias (slope)</strong> — multiplier on Method 2; slope ≠ 1 creates a fan-shaped Bland-Altman pattern</li>
+  </ul>
+  <p>Click <strong>Generate</strong> to preview, then <strong>Use in analysis</strong> to load into the table.</p>
+
+</div>

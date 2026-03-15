@@ -1,0 +1,163 @@
+<div class="info-content">
+
+  <h2>Two-Way ANOVA</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#tw-purpose" style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#tw-when" style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#tw-idea" style="color:var(--accent); text-decoration:none; padding:2px 0;">Key Idea</a>
+      <a href="#tw-design" style="color:var(--accent); text-decoration:none; padding:2px 0;">Design Structure</a>
+      <a href="#tw-interaction" style="color:var(--accent); text-decoration:none; padding:2px 0;">Interaction (Interpret First)</a>
+      <a href="#tw-hypotheses" style="color:var(--accent); text-decoration:none; padding:2px 0;">Hypotheses</a>
+      <a href="#tw-statistic" style="color:var(--accent); text-decoration:none; padding:2px 0;">Test Statistic</a>
+      <a href="#tw-df" style="color:var(--accent); text-decoration:none; padding:2px 0;">Degrees of Freedom</a>
+      <a href="#tw-effect" style="color:var(--accent); text-decoration:none; padding:2px 0;">Effect Size</a>
+      <a href="#tw-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#tw-violated" style="color:var(--accent); text-decoration:none; padding:2px 0;">If Assumptions Are Violated</a>
+      <a href="#tw-decision" style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
+      <a href="#tw-clinical" style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
+      <a href="#tw-viz" style="color:var(--accent); text-decoration:none; padding:2px 0;">Visual Interpretation</a>
+      <a href="#tw-reporting" style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+      <a href="#tw-data" style="color:var(--accent); text-decoration:none; padding:2px 0;">Generating Sample Data</a>
+    </div>
+  </div>
+
+  <h3 id="tw-purpose">Purpose</h3>
+  <p>
+    Two-Way ANOVA examines the effect of <strong>two independent categorical factors</strong> on a <strong>continuous outcome variable</strong>,
+    including whether the factors interact with each other.
+  </p>
+
+  <h3 id="tw-when">When to Use</h3>
+  <ul>
+    <li>Two independent grouping variables and a continuous numeric outcome</li>
+    <li>Independent groups (between-subjects design)</li>
+    <li>Equal sample size per cell (balanced design recommended)</li>
+    <li>When you need to test both main effects and their interaction simultaneously</li>
+  </ul>
+
+  <h3 id="tw-idea">Key Idea</h3>
+  <p>
+    Each effect is evaluated using an F-ratio: <strong>F = MS<sub>Effect</sub> / MS<sub>Error</sub></strong>.
+    Large F values indicate that between-group variation exceeds within-group variation.
+    Two-way ANOVA tests three effects in a single model: Factor A, Factor B, and their interaction (A × B).
+  </p>
+
+  <h3 id="tw-design">Design Structure</h3>
+  <p>Data are arranged in <strong>cells</strong>, where each cell is one combination of Factor A and Factor B levels.</p>
+  <p>Total variance is partitioned into:</p>
+  <ul>
+    <li><strong>SS<sub>A</sub></strong> — variation due to Factor A</li>
+    <li><strong>SS<sub>B</sub></strong> — variation due to Factor B</li>
+    <li><strong>SS<sub>A×B</sub></strong> — interaction variation</li>
+    <li><strong>SS<sub>Error</sub></strong> — within-cell variation (residual)</li>
+  </ul>
+
+  <h3 id="tw-interaction">Interaction (Interpret First)</h3>
+  <div style="background:#fefce8; border-radius:8px; padding:10px 14px; margin-bottom:8px;">
+    <strong>Always interpret the interaction before the main effects.</strong>
+  </div>
+
+  <p><strong>If the interaction is significant:</strong></p>
+  <ul>
+    <li>The effect of one factor depends on the level of the other factor</li>
+    <li>Main effects cannot be interpreted independently</li>
+    <li>Interpret simple effects or inspect the interaction plot</li>
+  </ul>
+
+  <p><strong>If the interaction is NOT significant:</strong></p>
+  <ul>
+    <li>Main effects can be interpreted independently</li>
+    <li>Factor A and Factor B effects represent overall differences</li>
+  </ul>
+
+  <h3 id="tw-hypotheses">Hypotheses</h3>
+  <p><strong>Factor A:</strong> H₀: All marginal means of A are equal &nbsp;|&nbsp; H₁: At least one marginal mean differs</p>
+  <p><strong>Factor B:</strong> H₀: All marginal means of B are equal &nbsp;|&nbsp; H₁: At least one marginal mean differs</p>
+  <p><strong>Interaction (A × B):</strong> H₀: No interaction between factors &nbsp;|&nbsp; H₁: The effect of one factor depends on the other</p>
+
+  <h3 id="tw-statistic">Test Statistic</h3>
+  <p>For each effect: <strong>F = MS<sub>Effect</sub> / MS<sub>Error</sub></strong></p>
+  <ul>
+    <li><strong>F<sub>A</sub></strong> = MS<sub>A</sub> / MS<sub>Error</sub></li>
+    <li><strong>F<sub>B</sub></strong> = MS<sub>B</sub> / MS<sub>Error</sub></li>
+    <li><strong>F<sub>A×B</sub></strong> = MS<sub>A×B</sub> / MS<sub>Error</sub></li>
+  </ul>
+
+  <h3 id="tw-df">Degrees of Freedom</h3>
+  <ul>
+    <li><strong>df<sub>A</sub></strong> = a − 1</li>
+    <li><strong>df<sub>B</sub></strong> = b − 1</li>
+    <li><strong>df<sub>A×B</sub></strong> = (a − 1)(b − 1)</li>
+    <li><strong>df<sub>Error</sub></strong> = ab(n − 1)</li>
+  </ul>
+  <p>where <em>a</em> = levels of Factor A, <em>b</em> = levels of Factor B, <em>n</em> = observations per cell.</p>
+
+  <h3 id="tw-effect">Effect Size</h3>
+  <p>Eta squared <strong>(η²)</strong> for each effect:</p>
+  <p><strong>η² = SS<sub>Effect</sub> / SS<sub>Total</sub></strong></p>
+  <ul>
+    <li>0.01 = small &nbsp;|&nbsp; 0.06 = medium &nbsp;|&nbsp; 0.14 = large</li>
+  </ul>
+
+  <h3 id="tw-assumptions">Assumptions</h3>
+  <ul>
+    <li>Observations are independent</li>
+    <li>Continuous dependent variable</li>
+    <li>Approximately normally distributed residuals</li>
+    <li>Homogeneity of variances across cells (Levene's test)</li>
+    <li>Balanced design preferred (equal n per cell)</li>
+  </ul>
+
+  <h3 id="tw-violated">If Assumptions Are Violated</h3>
+  <ul>
+    <li>For non-normal residuals with large n, ANOVA is generally robust</li>
+    <li>Unequal variances: use robust ANOVA methods or a mixed model</li>
+    <li>Unbalanced designs: use Type III sums of squares</li>
+  </ul>
+
+  <h3 id="tw-decision">Decision Rule</h3>
+  <p>Reject each H₀ if <strong>p &lt; α</strong> for that effect. Interpret interaction first, then main effects.</p>
+
+  <h3 id="tw-clinical">Clinical Interpretation</h3>
+  <p>
+    Significant main effects indicate that a factor influences the outcome overall.
+    A significant interaction means those effects differ depending on the other factor's level —
+    in clinical practice this often reflects that a treatment works differently across subgroups.
+    Report effect sizes (η²) and inspect the interaction plot to communicate findings clearly.
+  </p>
+
+  <h3 id="tw-viz">Visual Interpretation</h3>
+  <p>
+    <strong>Marginal means plots:</strong> show sampling distributions for each level's marginal mean,
+    scaled by that group's standard deviation. Wider curves = higher variability; narrower = lower.
+  </p>
+  <p><strong>Interaction plot — reading the lines:</strong></p>
+  <ul>
+    <li><strong>Parallel lines</strong> → no interaction between factors</li>
+    <li><strong>Non-parallel lines</strong> → interaction present</li>
+    <li><strong>Crossing lines</strong> → strong interaction (effect reversal across levels)</li>
+  </ul>
+
+  <h3 id="tw-reporting">Reporting Example</h3>
+  <p>
+    A two-way ANOVA revealed a significant interaction between Factor A and Factor B,
+    F(df<sub>A×B</sub>, df<sub>Error</sub>) = X.XX, p = 0.0X, η² = X.XX.
+    Factor A: F(df<sub>A</sub>, df<sub>Error</sub>) = X.XX, p = 0.0X.
+    Factor B: F(df<sub>B</sub>, df<sub>Error</sub>) = X.XX, p = 0.0X.
+  </p>
+
+  <h3 id="tw-data">Generating Sample Data</h3>
+  <p>
+    An expandable "Generate sample data (2-way design)" panel appears below the main data entry box.
+    Specify sample size per cell, distribution, and individual mean and SD for each Factor A × Factor B combination.
+    Click <strong>Generate</strong> to preview the data and <strong>Use in analysis</strong> to load it.
+  </p>
+  <p class="note">
+    <strong>Tip:</strong> To create an interaction, set non-parallel patterns across cells —
+    e.g., if A1 has increasing means across B levels but A2 has decreasing means.
+  </p>
+
+</div>

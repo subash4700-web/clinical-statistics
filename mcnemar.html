@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>McNemar's Test</title>
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
+      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+    .container { max-width: 860px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
+    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+    a.back-link { display: inline-block; margin-bottom: 18px; color: var(--accent);
+      font-size: 13px; font-weight: 700; text-decoration: none; }
+    a.back-link:hover { text-decoration: underline; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
+    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
+      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* CARD */
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
+    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* FORM */
+    select, input[type="number"] {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: #fff; font-size: 13px; color: var(--ink);
+    }
+    label.field-label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
+    label.small { font-weight: 700; font-size: 12px; display: block; margin-bottom: 6px; color: #374151; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
+      font-size: 13px; cursor: pointer; transition: transform .05s, opacity .15s; }
+    button:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--good); color: #fff; }
+    .btn-ghost   { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn-sm { padding: 8px 16px; font-size: 12px; }
+
+    /* ALERTS */
+    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
+      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
+    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
+    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
+    .alert.info { border-color: #3b82f655; background: #eff6ff; color: #1e3a5f; }
+
+    /* KPI GRID */
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+    .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
+
+    /* TABLE */
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { background: #f9fafb; font-weight: 800; color: #374151; }
+    tr:last-child td, tr:last-child th { border-bottom: none; }
+    td.num { text-align: right; font-family: ui-monospace, monospace; }
+
+    /* Contingency table inputs */
+    .ctable { border-collapse: separate; border-spacing: 0; }
+    .ctable th { background: #f9fafb; }
+    .ctable th input[type="text"] {
+      background: transparent; border: none; font-weight: 700;
+      font-size: 13px; color: #374151; padding: 4px; width: 120px;
+    }
+    .ctable td input[type="number"] {
+      width: 80px; padding: 6px 8px; border: 1px solid var(--line);
+      border-radius: 8px; font-size: 14px; text-align: center; background: #fff;
+    }
+    .ctable td { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+    .ctable tr:last-child td, .ctable tr:last-child th { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+
+  <h1>McNemar's Test</h1>
+  <p class="subtitle">Paired dichotomous outcomes — 2×2 contingency table</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab" data-tab="analysis">Analysis</div>
+  </div>
+
+  <!-- ===== INPUT TAB ===== -->
+  <div id="input" class="tab-content active">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Study context</div>
+        <p class="note" style="margin-top:0; margin-bottom:12px;">
+          Before running the test, verify that your study design meets the assumptions:
+        </p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkPaired" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Paired observations</strong> – Same subjects measured before and after (matched pairs)</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkDichotomous" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Dichotomous outcome</strong> – Binary categories (Yes/No, Present/Absent, etc.)</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkDiscordant" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Sufficient discordant pairs</strong> – At least 10-25 pairs with differing outcomes (b + c ≥ 10)</span>
+          </label>
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="chkHypothesis" style="margin-top:4px;">
+            <span style="font-size:13px; line-height:1.5;"><strong>Clear hypothesis</strong> – Testing if change is significantly different from chance</span>
+          </label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Test settings</div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Significance level (α)</label>
+          <select id="alpha">
+            <option value="0.10">0.10 (90% confidence)</option>
+            <option value="0.05" selected>0.05 (95% confidence)</option>
+            <option value="0.01">0.01 (99% confidence)</option>
+          </select>
+          <p class="note">Probability threshold for rejecting the null hypothesis</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label class="field-label">Continuity correction</label>
+          <select id="useContinuity">
+            <option value="true" selected>Yes (recommended for small samples)</option>
+            <option value="false">No (exact McNemar)</option>
+          </select>
+          <p class="note">Yates' correction improves approximation when b + c < 30</p>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="showViz" checked>
+            <span style="font-size:13px; font-weight:600;">Show hypothesis visualisation</span>
+          </label>
+          <p class="note" style="margin-top:4px;">Display chi-square distribution with test statistic</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Contingency Table</div>
+      <p class="note" style="margin-top:0; margin-bottom:12px;">
+        Click any header cell to rename the labels. Only <strong>b</strong> and <strong>c</strong> (discordant cells) are used in the McNemar χ² statistic.
+      </p>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead>
+            <tr>
+              <th></th>
+              <th><input type="text" id="labelAfterYes" value="After: Yes" /></th>
+              <th><input type="text" id="labelAfterNo"  value="After: No"  /></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th><input type="text" id="labelBeforeYes" value="Before: Yes" /></th>
+              <td><input type="number" id="a" value="0" min="0" /></td>
+              <td><input type="number" id="b" value="0" min="0" /></td>
+            </tr>
+            <tr>
+              <th><input type="text" id="labelBeforeNo" value="Before: No" /></th>
+              <td><input type="number" id="c" value="0" min="0" /></td>
+              <td><input type="number" id="d" value="0" min="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="inputError" class="alert bad" style="display:none; margin-top:12px;"></div>
+      
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-primary" id="runBtn">Run Analysis</button>
+        <button class="btn-ghost" id="clearBtn">Clear Data</button>
+      </div>
+    </div>
+
+    <!-- Generate sample data section -->
+    <details class="card" style="margin-top:16px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:14px; user-select:none;">
+        Generate sample data
+      </summary>
+      <div style="margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label class="small" style="font-weight:800;">Number of pairs (N)</label>
+            <input type="number" id="genSampleSize" value="50" min="10" step="1" style="width:100%;"/>
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Change pattern</label>
+            <select id="genPattern" style="width:100%;">
+              <option value="no_change" selected>No change (H₀ true)</option>
+              <option value="weak">Weak change (slight increase)</option>
+              <option value="moderate">Moderate change</option>
+              <option value="strong">Strong change (clear increase)</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:10px;">
+          <div>
+            <label class="small" style="font-weight:800;">Before prevalence</label>
+            <input type="number" id="genBeforePrevalence" value="0.3" min="0.1" max="0.9" step="0.1" style="width:100%;"/>
+            <div class="note">Proportion with condition before treatment</div>
+          </div>
+          <div>
+            <label class="small" style="font-weight:800;">Apply noise</label>
+            <select id="genNoise" style="width:100%;">
+              <option value="none">No noise (perfect pattern)</option>
+              <option value="low" selected>Low noise (slight variation)</option>
+              <option value="medium">Medium noise</option>
+              <option value="high">High noise</option>
+            </select>
+            <div class="note">Random variation in counts</div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost btn-sm" id="generateDataBtn">Generate</button>
+          <button class="btn-secondary btn-sm" id="useGeneratedBtn" style="display:none;">Use in analysis</button>
+        </div>
+        <div class="note">Generated contingency table appears below. Click "Use in analysis" to populate the table.</div>
+        <textarea id="generatedOutput" readonly style="margin-top:8px; min-height:100px; background:#f9fafb; font-size:11px;"></textarea>
+      </div>
+    </details>
+
+  </div><!-- /input -->
+
+  <!-- ===== ANALYSIS TAB ===== -->
+  <div id="analysis" class="tab-content">
+    <div id="results"></div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-title">Contingency Table Heatmap</div>
+      <p class="note" style="margin-top:0; margin-bottom:10px;">
+        Color intensity represents cell counts. Discordant cells (b and c, highlighted) determine the test outcome.
+      </p>
+      <div class="viz-wrap" style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+        <canvas id="heatmapCanvas" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script src="assets/js/stats/mcnemar.js"></script>
+<script>
+  // Tab switching
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  // Clear
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    ["a","b","c","d"].forEach(id => document.getElementById(id).value = 0);
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("inputError").style.display = "none";
+  });
+
+  // Run — mcnemar.js fills #results; we switch to analysis tab
+  document.getElementById("runBtn").addEventListener("click", () => {
+    const b = parseInt(document.getElementById("b").value) || 0;
+    const c = parseInt(document.getElementById("c").value) || 0;
+    if (b + c === 0) {
+      const err = document.getElementById("inputError");
+      err.style.display = "block";
+      err.textContent = "Please enter at least one discordant pair (b or c must be > 0).";
+      return;
+    }
+    document.getElementById("inputError").style.display = "none";
+    // Let mcnemar.js run first, then switch tab
+    setTimeout(() => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      document.querySelector('.tab[data-tab="analysis"]').classList.add("active");
+      document.getElementById("analysis").classList.add("active");
+    }, 0);
+  });
+
+  /* ===== Generate sample data ===== */
+  let generatedData = null;
+
+  document.getElementById("generateDataBtn").addEventListener("click", () => {
+    const N = parseInt(document.getElementById("genSampleSize").value) || 50;
+    const pattern = document.getElementById("genPattern").value;
+    const beforePrev = parseFloat(document.getElementById("genBeforePrevalence").value) || 0.3;
+    const noise = document.getElementById("genNoise").value;
+
+    // Generate probabilities based on pattern
+    // a = Yes→Yes, b = Yes→No, c = No→Yes, d = No→No
+    let pA, pB, pC, pD;
+    
+    if (pattern === "no_change") {
+      // No systematic change, b ≈ c
+      pB = beforePrev * 0.1; // 10% of those with condition change to no
+      pC = beforePrev * 0.1; // 10% of those without develop condition
+      pA = beforePrev - pB;
+      pD = (1 - beforePrev) - pC;
+    } else if (pattern === "weak") {
+      // Weak improvement: slightly more b than c
+      pB = beforePrev * 0.12;
+      pC = beforePrev * 0.18; // More gain condition
+      pA = beforePrev - pB;
+      pD = (1 - beforePrev) - pC;
+    } else if (pattern === "moderate") {
+      // Moderate improvement
+      pB = beforePrev * 0.15;
+      pC = beforePrev * 0.3;
+      pA = beforePrev - pB;
+      pD = (1 - beforePrev) - pC;
+    } else { // strong
+      // Strong improvement
+      pB = beforePrev * 0.2;
+      pC = beforePrev * 0.5;
+      pA = beforePrev - pB;
+      pD = (1 - beforePrev) - pC;
+    }
+
+    // Ensure valid probabilities
+    pA = Math.max(0, pA);
+    pB = Math.max(0, pB);
+    pC = Math.max(0, pC);
+    pD = Math.max(0, pD);
+    const sum = pA + pB + pC + pD;
+    pA /= sum; pB /= sum; pC /= sum; pD /= sum;
+
+    // Generate counts
+    let a = Math.round(N * pA);
+    let b = Math.round(N * pB);
+    let c = Math.round(N * pC);
+    let d = Math.round(N * pD);
+
+    // Apply noise
+    if (noise !== "none") {
+      let noiseLevel = 0;
+      if (noise === "low") noiseLevel = 0.05;
+      else if (noise === "medium") noiseLevel = 0.15;
+      else if (noise === "high") noiseLevel = 0.3;
+
+      const addNoise = (count) => {
+        const maxNoise = Math.floor(Math.max(1, count * noiseLevel));
+        const delta = Math.floor((Math.random() - 0.5) * 2 * maxNoise);
+        return Math.max(0, count + delta);
+      };
+
+      a = addNoise(a);
+      b = addNoise(b);
+      c = addNoise(c);
+      d = addNoise(d);
+    }
+
+    // Adjust to match total N
+    const currentTotal = a + b + c + d;
+    const diff = N - currentTotal;
+    if (diff !== 0) {
+      d = Math.max(0, d + diff);
+    }
+
+    // Store generated data
+    generatedData = { a, b, c, d };
+
+    // Display in textarea
+    let output = `Generated paired 2×2 table (N = ${N}, ${pattern.replace('_', ' ')}, ${noise} noise):\n\n`;
+    output += "              | After: Yes | After: No | Total\n";
+    output += "--------------+------------+-----------+-------\n";
+    output += `Before: Yes   | ${String(a).padStart(10)} | ${String(b).padStart(9)} | ${String(a+b).padStart(5)}\n`;
+    output += `Before: No    | ${String(c).padStart(10)} | ${String(d).padStart(9)} | ${String(c+d).padStart(5)}\n`;
+    output += "--------------+------------+-----------+-------\n";
+    output += `Total         | ${String(a+c).padStart(10)} | ${String(b+d).padStart(9)} | ${String(a+b+c+d).padStart(5)}\n\n`;
+    output += `Discordant pairs: b + c = ${b} + ${c} = ${b+c}\n`;
+    output += `McNemar χ² (with continuity correction) ≈ ${((Math.abs(b-c)-1)**2 / (b+c)).toFixed(3)}`;
+
+    document.getElementById("generatedOutput").value = output;
+    document.getElementById("useGeneratedBtn").style.display = "inline-block";
+  });
+
+  document.getElementById("useGeneratedBtn").addEventListener("click", () => {
+    if (!generatedData) return;
+
+    document.getElementById("a").value = generatedData.a;
+    document.getElementById("b").value = generatedData.b;
+    document.getElementById("c").value = generatedData.c;
+    document.getElementById("d").value = generatedData.d;
+
+    // Scroll to the table
+    document.querySelector(".ctable").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  /* ===== 2×2 Heatmap for McNemar ===== */
+  function renderHeatmap(a, b, c, d, labelBeforeYes, labelBeforeNo, labelAfterYes, labelAfterNo, isSignificant) {
+    const canvas = document.getElementById("heatmapCanvas");
+    if (!canvas) return;
+
+    const W = canvas.parentElement.clientWidth || 600;
+    const H = 300;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, W, H);
+
+    // Layout parameters
+    const padL = 150, padR = 40, padT = 80, padB = 60;
+    const cellW = (W - padL - padR) / 2;
+    const cellH = (H - padT - padB) / 2;
+
+    const values = [a, b, c, d];
+    const maxVal = Math.max(...values) || 1;
+
+    // Colors: discordant pairs (b, c) are highlighted, concordant (a, d) are muted
+    // Intensity based on value
+    function getColor(value, isDiscordant) {
+      const intensity = value / maxVal;
+      if (isDiscordant) {
+        // Orange gradient for discordant
+        const r = Math.round(255);
+        const g = Math.round(165 - intensity * 100);
+        const b = Math.round(0);
+        return `rgb(${r}, ${g}, ${b})`;
+      } else {
+        // Blue gradient for concordant
+        const r = Math.round(100 + (1 - intensity) * 100);
+        const g = Math.round(150 + (1 - intensity) * 80);
+        const b = Math.round(255);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+    }
+
+    // Cell positions: [a, b; c, d]
+    const cells = [
+      { val: a, x: padL, y: padT, label: "a", isDiscordant: false },
+      { val: b, x: padL + cellW, y: padT, label: "b", isDiscordant: true },
+      { val: c, x: padL, y: padT + cellH, label: "c", isDiscordant: true },
+      { val: d, x: padL + cellW, y: padT + cellH, label: "d", isDiscordant: false }
+    ];
+
+    // Draw cells with heatmap coloring
+    cells.forEach(cell => {
+      // Cell background
+      ctx.save();
+      ctx.fillStyle = getColor(cell.val, cell.isDiscordant);
+      ctx.fillRect(cell.x, cell.y, cellW, cellH);
+
+      // Cell border (thick for discordant)
+      ctx.strokeStyle = cell.isDiscordant ? "#ff6b6b" : "#333";
+      ctx.lineWidth = cell.isDiscordant ? 3 : 1;
+      ctx.strokeRect(cell.x, cell.y, cellW, cellH);
+      ctx.restore();
+
+      // Value text
+      ctx.save();
+      ctx.font = "bold 36px system-ui, sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(cell.val, cell.x + cellW / 2, cell.y + cellH / 2 - 15);
+
+      // Label
+      ctx.font = "bold 14px system-ui, sans-serif";
+      ctx.fillStyle = "#fff";
+      ctx.fillText(cell.label, cell.x + cellW / 2, cell.y + cellH / 2 + 20);
+      ctx.restore();
+    });
+
+    // Row headers (left side)
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillText(labelBeforeYes || "Before: Yes", padL - 10, padT + cellH / 2);
+    ctx.fillText(labelBeforeNo || "Before: No", padL - 10, padT + cellH + cellH / 2);
+    ctx.restore();
+
+    // Column headers (top)
+    ctx.save();
+    ctx.font = "bold 12px system-ui, sans-serif";
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(labelAfterYes || "After: Yes", padL + cellW / 2, padT - 10);
+    ctx.fillText(labelAfterNo || "After: No", padL + cellW + cellW / 2, padT - 10);
+    ctx.restore();
+
+    // Marginal totals
+    ctx.save();
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "#6b7280";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    
+    // Column totals (below)
+    ctx.fillText(a + c, padL + cellW / 2, H - padB + 10);
+    ctx.fillText(b + d, padL + cellW + cellW / 2, H - padB + 10);
+    ctx.fillText(a + b + c + d, padL + cellW + cellW / 2 + cellW / 2, H - padB + 10);
+
+    // Row totals (right)
+    ctx.textAlign = "left";
+    ctx.fillText(a + b, W - padR + 5, padT + cellH / 2);
+    ctx.fillText(c + d, W - padR + 5, padT + cellH + cellH / 2);
+    ctx.restore();
+
+    // Legend
+    ctx.save();
+    ctx.font = "11px system-ui, sans-serif";
+    const legendY = 15;
+    const legendX = padL;
+
+    // Discordant legend
+    ctx.fillStyle = "rgb(255, 165, 0)";
+    ctx.fillRect(legendX, legendY, 12, 12);
+    ctx.strokeStyle = "#ff6b6b";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(legendX, legendY, 12, 12);
+    ctx.fillStyle = "#374151";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Discordant (b, c)", legendX + 16, legendY + 6);
+
+    // Concordant legend
+    ctx.fillStyle = "rgb(100, 150, 255)";
+    ctx.fillRect(legendX + 200, legendY, 12, 12);
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(legendX + 200, legendY, 12, 12);
+    ctx.fillStyle = "#374151";
+    ctx.fillText("Concordant (a, d)", legendX + 216, legendY + 6);
+
+    ctx.restore();
+  }
+
+</script>
+</body>
+</html>
