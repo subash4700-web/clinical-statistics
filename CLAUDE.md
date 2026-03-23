@@ -36,6 +36,22 @@ A desktop app called **Clinical Statistics** — statistical tools for clinical 
 - **Download links format**: `https://github.com/subash4700-web/clinical-statistics/releases/download/vX.X.X/Clinical.Statistics-X.X.X-arm64.dmg` (Mac) and `Clinical.Statistics.Setup.X.X.X.exe` (Windows)
 
 ### 3. `clinical-stats-api`
+**Vercel environment variables (all required):**
+| Variable | Purpose |
+|---|---|
+| `KEYGEN_ACCOUNT_ID` | Keygen account identifier |
+| `KEYGEN_ADMIN_TOKEN` | Keygen admin API token |
+| `KEYGEN_POLICY_TRIAL_CLINICIAN` | Keygen policy ID for clinician trial (`b7869a97`) |
+| `KEYGEN_POLICY_TRIAL_STUDENT` | Keygen policy ID for student trial (`3d0ad97b`) |
+| `RESEND_API_KEY` | Resend API key for sending emails |
+| `FROM_EMAIL` | Sender address (`licenses@clinicalstatistics.dk`) |
+| `JWT_SECRET` | Secret for signing institution JWT tokens |
+| `LICENSE_KEY_PHA` | Institution license key for pha.dk |
+| `KV_REST_API_URL` | Upstash Redis URL |
+| `KV_REST_API_TOKEN` | Upstash Redis token |
+| `LEMON_VARIANT_INSTITUTION` | Lemon Squeezy variant ID for institution plan |
+
+
 - **What**: Vercel serverless API for licensing, email verification, and update checks
 - **Local path**: `/Users/subashsundaralingam/Documents/app/clinical-stats-api`
 - **GitHub**: `github.com/subash4700-web/Clinical-stats-api`
@@ -58,6 +74,13 @@ A desktop app called **Clinical Statistics** — statistical tools for clinical 
   - **Institution**: email domain verified → JWT stored locally (90 days)
 - **Machine activation**: When a key is entered, a machine fingerprint is registered with Keygen so the dashboard shows usage
 - **Trial keys**: Created via `request-trial.js` and emailed to the user
+
+### Trial license policies — Keygen
+- Two trial policies configured in Keygen dashboard:
+  - **Clinician trial**: policy ID `b7869a97`, env var `KEYGEN_POLICY_TRIAL_CLINICIAN` — Max Machines: 1, Max Uses: 20, 1 year
+  - **Student trial**: policy ID `3d0ad97b`, env var `KEYGEN_POLICY_TRIAL_STUDENT` — Max Machines: 1, Max Uses: 20, 1 year
+- Each email can only get one trial key (stored in Upstash Redis for 400 days)
+- To change limits: go to Keygen → Policies → edit the trial policy
 
 ### Email — Resend
 - Domain: `subphoto.dk`
