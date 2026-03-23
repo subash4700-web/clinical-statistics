@@ -104,8 +104,12 @@ function activateMachine(licenseKey, licenseId) {
   };
 
   // Fire-and-forget — never blocks or breaks the activation flow
-  const req = https.request(options, (res) => { res.resume(); });
-  req.on("error",   () => {});
+  const req = https.request(options, (res) => {
+    let data = "";
+    res.on("data", chunk => data += chunk);
+    res.on("end", () => console.log("Machine activation response:", res.statusCode, data));
+  });
+  req.on("error", (e) => console.log("Machine activation error:", e.message));
   req.on("timeout", () => { req.destroy(); });
   req.write(body);
   req.end();

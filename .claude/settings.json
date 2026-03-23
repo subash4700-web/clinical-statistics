@@ -4,7 +4,9 @@
       "Read(//Users/subashsundaralingam/Documents/**)",
       "Bash(curl -s -I https://clinicalstatistics.dk)",
       "Bash(open \"/Users/subashsundaralingam/Documents/app/clinical-statistics/dist/Clinical Statistics-1.0.8.dmg\")",
-      "Bash(ls /Users/subashsundaralingam/Documents/app/clinical-statistics/dist/*.dmg)"
+      "Bash(ls /Users/subashsundaralingam/Documents/app/clinical-statistics/dist/*.dmg)",
+      "Bash(ls /Users/subashsundaralingam/Documents/app/clinical-statistics/dist/*universal*)",
+      "Bash(open \"/Users/subashsundaralingam/Documents/app/clinical-statistics/dist/Clinical Statistics-1.0.11-universal.dmg\")"
     ],
     "additionalDirectories": [
       "/Users/subashsundaralingam/Documents/app/homepage"
