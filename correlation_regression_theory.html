@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Correlation &amp; Regression — Concepts &amp; Theory</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 12px 20px 80px; }
+
+    .font-toolbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 6px; justify-content: flex-end; padding: 8px 0 10px; background: #f4f6f8; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .ft-label { font-size: 11px; color: #9ca3af; font-weight: 600; letter-spacing: .04em; margin-right: 2px; }
+    .ft-btn { padding: 3px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-weight: 700; color: #374151; font-family: inherit; transition: background .12s; }
+    .ft-btn:hover { background: #f3f4f6; }
+    .ft-size { font-size: 11px; color: #6b7280; min-width: 28px; text-align: center; }
+
+    h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
+    .lead { color: #6b7280; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+
+    .index { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 20px; margin-bottom: 36px; }
+    .index h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; font-weight: 800; }
+    .index ol { margin: 0; padding-left: 18px; }
+    .index li { margin: 5px 0; }
+    .index a { color: #be185d; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .index a:hover { text-decoration: underline; }
+
+    .section { margin-bottom: 44px; scroll-margin-top: 16px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #e11d48; padding-left: 10px; }
+    .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
+    .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul, .section ol { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; padding-left: 20px; }
+    .section li { margin-bottom: 4px; }
+
+    .callout { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #881337; margin: 14px 0; }
+    .callout b { color: #be185d; }
+    .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #7c2d12; margin: 14px 0; }
+    .warn b { color: #9a3412; }
+    .good { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #14532d; margin: 14px 0; }
+    .good b { color: #166534; }
+    .info { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #1e3a8a; margin: 14px 0; }
+    .info b { color: #1d4ed8; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; border-radius: 10px; overflow: hidden; }
+    th { background: #e11d48; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
+    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .formula-box { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 14px 18px; font-size: 13px; font-family: monospace; line-height: 2; margin: 14px 0; }
+    .formula-box .f-correct { color: #86efac; }
+    .formula-box .f-wrong { color: #fca5a5; text-decoration: line-through; }
+    .formula-box .f-label { color: #94a3b8; font-size: 11px; display: block; margin-bottom: -6px; }
+
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #be185d; text-decoration: none; font-weight: 600; }
+    .back-top:hover { text-decoration: underline; }
+
+    .tag { display: inline-block; border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+    .tag-red { background: #fee2e2; color: #b42318; }
+    .tag-green { background: #dcfce7; color: #14532d; }
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+    .tag-amber { background: #fef3c7; color: #92400e; }
+    .tag-rose { background: #ffe4e6; color: #9f1239; }
+
+    .r-spectrum { margin: 20px 0 28px; }
+    .r-spectrum-bar {
+      height: 22px; border-radius: 11px;
+      background: linear-gradient(to right, #1e40af 0%, #60a5fa 22%, #e5e7eb 50%, #fb7185 78%, #e11d48 100%);
+    }
+    .r-spectrum-ticks { display: flex; justify-content: space-between; margin-top: 10px; }
+    .r-tick { text-align: center; font-size: 11px; line-height: 1.4; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .r-tick-val { font-weight: 900; font-size: 14px; }
+    .r-tick-val.neg  { color: #1e40af; }
+    .r-tick-val.neut { color: #9ca3af; }
+    .r-tick-val.pos  { color: #e11d48; }
+    .r-tick-desc { color: #9ca3af; font-weight: 600; font-size: 10px; }
+
+    .method-comparison-ladder { display: flex; flex-direction: column; gap: 0; margin: 14px 0; }
+    .method-comparison-ladder .mc-item { padding: 12px 16px; font-size: 13px; line-height: 1.6; border: 1px solid #e5e7eb; }
+    .method-comparison-ladder .mc-item:first-child { border-radius: 10px 10px 0 0; }
+    .method-comparison-ladder .mc-item:last-child { border-radius: 0 0 10px 10px; border-top: none; }
+    .method-comparison-ladder .mc-item + .mc-item { border-top: none; }
+    .mc-item .mc-title { font-weight: 800; font-size: 13px; margin-bottom: 3px; }
+    .mc-item .mc-desc { color: #6b7280; font-size: 12px; }
+    .mc-ols { background: #eff6ff; border-color: #bfdbfe; }
+    .mc-deming { background: #fdf4ff; border-color: #e9d5ff; }
+    .mc-pb { background: #fff1f2; border-color: #fecdd3; }
+  </style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+<div class="font-toolbar">
+  <span class="ft-label">Text size</span>
+  <button class="ft-btn" onclick="changeFontSize(-1)" style="font-size:12px;">A−</button>
+  <span class="ft-size" id="ftSize"></span>
+  <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
+</div>
+
+  <h1>Correlation &amp; Regression — Concepts &amp; Theory</h1>
+  <p class="lead">A practical guide to correlation, linear regression, and ROC analysis — written for clinical laboratory scientists. Explains when to use each method, what the numbers mean, and the most common mistakes.</p>
+
+  <div class="index">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#correlation">What is correlation?</a></li>
+      <li><a href="#pearson">Pearson r — calculation and interpretation</a></li>
+      <li><a href="#r2">r vs R² — what is the difference?</a></li>
+      <li><a href="#spearman">Spearman ρ — when to use a rank correlation</a></li>
+      <li><a href="#regression">Linear regression — prediction, not just association</a></li>
+      <li><a href="#diff">Correlation vs regression — key differences</a></li>
+      <li><a href="#residuals">Residuals and model fit</a></li>
+      <li><a href="#assumptions">Assumptions you must check</a></li>
+      <li><a href="#clinical">Clinical context — method comparison regression</a></li>
+      <li><a href="#roc">ROC analysis — why we need it</a></li>
+      <li><a href="#auc">AUC — interpreting the area under the curve</a></li>
+      <li><a href="#cutoff">Choosing a cut-off</a></li>
+      <li><a href="#summary">Summary table</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="correlation">
+    <h2>1. What is correlation?</h2>
+    <p>Correlation measures the <strong>strength and direction of the linear relationship</strong> between two continuous variables. It answers: when one variable goes up, does the other tend to go up too (positive), go down (negative), or show no consistent pattern (near zero)?</p>
+    <p>Correlation does <em>not</em> tell you which variable causes which, and it does not tell you how much one variable changes when the other changes. It only measures how tightly the two move together.</p>
+    <div class="callout">
+      <b>Classic mistake:</b> Correlation is not causation. Two variables can be strongly correlated because they are both driven by a third factor you have not measured. Always think about the biology before interpreting a correlation.
+    </div>
+    <p><strong>Examples in the laboratory:</strong></p>
+    <ul>
+      <li>HbA1c and fasting glucose — positively correlated (both reflect long-term glycaemia)</li>
+      <li>eGFR and creatinine — negatively correlated (as kidneys fail, creatinine rises and eGFR falls)</li>
+      <li>Patient age and sodium — weak or no correlation in a healthy population</li>
+    </ul>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 2 -->
+  <div class="section" id="pearson">
+    <h2>2. Pearson r — calculation and interpretation</h2>
+    <p>The most common correlation coefficient is the <strong>Pearson product-moment correlation coefficient (r)</strong>. It is calculated as the covariance of the two variables divided by the product of their standard deviations:</p>
+    <div class="formula-box">
+      <span class="f-label">Pearson r</span>
+      <span class="f-correct">r = Σ[(xᵢ − x̄)(yᵢ − ȳ)] / √[Σ(xᵢ − x̄)² × Σ(yᵢ − ȳ)²]</span>
+    </div>
+    <p>The result is always between −1 and +1:</p>
+    <div class="r-spectrum">
+      <div class="r-spectrum-bar"></div>
+      <div class="r-spectrum-ticks">
+        <div class="r-tick"><span class="r-tick-val neg">−1.0</span><span class="r-tick-desc">Perfect negative</span></div>
+        <div class="r-tick"><span class="r-tick-val neg" style="color:#3b82f6">−0.7</span><span class="r-tick-desc">Strong negative</span></div>
+        <div class="r-tick"><span class="r-tick-val neut">0</span><span class="r-tick-desc">No relationship</span></div>
+        <div class="r-tick"><span class="r-tick-val pos" style="color:#fb7185">+0.7</span><span class="r-tick-desc">Strong positive</span></div>
+        <div class="r-tick"><span class="r-tick-val pos">+1.0</span><span class="r-tick-desc">Perfect positive</span></div>
+      </div>
+    </div>
+    <h3>Strength guidelines (Cohen, 1988)</h3>
+    <table>
+      <tr><th>|r| value</th><th>Interpretation</th><th>Clinical example</th></tr>
+      <tr><td>0.00 – 0.19</td><td>Negligible / no correlation</td><td>Patient age vs sodium in healthy adults</td></tr>
+      <tr><td>0.20 – 0.39</td><td>Weak</td><td>Cortisol vs serum calcium</td></tr>
+      <tr><td>0.40 – 0.59</td><td>Moderate</td><td>BMI vs triglycerides</td></tr>
+      <tr><td>0.60 – 0.79</td><td>Strong</td><td>eGFR vs cystatin C</td></tr>
+      <tr><td>0.80 – 1.00</td><td>Very strong</td><td>Two glucose methods on the same patients</td></tr>
+    </table>
+    <div class="warn">
+      <b>Important:</b> A statistically significant p-value does not mean the correlation is clinically meaningful. With n = 500, even r = 0.09 will be statistically significant, but it explains less than 1% of the variance. Always report r alongside the p-value and sample size.
+    </div>
+    <p><strong>Significance test:</strong> Pearson r is tested with a t-statistic (df = n − 2):</p>
+    <div class="formula-box">
+      <span class="f-label">t-statistic for r</span>
+      <span class="f-correct">t = r × √(n − 2) / √(1 − r²)</span>
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 3 -->
+  <div class="section" id="r2">
+    <h2>3. r vs R² — what is the difference?</h2>
+    <p><strong>r</strong> is the correlation coefficient. <strong>R²</strong> (r squared, also called the coefficient of determination) is r multiplied by itself. They answer different questions:</p>
+    <table>
+      <tr><th>Statistic</th><th>What it tells you</th><th>Clinical example</th></tr>
+      <tr><td><strong>r = 0.80</strong></td><td>Strong positive linear relationship</td><td>HbA1c and fasting glucose in diabetic patients</td></tr>
+      <tr><td><strong>R² = 0.64</strong></td><td>64% of the variance in Y is explained by X</td><td>Fasting glucose alone explains 64% of the variation in HbA1c — other factors (diet, red cell lifespan) account for the rest</td></tr>
+      <tr><td><strong>r = 0.50</strong></td><td>Moderate relationship</td><td>BMI and total cholesterol — related, but many other factors involved</td></tr>
+      <tr><td><strong>R² = 0.25</strong></td><td>Only 25% of variance explained</td><td>BMI alone is a weak predictor of cholesterol — do not use it as the sole predictor</td></tr>
+    </table>
+    <div class="callout">
+      <b>Rule of thumb:</b> Always report R² when you are talking about prediction (regression). Report r when you are talking about the association between two variables. They are mathematically related but conceptually different.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 4 -->
+  <div class="section" id="spearman">
+    <h2>4. Spearman ρ — when to use a rank correlation</h2>
+    <p>Spearman's rank correlation (ρ, rho) is a non-parametric alternative to Pearson r. Instead of working with the raw values, it ranks them from smallest to largest and then calculates Pearson r on the ranks.</p>
+    <p><strong>Use Spearman ρ when:</strong></p>
+    <ul>
+      <li>One or both variables are clearly non-normally distributed (e.g. highly skewed analytes)</li>
+      <li>You have ordinal data (e.g. severity scores: mild / moderate / severe)</li>
+      <li>There are prominent outliers that you cannot remove but that should not dominate the result</li>
+      <li>The relationship may be monotonic but not strictly linear</li>
+    </ul>
+    <div class="info">
+      <b>In practice:</b> For comparing two laboratory methods on the same patients, Pearson r is usually appropriate if values are roughly normally distributed. Spearman ρ is safer when the analyte spans a very wide range or has a skewed distribution (e.g. triglycerides, ferritin, troponin).
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 5 -->
+  <div class="section" id="regression">
+    <h2>5. Linear regression — prediction, not just association</h2>
+    <p>While correlation tells you <em>how strongly</em> two variables are related, regression goes further: it models the exact mathematical relationship so you can <strong>predict Y from X</strong>.</p>
+    <p>The simple linear regression model is:</p>
+    <div class="formula-box">
+      <span class="f-label">Linear regression equation</span>
+      <span class="f-correct">ŷ = a + b × x</span>
+      <br/>
+      <span class="f-label">where</span>
+      <span class="f-correct">b (slope) = r × (sY / sX)</span>
+      <br/>
+      <span class="f-correct">a (intercept) = ȳ − b × x̄</span>
+    </div>
+    <p><strong>Interpreting the output:</strong></p>
+    <ul>
+      <li><strong>Slope (b):</strong> For every 1-unit increase in X, Y is predicted to change by b units. A slope of 1.0 means the methods agree perfectly on scale.</li>
+      <li><strong>Intercept (a):</strong> The predicted value of Y when X = 0. A non-zero intercept means there is a constant offset between the methods.</li>
+      <li><strong>R²:</strong> The proportion of variance in Y explained by X.</li>
+      <li><strong>Residual standard error (Sy.x):</strong> Average size of the prediction errors.</li>
+    </ul>
+    <div class="callout">
+      <b>In method comparison:</b> If method B perfectly agrees with method A, the regression line through the data should have a slope of 1.0 and an intercept of 0. Deviations from these values reveal proportional bias (slope ≠ 1) or constant bias (intercept ≠ 0).
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 6 -->
+  <div class="section" id="diff">
+    <h2>6. Correlation vs regression — key differences</h2>
+    <table>
+      <tr><th>Question</th><th>Use correlation</th><th>Use regression</th></tr>
+      <tr><td>Do the two variables move together?</td><td>✓</td><td>—</td></tr>
+      <tr><td>How strong is the relationship?</td><td>✓ (r)</td><td>✓ (R²)</td></tr>
+      <tr><td>Can I predict Y from X?</td><td>✗</td><td>✓</td></tr>
+      <tr><td>Is there a constant or proportional bias?</td><td>✗</td><td>✓ (intercept, slope)</td></tr>
+      <tr><td>Which variable is the outcome?</td><td>Neither — symmetric</td><td>Y is the outcome (asymmetric)</td></tr>
+      <tr><td>Does it assume a causal direction?</td><td>No</td><td>Yes (X predicts Y)</td></tr>
+    </table>
+    <div class="warn">
+      <b>Common mistake:</b> Correlation is symmetric — r(X,Y) = r(Y,X). Regression is not — regressing X on Y gives a different line than regressing Y on X. In method comparison, which method you call X and which you call Y matters.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 7 -->
+  <div class="section" id="residuals">
+    <h2>7. Residuals and model fit</h2>
+    <p>A <strong>residual</strong> is the difference between the observed value and the value predicted by the regression line:</p>
+    <div class="formula-box">
+      <span class="f-label">Residual</span>
+      <span class="f-correct">eᵢ = yᵢ − ŷᵢ</span>
+    </div>
+    <p>Residuals are the "left-over" variation that the model could not explain. By examining them, you can check whether the model is appropriate:</p>
+    <ul>
+      <li><strong>Random scatter around zero</strong> — model is appropriate</li>
+      <li><strong>Curved pattern</strong> — the relationship is not linear; consider a transformation</li>
+      <li><strong>Fan shape (increasing spread)</strong> — heteroscedasticity; variance is not constant</li>
+      <li><strong>One extreme residual</strong> — potential outlier; investigate before removing</li>
+    </ul>
+    <div class="good">
+      <b>Always plot residuals.</b> A residual plot reveals problems that R² alone hides. Two datasets with the same R² can have very different residual patterns (see Anscombe's quartet).
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 8 -->
+  <div class="section" id="assumptions">
+    <h2>8. Assumptions you must check</h2>
+    <p>Pearson r and ordinary linear regression share the following assumptions:</p>
+    <table>
+      <tr><th>Assumption</th><th>How to check</th><th>What happens if violated</th></tr>
+      <tr><td><strong>Linearity</strong></td><td>Scatter plot of X vs Y</td><td>r underestimates true association; regression line is misleading</td></tr>
+      <tr><td><strong>Normality of residuals</strong></td><td>Histogram or Q-Q plot of residuals</td><td>Confidence intervals and p-values are unreliable (less critical with large n)</td></tr>
+      <tr><td><strong>Homoscedasticity</strong> (constant variance)</td><td>Residual plot — look for fan shape</td><td>Standard errors are incorrect; wide CI at one end</td></tr>
+      <tr><td><strong>No extreme outliers</strong></td><td>Scatter plot; check leverage and Cook's distance</td><td>r and slope can be dominated by one or two points</td></tr>
+      <tr><td><strong>Independence of observations</strong></td><td>Study design — are samples related?</td><td>Artificially inflated r; paired data must use paired methods</td></tr>
+    </table>
+    <div class="warn">
+      <b>Outliers and Pearson r:</b> A single extreme outlier can change r from near 0 to 0.80, or from 0.90 to 0.60. Use the interactive simulation to see this for yourself.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 9 -->
+  <div class="section" id="clinical">
+    <h2>9. Clinical context — method comparison regression</h2>
+    <p>In clinical laboratory science, regression is most commonly used to <strong>compare two measurement methods</strong> run on the same patient samples. The goal is not prediction in the statistical sense — it is to quantify any systematic differences between the methods.</p>
+    <div class="method-comparison-ladder">
+      <div class="mc-item mc-ols">
+        <div class="mc-title">Ordinary Least Squares (OLS) — standard linear regression</div>
+        <div class="mc-desc">Minimises residuals in Y only. Assumes X (reference method) is measured without error. Appropriate when the reference standard has negligible imprecision compared with the test method. Results are biased if both methods have significant imprecision.</div>
+      </div>
+      <div class="mc-item mc-deming">
+        <div class="mc-title">Deming Regression</div>
+        <div class="mc-desc">Accounts for measurement error in both X and Y. More appropriate than OLS when both methods have imprecision that contributes to the scatter. Requires an estimate of the ratio of the error variances (λ = σ²X / σ²Y).</div>
+      </div>
+      <div class="mc-item mc-pb">
+        <div class="mc-title">Passing–Bablok Regression</div>
+        <div class="mc-desc">Non-parametric. No normality assumption. Robust to outliers. The preferred method in most clinical laboratory method comparison studies (CLSI EP09). It calculates the median of all possible slopes from pairs of points.</div>
+      </div>
+    </div>
+    <h3>Interpreting method comparison regression</h3>
+    <ul>
+      <li><strong>Slope = 1.0, Intercept = 0:</strong> No systematic difference — methods agree perfectly on average</li>
+      <li><strong>Slope ≠ 1.0:</strong> Proportional bias — the difference between methods grows as concentration increases</li>
+      <li><strong>Intercept ≠ 0:</strong> Constant bias — a fixed offset exists across the entire range</li>
+    </ul>
+    <div class="info">
+      <b>Bland-Altman plot:</b> Regression alone is not enough. The Bland-Altman difference plot (mean of methods vs difference between methods) directly visualises agreement and identifies whether bias is constant or proportional. Use both tools together.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 10 -->
+  <div class="section" id="roc">
+    <h2>10. ROC analysis — why we need it</h2>
+    <p>When a laboratory test is used to <strong>classify patients into two groups</strong> (disease vs no disease, high risk vs low risk), the question is not just "does the marker correlate with the outcome?" but "at what threshold does it best separate the groups?"</p>
+    <p>Most biomarkers produce a continuous result, but clinical decisions are binary. The <strong>Receiver Operating Characteristic (ROC) curve</strong> shows how the trade-off between sensitivity and specificity changes as you vary the threshold.</p>
+    <p><strong>Key concepts:</strong></p>
+    <ul>
+      <li><strong>Sensitivity (True Positive Rate):</strong> The proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
+      <li><strong>Specificity (True Negative Rate):</strong> The proportion of true negatives correctly identified. High specificity → few false alarms.</li>
+      <li><strong>False Positive Rate (FPR) = 1 − Specificity:</strong> Plotted on the X-axis of the ROC curve.</li>
+    </ul>
+    <div class="callout">
+      <b>The trade-off:</b> You cannot simultaneously maximise sensitivity and specificity by moving the threshold. Lowering the threshold catches more true positives (higher sensitivity) but also flags more false positives (lower specificity). The ROC curve makes this trade-off visible across all possible thresholds.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 11 -->
+  <div class="section" id="auc">
+    <h2>11. AUC — interpreting the area under the curve</h2>
+    <p>The <strong>Area Under the ROC Curve (AUC)</strong> summarises the overall discriminatory ability of a test with a single number. It represents the probability that a randomly selected patient with the disease has a higher test result than a randomly selected patient without the disease.</p>
+    <table>
+      <tr><th>AUC</th><th>Interpretation</th><th>Clinical implication</th></tr>
+      <tr><td>1.00</td><td>Perfect discrimination</td><td>Rare in practice — always check for data leakage</td></tr>
+      <tr><td>0.90 – 0.99</td><td>Excellent</td><td>Suitable for rule-in or rule-out at appropriate thresholds</td></tr>
+      <tr><td>0.80 – 0.89</td><td>Good</td><td>Useful; needs careful threshold selection</td></tr>
+      <tr><td>0.70 – 0.79</td><td>Acceptable / Fair</td><td>Useful as part of a panel; not ideal alone</td></tr>
+      <tr><td>0.60 – 0.69</td><td>Poor</td><td>Limited clinical use</td></tr>
+      <tr><td>0.50</td><td>No discrimination</td><td>No better than chance — random guessing</td></tr>
+      <tr><td>&lt; 0.50</td><td>Worse than chance</td><td>Consider inverting the test result</td></tr>
+    </table>
+    <div class="info">
+      <b>Combining analytes:</b> Logistic regression can combine multiple biomarkers into a single score. The predicted probability from the logistic model becomes the test result, and its ROC curve shows the combined discriminatory performance.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 12 -->
+  <div class="section" id="cutoff">
+    <h2>12. Choosing a cut-off</h2>
+    <p>There is no universally "correct" cut-off — the optimal threshold depends on the clinical context: what is the consequence of a missed case vs a false alarm?</p>
+    <h3>Common approaches</h3>
+    <table>
+      <tr><th>Method</th><th>How it works</th><th>Best when</th></tr>
+      <tr><td><strong>Youden Index</strong></td><td>Maximise (Sensitivity + Specificity − 1). Finds the point furthest from the diagonal.</td><td>Missing a case and a false alarm are equally costly</td></tr>
+      <tr><td><strong>Clinical constraint</strong></td><td>Fix minimum sensitivity (e.g. ≥ 95%) then pick highest specificity at that sensitivity</td><td>Ruling out a serious disease (e.g. sepsis, AMI) where missed cases are unacceptable</td></tr>
+      <tr><td><strong>Minimum cost</strong></td><td>Weight FP and FN by their clinical/economic costs</td><td>When costs are explicitly known (decision analysis)</td></tr>
+      <tr><td><strong>Prevalence-adjusted</strong></td><td>Consider PPV and NPV at the expected prevalence in your population</td><td>When the pre-test probability is very low or very high</td></tr>
+    </table>
+    <h3>PPV and NPV depend on prevalence</h3>
+    <p>Positive Predictive Value (PPV) and Negative Predictive Value (NPV) are not fixed properties of a test — they change with the prevalence of the disease in the tested population:</p>
+    <div class="formula-box">
+      <span class="f-label">PPV (Bayes theorem)</span>
+      <span class="f-correct">PPV = (Sensitivity × Prevalence) / [(Sensitivity × Prevalence) + ((1 − Specificity) × (1 − Prevalence))]</span>
+      <br/>
+      <span class="f-label">NPV</span>
+      <span class="f-correct">NPV = (Specificity × (1 − Prevalence)) / [((1 − Sensitivity) × Prevalence) + (Specificity × (1 − Prevalence))]</span>
+    </div>
+    <div class="warn">
+      <b>The prevalence trap:</b> A test with 90% sensitivity and 90% specificity sounds excellent. But at 1% disease prevalence, the PPV is only 8.3% — 11 out of 12 positive results are false positives. Use the interactive ROC tool to explore this effect.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 13 -->
+  <div class="section" id="summary">
+    <h2>13. Summary table</h2>
+    <table>
+      <tr><th>Concept</th><th>Symbol / Name</th><th>Range</th><th>What it measures</th></tr>
+      <tr><td>Pearson correlation</td><td>r</td><td>−1 to +1</td><td>Strength and direction of linear relationship</td></tr>
+      <tr><td>Spearman correlation</td><td>ρ (rho)</td><td>−1 to +1</td><td>Monotonic relationship; robust to outliers</td></tr>
+      <tr><td>Coefficient of determination</td><td>R²</td><td>0 to 1</td><td>Proportion of variance in Y explained by X</td></tr>
+      <tr><td>Regression slope</td><td>b</td><td>Any real number</td><td>Change in Y per unit change in X (proportional bias)</td></tr>
+      <tr><td>Regression intercept</td><td>a</td><td>Any real number</td><td>Predicted Y when X = 0 (constant bias)</td></tr>
+      <tr><td>Residual</td><td>e</td><td>Any real number</td><td>Observed minus predicted; model error</td></tr>
+      <tr><td>AUC</td><td>c-statistic</td><td>0.5 to 1.0</td><td>Discriminatory ability of a diagnostic test</td></tr>
+      <tr><td>Sensitivity</td><td>TPR</td><td>0 to 1</td><td>True positive rate at a given threshold</td></tr>
+      <tr><td>Specificity</td><td>TNR</td><td>0 to 1</td><td>True negative rate at a given threshold</td></tr>
+      <tr><td>PPV</td><td>Precision</td><td>0 to 1</td><td>Probability that a positive result is a true positive</td></tr>
+      <tr><td>NPV</td><td>—</td><td>0 to 1</td><td>Probability that a negative result is a true negative</td></tr>
+      <tr><td>Youden Index</td><td>J</td><td>0 to 1</td><td>Sensitivity + Specificity − 1; optimal cut-off criterion</td></tr>
+    </table>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+</div>
+<script>
+  const ZOOM = [0.85, 0.92, 1.0, 1.1, 1.2];
+  let fi = parseInt(localStorage.getItem('theoryZoom') || '2');
+  function applyZoom() {
+    document.getElementById('wrap').style.zoom = ZOOM[fi];
+    document.getElementById('ftSize').textContent = Math.round(ZOOM[fi] * 100) + '%';
+  }
+  function changeFontSize(d) {
+    fi = Math.max(0, Math.min(ZOOM.length - 1, fi + d));
+    localStorage.setItem('theoryZoom', fi);
+    applyZoom();
+  }
+  applyZoom();
+</script>
+</body>
+</html>

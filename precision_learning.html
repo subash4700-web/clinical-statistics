@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Precision</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#2b6cb0;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=number]:focus,select:focus{border-color:var(--accent);}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 62px;gap:7px;align-items:center;}
+
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-reset{background:#fff;border-color:#d1d5db;color:#6b7280;}
+
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;letter-spacing:0;}
+    .chart-bd{padding:12px 14px;}
+
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    canvas{display:block;}
+
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:0;}
+    .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-v{font-size:16px;font-weight:800;margin-top:2px;}
+    .stat-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+    .stat.highlight{border-color:#2b6cb0;background:#eef4ff;}
+    .stat.highlight .stat-v{color:#2b4dbf;}
+
+    .note-box{margin-top:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fbfcff;font-size:12px;line-height:1.6;color:#344054;}
+    .note-box b{color:#1e3a5f;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:9px;}
+    .insight-blue{background:#eef4ff;border:1px solid #c7d7fd;color:#1e3a5f;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+
+    .day-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:800;margin-right:3px;margin-bottom:3px;}
+
+    .formula-box{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:10px 13px;font-size:12px;font-family:monospace;line-height:1.8;margin-top:8px;}
+    .formula-box .f-correct{color:#86efac;}
+    .formula-box .f-wrong{color:#fca5a5;text-decoration:line-through;}
+    .formula-box .f-label{color:#94a3b8;font-size:10px;}
+
+    /* exercises */
+    .exercises{margin-bottom:20px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;position:relative;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f8faff;border:1px solid #c7d7fd;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#1e3a5f;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#1e40af;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}.bottom-row{grid-template-columns:1fr;}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎯 Understanding Precision</h1>
+  <p class="subtitle">Simulate precision studies — see the difference between repeatability, intermediate precision, and reproducibility.</p>
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">Repeatability only</div>
+          <div class="ex-obj">All measurements on one day. This is repeatability — the tightest precision you will ever see.</div>
+          <div class="ex-params">
+            <span class="ex-param">1 day</span>
+            <span class="ex-param">Sw =1.5</span>
+            <span class="ex-param">Sb =0</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Between-day variation appears</div>
+          <div class="ex-obj">Spread the same study over 5 days. Watch intermediate precision grow beyond repeatability.</div>
+          <div class="ex-params">
+            <span class="ex-param">5 days</span>
+            <span class="ex-param">Sw =1.5</span>
+            <span class="ex-param">Sb =2.0</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Why you cannot add SDs</div>
+          <div class="ex-obj">See how incorrectly adding Sw + Sb overestimates intermediate precision. The correct formula uses variances.</div>
+          <div class="ex-params">
+            <span class="ex-param">10 days</span>
+            <span class="ex-param">Sw =2.0</span>
+            <span class="ex-param">Sb =2.0</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">Stable analyser</div>
+          <div class="ex-obj">Low within-run AND low between-day variation. Repeatability and intermediate precision are nearly identical.</div>
+          <div class="ex-params">
+            <span class="ex-param">10 days</span>
+            <span class="ex-param">Sw =1.0</span>
+            <span class="ex-param">Sb =0.3</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Problematic calibration drift</div>
+          <div class="ex-obj">High between-day variation dominates. Results look fine within a run — but differ substantially between days.</div>
+          <div class="ex-params">
+            <span class="ex-param">10 days</span>
+            <span class="ex-param">Sw =1.0</span>
+            <span class="ex-param">Sb =4.0</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">Study design</div>
+        <div class="panel-bd">
+
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin:0 0 6px;padding:5px 8px;background:#f3f4f6;border-radius:6px;">
+            True population parameters — unknown in real life
+          </div>
+
+          <label>True mean</label>
+          <input type="number" id="trueMean" value="5.0" step="0.1">
+
+          <label><b>Sw</b> — Within-run SD <span style="font-weight:400;color:var(--muted)">· repeatability · σ_within</span></label>
+          <div class="range-row">
+            <input type="range" id="sigWithin" min="0.1" max="5" step="0.1" value="1.5" oninput="document.getElementById('sigWithinVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="sigWithinVal" value="1.5" step="0.1" min="0.1" max="5" oninput="document.getElementById('sigWithin').value=this.value;simulate()">
+          </div>
+
+          <label><b>Sb</b> — Between-day SD <span style="font-weight:400;color:var(--muted)">· day-to-day drift · σ_between</span></label>
+          <div class="range-row">
+            <input type="range" id="sigBetween" min="0" max="5" step="0.1" value="0" oninput="document.getElementById('sigBetweenVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="sigBetweenVal" value="0.0" step="0.1" min="0" max="5" oninput="document.getElementById('sigBetween').value=this.value;simulate()">
+          </div>
+
+          <div style="height:1px;background:var(--line);margin:12px 0;"></div>
+
+          <label>Number of days</label>
+          <select id="nDays" onchange="simulate()">
+            <option value="1">1 day (repeatability study)</option>
+            <option value="3">3 days</option>
+            <option value="5" selected>5 days</option>
+            <option value="10">10 days</option>
+          </select>
+
+          <label>Samples per day (duplicates each)</label>
+          <select id="samplesPerDay" onchange="simulate()">
+            <option value="2" selected>2 samples × 2 replicates</option>
+            <option value="3">3 samples × 2 replicates</option>
+            <option value="4">4 samples × 2 replicates</option>
+          </select>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="simulate()">▶ Simulate</button>
+            <button class="btn btn-reset" onclick="resetSim()">Reset</button>
+          </div>
+
+          <div class="note-box" style="margin-top:12px;">
+            <b>Study design:</b> Each day, <span id="noteDesign">2 patient samples</span> are measured in <b>duplicate</b>. Spread over <span id="noteDays">5 days</span> = <span id="noteTotal">20 measurements</span> total.
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Formula box -->
+      <div class="panel" style="margin-top:14px;">
+        <div class="panel-hd">How intermediate precision is calculated</div>
+        <div class="panel-bd">
+          <div class="formula-box">
+            <div class="f-label">Step 1 — within-run SD from duplicates:</div>
+            Sw = √( Σ(x₁ᵢ − x₂ᵢ)² / 2n )
+            <br><br>
+            <div class="f-label">Step 2 — between-day variance:</div>
+            Sb² = max(0, S²_day_means − Sw²/m)
+            <br><br>
+            <div class="f-label">Step 3 — intermediate precision SD:</div>
+            <span class="f-wrong">Wrong: St = Sw + Sb</span>
+            <br>
+            <span class="f-correct">Correct: St = √(Sw² + Sb²)</span>
+          </div>
+          <div id="formulaValues" style="margin-top:8px;font-size:12px;color:#344054;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CHARTS -->
+    <div class="charts-col">
+
+      <!-- Dot plot: measurements by day -->
+      <div class="chart-panel">
+        <div class="chart-hd">
+          Measurements by day
+          <span id="dotSubtitle">duplicates shown per sample per day</span>
+        </div>
+        <div class="chart-bd">
+          <canvas id="dotCanvas" style="width:100%;height:260px;"></canvas>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="chart-panel">
+        <div class="panel-hd" style="padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;">Precision results</div>
+        <div class="chart-bd">
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat"><div class="stat-k">Sw (within-run)</div><div class="stat-v" id="statSw">—</div><div class="stat-sub" id="statCVw">Repeatability</div></div>
+            <div class="stat"><div class="stat-k">Sb (between-day)</div><div class="stat-v" id="statSb">—</div><div class="stat-sub" id="statCVb">Day-to-day component</div></div>
+            <div class="stat highlight"><div class="stat-k">St (intermediate)</div><div class="stat-v" id="statSt">—</div><div class="stat-sub" id="statCVt">= √(Sw² + Sb²)</div></div>
+          </div>
+          <div id="insightBox" class="insight-box insight-blue" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Distribution comparison -->
+      <div class="bottom-row">
+        <div class="chart-panel">
+          <div class="chart-hd">
+            Distribution of results
+            <span>repeatability vs intermediate precision</span>
+          </div>
+          <div class="chart-bd">
+            <canvas id="distCanvas" style="width:100%;height:220px;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-hd">
+            CV% comparison
+            <span>how precision worsens across conditions</span>
+          </div>
+          <div class="chart-bd">
+            <canvas id="cvCanvas" style="width:100%;height:220px;"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var dotChart = null, distChart = null, cvChart = null;
+var lastStats = null;
+
+var DAY_COLORS = [
+  '#2b6cb0','#e05c2e','#118a4b','#7c3aed','#b42318',
+  '#0891b2','#d97706','#059669','#9333ea','#dc2626'
+];
+
+function rng(seed) {
+  // simple seeded random — not used, just use Math.random
+  return Math.random();
+}
+
+function randNorm() {
+  // Box-Muller
+  var u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function simulate() {
+  var mean    = parseFloat(document.getElementById('trueMean').value) || 5;
+  var sw_true = parseFloat(document.getElementById('sigWithin').value) || 1.5;
+  var sb_true = parseFloat(document.getElementById('sigBetween').value) || 0;
+  var nDays   = parseInt(document.getElementById('nDays').value) || 5;
+  var spd     = parseInt(document.getElementById('samplesPerDay').value) || 2; // samples per day
+
+  // Update notes
+  document.getElementById('noteDesign').textContent = spd + ' patient sample' + (spd > 1 ? 's' : '');
+  document.getElementById('noteDays').textContent = nDays + ' day' + (nDays > 1 ? 's' : '');
+  document.getElementById('noteTotal').textContent = (nDays * spd * 2) + ' measurements';
+
+  // Generate data
+  var days = [];
+  for (var d = 0; d < nDays; d++) {
+    var dayEffect = sb_true > 0 ? randNorm() * sb_true : 0;
+    var dayMean = mean + dayEffect;
+    var samples = [];
+    for (var s = 0; s < spd; s++) {
+      var r1 = dayMean + randNorm() * sw_true;
+      var r2 = dayMean + randNorm() * sw_true;
+      samples.push([r1, r2]);
+    }
+    days.push({ dayMean: dayMean, samples: samples });
+  }
+
+  // Calculate statistics
+  var stats = calcStats(days, mean);
+  lastStats = stats;
+
+  // Update displays
+  updateStats(stats, mean, sw_true, sb_true);
+  drawDotChart(days);
+  drawDistChart(stats, mean, sw_true, sb_true);
+  drawCVChart(stats, mean);
+  updateFormulaValues(stats, mean);
+}
+
+function calcStats(days, grandTrueMean) {
+  var allVals = [];
+  var dayMeans = [];
+  var nDays = days.length;
+  var m = days[0].samples.length; // samples per day
+
+  // Collect all values and day means
+  days.forEach(function(day) {
+    var dayVals = [];
+    day.samples.forEach(function(pair) {
+      dayVals.push(pair[0], pair[1]);
+      allVals.push(pair[0], pair[1]);
+    });
+    var dm = dayVals.reduce(function(a,b){return a+b;}, 0) / dayVals.length;
+    dayMeans.push(dm);
+  });
+
+  var N = allVals.length;
+  var grandMean = allVals.reduce(function(a,b){return a+b;}, 0) / N;
+
+  // Sw — within-run SD via pooled duplicate differences
+  var SSw = 0;
+  var nPairs = 0;
+  days.forEach(function(day) {
+    day.samples.forEach(function(pair) {
+      var diff = pair[0] - pair[1];
+      SSw += diff * diff;
+      nPairs++;
+    });
+  });
+  var Sw = Math.sqrt(SSw / (2 * nPairs));
+
+  // Sb — between-day component
+  var meanOfDayMeans = dayMeans.reduce(function(a,b){return a+b;}, 0) / nDays;
+  var S2dayMeans = 0;
+  dayMeans.forEach(function(dm){ S2dayMeans += (dm - meanOfDayMeans) * (dm - meanOfDayMeans); });
+  S2dayMeans = nDays > 1 ? S2dayMeans / (nDays - 1) : 0;
+
+  var nPerDay = days[0].samples.length * 2;
+  var Sb2 = Math.max(0, S2dayMeans - Sw * Sw / nPerDay);
+  var Sb = Math.sqrt(Sb2);
+
+  // St — intermediate precision
+  var St2 = Sw * Sw + Sb2;
+  var St = Math.sqrt(St2);
+
+  // Wrong addition
+  var StWrong = Sw + Sb;
+
+  var CVw = grandMean !== 0 ? Sw / grandMean * 100 : NaN;
+  var CVb = grandMean !== 0 ? Sb / grandMean * 100 : NaN;
+  var CVt = grandMean !== 0 ? St / grandMean * 100 : NaN;
+
+  return { Sw: Sw, Sb: Sb, St: St, StWrong: StWrong, Sb2: Sb2, St2: St2,
+           CVw: CVw, CVb: CVb, CVt: CVt, grandMean: grandMean, N: N, nDays: nDays };
+}
+
+function fmt(v, d) {
+  if (isNaN(v) || v === undefined) return '—';
+  return v.toFixed(d === undefined ? 3 : d);
+}
+
+function updateStats(stats, mean, sw_true, sb_true) {
+  document.getElementById('statSw').textContent = fmt(stats.Sw, 3);
+  document.getElementById('statSb').textContent = fmt(stats.Sb, 3);
+  document.getElementById('statSt').textContent = fmt(stats.St, 3);
+  document.getElementById('statCVw').textContent = 'CV ' + fmt(stats.CVw, 1) + '% — Repeatability';
+  document.getElementById('statCVb').textContent = 'CV ' + fmt(stats.CVb, 1) + '% — Between-day';
+  document.getElementById('statCVt').textContent = 'CV ' + fmt(stats.CVt, 1) + '% — Intermediate';
+
+  // Insight
+  var box = document.getElementById('insightBox');
+  var nDays = parseInt(document.getElementById('nDays').value);
+  var msg = '';
+  var cls = 'insight-blue';
+
+  if (nDays === 1) {
+    msg = '<b>This is repeatability only.</b> All measurements were made in one run on one day. No between-day variation is captured. This is the best-case precision — real-world performance will always be worse.';
+    cls = 'insight-amber';
+  } else if (stats.Sb < 0.01) {
+    msg = '<b>Between-day variation is negligible.</b> The analyser is highly stable — calibration, reagents, and temperature are consistent across days. Intermediate precision ≈ repeatability.';
+    cls = 'insight-green';
+  } else if (stats.Sb > stats.Sw) {
+    msg = '<b>Between-day variation dominates.</b> Day-to-day drift (calibration, reagent lots, temperature) contributes more to total imprecision than within-run variation. This is a warning sign — investigate what changes between days.';
+    cls = 'insight-amber';
+  } else {
+    msg = '<b>St = √(Sw² + Sb²) = ' + fmt(stats.St, 3) + '.</b> Intermediate precision combines both variance components. Notice it is larger than repeatability (Sw = ' + fmt(stats.Sw, 3) + ') but the difference depends on how stable the analyser is across days.';
+    cls = 'insight-blue';
+  }
+
+  box.className = 'insight-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function updateFormulaValues(stats, mean) {
+  var el = document.getElementById('formulaValues');
+  var nDays = parseInt(document.getElementById('nDays').value);
+  el.innerHTML =
+    'Sw = <b>' + fmt(stats.Sw, 3) + '</b> &nbsp;|&nbsp; ' +
+    'Sb = <b>' + fmt(stats.Sb, 3) + '</b> &nbsp;|&nbsp; ' +
+    'Sw² + Sb² = <b>' + fmt(stats.St2, 4) + '</b><br>' +
+    '<span style="color:#b42318">Wrong: Sw + Sb = ' + fmt(stats.StWrong, 3) + '</span><br>' +
+    '<span style="color:#118a4b">Correct: √(Sw² + Sb²) = ' + fmt(stats.St, 3) + '</span>' +
+    (stats.StWrong > 0.001 && Math.abs(stats.StWrong - stats.St) > 0.001
+      ? ' <span style="color:#6b7280;font-size:11px;">(difference: +' + fmt(stats.StWrong - stats.St, 3) + ' if added incorrectly)</span>'
+      : '');
+}
+
+function drawDotChart(days) {
+  var ctx = document.getElementById('dotCanvas').getContext('2d');
+  if (dotChart) { dotChart.destroy(); dotChart = null; }
+
+  var datasets = [];
+  days.forEach(function(day, d) {
+    var pts = [];
+    day.samples.forEach(function(pair, s) {
+      var x = d * (day.samples.length + 0.5) + s + 0.5;
+      pts.push({ x: x, y: pair[0] });
+      pts.push({ x: x + 0.15, y: pair[1] });
+    });
+    datasets.push({
+      label: 'Day ' + (d + 1),
+      data: pts,
+      backgroundColor: DAY_COLORS[d % DAY_COLORS.length],
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      showLine: false
+    });
+
+    // Day mean line
+    var xs = pts.map(function(p){return p.x;});
+    var minX = Math.min.apply(null, xs) - 0.2;
+    var maxX = Math.max.apply(null, xs) + 0.2;
+    datasets.push({
+      label: '_mean' + d,
+      data: [{ x: minX, y: day.dayMean }, { x: maxX, y: day.dayMean }],
+      borderColor: DAY_COLORS[d % DAY_COLORS.length],
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      showLine: true,
+      fill: false
+    });
+  });
+
+  // Grand mean line
+  var totalMean = 0, totalN = 0;
+  days.forEach(function(day) {
+    day.samples.forEach(function(pair) { totalMean += pair[0] + pair[1]; totalN += 2; });
+  });
+  totalMean /= totalN;
+  var maxX2 = days.length * (days[0].samples.length + 0.5) + 0.5;
+  datasets.push({
+    label: 'Grand mean',
+    data: [{ x: 0, y: totalMean }, { x: maxX2, y: totalMean }],
+    borderColor: '#334155',
+    borderWidth: 2,
+    borderDash: [6, 4],
+    pointRadius: 0,
+    showLine: true,
+    fill: false
+  });
+
+  dotChart = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            filter: function(item) { return !item.text.startsWith('_mean'); },
+            font: { size: 11 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(3);
+            }
+          }
+        }
+      },
+      scales: {
+        x: { display: false },
+        y: {
+          title: { display: true, text: 'Measured value', font: { size: 11 } },
+          ticks: { font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+function normalPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+}
+
+function drawDistChart(stats, mean, sw_true, sb_true) {
+  var ctx = document.getElementById('distCanvas').getContext('2d');
+  if (distChart) { distChart.destroy(); distChart = null; }
+
+  var gm = stats.grandMean;
+  var Sw = stats.Sw;
+  var St = stats.St;
+  var range = Math.max(Sw, St) * 4;
+  var nPts = 120;
+  var labels = [];
+  var repeatData = [], intData = [];
+  for (var i = 0; i <= nPts; i++) {
+    var x = (gm - range) + (2 * range * i / nPts);
+    labels.push(parseFloat(x.toFixed(3)));
+    repeatData.push(Sw > 0 ? normalPDF(x, gm, Sw) : 0);
+    intData.push(St > 0 ? normalPDF(x, gm, St) : 0);
+  }
+
+  distChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Repeatability (Sw = ' + fmt(Sw, 3) + ')',
+          data: repeatData,
+          borderColor: '#2b6cb0',
+          backgroundColor: 'rgba(43,108,176,0.12)',
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.4
+        },
+        {
+          label: 'Intermediate (St = ' + fmt(St, 3) + ')',
+          data: intData,
+          borderColor: '#e05c2e',
+          backgroundColor: 'rgba(224,92,46,0.10)',
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 6, font: { size: 10 } },
+          title: { display: true, text: 'Measured value', font: { size: 11 } }
+        },
+        y: {
+          display: false
+        }
+      }
+    }
+  });
+}
+
+function drawCVChart(stats, mean) {
+  var ctx = document.getElementById('cvCanvas').getContext('2d');
+  if (cvChart) { cvChart.destroy(); cvChart = null; }
+
+  var cvs = [
+    isNaN(stats.CVw) ? 0 : stats.CVw,
+    isNaN(stats.CVb) ? 0 : stats.CVb,
+    isNaN(stats.CVt) ? 0 : stats.CVt
+  ];
+
+  cvChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Repeatability\n(Sw)', 'Between-day\n(Sb)', 'Intermediate\n(St)'],
+      datasets: [{
+        data: cvs,
+        backgroundColor: ['#2b6cb0', '#f59e0b', '#e05c2e'],
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return 'CV: ' + ctx.parsed.y.toFixed(2) + '%'; }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: {
+          title: { display: true, text: 'CV%', font: { size: 11 } },
+          ticks: { font: { size: 11 }, callback: function(v) { return v.toFixed(1) + '%'; } },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+// Exercises
+var EXERCISES = {
+  1: {
+    params: { trueMean: 5.0, sigWithin: 1.5, sigBetween: 0, nDays: 1, samplesPerDay: 2 },
+    instructions: '<b>Exercise 1 — Repeatability only</b><ol>' +
+      '<li>Notice all points are from one day — there is no between-day variation.</li>' +
+      '<li>Sb = 0. St = Sw. Intermediate precision equals repeatability.</li>' +
+      '<li>Now change <b>Number of days to 5</b> and keep σ_between at 0 — what happens?</li>' +
+      '<li>Key message: one-day studies only measure repeatability. They give the best-case precision.</li></ol>'
+  },
+  2: {
+    params: { trueMean: 5.0, sigWithin: 1.5, sigBetween: 2.0, nDays: 5, samplesPerDay: 2 },
+    instructions: '<b>Exercise 2 — Between-day variation appears</b><ol>' +
+      '<li>The same within-run SD (1.5) as Exercise 1 — but now measurements span 5 days.</li>' +
+      '<li>Each day has its own mean (dashed line) — this is the day-to-day drift captured by Sb.</li>' +
+      '<li>St is now larger than Sw. Intermediate precision is worse than repeatability.</li>' +
+      '<li>Ask yourself: if you only ran this on one day, what would you have missed?</li></ol>'
+  },
+  3: {
+    params: { trueMean: 5.0, sigWithin: 2.0, sigBetween: 2.0, nDays: 10, samplesPerDay: 2 },
+    instructions: '<b>Exercise 3 — Why you cannot add SDs</b><ol>' +
+      '<li>Sw = 2.0 and Sb = 2.0 (approximately). What do you expect St to be?</li>' +
+      '<li>Wrong answer: 2.0 + 2.0 = 4.0.</li>' +
+      '<li>Correct: √(2.0² + 2.0²) = √8 ≈ 2.83.</li>' +
+      '<li>Check the formula box on the left — see the difference between the two approaches.</li>' +
+      '<li>Rule: <b>you always combine variances (SD²), never SDs directly.</b></li></ol>'
+  },
+  4: {
+    params: { trueMean: 5.0, sigWithin: 1.0, sigBetween: 0.3, nDays: 10, samplesPerDay: 2 },
+    instructions: '<b>Exercise 4 — Stable analyser</b><ol>' +
+      '<li>The analyser has very low between-day variation (Sb =0.3).</li>' +
+      '<li>Day means (dashed lines) are nearly identical.</li>' +
+      '<li>St ≈ Sw — intermediate precision is close to repeatability.</li>' +
+      '<li>This is a well-maintained, stable system. Calibration holds between days.</li></ol>'
+  },
+  5: {
+    params: { trueMean: 5.0, sigWithin: 1.0, sigBetween: 4.0, nDays: 10, samplesPerDay: 2 },
+    instructions: '<b>Exercise 5 — Problematic calibration drift</b><ol>' +
+      '<li>Within-run precision looks fine (Sw = 1.0), but between-day drift is large (Sb =4.0).</li>' +
+      '<li>Day means vary widely. Results on Monday vs Friday could differ substantially.</li>' +
+      '<li>A patient measured twice would get very different results on different days.</li>' +
+      '<li>This is why intermediate precision matters more than repeatability for real-world use.</li>' +
+      '<li>What conditions could cause this? Calibration frequency, reagent lot changes, temperature.</li></ol>'
+  }
+};
+
+function loadExercise(n) {
+  var ex = EXERCISES[n];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  var card = document.getElementById('exCard' + n);
+  if (card) card.classList.add('active');
+
+  var p = ex.params;
+  document.getElementById('trueMean').value = p.trueMean;
+  document.getElementById('sigWithin').value = p.sigWithin;
+  document.getElementById('sigWithinVal').value = parseFloat(p.sigWithin).toFixed(1);
+  document.getElementById('sigBetween').value = p.sigBetween;
+  document.getElementById('sigBetweenVal').value = parseFloat(p.sigBetween).toFixed(1);
+  document.getElementById('nDays').value = p.nDays;
+  document.getElementById('samplesPerDay').value = p.samplesPerDay;
+
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML = ex.instructions;
+  instr.classList.add('visible');
+
+  simulate();
+}
+
+function toggleExercises() {
+  var toggle = document.getElementById('exToggle');
+  var panel = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+function resetSim() {
+  document.getElementById('trueMean').value = 5.0;
+  document.getElementById('sigWithin').value = 1.5;
+  document.getElementById('sigWithinVal').value = '1.5';
+  document.getElementById('sigBetween').value = 0;
+  document.getElementById('sigBetweenVal').value = '0.0';
+  document.getElementById('nDays').value = 5;
+  document.getElementById('samplesPerDay').value = 2;
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('exInstructions').classList.remove('visible');
+  simulate();
+}
+
+// Initial run
+simulate();
+</script>
+</body>
+</html>

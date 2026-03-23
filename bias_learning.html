@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Bias</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#0d9488;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=number]:focus,select:focus{border-color:var(--accent);}
+
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 56px;gap:7px;align-items:center;}
+
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-reset{background:#fff;border-color:#d1d5db;color:#6b7280;}
+
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;letter-spacing:0;}
+    .chart-bd{padding:12px 14px;}
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    canvas{display:block;}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+    .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-v{font-size:16px;font-weight:800;margin-top:2px;}
+    .stat-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+    .stat.pass{border-color:#16a34a;background:#f0fdf4;}
+    .stat.pass .stat-v{color:#15803d;}
+    .stat.fail{border-color:#dc2626;background:#fef2f2;}
+    .stat.fail .stat-v{color:#b91c1c;}
+    .stat.neutral{border-color:#0d9488;background:#f0fdfa;}
+    .stat.neutral .stat-v{color:#0f766e;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:9px;}
+    .insight-blue{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .insight-red{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+
+    .mode-tabs{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+    .mode-tab{flex:1;padding:7px 10px;font-size:12px;font-weight:700;background:#f9fafb;border:none;cursor:pointer;font-family:inherit;color:#6b7280;transition:all .15s;}
+    .mode-tab.active{background:var(--accent);color:#fff;}
+
+    .formula-box{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:10px 13px;font-size:12px;font-family:monospace;line-height:1.9;margin-top:8px;}
+    .formula-box .f-label{color:#94a3b8;font-size:10px;display:block;margin-bottom:-2px;}
+
+    .divider-soft{height:1px;background:var(--line);margin:12px 0;}
+
+    /* exercises */
+    .exercises{margin-bottom:20px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#5eead4;box-shadow:0 2px 10px rgba(13,148,136,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#134e4a;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#0f766e;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}.bottom-row{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📐 Understanding Bias</h1>
+  <p class="subtitle">Simulate systematic error — see how bias shifts results, how CRM and EQA detect it, and how it combines with imprecision to affect patients.</p>
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">No bias — method is correct</div>
+          <div class="ex-obj">Results cluster symmetrically around the true value. No systematic shift in either direction.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 0%</span>
+            <span class="ex-param">CV = 2%</span>
+            <span class="ex-param">TAE = 6%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Positive bias — results too high</div>
+          <div class="ex-obj">A calibration drift shifts all results upward. Bias is systematic — it does not cancel out over many measurements.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = +4%</span>
+            <span class="ex-param">CV = 2%</span>
+            <span class="ex-param">TAE = 6%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Bias passes — but TE fails</div>
+          <div class="ex-obj">Bias is within the allowable limit. But combined with imprecision, total error exceeds TAE. Both must be evaluated together.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 2%</span>
+            <span class="ex-param">CV = 3%</span>
+            <span class="ex-param">TAE = 6%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">EQA bias — matrix effect?</div>
+          <div class="ex-obj">EQA shows apparent bias. But the same method on native patient samples shows no bias. This is a matrix effect, not a real analytical problem.</div>
+          <div class="ex-params">
+            <span class="ex-param">EQA bias = +5%</span>
+            <span class="ex-param">Patient bias = 0%</span>
+            <span class="ex-param">CV = 2%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Negative bias — results too low</div>
+          <div class="ex-obj">Results are consistently below the true value. For some analytes, underestimation is clinically more dangerous than overestimation.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = −3.5%</span>
+            <span class="ex-param">CV = 1.5%</span>
+            <span class="ex-param">TAE = 5%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">Simulation parameters</div>
+        <div class="panel-bd">
+
+          <!-- Mode tabs -->
+          <div style="font-size:11px;font-weight:700;color:#344054;margin-bottom:5px;">Comparison mode</div>
+          <div class="mode-tabs">
+            <button class="mode-tab active" id="tabCRM" onclick="setMode('crm')">CRM</button>
+            <button class="mode-tab" id="tabEQA" onclick="setMode('eqa')">EQA</button>
+          </div>
+
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">
+            True population parameters — unknown in real life
+          </div>
+
+          <label>True mean (target / certified value)</label>
+          <input type="number" id="trueMean" value="5.0" step="0.1">
+
+          <label id="biasLabel">Bias (% of true mean)</label>
+          <div class="range-row">
+            <input type="range" id="biasPct" min="-10" max="10" step="0.1" value="0"
+              oninput="document.getElementById('biasPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="biasPctVal" value="0.0" step="0.1" min="-10" max="10"
+              oninput="document.getElementById('biasPct').value=this.value;simulate()">
+          </div>
+
+          <label>Imprecision — CV%</label>
+          <div class="range-row">
+            <input type="range" id="cvPct" min="0.5" max="8" step="0.1" value="2.0"
+              oninput="document.getElementById('cvPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="cvPctVal" value="2.0" step="0.1" min="0.5" max="8"
+              oninput="document.getElementById('cvPct').value=this.value;simulate()">
+          </div>
+
+          <label>Number of measurements (n)</label>
+          <select id="nMeas" onchange="simulate()">
+            <option value="20">20</option>
+            <option value="40" selected>40</option>
+            <option value="80">80</option>
+          </select>
+
+          <div class="divider-soft"></div>
+
+          <label>Total Allowable Error — TAE%</label>
+          <div class="range-row">
+            <input type="range" id="taePct" min="2" max="15" step="0.5" value="6"
+              oninput="document.getElementById('taePctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="taePctVal" value="6.0" step="0.5" min="2" max="15"
+              oninput="document.getElementById('taePct').value=this.value;simulate()">
+          </div>
+
+          <!-- Matrix effect toggle (shown in EQA mode) -->
+          <div id="matrixBlock" style="display:none;">
+            <div class="divider-soft"></div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="matrixEffect" onchange="simulate()" style="width:auto;margin:0;">
+              Show matrix effect comparison
+            </label>
+            <div id="matrixBiasRow" style="display:none;margin-top:8px;">
+              <label>Patient sample bias % (native matrix)</label>
+              <div class="range-row">
+                <input type="range" id="patientBiasPct" min="-10" max="10" step="0.1" value="0"
+                  oninput="document.getElementById('patientBiasPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+                <input type="number" id="patientBiasPctVal" value="0.0" step="0.1" min="-10" max="10"
+                  oninput="document.getElementById('patientBiasPct').value=this.value;simulate()">
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="simulate()">▶ Simulate</button>
+            <button class="btn btn-reset" onclick="resetSim()">Reset</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Formula box -->
+      <div class="panel" style="margin-top:14px;">
+        <div class="panel-hd">Total Error calculation</div>
+        <div class="panel-bd">
+          <div class="formula-box">
+            <span class="f-label">Bias (absolute):</span>
+            Bias = Mean − Target
+            <br>
+            <span class="f-label">Bias (relative):</span>
+            Bias% = (Bias / Target) × 100
+            <br>
+            <span class="f-label">Total Error (95%):</span>
+            TE = |Bias%| + 1.65 × CV%
+            <br>
+            <span class="f-label">Pass if:</span>
+            TE ≤ TAE
+          </div>
+          <div id="formulaValues" style="margin-top:8px;font-size:12px;color:#344054;line-height:1.9;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CHARTS -->
+    <div class="charts-col">
+
+      <!-- Distribution chart -->
+      <div class="chart-panel">
+        <div class="chart-hd">
+          Distribution of results vs target value
+          <span id="distSubtitle">measured values shown against true/target value</span>
+        </div>
+        <div class="chart-bd">
+          <canvas id="distCanvas" style="width:100%;height:280px;"></canvas>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="chart-panel">
+        <div class="panel-hd" style="padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;">Results</div>
+        <div class="chart-bd">
+          <div class="stats-grid" id="statsGrid">
+            <div class="stat neutral"><div class="stat-k">Measured mean</div><div class="stat-v" id="statMean">—</div><div class="stat-sub" id="statMeanSub">—</div></div>
+            <div class="stat" id="statBiasBox"><div class="stat-k">Bias</div><div class="stat-v" id="statBias">—</div><div class="stat-sub" id="statBiasSub">—</div></div>
+            <div class="stat" id="statTEBox"><div class="stat-k">Total Error (TE)</div><div class="stat-v" id="statTE">—</div><div class="stat-sub" id="statTESub">vs TAE</div></div>
+            <div class="stat" id="statVerdictBox"><div class="stat-k">Verdict</div><div class="stat-v" id="statVerdict">—</div><div class="stat-sub" id="statVerdictSub">—</div></div>
+          </div>
+          <div id="insightBox" class="insight-box insight-blue" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Bottom row: dot plot + TE bar -->
+      <div class="bottom-row">
+        <div class="chart-panel">
+          <div class="chart-hd">
+            Individual measurements
+            <span>each point is one result</span>
+          </div>
+          <div class="chart-bd">
+            <canvas id="dotCanvas" style="width:100%;height:220px;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-hd">
+            Error budget
+            <span>bias + imprecision vs TAE</span>
+          </div>
+          <div class="chart-bd">
+            <canvas id="budgetCanvas" style="width:100%;height:220px;"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var distChart = null, dotChart = null, budgetChart = null;
+var currentMode = 'crm';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tabCRM').classList.toggle('active', mode === 'crm');
+  document.getElementById('tabEQA').classList.toggle('active', mode === 'eqa');
+  document.getElementById('matrixBlock').style.display = mode === 'eqa' ? '' : 'none';
+  document.getElementById('biasLabel').textContent = mode === 'crm'
+    ? 'Bias (% of true mean — CRM certified value)'
+    : 'Bias (% of true mean — EQA material, possibly non-commutable)';
+  simulate();
+}
+
+function randNorm() {
+  var u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function normalPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+}
+
+function fmt(v, d) {
+  if (isNaN(v) || v === undefined) return '—';
+  return v.toFixed(d === undefined ? 3 : d);
+}
+
+function simulate() {
+  var trueMean  = parseFloat(document.getElementById('trueMean').value) || 5;
+  var biasPct   = parseFloat(document.getElementById('biasPct').value) || 0;
+  var cvPct     = parseFloat(document.getElementById('cvPct').value) || 2;
+  var n         = parseInt(document.getElementById('nMeas').value) || 40;
+  var taePct    = parseFloat(document.getElementById('taePct').value) || 6;
+
+  var showMatrix = currentMode === 'eqa' && document.getElementById('matrixEffect').checked;
+  document.getElementById('matrixBiasRow').style.display = showMatrix ? '' : 'none';
+  var patientBiasPct = showMatrix ? (parseFloat(document.getElementById('patientBiasPct').value) || 0) : null;
+
+  var sd = trueMean * (cvPct / 100);
+  var measMean = trueMean * (1 + biasPct / 100);
+
+  // Generate measurements
+  var measurements = [];
+  for (var i = 0; i < n; i++) {
+    measurements.push(measMean + randNorm() * sd);
+  }
+
+  var sampleMean = measurements.reduce(function(a, b) { return a + b; }, 0) / n;
+  var absBias = sampleMean - trueMean;
+  var relBias = (absBias / trueMean) * 100;
+  var te = Math.abs(relBias) + 1.65 * cvPct;
+  var passes = te <= taePct;
+
+  // Update stats
+  document.getElementById('statMean').textContent = fmt(sampleMean, 3);
+  document.getElementById('statMeanSub').textContent = 'Target: ' + fmt(trueMean, 3);
+
+  var biasSign = relBias >= 0 ? '+' : '';
+  document.getElementById('statBias').textContent = biasSign + fmt(relBias, 2) + '%';
+  document.getElementById('statBiasSub').textContent = 'Absolute: ' + biasSign + fmt(absBias, 3);
+  var biasPassesAlone = Math.abs(relBias) <= taePct / 2;
+  document.getElementById('statBiasBox').className = 'stat ' + (Math.abs(relBias) < 0.5 ? 'pass' : (biasPassesAlone ? '' : 'fail'));
+
+  document.getElementById('statTE').textContent = fmt(te, 2) + '%';
+  document.getElementById('statTESub').textContent = 'TAE = ' + fmt(taePct, 1) + '%';
+  document.getElementById('statTEBox').className = 'stat ' + (passes ? 'pass' : 'fail');
+
+  document.getElementById('statVerdict').textContent = passes ? 'PASS' : 'FAIL';
+  document.getElementById('statVerdictSub').textContent = passes ? 'TE within TAE' : 'TE exceeds TAE';
+  document.getElementById('statVerdictBox').className = 'stat ' + (passes ? 'pass' : 'fail');
+
+  // Formula values
+  document.getElementById('formulaValues').innerHTML =
+    '|Bias%| = <b>' + fmt(Math.abs(relBias), 2) + '%</b><br>' +
+    '1.65 × CV% = 1.65 × ' + fmt(cvPct, 1) + '% = <b>' + fmt(1.65 * cvPct, 2) + '%</b><br>' +
+    'TE = ' + fmt(Math.abs(relBias), 2) + ' + ' + fmt(1.65 * cvPct, 2) + ' = <b>' + fmt(te, 2) + '%</b><br>' +
+    (passes
+      ? '<span style="color:#15803d;font-weight:700;">✓ TE (' + fmt(te, 2) + '%) ≤ TAE (' + fmt(taePct, 1) + '%) — PASS</span>'
+      : '<span style="color:#b91c1c;font-weight:700;">✗ TE (' + fmt(te, 2) + '%) > TAE (' + fmt(taePct, 1) + '%) — FAIL</span>');
+
+  // Insight
+  updateInsight(relBias, cvPct, te, taePct, passes, showMatrix, patientBiasPct, biasPct);
+
+  // Charts
+  drawDistChart(measurements, trueMean, sd, taePct, showMatrix, patientBiasPct);
+  drawDotChart(measurements, trueMean, taePct);
+  drawBudgetChart(Math.abs(relBias), cvPct, taePct);
+}
+
+function updateInsight(relBias, cvPct, te, taePct, passes, showMatrix, patientBiasPct, eqaBiasPct) {
+  var box = document.getElementById('insightBox');
+  var msg = '', cls = 'insight-blue';
+
+  if (showMatrix && patientBiasPct !== null) {
+    if (Math.abs(eqaBiasPct) > 2 && Math.abs(patientBiasPct) < 1) {
+      msg = '<b>This is likely a matrix effect.</b> The EQA material shows apparent bias (' + fmt(eqaBiasPct, 1) + '%), but native patient samples show no meaningful bias (' + fmt(patientBiasPct, 1) + '%). The EQA material\'s modified matrix (lyophilized, stabilized) is responding differently on this analyser — not a real analytical problem. Confirm with a patient-based method comparison before taking corrective action.';
+      cls = 'insight-amber';
+    } else if (Math.abs(eqaBiasPct) > 2 && Math.abs(patientBiasPct) > 2) {
+      msg = '<b>The bias appears real.</b> It is present on both the EQA material (' + fmt(eqaBiasPct, 1) + '%) and native patient samples (' + fmt(patientBiasPct, 1) + '%). This is a genuine analytical bias — not a matrix effect. Investigate calibration, reagent lots, and interference.';
+      cls = 'insight-red';
+    } else {
+      msg = '<b>No meaningful bias detected</b> on either EQA material or patient samples. The method appears correct.';
+      cls = 'insight-green';
+    }
+  } else if (Math.abs(relBias) < 0.5) {
+    msg = '<b>No meaningful bias.</b> Results are centred on the target value. Random error (imprecision) is the only source of variation here. The distribution is symmetrical around the true value — errors cancel out over many measurements.';
+    cls = 'insight-green';
+  } else if (!passes && Math.abs(relBias) <= taePct / 2) {
+    msg = '<b>Bias passes its individual limit — but total error fails.</b> Bias (' + fmt(Math.abs(relBias), 1) + '%) and CV% (' + fmt(cvPct, 1) + '%) each appear acceptable alone. But combined, TE = ' + fmt(te, 2) + '% exceeds TAE = ' + fmt(taePct, 1) + '%. Bias and imprecision both consume the error budget — you cannot evaluate them independently.';
+    cls = 'insight-red';
+  } else if (!passes) {
+    msg = '<b>Total error exceeds TAE.</b> Bias of ' + fmt(Math.abs(relBias), 1) + '% drives TE = ' + fmt(te, 2) + '% beyond the allowable limit of ' + fmt(taePct, 1) + '%. Patient results could be clinically misleading. Investigate calibration and check for systematic interference.';
+    cls = 'insight-red';
+  } else if (relBias > 0) {
+    msg = '<b>Positive bias — results consistently too high.</b> TE = ' + fmt(te, 2) + '% passes TAE = ' + fmt(taePct, 1) + '%. The shift is systematic — unlike random error, it does not cancel out. On average, patient results are overestimated by approximately ' + fmt(Math.abs(relBias), 1) + '% — individual results still vary around this shifted mean due to random error.';
+    cls = 'insight-amber';
+  } else if (relBias < 0) {
+    msg = '<b>Negative bias — results consistently too low.</b> TE = ' + fmt(te, 2) + '% passes TAE = ' + fmt(taePct, 1) + '%. For some analytes, underestimation is clinically more dangerous than overestimation (e.g. troponin, HbA1c, creatinine).';
+    cls = 'insight-amber';
+  } else {
+    msg = 'TE = ' + fmt(te, 2) + '% is within TAE = ' + fmt(taePct, 1) + '%. Method passes total error evaluation.';
+    cls = 'insight-green';
+  }
+
+  box.className = 'insight-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function drawDistChart(measurements, trueMean, sd, taePct, showMatrix, patientBiasPct) {
+  var ctx = document.getElementById('distCanvas').getContext('2d');
+  if (distChart) { distChart.destroy(); distChart = null; }
+
+  var sampleMean = measurements.reduce(function(a,b){return a+b;},0) / measurements.length;
+  var range = Math.max(sd * 4, Math.abs(sampleMean - trueMean) * 2 + sd * 3);
+  var nPts = 150;
+  var labels = [], trueData = [], measData = [], patientData = [];
+
+  for (var i = 0; i <= nPts; i++) {
+    var x = (trueMean - range) + (2 * range * i / nPts);
+    labels.push(parseFloat(x.toFixed(4)));
+    trueData.push(normalPDF(x, trueMean, sd));
+    measData.push(normalPDF(x, sampleMean, sd));
+    if (showMatrix && patientBiasPct !== null) {
+      var patientMean = trueMean * (1 + patientBiasPct / 100);
+      patientData.push(normalPDF(x, patientMean, sd));
+    }
+  }
+
+  var datasets = [
+    {
+      label: 'Target value distribution',
+      data: trueData,
+      borderColor: '#0d9488',
+      backgroundColor: 'rgba(13,148,136,0.10)',
+      fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4,
+      borderDash: [5, 4]
+    },
+    {
+      label: currentMode === 'crm' ? 'Your method (CRM)' : 'Your method (EQA material)',
+      data: measData,
+      borderColor: '#e05c2e',
+      backgroundColor: 'rgba(224,92,46,0.10)',
+      fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4
+    }
+  ];
+
+  if (showMatrix && patientBiasPct !== null) {
+    datasets.push({
+      label: 'Your method (patient samples)',
+      data: patientData,
+      borderColor: '#7c3aed',
+      backgroundColor: 'rgba(124,58,237,0.08)',
+      fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4,
+      borderDash: [3, 2]
+    });
+  }
+
+  distChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { enabled: false },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 7, font: { size: 10 } },
+          title: { display: true, text: 'Measured value', font: { size: 11 } }
+        },
+        y: { display: false }
+      }
+    }
+  });
+}
+
+function drawDotChart(measurements, trueMean, taePct) {
+  var ctx = document.getElementById('dotCanvas').getContext('2d');
+  if (dotChart) { dotChart.destroy(); dotChart = null; }
+
+  var allowableAbsBias = trueMean * (taePct / 2 / 100);
+  var upperLimit = trueMean + allowableAbsBias;
+  var lowerLimit = trueMean - allowableAbsBias;
+
+  var dotMean = measurements.reduce(function(a,b){return a+b;},0) / measurements.length;
+  var pts = measurements.map(function(v, i) { return { x: i + 1, y: v }; });
+  var inside = pts.filter(function(p){ return p.y >= lowerLimit && p.y <= upperLimit; });
+  var outside = pts.filter(function(p){ return p.y < lowerLimit || p.y > upperLimit; });
+
+  dotChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Within allowable bias',
+          data: inside,
+          backgroundColor: 'rgba(13,148,136,0.55)',
+          pointRadius: 3.5
+        },
+        {
+          label: 'Outside allowable bias',
+          data: outside,
+          backgroundColor: 'rgba(220,38,38,0.65)',
+          pointRadius: 3.5
+        },
+        {
+          label: 'Target value',
+          data: [{ x: 0, y: trueMean }, { x: measurements.length + 1, y: trueMean }],
+          borderColor: '#0d9488', borderWidth: 2, borderDash: [5, 4],
+          pointRadius: 0, showLine: true, fill: false
+        },
+        {
+          label: 'Max allowable bias (±' + (taePct / 2).toFixed(1) + '%)',
+          data: [{ x: 0, y: upperLimit }, { x: measurements.length + 1, y: upperLimit }],
+          borderColor: '#fbbf24', borderWidth: 1.5, borderDash: [3, 3],
+          pointRadius: 0, showLine: true, fill: false
+        },
+        {
+          label: '_lower',
+          data: [{ x: 0, y: lowerLimit }, { x: measurements.length + 1, y: lowerLimit }],
+          borderColor: '#fbbf24', borderWidth: 1.5, borderDash: [3, 3],
+          pointRadius: 0, showLine: true, fill: false
+        },
+        {
+          label: 'Measured mean',
+          data: [{ x: 0, y: dotMean }, { x: measurements.length + 1, y: dotMean }],
+          borderColor: '#e11d48', borderWidth: 2, borderDash: [8, 4],
+          pointRadius: 0, showLine: true, fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            filter: function(item) { return !item.text.startsWith('_'); },
+            font: { size: 10 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y.toFixed(3); }
+          }
+        }
+      },
+      scales: {
+        x: { display: false },
+        y: {
+          title: { display: true, text: 'Value', font: { size: 11 } },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function drawBudgetChart(absBiasPct, cvPct, taePct) {
+  var ctx = document.getElementById('budgetCanvas').getContext('2d');
+  if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+
+  var imprecisionContrib = 1.65 * cvPct;
+  var te = absBiasPct + imprecisionContrib;
+  var remaining = Math.max(0, taePct - te);
+
+  budgetChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Error budget'],
+      datasets: [
+        {
+          label: '|Bias%|',
+          data: [absBiasPct],
+          backgroundColor: '#e05c2e',
+          borderRadius: 0,
+          borderSkipped: false
+        },
+        {
+          label: '1.65 × CV%',
+          data: [imprecisionContrib],
+          backgroundColor: '#f59e0b',
+          borderSkipped: false
+        },
+        {
+          label: 'Remaining TAE',
+          data: [remaining],
+          backgroundColor: remaining > 0 ? '#86efac' : '#fecaca',
+          borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.x.toFixed(2) + '%'; }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: '%', font: { size: 11 } },
+          ticks: { font: { size: 10 }, callback: function(v){ return parseFloat(v.toFixed(2)) + '%'; } },
+          max: Math.max(taePct * 1.2, te * 1.1)
+        },
+        y: { stacked: true, display: false }
+      }
+    }
+  });
+}
+
+var EXERCISES = {
+  1: {
+    params: { trueMean: 5.0, biasPct: 0, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
+    instructions: '<b>Exercise 1 — No bias</b><ol>' +
+      '<li>The distribution is centred exactly on the target value. Results are symmetrical.</li>' +
+      '<li>Random error (imprecision) causes scatter, but on average the method is correct.</li>' +
+      '<li>Try increasing CV% — watch the distribution widen. TE increases even though bias is zero.</li>' +
+      '<li>Key message: even without bias, high imprecision alone can cause total error to fail.</li></ol>'
+  },
+  2: {
+    params: { trueMean: 5.0, biasPct: 4, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
+    instructions: '<b>Exercise 2 — Positive bias</b><ol>' +
+      '<li>The entire distribution has shifted to the right — away from the true value.</li>' +
+      '<li>Unlike random error, this shift does NOT cancel out. Every patient result is too high.</li>' +
+      '<li>Notice the error budget chart: bias is consuming most of the TAE.</li>' +
+      '<li>Try reducing bias to 1% — does the method pass now? What does TE become?</li></ol>'
+  },
+  3: {
+    params: { trueMean: 5.0, biasPct: 2, cvPct: 3.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
+    instructions: '<b>Exercise 3 — Bias passes, TE fails</b><ol>' +
+      '<li>Bias = 2% and CV = 3% — both might seem acceptable individually.</li>' +
+      '<li>But TE = |2| + 1.65 × 3 = 6.95% — which exceeds TAE = 6%.</li>' +
+      '<li>This is the most dangerous scenario: the method appears fine by individual criteria, but total error fails.</li>' +
+      '<li>Always evaluate TE, not bias and imprecision in isolation.</li></ol>'
+  },
+  4: {
+    params: { trueMean: 5.0, biasPct: 5, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'eqa', matrix: true, patientBias: 0 },
+    instructions: '<b>Exercise 4 — EQA bias vs matrix effect</b><ol>' +
+      '<li>The EQA material shows +5% bias — but patient samples show 0% bias (native matrix).</li>' +
+      '<li>This is a matrix effect: the lyophilized EQA material behaves differently on this analyser.</li>' +
+      '<li>If you corrected the calibration based on EQA alone, you would introduce a real bias into patient results.</li>' +
+      '<li>Try changing patient sample bias to +5% — now both materials agree. That is a real bias.</li>' +
+      '<li>Rule: always confirm EQA-detected bias with a patient-based comparison before acting.</li></ol>'
+  },
+  5: {
+    params: { trueMean: 5.0, biasPct: -3.5, cvPct: 1.5, nMeas: 40, taePct: 5, mode: 'crm', matrix: false, patientBias: 0 },
+    instructions: '<b>Exercise 5 — Negative bias</b><ol>' +
+      '<li>Results are consistently below the true value.</li>' +
+      '<li>For some analytes, underestimation is clinically more dangerous: creatinine (missed kidney disease), troponin (missed MI), HbA1c (under-treated diabetes).</li>' +
+      '<li>TE = 3.5 + 1.65 × 1.5 = 5.975% — just below TAE = 5%? Check the numbers.</li>' +
+      '<li>The direction of bias matters clinically, even if the numbers pass.</li></ol>'
+  }
+};
+
+function loadExercise(n) {
+  var ex = EXERCISES[n];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  var card = document.getElementById('exCard' + n);
+  if (card) card.classList.add('active');
+
+  var p = ex.params;
+  setMode(p.mode);
+  document.getElementById('trueMean').value = p.trueMean;
+  document.getElementById('biasPct').value = p.biasPct;
+  document.getElementById('biasPctVal').value = parseFloat(p.biasPct).toFixed(1);
+  document.getElementById('cvPct').value = p.cvPct;
+  document.getElementById('cvPctVal').value = parseFloat(p.cvPct).toFixed(1);
+  document.getElementById('nMeas').value = p.nMeas;
+  document.getElementById('taePct').value = p.taePct;
+  document.getElementById('taePctVal').value = parseFloat(p.taePct).toFixed(1);
+  document.getElementById('matrixEffect').checked = p.matrix;
+  document.getElementById('patientBiasPct').value = p.patientBias;
+  document.getElementById('patientBiasPctVal').value = parseFloat(p.patientBias).toFixed(1);
+
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML = ex.instructions;
+  instr.classList.add('visible');
+
+  simulate();
+}
+
+function toggleExercises() {
+  var toggle = document.getElementById('exToggle');
+  var panel = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+function resetSim() {
+  setMode('crm');
+  document.getElementById('trueMean').value = 5.0;
+  document.getElementById('biasPct').value = 0;
+  document.getElementById('biasPctVal').value = '0.0';
+  document.getElementById('cvPct').value = 2.0;
+  document.getElementById('cvPctVal').value = '2.0';
+  document.getElementById('nMeas').value = 40;
+  document.getElementById('taePct').value = 6;
+  document.getElementById('taePctVal').value = '6.0';
+  document.getElementById('matrixEffect').checked = false;
+  document.getElementById('patientBiasPct').value = 0;
+  document.getElementById('patientBiasPctVal').value = '0.0';
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('exInstructions').classList.remove('visible');
+  simulate();
+}
+
+simulate();
+</script>
+</body>
+</html>

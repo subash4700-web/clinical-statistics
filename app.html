@@ -522,6 +522,41 @@
       border-color: #1565c0;
     }
 
+    /* Search */
+    .search-wrap { padding: 8px 10px 4px; position: relative; }
+    .search-input {
+      width: 100%; box-sizing: border-box;
+      padding: 7px 10px 7px 30px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #e2e8f0; font-size: 12px; font-family: inherit;
+      outline: none;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.35); }
+    .search-input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
+    .search-icon {
+      position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: rgba(255,255,255,0.35); pointer-events: none;
+    }
+    .search-results {
+      display: none; position: absolute; left: 10px; right: 10px; top: calc(100% - 4px);
+      background: #1e293b; border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; z-index: 200; max-height: 300px; overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .search-results.visible { display: block; }
+    .search-result-item {
+      padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.07);
+      transition: background .1s;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: rgba(255,255,255,0.08); }
+    .sr-name { font-size: 12px; font-weight: 700; color: #e2e8f0; }
+    .sr-hint { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .sr-section { font-size: 10px; color: #7dd3fc; margin-top: 1px; }
+    .search-no-results { padding: 10px 12px; font-size: 12px; color: rgba(255,255,255,0.4); }
+
     .home-button {
       display: block;
       width: 100%;
@@ -714,9 +749,19 @@
       <h2 data-i18n="appTitle">Clinical Statistics</h2>
       <div class="sidebar-version" id="appVersion">Version v1.0.0 (Build 0)</div>
 
+      <!-- Search -->
+      <div class="search-wrap" id="searchWrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search tools…"
+          oninput="doSearch(this.value)" onkeydown="searchKeydown(event)"
+          autocomplete="off" spellcheck="false">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
       <!-- Home Button -->
       <button class="home-button active" onclick="loadHome(this)" data-i18n="nav.home">Home</button>
       <button onclick="loadTool('test_guide.html','Statistical Test Guide', this)" data-i18n="nav.testGuide" class="guide-button">🧭 Test Guide</button>
+      <button onclick="loadTool('dictionary.html','Clinical Terms — Glossary', this)" class="guide-button">📖 Glossary</button>
 
       <!-- Collapsible Hypothesis Tests Section -->
       <div class="collapsible-section">
@@ -772,18 +817,59 @@
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.analytical">Analytical Performance</button>
         <div class="collapsible-content child-nav">
-          <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run statistics</span></button>
-          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol</span></button>
-          <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
-          <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Two methods · paired patient samples</span></button>
+
+          <!-- Learning subsection -->
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">📚 Learning</button>
+            <div class="collapsible-content child-nav">
+              <div class="sub-category">Analytical Performance</div>
+              <button onclick="loadTool('analytical_performance_theory.html','Analytical Performance — Concepts &amp; Theory', this)">Concepts &amp; Theory<span class="btn-hint">Precision · bias · TAE · sigma metric</span></button>
+              <div class="sub-category">Learning Tools</div>
+              <button onclick="loadTool('precision_learning.html','Understanding Precision', this)">Understanding Precision<span class="btn-hint">Repeatability · intermediate precision · reproducibility</span></button>
+              <button onclick="loadTool('bias_learning.html','Understanding Bias', this)">Understanding Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
+              <button onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">Understanding Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
+            </div>
+          </div>
+
+          <!-- Precision subsection -->
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Precision</button>
+            <div class="collapsible-content child-nav">
+              <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run statistics</span></button>
+              <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol</span></button>
+            </div>
+          </div>
+
+          <!-- Bias & Method Comparison subsection -->
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Bias &amp; Method Comparison</button>
+            <div class="collapsible-content child-nav">
+              <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
+              <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Two methods · paired patient samples</span></button>
+            </div>
+          </div>
+
         </div>
       </div>
 
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression</button>
         <div class="collapsible-content child-nav">
-          <button onclick="loadTool('linear_regression.html','Correlation & Linear Regression', this)" data-i18n="tool.linReg">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
-          <button onclick="loadTool('logistic_regression_roc.html','ROC & Diagnostic Performance', this)" data-i18n="tool.logReg">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
+
+          <!-- Learning subsection -->
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">📚 Learning</button>
+            <div class="collapsible-content child-nav">
+              <div class="sub-category">Correlation &amp; Regression</div>
+              <button onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">Concepts &amp; Theory<span class="btn-hint">r · R² · regression · ROC · AUC</span></button>
+              <div class="sub-category">Learning Tools</div>
+              <button onclick="loadTool('correlation_learning.html','Understanding Correlation &amp; Linear Regression', this)">Understanding Correlation<span class="btn-hint">r · R² · scatter · residuals · outliers</span></button>
+              <button onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">Understanding ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
+            </div>
+          </div>
+
+          <button onclick="loadTool('linear_regression.html','Correlation &amp; Linear Regression', this)" data-i18n="tool.linReg">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
+          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)" data-i18n="tool.logReg">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
         </div>
       </div>
 
@@ -1451,26 +1537,43 @@
       analytical: {
         heroClass: 'sl-teal',
         title: T('cat.analytical'),
-        desc: 'Evaluate and validate analytical performance of laboratory methods. Choose Precision — Quick/QC for routine monitoring or EP05/EP15 for full validation studies.',
+        desc: 'Evaluate and validate analytical performance of laboratory methods. Start with the learning tools to understand the concepts, then use the tools to investigate your own data.',
         back: `loadHome()`,
         backLabel: '← Home',
-        body: grp('', [
-          tc('precision.html',         'Precision — Quick / QC',  'Daily monitoring · run-to-run statistics'),
-          tc('precision_ep05.html',    'EP05/EP15 — Validation',  'Full validation study · CLSI protocol'),
-          tc('bias.html',              'Bias — CRM / EQA',        'Known reference value vs your method'),
-          tc('method_comparison.html', 'Method Comparison',       'Two methods · paired patient samples'),
-        ]),
+        body: [
+          grp('📚 Learning', [
+            tc('analytical_performance_theory.html', 'Concepts &amp; Theory', 'Precision · bias · TAE · sigma metric'),
+            tc('precision_learning.html', 'Understanding Precision', 'Repeatability · intermediate precision · reproducibility'),
+            tc('bias_learning.html', 'Understanding Bias', 'Systematic error · CRM vs EQA · total error'),
+            tc('tae_learning.html', 'Understanding Total Error &amp; Sigma', 'TE · TAE · sigma metric · QC design'),
+          ]),
+          grp('Precision', [
+            tc('precision.html',         'Precision — Quick / QC',  'Daily monitoring · run-to-run statistics'),
+            tc('precision_ep05.html',    'EP05/EP15 — Validation',  'Full validation study · CLSI protocol'),
+          ]),
+          grp('Bias &amp; Method Comparison', [
+            tc('bias.html',              'Bias — CRM / EQA',        'Known reference value vs your method'),
+            tc('method_comparison.html', 'Method Comparison',       'Two methods · paired patient samples'),
+          ]),
+        ].join(''),
       },
       regression: {
         heroClass: 'sl-rose',
         title: T('cat.correlation'),
-        desc: 'Explore relationships between continuous variables or evaluate the diagnostic accuracy of a test or biomarker. Use ROC &amp; Diagnostic Performance to find optimal cut-offs and compare analytes.',
+        desc: 'Explore relationships between continuous variables or evaluate diagnostic accuracy. New here? Start with the Learning section.',
         back: `loadHome()`,
         backLabel: '← Home',
-        body: grp('', [
-          tc('linear_regression.html',        'Linear Regression',            'r, R², prediction line · continuous outcome'),
-          tc('logistic_regression_roc.html',  'ROC &amp; Diagnostic Performance', 'AUC · cut-off · combine analytes via logistic regression'),
-        ]),
+        body: [
+          grp('📚 Learning', [
+            tc('correlation_regression_theory.html', 'Concepts &amp; Theory',           'r · R² · regression · ROC · AUC'),
+            tc('correlation_learning.html',          'Understanding Correlation',        'r · R² · scatter · residuals · outliers'),
+            tc('roc_learning.html',                  'Understanding ROC',               'Sensitivity · specificity · AUC · cut-off'),
+          ]),
+          grp('Tools', [
+            tc('linear_regression.html',        'Linear Regression',            'r, R², prediction line · continuous outcome'),
+            tc('logistic_regression_roc.html',  'ROC &amp; Diagnostic Performance', 'AUC · cut-off · combine analytes via logistic regression'),
+          ]),
+        ].join(''),
       },
       lab: {
         heroClass: 'sl-orange',
@@ -1530,6 +1633,182 @@
         ${sec.body}
       </div>`;
   }
+
+  // ── Search ──────────────────────────────────────────────────────────────
+  const ALL_PAGES = [
+    { file:'inferential_statistics.html',        name:'Concepts & Theory',               section:'Inferential Statistics' },
+    { file:'dance_of_p.html',                    name:'Dance of the p-values',            section:'Inferential Statistics › Learning' },
+    { file:'normal_distribution.html',           name:'Normal Distribution',              section:'Inferential Statistics › Learning' },
+    { file:'f_distribution.html',                name:'F Distribution',                   section:'Inferential Statistics › Learning' },
+    { file:'chi_distribution.html',              name:'Chi-Square Distribution',          section:'Inferential Statistics › Learning' },
+    { file:'t_one_sample.html',                  name:'One-Sample T-Test',                section:'Inferential Statistics › Quantitative' },
+    { file:'paired_t_test.html',                 name:'Paired T-Test',                    section:'Inferential Statistics › Quantitative' },
+    { file:'two_sample_t_test_independent.html', name:'Independent T-Test',               section:'Inferential Statistics › Quantitative' },
+    { file:'anova.html',                         name:'One-Way ANOVA',                    section:'Inferential Statistics › Quantitative' },
+    { file:'two_way_anova.html',                 name:'Two-Way ANOVA',                    section:'Inferential Statistics › Quantitative' },
+    { file:'mann_whitney.html',                  name:'Mann–Whitney U',                   section:'Inferential Statistics › Quantitative' },
+    { file:'wilcoxon.html',                      name:'Wilcoxon signed-rank',             section:'Inferential Statistics › Quantitative' },
+    { file:'Chi_GOF.html',                       name:'Chi-Square GOF',                   section:'Inferential Statistics › Categorical' },
+    { file:'Chi_independence.html',              name:'Chi-Square Independence',           section:'Inferential Statistics › Categorical' },
+    { file:'mcnemar.html',                       name:'McNemar Test',                     section:'Inferential Statistics › Categorical' },
+    { file:'fisher_exact.html',                  name:"Fisher's Exact Test",              section:'Inferential Statistics › Categorical' },
+    { file:'kappa.html',                         name:'Kappa',                            section:'Inferential Statistics › Categorical' },
+    { file:'weighted_kappa.html',                name:'Weighted Kappa',                   section:'Inferential Statistics › Categorical' },
+    { file:'analytical_performance_theory.html', name:'Concepts & Theory — Analytical',  section:'Analytical Performance › Learning' },
+    { file:'precision_learning.html',            name:'Understanding Precision',          section:'Analytical Performance › Learning' },
+    { file:'bias_learning.html',                 name:'Understanding Bias',               section:'Analytical Performance › Learning' },
+    { file:'tae_learning.html',                  name:'Understanding Total Error & Sigma',section:'Analytical Performance › Learning' },
+    { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Precision' },
+    { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Precision' },
+    { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Bias' },
+    { file:'method_comparison.html',             name:'Method Comparison',                section:'Analytical Performance › Bias' },
+    { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
+    { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
+    { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Correlation & Regression › Learning' },
+    { file:'linear_regression.html',             name:'Linear Regression',               section:'Correlation & Regression' },
+    { file:'logistic_regression_roc.html',       name:'ROC & Diagnostic Performance',    section:'Correlation & Regression' },
+    { file:'PCR.html',                           name:'In Silico PCR',                    section:'Lab Tools › PCR' },
+    { file:'dilution_calculator.html',           name:'PCR Setup / Primer Dilution',      section:'Lab Tools › PCR' },
+    { file:'molarity_solution_prep.html',        name:'Molarity & Solution Prep',         section:'Lab Tools › Prepare Solution' },
+    { file:'lambert_beer.html',                  name:'Photometry',                       section:'Lab Tools › Quantification' },
+    { file:'nernst_ise.html',                    name:'Potentiometry',                    section:'Lab Tools › Quantification' },
+    { file:'test_guide.html',                    name:'Statistical Test Guide',           section:'Guide' },
+    { file:'dictionary.html',                    name:'Clinical Terms — Glossary',       section:'Guide' },
+  ];
+
+  let pageIndex = null;   // null = not yet built
+  let indexing  = false;
+  let searchHighlight = -1;
+  let searchDebounce = null;
+
+  async function buildPageIndex() {
+    if (pageIndex || indexing) return;
+    indexing = true;
+    pageIndex = [];
+    const parser = new DOMParser();
+    for (const page of ALL_PAGES) {
+      try {
+        const res  = await fetch(page.file);
+        const html = await res.text();
+        const doc  = parser.parseFromString(html, 'text/html');
+        doc.querySelectorAll('script,style,noscript').forEach(el => el.remove());
+        const raw = (doc.body ? doc.body.textContent : '').replace(/\s+/g, ' ').trim();
+        pageIndex.push({ ...page, raw, lower: raw.toLowerCase() });
+      } catch(_) {
+        pageIndex.push({ ...page, raw: '', lower: '' });
+      }
+    }
+    indexing = false;
+    // Re-run search if input still has text
+    const q = document.getElementById('searchInput').value;
+    if (q.trim()) renderSearch(q.trim());
+  }
+
+  function extractSnippet(raw, lower, term) {
+    const idx = lower.indexOf(term);
+    if (idx === -1) return null;
+    const start = Math.max(0, idx - 70);
+    const end   = Math.min(raw.length, idx + term.length + 70);
+    let snip = raw.slice(start, end).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (start > 0) snip = '…' + snip;
+    if (end < raw.length) snip += '…';
+    const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+    return snip.replace(re, '<mark style="background:#fde68a;color:#1c1c1c;border-radius:2px;padding:0 2px;">$&</mark>');
+  }
+
+  function renderSearch(term) {
+    const el = document.getElementById('searchResults');
+    const tl = term.toLowerCase();
+
+    if (!pageIndex) {
+      el.innerHTML = '<div class="search-no-results">⏳ Indexing pages…</div>';
+      el.classList.add('visible');
+      buildPageIndex();
+      return;
+    }
+
+    const results = [];
+    for (const page of pageIndex) {
+      if (!page.lower.includes(tl)) continue;
+      const snippet = extractSnippet(page.raw, page.lower, tl);
+      // Count occurrences for ranking
+      const count = (page.lower.match(new RegExp(tl.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g')) || []).length;
+      results.push({ ...page, snippet, count });
+    }
+    results.sort((a, b) => b.count - a.count);
+    const top = results.slice(0, 10);
+
+    if (!top.length) {
+      el.innerHTML = '<div class="search-no-results">No results found</div>';
+    } else {
+      el.innerHTML = top.map((r, i) =>
+        `<div class="search-result-item" data-idx="${i}"
+          onclick="searchSelect('${r.file.replace(/'/g,"\\'")}','${r.name.replace(/'/g,"\\'")}')">
+          <div class="sr-name">${r.name}</div>
+          <div class="sr-section">${r.section} · ${r.count} match${r.count > 1 ? 'es' : ''}</div>
+          ${r.snippet ? `<div class="sr-hint" style="margin-top:3px;font-size:10px;line-height:1.5;">${r.snippet}</div>` : ''}
+        </div>`
+      ).join('');
+    }
+    el.classList.add('visible');
+    searchHighlight = -1;
+  }
+
+  function doSearch(q) {
+    const el = document.getElementById('searchResults');
+    const term = q.trim();
+    if (!term) { el.classList.remove('visible'); el.innerHTML = ''; searchHighlight = -1; return; }
+    // Debounce slightly so we don't re-render on every keystroke
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => renderSearch(term), 120);
+    // Show instantly if index ready
+    if (pageIndex) renderSearch(term);
+    else {
+      el.innerHTML = '<div class="search-no-results">⏳ Indexing pages…</div>';
+      el.classList.add('visible');
+      buildPageIndex();
+    }
+  }
+
+  function searchKeydown(e) {
+    const el    = document.getElementById('searchResults');
+    const items = el.querySelectorAll('.search-result-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      searchHighlight = Math.min(searchHighlight + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      searchHighlight = Math.max(searchHighlight - 1, 0);
+    } else if (e.key === 'Enter') {
+      if (searchHighlight >= 0 && items[searchHighlight]) items[searchHighlight].click();
+      else if (items.length === 1) items[0].click();
+      return;
+    } else if (e.key === 'Escape') {
+      closeSearch(); return;
+    }
+    items.forEach((el, i) => el.style.background = i === searchHighlight ? 'rgba(255,255,255,0.12)' : '');
+  }
+
+  function searchSelect(file, name) {
+    loadTool(file, name, null);
+    closeSearch();
+  }
+
+  function closeSearch() {
+    document.getElementById('searchInput').value = '';
+    const el = document.getElementById('searchResults');
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    searchHighlight = -1;
+  }
+
+  // Start building index in background immediately
+  buildPageIndex();
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('searchWrap').contains(e.target)) closeSearch();
+  });
+  // ── End Search ───────────────────────────────────────────────────────────
 
   function loadHome(btn) {
     currentToolPage = null;

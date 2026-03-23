@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding ROC &amp; Diagnostic Performance</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+
+    .page-header {
+      background: linear-gradient(135deg, #881337 0%, #be185d 60%, #e11d48 100%);
+      color: white; padding: 20px 28px 18px;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p { margin: 0; font-size: 13px; opacity: .78; }
+
+    .shell { display: flex; height: calc(100vh - 72px - 80px); }
+
+    /* LEFT */
+    .left-panel {
+      width: 280px; min-width: 280px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
+
+    .ctrl-group { margin-bottom: 18px; }
+    .ctrl-group label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #e11d48; }
+    .ctrl-val { font-size: 13px; font-weight: 700; color: #e11d48; min-width: 44px; text-align: right; }
+
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 16px 0 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+    .stat-card .sc-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .stat-card .sc-val { font-size: 18px; font-weight: 900; color: #111827; }
+    .stat-card .sc-pct { font-size: 11px; color: #6b7280; }
+
+    .auc-badge {
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      background: #fff1f2; border: 2px solid #fecdd3; border-radius: 14px;
+      padding: 14px; margin: 12px 0;
+    }
+    .auc-badge .auc-label { font-size: 11px; font-weight: 700; color: #be185d; text-transform: uppercase; letter-spacing: .06em; }
+    .auc-badge .auc-val { font-size: 36px; font-weight: 900; color: #e11d48; line-height: 1.1; }
+    .auc-badge .auc-desc { font-size: 12px; color: #881337; margin-top: 2px; text-align: center; }
+
+    .youden-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #14532d; margin-top: 10px; }
+    .youden-box b { color: #166534; }
+
+    .insight-box { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; color: #881337; margin-top: 10px; }
+    .insight-box b { color: #be185d; }
+
+    /* RIGHT */
+    .right-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; overflow: hidden; }
+
+    .chart-cell { padding: 14px 16px 10px; min-height: 0; display: flex; flex-direction: column; }
+    .chart-cell:nth-child(2) { border-left: 1px solid #e5e7eb; }
+    .chart-cell:nth-child(3) { border-top: 1px solid #e5e7eb; background: white; }
+    .chart-cell:nth-child(4) { border-top: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; background: white; }
+
+    .chart-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .chart-wrap { position: relative; flex: 1; min-height: 0; }
+
+    /* EXERCISES */
+    .exercises { background: white; border-top: 1px solid #e5e7eb; padding: 12px 20px; }
+    .exercise-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ex-tab {
+      padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; transition: all .15s;
+    }
+    .ex-tab:hover, .ex-tab.active { background: #e11d48; color: white; border-color: #e11d48; }
+    .ex-desc { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Understanding ROC &amp; Diagnostic Performance</h1>
+  <p>Explore how sensitivity, specificity, AUC, and the cut-off interact. Adjust the distributions and move the threshold to see the trade-off in real time.</p>
+</div>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="ctrl-group">
+      <label>Separation (μ disease − μ healthy)</label>
+      <div class="ctrl-row">
+        <input type="range" id="sepSlider" min="0.2" max="4.0" step="0.1" value="2.0" oninput="update()">
+        <span class="ctrl-val" id="sepVal">2.0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>SD — Healthy group</label>
+      <div class="ctrl-row">
+        <input type="range" id="sdHSlider" min="0.3" max="2.0" step="0.1" value="1.0" oninput="update()">
+        <span class="ctrl-val" id="sdHVal">1.0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>SD — Disease group</label>
+      <div class="ctrl-row">
+        <input type="range" id="sdDSlider" min="0.3" max="2.0" step="0.1" value="1.0" oninput="update()">
+        <span class="ctrl-val" id="sdDVal">1.0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Threshold (cut-off)</label>
+      <div class="ctrl-row">
+        <input type="range" id="threshSlider" min="-2" max="6" step="0.05" value="1.0" oninput="update()">
+        <span class="ctrl-val" id="threshVal">1.00</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Prevalence (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="prevSlider" min="1" max="70" step="1" value="20" oninput="update()">
+        <span class="ctrl-val" id="prevVal">20%</span>
+      </div>
+    </div>
+
+    <div class="section-title">AUC</div>
+    <div class="auc-badge">
+      <div class="auc-label">Area Under Curve</div>
+      <div class="auc-val" id="aucVal">—</div>
+      <div class="auc-desc" id="aucDesc">—</div>
+    </div>
+
+    <div class="youden-box" id="youdenBox">—</div>
+
+    <div class="section-title">At Current Threshold</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-label">Sensitivity</div>
+        <div class="sc-val" id="sensVal">—</div>
+        <div class="sc-pct" id="sensPct"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Specificity</div>
+        <div class="sc-val" id="specVal">—</div>
+        <div class="sc-pct" id="specPct"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">PPV</div>
+        <div class="sc-val" id="ppvVal">—</div>
+        <div class="sc-pct" id="ppvPct"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">NPV</div>
+        <div class="sc-val" id="npvVal">—</div>
+        <div class="sc-pct" id="npvPct"></div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insightBox">Adjust the sliders to explore diagnostic performance.</div>
+  </div>
+
+  <!-- RIGHT: 4 charts -->
+  <div class="right-panel">
+    <!-- Distribution plot -->
+    <div class="chart-cell">
+      <div class="chart-label">Distribution — Healthy vs Disease</div>
+      <div class="chart-wrap"><canvas id="distChart"></canvas></div>
+    </div>
+    <!-- ROC curve -->
+    <div class="chart-cell">
+      <div class="chart-label">ROC Curve</div>
+      <div class="chart-wrap"><canvas id="rocChart"></canvas></div>
+    </div>
+    <!-- Sens / Spec vs threshold -->
+    <div class="chart-cell">
+      <div class="chart-label">Sensitivity &amp; Specificity vs Threshold</div>
+      <div class="chart-wrap"><canvas id="ssChart"></canvas></div>
+    </div>
+    <!-- PPV / NPV vs prevalence -->
+    <div class="chart-cell">
+      <div class="chart-label">PPV &amp; NPV vs Prevalence</div>
+      <div class="chart-wrap"><canvas id="pvChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <div class="exercise-tabs" id="exTabs"></div>
+  <div class="ex-desc" id="exDesc"></div>
+</div>
+
+<script>
+const exercises = [
+  {
+    label: '1. Excellent test',
+    sep: 3.5, sdH: 0.8, sdD: 0.8, prev: 20, thresh: 1.75,
+    desc: 'Wide separation between groups → AUC near 0.99. The distributions barely overlap. Even a rough threshold gives very high sensitivity and specificity. This would be an almost-perfect biomarker.'
+  },
+  {
+    label: '2. Poor test',
+    sep: 0.8, sdH: 1.0, sdD: 1.0, prev: 20, thresh: 0.4,
+    desc: 'Small separation → heavy overlap → AUC ≈ 0.71. Many false positives and false negatives regardless of where you set the threshold. The ROC curve barely rises above the diagonal. Consider combining with another marker.'
+  },
+  {
+    label: '3. Sens/Spec trade-off',
+    sep: 2.0, sdH: 1.0, sdD: 1.0, prev: 20, thresh: 1.0,
+    desc: 'Drag the threshold slider left and right. Watch sensitivity and specificity move in opposite directions on the chart. Moving the threshold left catches more disease cases (higher sensitivity) but creates more false alarms (lower specificity). There is no free lunch.'
+  },
+  {
+    label: '4. Prevalence effect',
+    sep: 2.5, sdH: 1.0, sdD: 1.0, prev: 2, thresh: 1.25,
+    desc: 'Prevalence = 2% (rare disease). Even with AUC ≈ 0.94, the PPV is low — most positive results are false positives. Now increase prevalence to 40% and watch PPV climb dramatically. PPV and NPV depend heavily on pre-test probability, not just test performance.'
+  },
+  {
+    label: '5. Asymmetric SDs',
+    sep: 2.0, sdH: 0.6, sdD: 1.8, prev: 20, thresh: 1.0,
+    desc: 'The disease group has much greater variability (σ_D = 1.8 vs σ_H = 0.6). This creates an asymmetric distribution: many diseased patients cluster near healthy values. The optimal cut-off shifts differently than with equal SDs. This is common with heterogeneous disease populations.'
+  },
+];
+
+let distChart, rocChart, ssChart, pvChart;
+
+function phi(x) {
+  // Standard normal CDF
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  const approx = 1 - (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x) * poly;
+  return x >= 0 ? approx : 1 - approx;
+}
+
+function phiPDF(x) {
+  return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+}
+
+function normalPDF(x, mu, sigma) {
+  return phiPDF((x - mu) / sigma) / sigma;
+}
+
+function aucLabel(auc) {
+  if (auc >= 0.99) return 'Near perfect discrimination';
+  if (auc >= 0.90) return 'Excellent discrimination';
+  if (auc >= 0.80) return 'Good discrimination';
+  if (auc >= 0.70) return 'Acceptable discrimination';
+  if (auc >= 0.60) return 'Poor discrimination';
+  return 'No useful discrimination';
+}
+
+function update() {
+  const sep    = parseFloat(document.getElementById('sepSlider').value);
+  const sdH    = parseFloat(document.getElementById('sdHSlider').value);
+  const sdD    = parseFloat(document.getElementById('sdDSlider').value);
+  const thresh = parseFloat(document.getElementById('threshSlider').value);
+  const prev   = parseFloat(document.getElementById('prevSlider').value) / 100;
+
+  document.getElementById('sepVal').textContent    = sep.toFixed(1);
+  document.getElementById('sdHVal').textContent    = sdH.toFixed(1);
+  document.getElementById('sdDVal').textContent    = sdD.toFixed(1);
+  document.getElementById('threshVal').textContent = thresh.toFixed(2);
+  document.getElementById('prevVal').textContent   = Math.round(prev * 100) + '%';
+
+  const muH = 0, muD = sep;
+
+  // Sensitivity = P(X > T | disease) = 1 - Phi((T - muD)/sdD)
+  const sens = 1 - phi((thresh - muD) / sdD);
+  // Specificity = P(X < T | healthy) = Phi((T - muH)/sdH)
+  const spec = phi((thresh - muH) / sdH);
+  // PPV, NPV
+  const ppv = (sens * prev) / (sens * prev + (1 - spec) * (1 - prev));
+  const npv = (spec * (1 - prev)) / ((1 - sens) * prev + spec * (1 - prev));
+
+  document.getElementById('sensVal').textContent = (sens * 100).toFixed(1) + '%';
+  document.getElementById('specVal').textContent = (spec * 100).toFixed(1) + '%';
+  document.getElementById('ppvVal').textContent  = (ppv * 100).toFixed(1) + '%';
+  document.getElementById('npvVal').textContent  = (npv * 100).toFixed(1) + '%';
+
+  // AUC = Phi(muD - muH) / sqrt(sdH² + sdD²)  (analytical for normal)
+  const auc = phi((muD - muH) / Math.sqrt(sdH * sdH + sdD * sdD));
+  document.getElementById('aucVal').textContent = auc.toFixed(3);
+  document.getElementById('aucDesc').textContent = aucLabel(auc);
+
+  // Youden optimal: find threshold maximising sens + spec - 1
+  let bestJ = -Infinity, bestT = muH, bestSens = 0, bestSpec = 0;
+  for (let t = muH - 3 * sdH; t <= muD + 3 * sdD; t += 0.05) {
+    const s1 = 1 - phi((t - muD) / sdD);
+    const s2 = phi((t - muH) / sdH);
+    const j  = s1 + s2 - 1;
+    if (j > bestJ) { bestJ = j; bestT = t; bestSens = s1; bestSpec = s2; }
+  }
+  document.getElementById('youdenBox').innerHTML =
+    `<b>Youden optimal threshold:</b> ${bestT.toFixed(2)}<br>` +
+    `Sensitivity = ${(bestSens * 100).toFixed(1)}% · Specificity = ${(bestSpec * 100).toFixed(1)}%`;
+
+  // Insight
+  let msg = '';
+  const gap = sens + spec - 1;
+  if (auc > 0.90) msg = `<b>Excellent test.</b> The two groups are well separated — AUC = ${auc.toFixed(3)}. `;
+  else if (auc > 0.75) msg = `<b>Good test.</b> AUC = ${auc.toFixed(3)} — useful clinically but threshold selection matters. `;
+  else msg = `<b>Weak test.</b> AUC = ${auc.toFixed(3)} — heavy overlap means many misclassifications regardless of threshold. `;
+  if (prev < 0.05 && ppv < 0.5) msg += `At ${Math.round(prev * 100)}% prevalence, PPV = ${(ppv * 100).toFixed(1)}% — most positives are false alarms. `;
+  if (gap < 0.3) msg += `⚠ Current threshold gives poor combined performance (Youden J = ${gap.toFixed(2)}). `;
+  document.getElementById('insightBox').innerHTML = msg;
+
+  // === CHARTS ===
+
+  // 1. Distribution chart
+  const xMin = muH - 4 * sdH;
+  const xMax = muD + 4 * sdD;
+  const step = (xMax - xMin) / 200;
+  const xs = [], pdfsH = [], pdfsD = [];
+  for (let x = xMin; x <= xMax; x += step) {
+    xs.push(x);
+    pdfsH.push(normalPDF(x, muH, sdH));
+    pdfsD.push(normalPDF(x, muD, sdD));
+  }
+
+  if (distChart) distChart.destroy();
+  distChart = new Chart(document.getElementById('distChart'), {
+    type: 'line',
+    data: {
+      labels: xs.map(x => x.toFixed(2)),
+      datasets: [
+        {
+          label: 'Healthy',
+          data: pdfsH,
+          borderColor: '#3b82f6', borderWidth: 2.5,
+          backgroundColor: 'rgba(59,130,246,0.12)',
+          fill: true, pointRadius: 0, tension: 0.4,
+        },
+        {
+          label: 'Disease',
+          data: pdfsD,
+          borderColor: '#e11d48', borderWidth: 2.5,
+          backgroundColor: 'rgba(225,29,72,0.12)',
+          fill: true, pointRadius: 0, tension: 0.4,
+        },
+        {
+          label: 'Threshold',
+          data: xs.map(x => Math.abs(x - thresh) < step * 1.5 ? Math.max(...pdfsH, ...pdfsD) * 1.1 : null),
+          borderColor: '#f59e0b', borderWidth: 2.5,
+          borderDash: [5, 4], pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { filter: (item) => item.datasetIndex < 2 },
+        title: {
+          display: true,
+          text: `Threshold = ${thresh.toFixed(2)}  |  Sens = ${(sens*100).toFixed(1)}%  |  Spec = ${(spec*100).toFixed(1)}%`,
+          font: { size: 11, weight: 'bold' }, color: '#374151',
+        }
+      },
+      scales: {
+        x: { display: true, grid: { color: '#f3f4f6' }, ticks: { maxTicksLimit: 8, font: { size: 10 } } },
+        y: { display: true, title: { display: true, text: 'Density', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+      }
+    }
+  });
+
+  // 2. ROC curve — sweep threshold
+  const rocPts = [];
+  for (let t = xMax; t >= xMin; t -= (xMax - xMin) / 200) {
+    const tSens = 1 - phi((t - muD) / sdD);
+    const tSpec = phi((t - muH) / sdH);
+    rocPts.push({ x: 1 - tSpec, y: tSens });
+  }
+  // Current point on ROC
+  const curFPR = 1 - spec;
+  const curTPR = sens;
+
+  if (rocChart) rocChart.destroy();
+  rocChart = new Chart(document.getElementById('rocChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'ROC',
+          data: rocPts,
+          showLine: true, borderColor: '#e11d48', borderWidth: 2.5,
+          backgroundColor: 'rgba(225,29,72,0.08)',
+          fill: true, pointRadius: 0, tension: 0.2,
+        },
+        {
+          label: 'Diagonal (chance)',
+          data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+          showLine: true, borderColor: '#d1d5db', borderWidth: 1.5,
+          borderDash: [5, 4], pointRadius: 0,
+        },
+        {
+          label: 'Current threshold',
+          data: [{ x: curFPR, y: curTPR }],
+          backgroundColor: '#f59e0b', borderColor: '#92400e',
+          pointRadius: 8, pointBorderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: `AUC = ${auc.toFixed(3)}`,
+          font: { size: 12, weight: 'bold' }, color: '#be185d',
+        },
+        tooltip: { callbacks: { label: (ctx) => `FPR = ${ctx.parsed.x.toFixed(2)}, TPR = ${ctx.parsed.y.toFixed(2)}` } }
+      },
+      scales: {
+        x: { min: 0, max: 1, title: { display: true, text: '1 − Specificity (FPR)', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+        y: { min: 0, max: 1, title: { display: true, text: 'Sensitivity (TPR)', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+      }
+    }
+  });
+
+  // 3. Sens & Spec vs threshold
+  const threshRange = [], sensArr = [], specArr = [], youdenArr = [];
+  for (let t = xMin; t <= xMax; t += (xMax - xMin) / 200) {
+    const s1 = 1 - phi((t - muD) / sdD);
+    const s2 = phi((t - muH) / sdH);
+    threshRange.push(t.toFixed(2));
+    sensArr.push(s1);
+    specArr.push(s2);
+    youdenArr.push(s1 + s2 - 1);
+  }
+  const curIdx = threshRange.findIndex(v => Math.abs(parseFloat(v) - thresh) < (xMax - xMin) / 150);
+
+  if (ssChart) ssChart.destroy();
+  ssChart = new Chart(document.getElementById('ssChart'), {
+    type: 'line',
+    data: {
+      labels: threshRange,
+      datasets: [
+        { label: 'Sensitivity', data: sensArr, borderColor: '#e11d48', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        { label: 'Specificity', data: specArr, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        { label: 'Youden J', data: youdenArr, borderColor: '#10b981', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, tension: 0.3 },
+        {
+          label: 'Current',
+          data: threshRange.map((_, i) => i === curIdx ? Math.max(...sensArr, ...specArr) : null),
+          borderColor: '#f59e0b', borderWidth: 2, borderDash: [6, 3], pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: { display: false }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 6, font: { size: 10 } }, grid: { color: '#f3f4f6' } },
+        y: { min: 0, max: 1, ticks: { font: { size: 10 } }, grid: { color: '#f3f4f6' } }
+      }
+    }
+  });
+
+  // 4. PPV & NPV vs prevalence
+  const prevRange = [], ppvArr = [], npvArr = [];
+  for (let p = 0.01; p <= 0.80; p += 0.01) {
+    prevRange.push(Math.round(p * 100) + '%');
+    ppvArr.push((sens * p) / (sens * p + (1 - spec) * (1 - p)));
+    npvArr.push((spec * (1 - p)) / ((1 - sens) * p + spec * (1 - p)));
+  }
+  const prevPct = Math.round(prev * 100);
+  const prevIdxPV = Math.max(0, prevPct - 1);
+
+  if (pvChart) pvChart.destroy();
+  pvChart = new Chart(document.getElementById('pvChart'), {
+    type: 'line',
+    data: {
+      labels: prevRange,
+      datasets: [
+        { label: 'PPV', data: ppvArr, borderColor: '#e11d48', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        { label: 'NPV', data: npvArr, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        {
+          label: `Current (${prevPct}%)`,
+          data: prevRange.map((_, i) => i === prevIdxPV ? 1.0 : null),
+          borderColor: '#f59e0b', borderWidth: 2, borderDash: [6, 3], pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: `At ${prevPct}% prevalence: PPV = ${(ppv*100).toFixed(1)}%  NPV = ${(npv*100).toFixed(1)}%`,
+          font: { size: 11 }, color: '#374151'
+        }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, font: { size: 10 } }, grid: { color: '#f3f4f6' } },
+        y: { min: 0, max: 1, ticks: { font: { size: 10 } }, grid: { color: '#f3f4f6' } }
+      }
+    }
+  });
+}
+
+// Build exercises
+const tabsEl = document.getElementById('exTabs');
+const descEl = document.getElementById('exDesc');
+exercises.forEach((ex, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'ex-tab';
+  btn.textContent = ex.label;
+  btn.onclick = () => {
+    document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    descEl.textContent = ex.desc;
+    document.getElementById('sepSlider').value   = ex.sep;
+    document.getElementById('sdHSlider').value   = ex.sdH;
+    document.getElementById('sdDSlider').value   = ex.sdD;
+    document.getElementById('prevSlider').value  = ex.prev;
+    document.getElementById('threshSlider').value = ex.thresh;
+    update();
+  };
+  tabsEl.appendChild(btn);
+});
+
+update();
+</script>
+</body>
+</html>

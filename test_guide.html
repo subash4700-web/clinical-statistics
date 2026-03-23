@@ -642,13 +642,83 @@ const TREE = {
 
   // ── Relationships branch ─────────────────────────────────────────────────
   relationships: {
+    question: "What type of outcome variable do you have?",
+    options: [
+      { label: "Both variables are continuous measurements — e.g. glucose by two methods, HbA1c vs fasting glucose", icon: "📏", next: "rel_continuous" },
+      { label: "The outcome is binary or categorical — e.g. disease vs no disease, positive vs negative",             icon: "⚕️", next: "rel_diagnostic" }
+    ]
+  },
+
+  rel_continuous: {
+    question: "What is your primary goal?",
+    options: [
+      { label: "Quantify the strength of the linear association between two variables (r, R²)",          icon: "📐", next: "rel_corr_normality" },
+      { label: "Model the relationship to predict Y from X — slope, intercept, regression equation",     icon: "📉", next: "rel_regression_result" },
+      { label: "Compare two measurement methods — looking for proportional or constant bias",            icon: "🔀", next: "ap_method_goal" }
+    ]
+  },
+
+  rel_corr_normality: {
+    question: "Are both variables approximately normally distributed (no strong outliers)?",
+    options: [
+      { label: "Yes — both roughly normal, no extreme outliers",        icon: "✅", next: "rel_pearson_result"   },
+      { label: "No — skewed, ordinal, or prominent outliers present",   icon: "⚠️", next: "rel_spearman_result"  }
+    ]
+  },
+
+  rel_pearson_result: {
+    result: {
+      test: "Correlation & Linear Regression — Pearson r",
+      file: "linear_regression.html",
+      description: "Pearson r quantifies the strength and direction of the linear relationship between two continuous, normally distributed variables. Ranges from −1 to +1. R² tells you how much variance in Y is explained by X.",
+      note: "Correlation does not imply causation. A high r does not mean the two variables are interchangeable — use method comparison regression for that. If outliers are present, Pearson r can be misleading."
+    }
+  },
+
+  rel_spearman_result: {
+    result: {
+      test: "Correlation & Linear Regression — Spearman ρ",
+      file: "linear_regression.html",
+      description: "Spearman rank correlation is a non-parametric alternative to Pearson r. It works on ranks rather than raw values, making it robust to outliers and non-normal distributions. Suitable for ordinal data or skewed analytes.",
+      note: "Choose Spearman ρ when Pearson's assumptions are not met. Both Pearson r and Spearman ρ are available in the Linear Regression tool."
+    }
+  },
+
+  rel_regression_result: {
     result: {
       test: "Correlation & Linear Regression",
       file: "linear_regression.html",
-      description: "Models the linear relationship between a continuous predictor and a continuous outcome, and quantifies association strength (Pearson r).",
-      note: "Correlation describes association strength; regression describes the predictive relationship. Neither implies causation."
+      description: "Fits a line ŷ = a + b × x to model how Y changes with X. Provides slope (b), intercept (a), R², and prediction intervals. Use when you want to predict an outcome or understand the size of the relationship.",
+      note: "Ordinary linear regression assumes X is measured without error. If both variables have measurement error (e.g. two laboratory methods), use Passing–Bablok or Deming regression instead."
+    }
+  },
+
+  rel_diagnostic: {
+    question: "What is your diagnostic goal?",
+    options: [
+      { label: "Evaluate one biomarker — find AUC, optimal cut-off, sensitivity and specificity",          icon: "🎯", next: "rel_roc_result"      },
+      { label: "Combine multiple biomarkers into a diagnostic model via logistic regression",              icon: "🔬", next: "rel_logistic_result"  }
+    ]
+  },
+
+  rel_roc_result: {
+    result: {
+      test: "ROC & Diagnostic Performance",
+      file: "logistic_regression_roc.html",
+      description: "Plots the trade-off between sensitivity (true positive rate) and 1 − specificity (false positive rate) across all thresholds. AUC (Area Under the Curve) summarises overall discrimination. Finds the optimal cut-off using the Youden Index or a clinical constraint.",
+      note: "AUC ≥ 0.90 = excellent; 0.70–0.89 = acceptable; < 0.70 = poor. PPV and NPV depend on prevalence — always consider the pre-test probability in your population."
+    }
+  },
+
+  rel_logistic_result: {
+    result: {
+      test: "ROC & Diagnostic Performance (Logistic Regression)",
+      file: "logistic_regression_roc.html",
+      description: "Logistic regression combines multiple continuous or binary predictors into a single probability score. The predicted probability is used as the test result, and its ROC curve shows the combined discriminatory ability of the marker panel.",
+      note: "Requires adequate sample size (rule of thumb: ≥ 10 events per predictor variable). Validate the model in an independent dataset before clinical use."
     }
   }
+
 };
 
 // ─── State ────────────────────────────────────────────────────────────────────

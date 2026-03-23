@@ -6,9 +6,17 @@
   <title>Inferential Statistics</title>
   <link rel="stylesheet" href="assets/css/base_no_header.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
   <style>
     body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 24px 80px; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 12px 20px 80px; }
+
+    .font-toolbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 6px; justify-content: flex-end; padding: 8px 0 10px; background: #f4f6f8; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .ft-label { font-size: 11px; color: #9ca3af; font-weight: 600; letter-spacing: .04em; margin-right: 2px; }
+    .ft-btn { padding: 3px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-weight: 700; color: #374151; font-family: inherit; transition: background .12s; }
+    .ft-btn:hover { background: #f3f4f6; }
+    .ft-size { font-size: 11px; color: #6b7280; min-width: 28px; text-align: center; }
 
     h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
     .lead { color: #6b7280; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
@@ -56,7 +64,13 @@
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="wrap">
+<div class="font-toolbar">
+  <span class="ft-label">Text size</span>
+  <button class="ft-btn" onclick="changeFontSize(-1)" style="font-size:12px;">A−</button>
+  <span class="ft-size" id="ftSize"></span>
+  <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
+</div>
 
   <h1>Inferential Statistics</h1>
   <p class="lead">A practical introduction to hypothesis testing, p-values, confidence intervals, effect size, power, and categorical tests — written for clinicians and laboratory scientists without assuming prior statistics knowledge.</p>
@@ -350,5 +364,19 @@
   </div>
 
 </div>
+<script>
+  const ZOOM = [0.85, 0.92, 1.0, 1.1, 1.2];
+  let fi = parseInt(localStorage.getItem('theoryZoom') || '2');
+  function applyZoom() {
+    document.getElementById('wrap').style.zoom = ZOOM[fi];
+    document.getElementById('ftSize').textContent = Math.round(ZOOM[fi] * 100) + '%';
+  }
+  function changeFontSize(d) {
+    fi = Math.max(0, Math.min(ZOOM.length - 1, fi + d));
+    localStorage.setItem('theoryZoom', fi);
+    applyZoom();
+  }
+  applyZoom();
+</script>
 </body>
 </html>

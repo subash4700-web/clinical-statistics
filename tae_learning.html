@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Total Error &amp; Sigma</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#7c3aed;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 56px;gap:7px;align-items:center;}
+
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-reset{background:#fff;border-color:#d1d5db;color:#6b7280;}
+
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;letter-spacing:0;}
+    .chart-bd{padding:12px 14px;}
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    canvas{display:block;}
+
+    /* Sigma badge */
+    .sigma-badge{display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:var(--radius);padding:16px;margin-bottom:14px;border:2px solid;}
+    .sigma-badge .sig-value{font-size:42px;font-weight:900;letter-spacing:-.03em;line-height:1;}
+    .sigma-badge .sig-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+    .sigma-badge .sig-level{font-size:13px;font-weight:700;margin-top:6px;}
+    .sigma-wc  {background:#f0fdf4;border-color:#16a34a;color:#14532d;}
+    .sigma-ex  {background:#eff6ff;border-color:#3b82f6;color:#1e3a8a;}
+    .sigma-ok  {background:#fffbeb;border-color:#f59e0b;color:#78350f;}
+    .sigma-poor{background:#fef2f2;border-color:#dc2626;color:#7f1d1d;}
+
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+    .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-v{font-size:15px;font-weight:800;margin-top:2px;}
+    .stat-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+    .stat.pass{border-color:#16a34a;background:#f0fdf4;} .stat.pass .stat-v{color:#15803d;}
+    .stat.fail{border-color:#dc2626;background:#fef2f2;} .stat.fail .stat-v{color:#b91c1c;}
+    .stat.warn{border-color:#f59e0b;background:#fffbeb;} .stat.warn .stat-v{color:#b45309;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:9px;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-blue {background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .insight-red  {background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+
+    .formula-box{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:10px 13px;font-size:12px;font-family:monospace;line-height:2;margin-top:8px;}
+    .formula-box .f-label{color:#94a3b8;font-size:10px;display:block;margin-bottom:-4px;}
+
+    .divider-soft{height:1px;background:var(--line);margin:12px 0;}
+
+    .qc-box{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-top:8px;border:1px solid;}
+    .qc-wc  {background:#f0fdf4;border-color:#bbf7d0;color:#14532d;}
+    .qc-ex  {background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;}
+    .qc-ok  {background:#fffbeb;border-color:#fcd34d;color:#78350f;}
+    .qc-poor{background:#fef2f2;border-color:#fecaca;color:#7f1d1d;}
+
+    /* exercises */
+    .exercises{margin-bottom:20px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#c4b5fd;box-shadow:0 2px 10px rgba(124,58,237,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#4c1d95;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#6d28d9;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}.bottom-row{grid-template-columns:1fr;}.stats-grid{grid-template-columns:1fr 1fr;}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚖️ Understanding Total Error &amp; Sigma</h1>
+  <p class="subtitle">See how bias and imprecision combine into total error — and what the sigma metric tells you about method quality and QC design.</p>
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">World class — Sigma ≥ 6</div>
+          <div class="ex-obj">Low bias, low imprecision. The distribution is well within TAE limits. Almost no patient results are unacceptable.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 0.5%</span>
+            <span class="ex-param">CV = 0.8%</span>
+            <span class="ex-param">TAE = 6%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Good method — Sigma ~4–5</div>
+          <div class="ex-obj">Acceptable performance. A small tail exceeds TAE. Standard QC rules are sufficient to catch errors.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 1.5%</span>
+            <span class="ex-param">CV = 1.5%</span>
+            <span class="ex-param">TAE = 8%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Marginal — Sigma ~3</div>
+          <div class="ex-obj">Method is on the edge. A visible proportion of results fall outside TAE. Tighter QC is required to maintain safety.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 2%</span>
+            <span class="ex-param">CV = 2%</span>
+            <span class="ex-param">TAE = 8%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">Poor method — Sigma &lt; 3</div>
+          <div class="ex-obj">Large proportion of patient results exceed TAE. QC alone cannot rescue this method — improvement is needed.</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 3%</span>
+            <span class="ex-param">CV = 3%</span>
+            <span class="ex-param">TAE = 8%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Fix the method</div>
+          <div class="ex-obj">Start with a failing method. Adjust bias and CV until sigma reaches ≥ 4. Which matters more — reducing bias or improving precision?</div>
+          <div class="ex-params">
+            <span class="ex-param">Bias = 4%</span>
+            <span class="ex-param">CV = 3%</span>
+            <span class="ex-param">TAE = 10%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div>
+      <!-- Sigma badge -->
+      <div id="sigmaBadge" class="sigma-badge sigma-poor" style="margin-bottom:14px;">
+        <div class="sig-value" id="sigValue">—</div>
+        <div class="sig-label">Sigma metric</div>
+        <div class="sig-level" id="sigLevel">—</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">Parameters</div>
+        <div class="panel-bd">
+
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">
+            True population parameters
+          </div>
+
+          <label>True mean</label>
+          <input type="number" id="trueMean" value="5.0" step="0.1" oninput="simulate()">
+
+          <label>Bias%</label>
+          <div class="range-row">
+            <input type="range" id="biasPct" min="0" max="10" step="0.1" value="2"
+              oninput="document.getElementById('biasPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="biasPctVal" value="2.0" step="0.1" min="0" max="10"
+              oninput="document.getElementById('biasPct').value=this.value;simulate()">
+          </div>
+
+          <label>CV%</label>
+          <div class="range-row">
+            <input type="range" id="cvPct" min="0.2" max="8" step="0.1" value="2"
+              oninput="document.getElementById('cvPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="cvPctVal" value="2.0" step="0.1" min="0.2" max="8"
+              oninput="document.getElementById('cvPct').value=this.value;simulate()">
+          </div>
+
+          <div class="divider-soft"></div>
+
+          <label>Total Allowable Error — TAE%</label>
+          <div class="range-row">
+            <input type="range" id="taePct" min="2" max="20" step="0.5" value="8"
+              oninput="document.getElementById('taePctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="taePctVal" value="8.0" step="0.5" min="2" max="20"
+              oninput="document.getElementById('taePct').value=this.value;simulate()">
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="simulate()">▶ Update</button>
+            <button class="btn btn-reset" onclick="resetSim()">Reset</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Formula -->
+      <div class="panel" style="margin-top:14px;">
+        <div class="panel-hd">Formulas</div>
+        <div class="panel-bd">
+          <div class="formula-box">
+            <span class="f-label">Total Error:</span>
+            TE = |Bias%| + 1.65 × CV%
+            <br>
+            <span class="f-label">Sigma metric:</span>
+            σ = (TAE% − |Bias%|) / CV%
+            <br>
+            <span class="f-label">Pass if:</span>
+            TE ≤ TAE  (or σ ≥ 3)
+          </div>
+          <div id="formulaValues" style="margin-top:8px;font-size:12px;color:#344054;line-height:2;"></div>
+        </div>
+      </div>
+
+      <!-- QC implication -->
+      <div class="panel" style="margin-top:14px;">
+        <div class="panel-hd">QC implications</div>
+        <div class="panel-bd">
+          <div id="qcBox" class="qc-box qc-poor">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CHARTS -->
+    <div class="charts-col">
+
+      <!-- Main distribution -->
+      <div class="chart-panel">
+        <div class="chart-hd">
+          Patient result distribution vs TAE limits
+          <span id="pctOutside">—% of results outside TAE</span>
+        </div>
+        <div class="chart-bd">
+          <canvas id="distCanvas" style="width:100%;height:300px;"></canvas>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="chart-panel">
+        <div class="panel-hd" style="padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;">Results</div>
+        <div class="chart-bd">
+          <div class="stats-grid">
+            <div class="stat" id="statBiasBox">
+              <div class="stat-k">|Bias%|</div>
+              <div class="stat-v" id="statBias">—</div>
+              <div class="stat-sub" id="statBiasSub">—</div>
+            </div>
+            <div class="stat" id="statTEBox">
+              <div class="stat-k">Total Error (TE)</div>
+              <div class="stat-v" id="statTE">—</div>
+              <div class="stat-sub" id="statTESub">vs TAE</div>
+            </div>
+            <div class="stat" id="statVerdictBox">
+              <div class="stat-k">Verdict</div>
+              <div class="stat-v" id="statVerdict">—</div>
+              <div class="stat-sub" id="statVerdictSub">—</div>
+            </div>
+          </div>
+          <div id="insightBox" class="insight-box insight-blue" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="bottom-row">
+        <div class="chart-panel">
+          <div class="chart-hd">
+            Error budget breakdown
+            <span>how bias &amp; imprecision fill TAE</span>
+          </div>
+          <div class="chart-bd">
+            <canvas id="budgetCanvas" style="width:100%;height:220px;"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-hd">
+            How imprecision (CV%) affects your Sigma
+            <span>red dot = your current method</span>
+          </div>
+          <div style="padding:6px 14px 0;font-size:11px;color:#6b7280;line-height:1.5;">
+            The curve shows what sigma you get for each CV% level, with your current bias held constant.
+            Moving the red dot <b>left</b> (lower CV%) raises sigma. Moving it <b>right</b> (higher CV%) lowers sigma.
+          </div>
+          <div class="chart-bd">
+            <canvas id="sigmaCanvas" style="width:100%;height:210px;"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var distChart = null, budgetChart = null, sigmaChart = null;
+
+function normalPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+}
+
+function normalCDF(z) {
+  // Abramowitz & Stegun approximation
+  var t = 1 / (1 + 0.2316419 * Math.abs(z));
+  var d = 0.3989423 * Math.exp(-z * z / 2);
+  var p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  return z > 0 ? 1 - p : p;
+}
+
+function fmt(v, d) {
+  if (isNaN(v) || !isFinite(v)) return '—';
+  return v.toFixed(d === undefined ? 2 : d);
+}
+
+function getSigmaClass(sigma) {
+  if (sigma >= 6) return 'sigma-wc';
+  if (sigma >= 4) return 'sigma-ex';
+  if (sigma >= 3) return 'sigma-ok';
+  return 'sigma-poor';
+}
+
+function getSigmaLevel(sigma) {
+  if (sigma >= 6) return '🏆 World class';
+  if (sigma >= 4) return '✅ Excellent';
+  if (sigma >= 3) return '⚠️ Acceptable';
+  return '❌ Poor — improvement needed';
+}
+
+function simulate() {
+  var trueMean = parseFloat(document.getElementById('trueMean').value) || 5;
+  var biasPct  = parseFloat(document.getElementById('biasPct').value) || 0;
+  var cvPct    = parseFloat(document.getElementById('cvPct').value) || 2;
+  var taePct   = parseFloat(document.getElementById('taePct').value) || 8;
+
+  var sd = trueMean * cvPct / 100;
+  var measMean = trueMean * (1 + biasPct / 100);
+
+  var te = biasPct + 1.65 * cvPct;
+  var sigma = cvPct > 0 ? (taePct - biasPct) / cvPct : Infinity;
+  var passes = te <= taePct;
+
+  // % outside TAE limits
+  var upperLimit = trueMean * (1 + taePct / 100);
+  var lowerLimit = trueMean * (1 - taePct / 100);
+  var zUpper = (upperLimit - measMean) / sd;
+  var zLower = (lowerLimit - measMean) / sd;
+  var pctInside = (normalCDF(zUpper) - normalCDF(zLower)) * 100;
+  var pctOut = Math.max(0, 100 - pctInside);
+
+  // Sigma badge
+  var badge = document.getElementById('sigmaBadge');
+  badge.className = 'sigma-badge ' + getSigmaClass(sigma);
+  document.getElementById('sigValue').textContent = isFinite(sigma) ? fmt(sigma, 2) : '∞';
+  document.getElementById('sigLevel').textContent = getSigmaLevel(sigma);
+
+  // Stats
+  document.getElementById('statBias').textContent = fmt(biasPct, 1) + '%';
+  document.getElementById('statBiasSub').textContent = 'of TAE (' + fmt(biasPct / taePct * 100, 0) + '% consumed)';
+  document.getElementById('statBiasBox').className = 'stat ' + (biasPct < taePct * 0.3 ? 'pass' : biasPct < taePct * 0.5 ? 'warn' : 'fail');
+
+  document.getElementById('statTE').textContent = fmt(te, 2) + '%';
+  document.getElementById('statTESub').textContent = 'TAE = ' + fmt(taePct, 1) + '%';
+  document.getElementById('statTEBox').className = 'stat ' + (passes ? 'pass' : 'fail');
+
+  document.getElementById('statVerdict').textContent = passes ? 'PASS' : 'FAIL';
+  document.getElementById('statVerdictSub').textContent = fmt(pctOut, 2) + '% of results exceed TAE';
+  document.getElementById('statVerdictBox').className = 'stat ' + (passes ? 'pass' : 'fail');
+
+  // % outside label
+  document.getElementById('pctOutside').textContent = fmt(pctOut, 3) + '% of results outside TAE';
+
+  // Formula values
+  document.getElementById('formulaValues').innerHTML =
+    'TE = ' + fmt(biasPct,1) + ' + 1.65 × ' + fmt(cvPct,1) + ' = <b>' + fmt(te,2) + '%</b><br>' +
+    'σ = (' + fmt(taePct,1) + ' − ' + fmt(biasPct,1) + ') / ' + fmt(cvPct,1) + ' = <b>' + fmt(sigma,2) + '</b><br>' +
+    (passes
+      ? '<span style="color:#15803d;font-weight:700;">✓ ' + fmt(te,2) + '% ≤ TAE ' + fmt(taePct,1) + '% — PASS</span>'
+      : '<span style="color:#b91c1c;font-weight:700;">✗ ' + fmt(te,2) + '% > TAE ' + fmt(taePct,1) + '% — FAIL</span>');
+
+  // QC box
+  updateQCBox(sigma);
+
+  // Insight
+  updateInsight(sigma, biasPct, cvPct, te, taePct, passes, pctOut);
+
+  // Charts
+  drawDistChart(trueMean, measMean, sd, taePct, pctOut);
+  drawBudgetChart(biasPct, cvPct, taePct);
+  drawSigmaChart(biasPct, cvPct, taePct);
+}
+
+function updateQCBox(sigma) {
+  var box = document.getElementById('qcBox');
+  var msg = '', cls = '';
+  if (sigma >= 6) {
+    cls = 'qc-wc';
+    msg = '<b>Sigma ≥ 6 — Minimal QC required.</b> One QC level, run once per day. Simple 1-2s warning rule. Patient results are extremely unlikely to exceed TAE even if QC misses an error.';
+  } else if (sigma >= 4) {
+    cls = 'qc-ex';
+    msg = '<b>Sigma 4–6 — Standard QC sufficient.</b> Two QC levels, Westgard 1-3s/2-2s rules. Daily QC runs are adequate to detect clinically important errors before patients are affected.';
+  } else if (sigma >= 3) {
+    cls = 'qc-ok';
+    msg = '<b>Sigma 3–4 — Intensive QC needed.</b> Two or more QC levels, Westgard multirule. More frequent runs. The narrow error budget means errors can reach patients between QC checks.';
+  } else {
+    cls = 'qc-poor';
+    msg = '<b>Sigma &lt; 3 — QC cannot rescue this method.</b> Even running QC before every patient will not prevent a significant proportion of unacceptable results. The method itself needs improvement — recalibrate, change reagents, or investigate bias source.';
+  }
+  box.className = 'qc-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function updateInsight(sigma, biasPct, cvPct, te, taePct, passes, pctOut) {
+  var box = document.getElementById('insightBox');
+  var msg = '', cls = '';
+
+  if (sigma >= 6) {
+    msg = '<b>World class performance.</b> Bias (' + fmt(biasPct,1) + '%) and CV (' + fmt(cvPct,1) + '%) together leave plenty of room in the TAE budget. Only ' + fmt(pctOut,3) + '% of patient results exceed TAE — effectively zero. This method barely needs QC.';
+    cls = 'insight-green';
+  } else if (sigma >= 4) {
+    msg = '<b>Good method.</b> Sigma = ' + fmt(sigma,2) + '. Total error (' + fmt(te,2) + '%) passes TAE (' + fmt(taePct,1) + '%). About ' + fmt(pctOut,3) + '% of patient results exceed TAE. Standard QC rules will catch errors before they reach patients.';
+    cls = 'insight-blue';
+  } else if (sigma >= 3) {
+    msg = '<b>Acceptable — but tight.</b> Sigma = ' + fmt(sigma,2) + '. TE ' + (passes ? 'just passes' : 'fails') + '. About ' + fmt(pctOut,2) + '% of results exceed TAE. A tighter QC strategy is needed. Consider whether you can reduce bias or improve precision.';
+    cls = 'insight-amber';
+  } else {
+    var biasContrib = biasPct / te * 100;
+    var imprecContrib = (1.65 * cvPct) / te * 100;
+    var dominant = biasContrib > imprecContrib ? 'bias' : 'imprecision';
+    msg = '<b>Poor method — ' + fmt(pctOut,2) + '% of patient results exceed TAE.</b> Sigma = ' + fmt(sigma,2) + '. ' + fmt(biasContrib,0) + '% of TE comes from bias, ' + fmt(imprecContrib,0) + '% from imprecision. <b>' + dominant.charAt(0).toUpperCase() + dominant.slice(1) + ' is the bigger problem here</b> — focus improvement efforts there first.';
+    cls = 'insight-red';
+  }
+
+  box.className = 'insight-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function drawDistChart(trueMean, measMean, sd, taePct, pctOut) {
+  var ctx = document.getElementById('distCanvas').getContext('2d');
+  if (distChart) { distChart.destroy(); distChart = null; }
+
+  var upperLimit = trueMean * (1 + taePct / 100);
+  var lowerLimit = trueMean * (1 - taePct / 100);
+
+  var range = Math.max(sd * 5, Math.abs(measMean - trueMean) + sd * 4.5, taePct / 100 * trueMean + sd * 2);
+  var nPts = 200;
+  var labels = [], mainData = [], outsideData = [];
+
+  for (var i = 0; i <= nPts; i++) {
+    var x = (trueMean - range) + (2 * range * i / nPts);
+    labels.push(parseFloat(x.toFixed(5)));
+    var y = normalPDF(x, measMean, sd);
+    var outside = x < lowerLimit || x > upperLimit;
+    mainData.push(outside ? null : y);
+    outsideData.push(outside ? y : null);
+  }
+
+  // Fill gaps at boundaries
+  for (var j = 1; j < labels.length - 1; j++) {
+    var xl = labels[j];
+    if ((xl >= lowerLimit - (labels[1]-labels[0]) && xl <= lowerLimit + (labels[1]-labels[0])) ||
+        (xl >= upperLimit - (labels[1]-labels[0]) && xl <= upperLimit + (labels[1]-labels[0]))) {
+      var y2 = normalPDF(xl, measMean, sd);
+      mainData[j] = y2;
+      outsideData[j] = y2;
+    }
+  }
+
+  distChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Within TAE (' + fmt(100 - pctOut, 2) + '%)',
+          data: mainData,
+          borderColor: '#7c3aed',
+          backgroundColor: 'rgba(124,58,237,0.15)',
+          fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4,
+          spanGaps: false
+        },
+        {
+          label: 'Outside TAE (' + fmt(pctOut, 3) + '%)',
+          data: outsideData,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.25)',
+          fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4,
+          spanGaps: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 8, font: { size: 10 } },
+          title: { display: true, text: 'Patient result value', font: { size: 11 } }
+        },
+        y: { display: false }
+      }
+    }
+  });
+
+  // Draw limit lines as vertical annotations via plugin (manual)
+  // We annotate by adding near-vertical line datasets
+  var maxY = 0;
+  mainData.forEach(function(v){ if (v && v > maxY) maxY = v; });
+  outsideData.forEach(function(v){ if (v && v > maxY) maxY = v; });
+
+  // Re-add annotation lines
+  distChart.data.datasets.push({
+    label: 'True mean',
+    data: labels.map(function(x){ return x === labels[Math.round(labels.length/2)] ? maxY : null; }),
+    borderColor: 'transparent', pointRadius: 0, fill: false, showLine: false
+  });
+}
+
+function drawBudgetChart(biasPct, cvPct, taePct) {
+  var ctx = document.getElementById('budgetCanvas').getContext('2d');
+  if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+
+  var imprecContrib = 1.65 * cvPct;
+  var te = biasPct + imprecContrib;
+  var remaining = Math.max(0, taePct - te);
+  var overflow = Math.max(0, te - taePct);
+
+  var datasets = [
+    { label: '|Bias%|',        data: [biasPct],       backgroundColor: '#e05c2e' },
+    { label: '1.65 × CV%',     data: [imprecContrib], backgroundColor: '#f59e0b' },
+  ];
+  if (remaining > 0) {
+    datasets.push({ label: 'Remaining budget', data: [remaining], backgroundColor: '#86efac' });
+  }
+  if (overflow > 0) {
+    datasets.push({ label: 'Exceeds TAE', data: [overflow], backgroundColor: '#fca5a5' });
+  }
+
+  budgetChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ['Error budget'], datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: function(c){ return c.dataset.label + ': ' + fmt(c.parsed.x,2) + '%'; } } }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: '%', font: { size: 11 } },
+          ticks: { font: { size: 10 }, callback: function(v){ return v + '%'; } },
+          max: Math.max(taePct, te) * 1.15
+        },
+        y: { stacked: true, display: false }
+      }
+    }
+  });
+}
+
+function drawSigmaChart(currentBias, currentCV, taePct) {
+  var ctx = document.getElementById('sigmaCanvas').getContext('2d');
+  if (sigmaChart) { sigmaChart.destroy(); sigmaChart = null; }
+
+  // Build numeric x/y pairs for all datasets
+  var curveData = [], n = 80;
+  for (var i = 0; i <= n; i++) {
+    var cv = 0.2 + (8 - 0.2) * i / n;
+    curveData.push({ x: cv, y: (taePct - currentBias) / cv });
+  }
+  var refXs = [0.2, 8];
+
+  var currentSigma = currentCV > 0 ? (taePct - currentBias) / currentCV : null;
+
+  sigmaChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Sigma at each CV% (bias = ' + fmt(currentBias,1) + '% fixed)',
+          data: curveData,
+          borderColor: '#7c3aed',
+          backgroundColor: 'rgba(124,58,237,0.08)',
+          showLine: true, fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.3
+        },
+        {
+          label: 'σ = 6 — World class',
+          data: refXs.map(function(x){ return { x: x, y: 6 }; }),
+          borderColor: 'rgba(22,163,74,0.5)', borderWidth: 1.5, borderDash: [5,4],
+          showLine: true, pointRadius: 0, fill: false
+        },
+        {
+          label: 'σ = 4 — Good',
+          data: refXs.map(function(x){ return { x: x, y: 4 }; }),
+          borderColor: 'rgba(251,191,36,0.6)', borderWidth: 1.5, borderDash: [5,4],
+          showLine: true, pointRadius: 0, fill: false
+        },
+        {
+          label: 'σ = 3 — Minimum acceptable',
+          data: refXs.map(function(x){ return { x: x, y: 3 }; }),
+          borderColor: 'rgba(220,38,38,0.5)', borderWidth: 1.5, borderDash: [5,4],
+          showLine: true, pointRadius: 0, fill: false
+        },
+        {
+          label: 'Your method (σ = ' + (currentSigma !== null ? fmt(currentSigma,2) : '–') + ')',
+          data: currentSigma !== null ? [{ x: currentCV, y: currentSigma }] : [],
+          backgroundColor: '#dc2626',
+          pointRadius: 8, pointHoverRadius: 10,
+          pointStyle: 'circle'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 10 } } },
+        tooltip: {
+          callbacks: {
+            label: function(c){
+              if (c.datasetIndex === 4) return 'CV% = ' + fmt(c.parsed.x,1) + '  σ = ' + fmt(c.parsed.y,2);
+              return 'σ = ' + fmt(c.parsed.y, 2);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0.2, max: 8,
+          title: { display: true, text: 'CV%', font: { size: 11 } },
+          ticks: { maxTicksLimit: 8, font: { size: 10 } }
+        },
+        y: {
+          title: { display: true, text: 'Sigma', font: { size: 11 } },
+          ticks: { font: { size: 10 } },
+          min: 0, max: 15
+        }
+      }
+    }
+  });
+}
+
+// Exercises
+var EXERCISES = {
+  1: {
+    params: { trueMean: 5.0, biasPct: 0.5, cvPct: 0.8, taePct: 6 },
+    instructions: '<b>Exercise 1 — World class (σ ≥ 6)</b><ol>' +
+      '<li>Notice how the entire distribution sits well within the TAE limits (purple lines).</li>' +
+      '<li>The red "outside TAE" area is essentially invisible — almost no patient results are unacceptable.</li>' +
+      '<li>Try increasing CV% to 2% — watch sigma drop and the red area grow.</li>' +
+      '<li>Now try increasing bias to 3% — which has a bigger effect on sigma?</li>' +
+      '<li>Key message: at sigma ≥ 6, minimal QC is needed. The method protects patients automatically.</li></ol>'
+  },
+  2: {
+    params: { trueMean: 5.0, biasPct: 1.5, cvPct: 1.5, taePct: 8 },
+    instructions: '<b>Exercise 2 — Good method (σ ~4–5)</b><ol>' +
+      '<li>A small but visible red area appears at the tail of the distribution.</li>' +
+      '<li>Standard Westgard QC rules (1-3s / 2-2s) are sufficient to catch errors before they accumulate.</li>' +
+      '<li>Look at the error budget — bias and imprecision share the TAE fairly equally here.</li>' +
+      '<li>What would you need to do to push sigma above 6? Try reducing bias to 0.5%.</li></ol>'
+  },
+  3: {
+    params: { trueMean: 5.0, biasPct: 2.0, cvPct: 2.0, taePct: 8 },
+    instructions: '<b>Exercise 3 — Marginal (σ ~3)</b><ol>' +
+      '<li>The red area is now clearly visible. About 1–2% of patient results exceed TAE.</li>' +
+      '<li>This method passes technically (TE &lt; TAE) but sigma is at the minimum acceptable level.</li>' +
+      '<li>The QC box shows that more intensive QC rules are needed.</li>' +
+      '<li>Consider: is 1–2% of unacceptable results clinically acceptable for this analyte?</li></ol>'
+  },
+  4: {
+    params: { trueMean: 5.0, biasPct: 3.0, cvPct: 3.0, taePct: 8 },
+    instructions: '<b>Exercise 4 — Poor method (σ &lt; 3)</b><ol>' +
+      '<li>A large proportion of patient results now fall outside TAE.</li>' +
+      '<li>The insight box tells you whether bias or imprecision is the dominant problem.</li>' +
+      '<li>Read the QC implications — QC cannot rescue a method with sigma &lt; 3.</li>' +
+      '<li>The method itself needs improvement: investigate calibration, reagents, or interference.</li></ol>'
+  },
+  5: {
+    params: { trueMean: 5.0, biasPct: 4.0, cvPct: 3.0, taePct: 10 },
+    instructions: '<b>Exercise 5 — Fix the method</b><ol>' +
+      '<li>Current sigma is failing. Your goal: reach sigma ≥ 4.</li>' +
+      '<li>Try reducing bias first: set bias to 1%. Does that get you to sigma ≥ 4?</li>' +
+      '<li>Now reset bias to 4% and try reducing CV to 1.5%. Compare the two approaches.</li>' +
+      '<li>Key insight: <b>reducing bias is usually more effective than improving precision</b> because bias shifts the entire distribution. Precision improvement only narrows it.</li>' +
+      '<li>What combination gives the best sigma?</li></ol>'
+  }
+};
+
+function loadExercise(n) {
+  var ex = EXERCISES[n];
+  if (!ex) return;
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('exCard' + n).classList.add('active');
+
+  var p = ex.params;
+  document.getElementById('trueMean').value = p.trueMean;
+  document.getElementById('biasPct').value = p.biasPct;
+  document.getElementById('biasPctVal').value = parseFloat(p.biasPct).toFixed(1);
+  document.getElementById('cvPct').value = p.cvPct;
+  document.getElementById('cvPctVal').value = parseFloat(p.cvPct).toFixed(1);
+  document.getElementById('taePct').value = p.taePct;
+  document.getElementById('taePctVal').value = parseFloat(p.taePct).toFixed(1);
+
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML = ex.instructions;
+  instr.classList.add('visible');
+  simulate();
+}
+
+function toggleExercises() {
+  var t = document.getElementById('exToggle');
+  var p = document.getElementById('exPanel');
+  t.classList.toggle('open');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+}
+
+function resetSim() {
+  document.getElementById('trueMean').value = 5.0;
+  document.getElementById('biasPct').value = 2;
+  document.getElementById('biasPctVal').value = '2.0';
+  document.getElementById('cvPct').value = 2;
+  document.getElementById('cvPctVal').value = '2.0';
+  document.getElementById('taePct').value = 8;
+  document.getElementById('taePctVal').value = '8.0';
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('exInstructions').classList.remove('visible');
+  simulate();
+}
+
+simulate();
+</script>
+</body>
+</html>

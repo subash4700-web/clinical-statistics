@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clinical Terms — Glossary</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 24px 20px 80px; }
+
+    h1 { font-size: 24px; margin: 0 0 4px; font-weight: 900; letter-spacing: -.02em; }
+    .lead { color: #6b7280; font-size: 13px; margin: 0 0 20px; }
+
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 10px 16px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .search-bar input {
+      flex: 1; border: none; outline: none; font-size: 14px; color: #111827; background: none; font-family: inherit;
+    }
+    .search-bar .search-icon { font-size: 15px; color: #9ca3af; }
+    .search-count { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+
+    .categories { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .cat-btn {
+      padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid #e5e7eb; background: white; color: #374151; transition: all .12s;
+    }
+    .cat-btn:hover { border-color: #6b7280; }
+    .cat-btn.active { background: #1f2937; color: white; border-color: #1f2937; }
+
+    .terms-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .term-card {
+      background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 14px 18px; cursor: pointer; transition: border-color .12s, box-shadow .12s;
+    }
+    .term-card:hover { border-color: #d1d5db; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+    .term-card.open { border-color: #6b7280; }
+
+    .term-header { display: flex; align-items: baseline; gap: 12px; }
+    .term-label { font-size: 16px; font-weight: 900; color: #111827; }
+    .term-cat {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .term-arrow { margin-left: auto; font-size: 13px; color: #9ca3af; transition: transform .15s; }
+    .term-card.open .term-arrow { transform: rotate(90deg); }
+
+    .term-def {
+      display: none; font-size: 13px; line-height: 1.8; color: #374151;
+      margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6;
+    }
+    .term-card.open .term-def { display: block; }
+
+    .no-results { text-align: center; padding: 48px; color: #9ca3af; font-size: 14px; }
+
+    /* Category colours */
+    .cat-Precision           { background: #dbeafe; color: #1e40af; }
+    .cat-Biological-variation { background: #dcfce7; color: #14532d; }
+    .cat-Bias-Error          { background: #fee2e2; color: #991b1b; }
+    .cat-Reference-materials { background: #fef3c7; color: #78350f; }
+    .cat-Inferential-statistics { background: #ede9fe; color: #4c1d95; }
+    .cat-Correlation-Regression { background: #ffe4e6; color: #9f1239; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Clinical Terms — Glossary</h1>
+  <p class="lead">Definitions of key statistical and analytical terms used throughout Clinical Statistics. Click any term to expand.</p>
+
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search terms…" oninput="filterTerms()" autocomplete="off" spellcheck="false">
+    <span class="search-count" id="searchCount"></span>
+  </div>
+
+  <div class="categories" id="catBtns"></div>
+  <div class="terms-list" id="termsList"></div>
+  <div class="no-results" id="noResults" style="display:none;">No terms found.</div>
+
+</div>
+
+<script>
+var terms = window.CLINICAL_TERMS || [];
+var activeCategory = 'All';
+
+/* Category colour class */
+function catClass(cat) {
+  return 'cat-' + cat.replace(/[^a-zA-Z]/g, '-');
+}
+
+/* Build category buttons */
+var cats = ['All'];
+terms.forEach(function(t){ if (cats.indexOf(t.category) < 0) cats.push(t.category); });
+var catEl = document.getElementById('catBtns');
+cats.forEach(function(cat) {
+  var btn = document.createElement('button');
+  btn.className = 'cat-btn' + (cat === 'All' ? ' active' : '');
+  btn.textContent = cat;
+  btn.onclick = function() {
+    activeCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    filterTerms();
+  };
+  catEl.appendChild(btn);
+});
+
+/* Build term cards */
+var listEl = document.getElementById('termsList');
+var cards = [];
+terms.forEach(function(term) {
+  var card = document.createElement('div');
+  card.className = 'term-card';
+  card.dataset.label = term.label.toLowerCase();
+  card.dataset.def   = term.def.toLowerCase();
+  card.dataset.cat   = term.category;
+  card.innerHTML =
+    '<div class="term-header">' +
+      '<span class="term-label">' + term.label + '</span>' +
+      '<span class="term-cat ' + catClass(term.category) + '">' + term.category + '</span>' +
+      '<span class="term-arrow">›</span>' +
+    '</div>' +
+    '<div class="term-def">' + term.def + '</div>';
+  card.onclick = function() { this.classList.toggle('open'); };
+  listEl.appendChild(card);
+  cards.push(card);
+});
+
+/* Filter */
+var countEl = document.getElementById('searchCount');
+var noEl    = document.getElementById('noResults');
+function filterTerms() {
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  var visible = 0;
+  cards.forEach(function(card) {
+    var matchCat  = activeCategory === 'All' || card.dataset.cat === activeCategory;
+    var matchText = !q || card.dataset.label.includes(q) || card.dataset.def.includes(q);
+    var show = matchCat && matchText;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  countEl.textContent = visible + ' term' + (visible === 1 ? '' : 's');
+  noEl.style.display = visible === 0 ? '' : 'none';
+}
+filterTerms();
+</script>
+</body>
+</html>

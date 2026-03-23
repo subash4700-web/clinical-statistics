@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytical Performance — Concepts &amp; Theory</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 12px 20px 80px; }
+
+    .font-toolbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 6px; justify-content: flex-end; padding: 8px 0 10px; background: #f4f6f8; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .ft-label { font-size: 11px; color: #9ca3af; font-weight: 600; letter-spacing: .04em; margin-right: 2px; }
+    .ft-btn { padding: 3px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-weight: 700; color: #374151; font-family: inherit; transition: background .12s; }
+    .ft-btn:hover { background: #f3f4f6; }
+    .ft-size { font-size: 11px; color: #6b7280; min-width: 28px; text-align: center; }
+
+    h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
+    .lead { color: #6b7280; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+
+    .index { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 20px; margin-bottom: 36px; }
+    .index h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; font-weight: 800; }
+    .index ol { margin: 0; padding-left: 18px; }
+    .index li { margin: 5px 0; }
+    .index a { color: #0d766e; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .index a:hover { text-decoration: underline; }
+
+    .section { margin-bottom: 44px; scroll-margin-top: 16px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #0d9488; padding-left: 10px; }
+    .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
+    .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul, .section ol { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; padding-left: 20px; }
+    .section li { margin-bottom: 4px; }
+
+    .callout { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #134e4a; margin: 14px 0; }
+    .callout b { color: #0f766e; }
+    .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #7c2d12; margin: 14px 0; }
+    .warn b { color: #9a3412; }
+    .good { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #14532d; margin: 14px 0; }
+    .good b { color: #166534; }
+    .info { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #1e3a8a; margin: 14px 0; }
+    .info b { color: #1d4ed8; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; border-radius: 10px; overflow: hidden; }
+    th { background: #0d9488; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
+    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .formula-box { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 14px 18px; font-size: 13px; font-family: monospace; line-height: 2; margin: 14px 0; }
+    .formula-box .f-correct { color: #86efac; }
+    .formula-box .f-wrong { color: #fca5a5; text-decoration: line-through; }
+    .formula-box .f-label { color: #94a3b8; font-size: 11px; display: block; margin-bottom: -6px; }
+
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #0d9488; text-decoration: none; font-weight: 600; }
+    .back-top:hover { text-decoration: underline; }
+
+    .tag { display: inline-block; border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+    .tag-red { background: #fee2e2; color: #b42318; }
+    .tag-green { background: #dcfce7; color: #14532d; }
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+    .tag-amber { background: #fef3c7; color: #92400e; }
+
+    .precision-ladder { display: flex; flex-direction: column; gap: 0; margin: 14px 0; }
+    .ladder-item { padding: 12px 16px; font-size: 13px; line-height: 1.6; border: 1px solid #e5e7eb; }
+    .ladder-item:first-child { border-radius: 10px 10px 0 0; background: #f0fdf4; border-color: #bbf7d0; }
+    .ladder-item:nth-child(2) { background: #fffbeb; border-color: #fcd34d; border-top: none; }
+    .ladder-item:last-child { border-radius: 0 0 10px 10px; background: #fef2f2; border-color: #fecaca; border-top: none; }
+    .ladder-item .l-title { font-weight: 800; font-size: 13px; margin-bottom: 3px; }
+    .ladder-item .l-desc { color: #6b7280; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+<div class="font-toolbar">
+  <span class="ft-label">Text size</span>
+  <button class="ft-btn" onclick="changeFontSize(-1)" style="font-size:12px;">A−</button>
+  <span class="ft-size" id="ftSize"></span>
+  <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
+</div>
+
+  <h1>Analytical Performance — Concepts &amp; Theory</h1>
+  <p class="lead">A practical guide to precision, bias, total error, and method validation — written for clinical laboratory scientists. Covers the concepts behind the tools and explains when and how to use them.</p>
+
+  <div class="index">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#error">Sources of analytical error</a></li>
+      <li><a href="#precision">Precision — what it means and how to measure it</a></li>
+      <li><a href="#repeatability">Repeatability, intermediate precision, and reproducibility</a></li>
+      <li><a href="#study-design">Practical study design — the duplicate method</a></li>
+      <li><a href="#combining-variance">Why you cannot add standard deviations</a></li>
+      <li><a href="#patient-vs-qc">Patient samples vs reference material for precision</a></li>
+      <li><a href="#bias">Bias — systematic error</a></li>
+      <li><a href="#crm-eqa">CRM vs EQA — two ways to detect bias</a></li>
+      <li><a href="#matrix">Matrix effects</a></li>
+      <li><a href="#allowable">Allowable error — where limits come from</a></li>
+      <li><a href="#bioval">Biological variation — CVi and CVg explained</a></li>
+      <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
+      <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
+      <li><a href="#sigma">The Sigma metric</a></li>
+      <li><a href="#summary">Summary table</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="error">
+    <h2>1. Sources of analytical error</h2>
+    <p>Every measurement a laboratory makes contains some error. Understanding the <em>type</em> of error is the first step in knowing what to do about it.</p>
+    <table>
+      <tr><th>Error type</th><th>What it means</th><th>Example</th></tr>
+      <tr><td><b>Random error</b></td><td>Unpredictable variation around the true value. Changes direction each measurement.</td><td>Pipetting variation, detector noise</td></tr>
+      <tr><td><b>Systematic error (bias)</b></td><td>Consistent shift in one direction. Results are always too high or always too low.</td><td>Mis-calibration, reagent lot change</td></tr>
+      <tr><td><b>Total error</b></td><td>The combined effect of random and systematic error on any single patient result.</td><td>TE = |Bias| + z × SD</td></tr>
+    </table>
+    <div class="callout">
+      <b>Key principle:</b> Precision addresses random error. Bias addresses systematic error. Total error addresses both together. You need all three to evaluate whether your method is fit for clinical use.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2 -->
+  <div class="section" id="precision">
+    <h2>2. Precision — what it means and how to measure it</h2>
+    <p>Precision describes how <em>reproducible</em> your measurements are — how close repeated measurements of the same sample are to each other. It does <em>not</em> tell you whether the results are correct, only whether they are consistent.</p>
+    <p>Precision is expressed as:</p>
+    <ul>
+      <li><b>SD (Standard Deviation)</b> — in the same units as the measurement. Useful for fixed-concentration QC material.</li>
+      <li><b>CV% (Coefficient of Variation)</b> — SD expressed as a percentage of the mean. Allows comparison across different concentration levels and analytes.</li>
+    </ul>
+    <div class="formula-box">
+      <span class="f-label">CV% formula:</span>
+      CV% = (SD / Mean) × 100
+    </div>
+    <div class="warn">
+      <b>Precision ≠ accuracy.</b> A method can be very precise (low CV%) but systematically biased. Think of a scale that always reads 0.5 kg too high — consistent but wrong. Both precision and bias must be evaluated independently.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3 -->
+  <div class="section" id="repeatability">
+    <h2>3. Repeatability, intermediate precision, and reproducibility</h2>
+    <p>These three terms describe precision under different conditions. The conditions you vary during your study determine which type you are measuring.</p>
+
+    <div class="precision-ladder">
+      <div class="ladder-item">
+        <div class="l-title">🟢 Repeatability (within-run)</div>
+        <div class="l-desc">Same sample · same day · same run · same operator · same reagents · same calibration<br>This is the <b>tightest</b> precision you will ever achieve. It represents only random pipetting and detector variation.</div>
+      </div>
+      <div class="ladder-item">
+        <div class="l-title">🟡 Intermediate precision (within-laboratory)</div>
+        <div class="l-desc">Same laboratory · different days · possibly different operators, reagent lots, or calibrations<br>This is what <b>real-world performance</b> looks like. Day-to-day drift is captured here. This is what patients experience.</div>
+      </div>
+      <div class="ladder-item">
+        <div class="l-title">🔴 Reproducibility (between-laboratory)</div>
+        <div class="l-desc">Different laboratories · different instruments · different everything<br>Used in method standardisation and reference interval studies. Broadest variation.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Important:</b> There is no single "intermediate precision." What you vary defines what you measure. If you vary days only, you get day-to-day intermediate precision. If you also vary operators and reagent lots, you get a broader measure. Always state what conditions were varied when reporting intermediate precision.
+    </div>
+
+    <p>Intermediate precision is always <b>≥ repeatability</b> because it includes all the within-run variation <em>plus</em> additional between-day sources.</p>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4 -->
+  <div class="section" id="study-design">
+    <h2>4. Practical study design — the duplicate method</h2>
+    <p>The simplest precision study is to measure the same sample many times in one run and calculate the SD. This gives you <b>repeatability</b> — but nothing more.</p>
+    <p>In practice, the most common design used in clinical laboratories is:</p>
+    <div class="info">
+      <b>The duplicate design:</b> Measure 2 patient samples in duplicate each day, over 10 days = 20 samples × 2 replicates = 40 measurements total. This is the approach described in CLSI EP05-A3.
+    </div>
+    <p>What this gives you depends on how the days are spread:</p>
+    <table>
+      <tr><th>Design</th><th>What you measure</th><th>Use for</th></tr>
+      <tr><td>All measurements on <b>one day</b></td><td>Repeatability only (Sw)</td><td>Best-case precision estimate</td></tr>
+      <tr><td>Measurements spread across <b>multiple days</b></td><td>Intermediate precision (St = √(Sw² + Sb²))</td><td>Real-world performance estimate</td></tr>
+    </table>
+    <p>The duplicates within each day give you the <b>within-run SD (Sw)</b>. The variation of the day means around the grand mean gives you the <b>between-day component (Sb)</b>. Combined, they give you the <b>intermediate precision SD (St)</b>.</p>
+    <div class="good">
+      <b>Recommendation:</b> Always spread your precision study across multiple days. A one-day study will make your method look more precise than it actually is under real laboratory conditions.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 5 -->
+  <div class="section" id="combining-variance">
+    <h2>5. Why you cannot add standard deviations</h2>
+    <p>When combining two sources of variation, it is tempting to simply add their SDs. This is <b>incorrect</b> and will always overestimate the true combined precision.</p>
+    <p>The correct approach is to add the <b>variances</b> (SD²), then take the square root:</p>
+    <div class="formula-box">
+      <span class="f-label">Wrong — do not do this:</span>
+      <span class="f-wrong">St = Sw + Sb</span>
+      <br>
+      <span class="f-label">Correct — combine variances:</span>
+      <span class="f-correct">St = √(Sw² + Sb²)</span>
+    </div>
+    <p><b>Example:</b> Sw = 2.0 and Sb = 2.0</p>
+    <ul>
+      <li>Wrong: 2.0 + 2.0 = <b>4.0</b></li>
+      <li>Correct: √(2.0² + 2.0²) = √8 = <b>2.83</b></li>
+    </ul>
+    <p>The incorrect addition gives a result <b>41% higher</b> than the correct value. This is not a small rounding difference — it is a fundamental statistical error.</p>
+    <div class="callout">
+      <b>Rule:</b> Variances add. Standard deviations do not. This applies everywhere in statistics — not just to precision calculations.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 6 -->
+  <div class="section" id="patient-vs-qc">
+    <h2>6. Patient samples vs reference material for precision</h2>
+    <p>Precision can be studied using two types of material — and they answer different questions.</p>
+    <table>
+      <tr><th>Material</th><th>Advantages</th><th>Limitations</th></tr>
+      <tr>
+        <td><b>Patient samples</b><br><span class="tag tag-green">Preferred for validation</span></td>
+        <td>Native matrix — same composition as real patient samples. Results reflect true analytical performance on actual specimens.</td>
+        <td>Less stable. Must be aliquoted and frozen. Concentration may drift over time.</td>
+      </tr>
+      <tr>
+        <td><b>QC / reference material</b><br><span class="tag tag-blue">Used for monitoring</span></td>
+        <td>Stable, commercially available, ready to use. Ideal for day-to-day monitoring of ongoing precision.</td>
+        <td>Often lyophilized or stabilized — matrix differs from real patient samples. May give artificially good precision due to stabilizers.</td>
+      </tr>
+    </table>
+    <div class="warn">
+      <b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.
+    </div>
+    <p>Once validated, QC material is excellent for <b>ongoing monitoring</b> — detecting when precision drifts over time (Levey-Jennings charts, Westgard rules).</p>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 7 -->
+  <div class="section" id="bias">
+    <h2>7. Bias — systematic error</h2>
+    <p>Bias is a consistent, directional difference between your method's results and the true value. Unlike random error, bias does not cancel out over many measurements — it shifts <em>all</em> results in the same direction.</p>
+    <div class="formula-box">
+      <span class="f-label">Absolute bias:</span>
+      Bias = Your mean − True (assigned) value
+      <br>
+      <span class="f-label">Relative bias (%):</span>
+      Bias% = ((Your mean − True value) / True value) × 100
+    </div>
+    <h3>Common causes of bias</h3>
+    <ul>
+      <li>Incorrect calibration or calibrator lot change</li>
+      <li>Reagent lot-to-lot variation</li>
+      <li>Interfering substances in the sample matrix</li>
+      <li>Carry-over from high-concentration samples</li>
+      <li>Incorrect reference interval or assigned value</li>
+    </ul>
+    <div class="callout">
+      <b>Bias vs imprecision:</b> Bias shifts the entire distribution of results. Imprecision spreads it. A biased method gives results that cluster around the wrong value. An imprecise method gives results scattered around the right value. Total error combines both effects.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 8 -->
+  <div class="section" id="crm-eqa">
+    <h2>8. CRM vs EQA — two ways to detect bias</h2>
+    <p>Bias can only be measured if you know the true value. There are two main ways to establish this in the clinical laboratory:</p>
+
+    <h3>Certified Reference Material (CRM)</h3>
+    <p>A material with a known, certified assigned value — traceable to a reference method or SI units. You measure it on your analyser and compare your result to the certified value.</p>
+    <ul>
+      <li><b>Advantage:</b> Direct, objective comparison to a known true value.</li>
+      <li><b>Limitation:</b> CRMs are expensive. Commutability must be verified — the CRM matrix should behave the same as real patient samples on your method.</li>
+    </ul>
+
+    <h3>External Quality Assessment (EQA)</h3>
+    <p>Also called proficiency testing or EQAS (e.g. DEKS in Denmark, UKNEQAS in the UK). The same sample is sent to hundreds of laboratories. Your result is compared against the peer group mean or an assigned target value.</p>
+    <ul>
+      <li><b>Advantage:</b> Independent external check. Reveals systematic bias that internal QC would never detect — because internal QC only tells you if <em>you</em> are consistent, not if you are <em>correct</em>.</li>
+      <li><b>Limitation:</b> EQA materials are often lyophilized or stabilized. Their matrix may differ from real patient samples, so apparent bias may be a matrix effect rather than a true analytical problem.</li>
+    </ul>
+
+    <div class="info">
+      <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 9 -->
+  <div class="section" id="matrix">
+    <h2>9. Matrix effects</h2>
+    <p>The matrix is everything in a sample other than the analyte being measured — water, proteins, lipids, salts, stabilizers. Different matrices can affect how an instrument responds to the same concentration of analyte.</p>
+    <p>This is why a bias seen in EQA or with QC material does not always mean your method is wrong. The material's matrix may simply behave differently from real patient samples on your analyser.</p>
+    <div class="warn">
+      <b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 -->
+  <div class="section" id="allowable">
+    <h2>10. Allowable error — where limits come from</h2>
+    <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
+    <table>
+      <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
+      <tr>
+        <td><b>Biological variation</b><br><span class="tag tag-green">Recommended</span></td>
+        <td>Derived from intra-individual (CVi) and inter-individual (CVg) biological variation. Published in the EFLM biological variation database.</td>
+        <td>Allowable CV% = 0.5 × CVi<br>Allowable bias% = 0.25 × √(CVi² + CVg²)</td>
+      </tr>
+      <tr>
+        <td><b>Regulatory / external requirements</b></td>
+        <td>Fixed limits set by national or international bodies (e.g. ISO 15189, CLIA, Danish accreditation).</td>
+        <td>HbA1c: ≤ 6 mmol/mol or ≤ 6%</td>
+      </tr>
+      <tr>
+        <td><b>State of the art</b></td>
+        <td>What the best methods in the field can achieve. Used when biological variation goals are not achievable with current technology.</td>
+        <td>Peer group CV from EQA scheme</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, your results are clinically useful.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CVi / CVg -->
+  <div class="section" id="bioval">
+    <h2>Biological variation — CVi and CVg explained</h2>
+    <p>Biological variation describes the natural fluctuation in analyte concentrations in the human body. It has two components:</p>
+
+    <h3>CVi — Intra-individual biological variation</h3>
+    <p><strong>CVi</strong> (also written CV<sub>I</sub>) is the variation <em>within</em> a single person over time, when they are in a stable physiological state. Even a completely healthy person's blood analytes fluctuate from day to day and hour to hour due to normal biological rhythms, hydration, posture, and circadian effects.</p>
+    <div class="formula-box">
+      <span class="f-label">CVi example — Potassium:</span>
+      <span class="f-correct">CVi ≈ 4.6% → potassium fluctuates by ≈ 4.6% within the same person week to week</span>
+    </div>
+    <p>CVi is measured in studies where the same individual is sampled repeatedly over time, under controlled conditions. The <a href="https://biologicalvariation.eu" target="_blank" style="color:#0d766e;">EFLM Biological Variation Database</a> publishes CVi estimates for hundreds of analytes.</p>
+
+    <h3>CVg — Inter-individual biological variation</h3>
+    <p><strong>CVg</strong> (also written CV<sub>G</sub>) is the variation <em>between</em> different people. Even in a healthy population, people have different set-points for the same analyte. CVg is typically larger than CVi.</p>
+    <div class="formula-box">
+      <span class="f-label">CVg example — Potassium:</span>
+      <span class="f-correct">CVg ≈ 5.6% → different healthy people have potassium levels that differ by ≈ 5.6% between individuals</span>
+    </div>
+
+    <h3>Why CVi and CVg matter for analytical quality</h3>
+    <p>If your analytical imprecision is large compared to CVi, you cannot reliably detect clinically meaningful changes within a patient over time. If your bias is large compared to CVi and CVg together, the result shifts relative to the population reference range in a clinically significant way.</p>
+    <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive specific, clinically meaningful allowable limits:</p>
+    <div class="formula-box">
+      <span class="f-label">Allowable imprecision (desirable goal):</span>
+      <span class="f-correct">CVa ≤ 0.5 × CVi</span>
+      <br/>
+      <span class="f-label">Allowable bias (desirable goal):</span>
+      <span class="f-correct">Bias_a ≤ 0.25 × √(CVi² + CVg²)</span>
+      <br/>
+      <span class="f-label">Allowable Total Error (desirable goal):</span>
+      <span class="f-correct">TAE_a ≤ 1.65 × CVa + Bias_a</span>
+    </div>
+    <p>The factor <strong>0.5</strong> for imprecision means: your analytical noise should be less than half the natural biological noise within a person. If it is, analytical imprecision does not meaningfully obscure biological signals.</p>
+    <p>The factor <strong>0.25</strong> for bias uses both CVi and CVg because bias shifts results relative to both the patient's own set-point and the population-based reference interval.</p>
+
+    <h3>Three levels of biological variation goals</h3>
+    <table>
+      <tr><th>Level</th><th>Imprecision (CVa)</th><th>Bias</th><th>When to use</th></tr>
+      <tr><td><span class="tag tag-green">Desirable</span></td><td>0.5 × CVi</td><td>0.25 × √(CVi² + CVg²)</td><td>Target for most clinical analytes</td></tr>
+      <tr><td><span class="tag tag-amber">Minimum</span></td><td>0.75 × CVi</td><td>0.375 × √(CVi² + CVg²)</td><td>Acceptable if desirable is not achievable</td></tr>
+      <tr><td><span class="tag tag-blue">Optimum</span></td><td>0.25 × CVi</td><td>0.125 × √(CVi² + CVg²)</td><td>Highest clinical demand (e.g. therapeutic drug monitoring)</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>Index of Individuality (II) = CVi / CVg:</b> When II &lt; 0.6, population-based reference intervals are poor at detecting changes within an individual patient. In this case, individual baseline values (reference change values) are more clinically useful than population reference ranges. Low II analytes include CRP, ferritin, and troponin.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 11 -->
+  <div class="section" id="tae">
+    <h2>11. Total Allowable Error (TAE) and Total Error (TE)</h2>
+    <p>A patient result contains both random and systematic error. <b>Total Error</b> is the maximum likely error in any single result, accounting for both bias and imprecision together.</p>
+
+    <h3>Total Allowable Error (TAE)</h3>
+    <p>The maximum total error that is clinically acceptable. It is a pre-defined limit based on biological variation or regulatory requirements. It represents the error budget — how much total error the clinical use of the result can tolerate.</p>
+
+    <h3>Calculating Total Error (TE)</h3>
+    <p>TE is calculated as:</p>
+    <div class="formula-box">
+      <span class="f-label">Most common (CLSI/Westgard — 95% one-tailed):</span>
+      <span class="f-correct">TE = |Bias%| + 1.65 × CV%</span>
+      <br/>
+      <span class="f-label">Alternative (97.5% one-tailed / stricter):</span>
+      <span class="f-correct">TE = |Bias%| + 2.0 × CV%</span>
+    </div>
+
+    <h3>Why two formulas? What z-score should you use?</h3>
+    <p>The multiplier (1.65 or 2.0) is a <strong>z-score</strong> from the standard normal distribution. It defines what proportion of individual patient results you want to protect against exceeding the TAE:</p>
+    <table>
+      <tr><th>Multiplier</th><th>Distribution coverage</th><th>What it means</th><th>When to use</th></tr>
+      <tr>
+        <td><strong>1.65</strong></td>
+        <td>95% one-tailed<br/>(or 90% two-tailed)</td>
+        <td>Up to 5% of results may exceed the TAE boundary due to random error — in the worst direction</td>
+        <td>Standard CLSI/Westgard approach. Most published goals and validation criteria use this. Appropriate for routine chemistry where some error is tolerated.</td>
+      </tr>
+      <tr>
+        <td><strong>2.0</strong></td>
+        <td>≈ 97.5% one-tailed<br/>(or 95% two-tailed)</td>
+        <td>Only 2.5% of results may exceed TAE — more protective against outliers</td>
+        <td>More conservative laboratories, or analytes where a single erroneous result could cause serious patient harm (e.g. drug levels, coagulation, critical values).</td>
+      </tr>
+      <tr>
+        <td><strong>1.96</strong></td>
+        <td>97.5% one-tailed</td>
+        <td>The formal 95% two-tailed z-score — sometimes used for consistency with other statistical tests</td>
+        <td>Some ISO and EQA frameworks use 1.96; check your accreditation body's requirements.</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <b>The one-tailed vs two-tailed distinction:</b> We use a <em>one-tailed</em> z-score because we care about errors in the worst direction (results that are too high OR too low — whichever pushes past the TAE limit). The bias is already included separately, so we only need to model how far random error can push a result in one additional direction. That is why 1.65 (not 1.96) corresponds to 95%.
+    </div>
+
+    <div class="info">
+      <b>Practical guidance:</b> Use <strong>1.65</strong> when following CLSI EP15/Westgard protocols, biological variation goals, or Six Sigma calculations — this is the international standard. Use <strong>2.0</strong> if your laboratory policy or accreditation body requires greater assurance, or for high-stakes analytes. Be consistent — use the same multiplier throughout your validation and your TAE definition.
+    </div>
+
+    <p>The method passes if: <b>TE ≤ TAE</b></p>
+
+    <div class="info">
+      <b>Interpreting TE:</b> Bias and imprecision both consume part of the error budget. A method with large bias has less room for imprecision, and vice versa. A method can fail on total error even if both bias and imprecision individually appear acceptable — because they accumulate.
+    </div>
+
+    <h3>Example</h3>
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>Bias</td><td>1.5%</td></tr>
+      <tr><td>SD (CV%)</td><td>2.0%</td></tr>
+      <tr><td>TE = |1.5| + 1.65 × 2.0</td><td><b>4.8%</b></td></tr>
+      <tr><td>TAE (allowable)</td><td>6.0%</td></tr>
+      <tr><td>Verdict</td><td><span class="tag tag-green">PASS — TE &lt; TAE</span></td></tr>
+    </table>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Local TAE -->
+  <div class="section" id="local-tae">
+    <h2>Setting TAE locally — approach and considerations</h2>
+    <p>Yes — TAE can and sometimes should be set locally by the laboratory. While external sources (biological variation databases, regulatory bodies) provide a starting point, the laboratory often needs to adapt or define its own TAE based on clinical context and technical reality.</p>
+
+    <h3>The hierarchy — start here before setting TAE locally</h3>
+    <div class="precision-ladder">
+      <div class="ladder-item">
+        <div class="l-title">1st choice: Biological variation (EFLM database)</div>
+        <div class="l-desc">Directly links analytical quality to clinical impact. Desirable goals should be the default for most analytes.</div>
+      </div>
+      <div class="ladder-item">
+        <div class="l-title">2nd choice: Regulatory or external requirements</div>
+        <div class="l-desc">National accreditation (e.g. DANAK/ISO 15189 in Denmark), CLIA, or EQA scheme criteria. These are mandatory minimums, not aspirational targets.</div>
+      </div>
+      <div class="ladder-item">
+        <div class="l-title">3rd choice: State of the art / peer group performance</div>
+        <div class="l-desc">What the best comparable methods achieve. Used when biological variation goals are technically unachievable.</div>
+      </div>
+    </div>
+
+    <h3>When should you set TAE locally?</h3>
+    <ul>
+      <li><strong>No biological variation data exists</strong> for the analyte (e.g. novel markers, calculated parameters)</li>
+      <li><strong>Biological variation goals are unachievable</strong> with any current instrument — state of the art becomes the practical ceiling</li>
+      <li><strong>Clinical use is more demanding</strong> than the published general goal (e.g. therapeutic monitoring, critical decisions)</li>
+      <li><strong>Analyte has a non-analytical intended use</strong> (e.g. a screening test where the threshold matters more than the exact value)</li>
+      <li><strong>Your patient population is specific</strong> — e.g. neonatal, ICU, or paediatric samples where biological variation data may not apply</li>
+    </ul>
+
+    <h3>Factors to consider when setting TAE locally</h3>
+    <table>
+      <tr><th>Factor</th><th>Question to ask</th><th>Effect on TAE</th></tr>
+      <tr><td><strong>Clinical decision limits</strong></td><td>At what concentration does clinical action change? How large an error at that point is acceptable?</td><td>Tighter TAE if the decision limit is clinically critical</td></tr>
+      <tr><td><strong>Concentration level</strong></td><td>Is the error requirement the same across the measurement range, or does it vary?</td><td>May need separate TAE at low, medium, high concentrations</td></tr>
+      <tr><td><strong>Within-patient monitoring</strong></td><td>Are results used to detect trends over time in the same patient?</td><td>TAE should be ≤ Reference Change Value (RCV = 2.77 × CVi × √2) to detect real change</td></tr>
+      <tr><td><strong>Method capability</strong></td><td>What is the best CV% achievable with available instruments?</td><td>TAE must be achievable — unachievable goals are not useful</td></tr>
+      <tr><td><strong>Available reference materials</strong></td><td>Can bias be verified against a certified reference? Or is EQA the only option?</td><td>Affects certainty of bias estimate; uncertainty propagates to TAE</td></tr>
+      <tr><td><strong>Regulatory floor</strong></td><td>What is the mandatory minimum? Local goals cannot be looser than this.</td><td>TAE ≥ regulatory minimum; can be stricter</td></tr>
+    </table>
+
+    <h3>Reference Change Value (RCV)</h3>
+    <p>The RCV is the minimum difference between two consecutive results (from the same patient) that can be considered a real biological change — not just analytical noise:</p>
+    <div class="formula-box">
+      <span class="f-label">RCV (95% confidence, bidirectional):</span>
+      <span class="f-correct">RCV = 2.77 × √(CVa² + CVi²)</span>
+      <br/>
+      <span class="f-label">If your TE approaches the RCV, you cannot reliably detect real changes within a patient.</span>
+    </div>
+
+    <div class="good">
+      <b>Practical recommendation:</b> Start with the EFLM desirable goal. If it is achievable, use it. If not, check regulatory requirements and use state-of-the-art data. Document your rationale — ISO 15189 requires that quality goals are defined and justified. A locally set TAE with clear clinical reasoning is better than an unachievable external goal that is ignored in practice.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 12 -->
+  <div class="section" id="sigma">
+    <h2>12. The Sigma metric</h2>
+    <p>The Sigma metric is borrowed from Six Sigma industrial quality management. It expresses how many standard deviations of your method's imprecision fit within the allowable error budget after accounting for bias.</p>
+
+    <div class="formula-box">
+      <span class="f-label">Sigma metric:</span>
+      Sigma = (TAE% − |Bias%|) / CV%
+    </div>
+
+    <p>Sigma tells you how much room is left in the error budget for random variation:</p>
+    <table>
+      <tr><th>Sigma</th><th>Performance level</th><th>Interpretation</th></tr>
+      <tr><td><b>≥ 6</b></td><td><span class="tag tag-green">World class</span></td><td>Minimal QC needed. Very rarely produces errors.</td></tr>
+      <tr><td><b>4 – 6</b></td><td><span class="tag tag-blue">Excellent</span></td><td>Good method. Standard QC is sufficient.</td></tr>
+      <tr><td><b>3 – 4</b></td><td><span class="tag tag-amber">Acceptable</span></td><td>More intensive QC required to catch errors.</td></tr>
+      <tr><td><b>&lt; 3</b></td><td><span class="tag tag-red">Poor</span></td><td>Method improvement needed. High QC burden to maintain safety.</td></tr>
+    </table>
+
+    <h3>Example</h3>
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>TAE%</td><td>6.0%</td></tr>
+      <tr><td>|Bias%|</td><td>1.5%</td></tr>
+      <tr><td>CV%</td><td>2.0%</td></tr>
+      <tr><td>Sigma = (6.0 − 1.5) / 2.0</td><td><b>2.25</b> <span class="tag tag-red">Poor</span></td></tr>
+    </table>
+
+    <div class="warn">
+      <b>Even if bias and imprecision individually pass their allowable limits, the Sigma metric can still be poor</b> if they together consume too much of the error budget. A high Sigma means your QC can be simple. A low Sigma means you need to run more QC to protect patients.
+    </div>
+
+    <div class="callout">
+      <b>Practical use:</b> The Sigma metric is a single number that summarises the overall quality of your method. It can be used to design a rational QC strategy — methods with high Sigma need less QC, methods with low Sigma need more.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 13 -->
+  <div class="section" id="summary">
+    <h2>13. Summary table</h2>
+    <table>
+      <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
+      <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
+      <tr><td><b>Intermediate precision</b></td><td>Within-lab variation across days</td><td>St = √(Sw²+Sb²), CVt%</td><td>EP05/EP15 — Validation</td></tr>
+      <tr><td><b>Reproducibility</b></td><td>Between-laboratory variation</td><td>SD, CV%</td><td>External scheme / EQAS</td></tr>
+      <tr><td><b>Bias</b></td><td>Systematic error vs true value</td><td>Absolute, %</td><td>Bias — CRM / EQA</td></tr>
+      <tr><td><b>Total Error (TE)</b></td><td>Bias + random error combined</td><td>TE = |Bias| + 1.65 × SD</td><td>—</td></tr>
+      <tr><td><b>TAE</b></td><td>Maximum acceptable total error</td><td>% (from EFLM / regulatory)</td><td>All tools</td></tr>
+      <tr><td><b>Sigma</b></td><td>Quality relative to error budget</td><td>Sigma = (TAE − |Bias|) / CV</td><td>Method Comparison</td></tr>
+    </table>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+</div>
+<script>
+  const ZOOM = [0.85, 0.92, 1.0, 1.1, 1.2];
+  let fi = parseInt(localStorage.getItem('theoryZoom') || '2');
+  function applyZoom() {
+    document.getElementById('wrap').style.zoom = ZOOM[fi];
+    document.getElementById('ftSize').textContent = Math.round(ZOOM[fi] * 100) + '%';
+  }
+  function changeFontSize(d) {
+    fi = Math.max(0, Math.min(ZOOM.length - 1, fi + d));
+    localStorage.setItem('theoryZoom', fi);
+    applyZoom();
+  }
+  applyZoom();
+</script>
+</body>
+</html>

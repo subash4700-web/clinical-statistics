@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Correlation &amp; Linear Regression</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+
+    .page-header {
+      background: linear-gradient(135deg, #881337 0%, #be185d 60%, #e11d48 100%);
+      color: white; padding: 20px 28px 18px;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p { margin: 0; font-size: 13px; opacity: .78; }
+
+    .shell { display: flex; height: calc(100vh - 72px); }
+
+    /* ---- LEFT PANEL ---- */
+    .left-panel {
+      width: 280px; min-width: 280px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
+
+    .ctrl-group { margin-bottom: 20px; }
+    .ctrl-group label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #e11d48; }
+    .ctrl-val { font-size: 13px; font-weight: 700; color: #e11d48; min-width: 38px; text-align: right; }
+
+    select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; background: #f9fafb; }
+
+    .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .toggle-row input[type=checkbox] { accent-color: #e11d48; width: 16px; height: 16px; }
+    .toggle-row span { font-size: 13px; color: #374151; }
+
+    .resample-btn {
+      width: 100%; padding: 10px; background: #e11d48; color: white; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 800; cursor: pointer; margin-bottom: 16px; transition: background .15s;
+    }
+    .resample-btn:hover { background: #be185d; }
+
+    .stats-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; margin-top: 4px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+    .stat-value { font-size: 15px; font-weight: 800; color: #111827; }
+    .stat-sub { font-size: 11px; color: #9ca3af; margin-top: -6px; }
+
+    .equation-box { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 12px 14px; font-family: monospace; font-size: 13px; line-height: 1.8; margin-top: 12px; }
+    .eq-highlight { color: #fb7185; }
+
+    .insight-box { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; color: #881337; margin-top: 12px; }
+    .insight-box b { color: #be185d; }
+
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 18px 0 8px; }
+
+    /* ---- RIGHT PANEL ---- */
+    .right-panel { flex: 1; display: flex; flex-direction: column; gap: 0; overflow: hidden; }
+
+    .chart-top { flex: 1; padding: 16px 20px 8px; min-height: 0; }
+    .chart-bottom { flex: 1; padding: 8px 20px 16px; min-height: 0; border-top: 1px solid #e5e7eb; background: white; }
+
+    .chart-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .chart-wrap { position: relative; height: calc(100% - 24px); }
+
+    /* ---- EXERCISES ---- */
+    .exercises { background: white; border-top: 1px solid #e5e7eb; padding: 12px 20px; }
+    .exercise-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ex-tab {
+      padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; transition: all .15s;
+    }
+    .ex-tab:hover, .ex-tab.active { background: #e11d48; color: white; border-color: #e11d48; }
+    .ex-desc { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Understanding Correlation &amp; Linear Regression</h1>
+  <p>Explore how r, R², and the regression line change with different data, sample sizes, and outliers.</p>
+</div>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <button class="resample-btn" onclick="resample()">↺ New Sample</button>
+
+    <div class="ctrl-group">
+      <label>True Correlation (ρ)</label>
+      <div class="ctrl-row">
+        <input type="range" id="rhoSlider" min="-0.95" max="0.95" step="0.05" value="0.6" oninput="update()">
+        <span class="ctrl-val" id="rhoVal">0.60</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Sample Size (n)</label>
+      <select id="nSelect" onchange="resample()">
+        <option value="10">n = 10</option>
+        <option value="20">n = 20</option>
+        <option value="50" selected>n = 50</option>
+        <option value="100">n = 100</option>
+        <option value="200">n = 200</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Noise (σ)</label>
+      <div class="ctrl-row">
+        <input type="range" id="noiseSlider" min="0.3" max="2.0" step="0.1" value="0.8" oninput="update()">
+        <span class="ctrl-val" id="noiseVal">0.8</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Options</label>
+      <div class="toggle-row">
+        <input type="checkbox" id="outlierCb" onchange="update()">
+        <span>Add extreme outlier</span>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="residualLineCb" checked onchange="drawCharts()">
+        <span>Show residuals</span>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="ciCb" checked onchange="drawCharts()">
+        <span>Show 95% CI band</span>
+      </div>
+    </div>
+
+    <div class="section-title">Statistics</div>
+    <div class="stats-box">
+      <div class="stat-row">
+        <span class="stat-label">Observed r</span>
+        <span class="stat-value" id="statR">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">R²</span>
+        <span class="stat-value" id="statR2">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">p-value</span>
+        <span class="stat-value" id="statP">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">n</span>
+        <span class="stat-value" id="statN">—</span>
+      </div>
+    </div>
+    <div class="equation-box" id="eqBox">ŷ = — + — × x</div>
+    <div class="insight-box" id="insightBox">Adjust the sliders to explore how correlation changes.</div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="chart-top">
+      <div class="chart-label">Scatter Plot with Regression Line</div>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+    </div>
+    <div class="chart-bottom">
+      <div class="chart-label">Residual Plot (Predicted vs Residual)</div>
+      <div class="chart-wrap"><canvas id="residualChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <div class="exercise-tabs" id="exTabs"></div>
+  <div class="ex-desc" id="exDesc"></div>
+</div>
+
+<script>
+const exercises = [
+  {
+    label: '1. Strong positive',
+    rho: 0.9, n: 50, noise: 0.5, outlier: false,
+    desc: 'Set ρ = 0.90 with low noise. You get a very tight scatter around the line. r will be close to 0.90, R² ≈ 0.81 — 81% of variance in Y is explained by X. This is what a good method comparison looks like.'
+  },
+  {
+    label: '2. No correlation',
+    rho: 0.0, n: 50, noise: 1.0, outlier: false,
+    desc: 'ρ = 0 — no true relationship. The data scatter randomly, r ≈ 0, and the regression line is almost horizontal. R² ≈ 0. Even at p > 0.05, notice that r fluctuates between samples — click ↺ New Sample several times.'
+  },
+  {
+    label: '3. Outlier effect',
+    rho: 0.05, n: 30, noise: 0.8, outlier: true,
+    desc: 'With ρ ≈ 0 (no true correlation), add a single extreme outlier. Watch how r jumps dramatically. This shows why outliers must always be investigated — one point can create a completely misleading correlation.'
+  },
+  {
+    label: '4. Sample size',
+    rho: 0.35, n: 10, noise: 0.9, outlier: false,
+    desc: 'Start with n = 10. The same moderate true correlation (ρ = 0.35) gives very variable r estimates — sometimes near 0, sometimes near 0.7. Now increase n to 100 or 200. The estimate stabilises. Small samples have wide confidence intervals around r.'
+  },
+  {
+    label: '5. Negative correlation',
+    rho: -0.75, n: 50, noise: 0.6, outlier: false,
+    desc: 'r = −0.75 — as X increases, Y decreases. The slope is negative. A clinical example: as eGFR decreases, creatinine increases. R² is the same whether the correlation is positive or negative — it only measures strength, not direction.'
+  },
+];
+
+let currentData = [];
+let scatterChart = null;
+let residualChart = null;
+let activeEx = -1;
+
+function randNorm() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function generateData(rho, n, noise, hasOutlier) {
+  const data = [];
+  for (let i = 0; i < n; i++) {
+    const x = randNorm();
+    const y = rho * x + Math.sqrt(Math.max(0, 1 - rho * rho)) * randNorm() * noise;
+    data.push({ x, y });
+  }
+  if (hasOutlier) {
+    // Outlier placed to create a spurious correlation if rho is near 0
+    const sign = rho >= 0 ? 1 : -1;
+    data.push({ x: 3.2, y: 3.2 * sign * (Math.abs(rho) < 0.2 ? (Math.random() > 0.5 ? 1 : -1) : sign) });
+  }
+  return data;
+}
+
+function computeStats(data) {
+  const n = data.length;
+  const mx = data.reduce((s, p) => s + p.x, 0) / n;
+  const my = data.reduce((s, p) => s + p.y, 0) / n;
+  const ssxx = data.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+  const ssyy = data.reduce((s, p) => s + (p.y - my) ** 2, 0);
+  const ssxy = data.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0);
+  let r = 0;
+  if (ssxx > 0 && ssyy > 0) r = ssxy / Math.sqrt(ssxx * ssyy);
+  const slope = ssxx > 0 ? ssxy / ssxx : 0;
+  const intercept = my - slope * mx;
+  // t-statistic
+  const rClamped = Math.min(0.9999, Math.max(-0.9999, r));
+  const t = rClamped * Math.sqrt(n - 2) / Math.sqrt(1 - rClamped * rClamped);
+  // p-value (two-tailed, t-distribution approximation)
+  const pval = 2 * (1 - tCDF(Math.abs(t), n - 2));
+  return { r, r2: r * r, slope, intercept, pval, mx, ssxx };
+}
+
+// t-distribution CDF approximation (Abramowitz & Stegun)
+function tCDF(t, df) {
+  const x = df / (df + t * t);
+  return 1 - 0.5 * incompleteBeta(x, df / 2, 0.5);
+}
+function incompleteBeta(x, a, b) {
+  // Simple approximation using regularised incomplete beta
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const lbeta = lgamma(a) + lgamma(b) - lgamma(a + b);
+  return Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta) * betaCF(x, a, b) / a;
+}
+function betaCF(x, a, b) {
+  const MAXIT = 100; const EPS = 3e-7;
+  let qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - qab * x / qap;
+  if (Math.abs(d) < 1e-30) d = 1e-30;
+  d = 1 / d; let h = d;
+  for (let m = 1; m <= MAXIT; m++) {
+    const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d; const del = d * c; h *= del;
+    if (Math.abs(del - 1) < EPS) break;
+  }
+  return h;
+}
+function lgamma(z) {
+  const c = [76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y = z, x = z, tmp = x + 5.5;
+  tmp = (x + 0.5) * Math.log(tmp) - tmp;
+  let ser = 1.000000000190015;
+  for (let j = 0; j < 6; j++) { y += 1; ser += c[j] / y; }
+  return tmp + Math.log(2.5066282746310005 * ser / x);
+}
+
+function rLabel(r) {
+  const a = Math.abs(r);
+  const dir = r < 0 ? 'negative' : 'positive';
+  if (a < 0.2) return 'No meaningful correlation';
+  if (a < 0.4) return `Weak ${dir} correlation`;
+  if (a < 0.6) return `Moderate ${dir} correlation`;
+  if (a < 0.8) return `Strong ${dir} correlation`;
+  return `Very strong ${dir} correlation`;
+}
+
+function insight(r, r2, pval, n, hasOutlier) {
+  let msg = `<b>${rLabel(r)}.</b> `;
+  msg += `R² = ${(r2 * 100).toFixed(1)}% — X explains ${(r2 * 100).toFixed(1)}% of the variance in Y. `;
+  if (pval < 0.001) msg += `The result is highly statistically significant (p &lt; 0.001). `;
+  else if (pval < 0.05) msg += `The result is statistically significant (p = ${pval.toFixed(3)}). `;
+  else msg += `Not statistically significant (p = ${pval.toFixed(3)}) — likely due to chance or small n. `;
+  if (hasOutlier) msg += `<b>Outlier active:</b> The extreme point is strongly influencing r. `;
+  if (n < 20) msg += `⚠ Small sample — r estimates are unreliable. Try increasing n. `;
+  return msg;
+}
+
+function resample() {
+  const rho = parseFloat(document.getElementById('rhoSlider').value);
+  const n = parseInt(document.getElementById('nSelect').value);
+  const noise = parseFloat(document.getElementById('noiseSlider').value);
+  const hasOutlier = document.getElementById('outlierCb').checked;
+  currentData = generateData(rho, n, noise, hasOutlier);
+  drawCharts();
+}
+
+function update() {
+  document.getElementById('rhoVal').textContent = parseFloat(document.getElementById('rhoSlider').value).toFixed(2);
+  document.getElementById('noiseVal').textContent = parseFloat(document.getElementById('noiseSlider').value).toFixed(1);
+  resample();
+}
+
+function drawCharts() {
+  if (currentData.length === 0) return;
+  const data = currentData;
+  const n = data.length;
+  const stats = computeStats(data);
+  const { r, r2, slope, intercept, pval, mx, ssxx } = stats;
+  const showResid = document.getElementById('residualLineCb').checked;
+  const showCI = document.getElementById('ciCb').checked;
+  const hasOutlier = document.getElementById('outlierCb').checked;
+
+  // Update stats
+  document.getElementById('statR').textContent = r.toFixed(3);
+  document.getElementById('statR2').textContent = r2.toFixed(3);
+  document.getElementById('statP').textContent = pval < 0.001 ? '< 0.001' : pval.toFixed(3);
+  document.getElementById('statN').textContent = n;
+  document.getElementById('eqBox').innerHTML =
+    `ŷ = <span class="eq-highlight">${intercept.toFixed(3)}</span> + <span class="eq-highlight">${slope.toFixed(3)}</span> × x`;
+  document.getElementById('insightBox').innerHTML = insight(r, r2, pval, n, hasOutlier);
+
+  // X range for regression line
+  const xs = data.map(p => p.x);
+  const xMin = Math.min(...xs) - 0.3;
+  const xMax = Math.max(...xs) + 0.3;
+
+  // Regression line points
+  const regLine = [
+    { x: xMin, y: intercept + slope * xMin },
+    { x: xMax, y: intercept + slope * xMax },
+  ];
+
+  // CI band (95%)
+  const t95 = 1.96; // approximate for large n
+  const se_y = Math.sqrt(data.reduce((s, p) => s + (p.y - (intercept + slope * p.x)) ** 2, 0) / Math.max(1, n - 2));
+  const ciPoints = [];
+  const ciPointsLow = [];
+  for (let xi = xMin; xi <= xMax; xi += (xMax - xMin) / 40) {
+    const se = se_y * Math.sqrt(1 / n + (xi - mx) ** 2 / Math.max(1, ssxx));
+    const yHat = intercept + slope * xi;
+    ciPoints.push({ x: xi, y: yHat + t95 * se });
+    ciPointsLow.push({ x: xi, y: yHat - t95 * se });
+  }
+
+  // Residuals
+  const residuals = data.map(p => ({ x: intercept + slope * p.x, y: p.y - (intercept + slope * p.x) }));
+
+  // Build scatter datasets
+  const scatterDs = [
+    {
+      label: 'Data',
+      data: data,
+      backgroundColor: data.map((_, i) =>
+        hasOutlier && i === data.length - 1 ? 'rgba(239,68,68,0.9)' : 'rgba(225,29,72,0.55)'
+      ),
+      pointRadius: data.map((_, i) =>
+        hasOutlier && i === data.length - 1 ? 7 : 5
+      ),
+      pointBorderColor: data.map((_, i) =>
+        hasOutlier && i === data.length - 1 ? '#dc2626' : '#e11d48'
+      ),
+      pointBorderWidth: data.map((_, i) =>
+        hasOutlier && i === data.length - 1 ? 2 : 1
+      ),
+      type: 'scatter',
+    },
+    {
+      label: 'Regression Line',
+      data: regLine,
+      type: 'line',
+      borderColor: '#1e293b',
+      borderWidth: 2.5,
+      pointRadius: 0,
+      tension: 0,
+    },
+  ];
+
+  if (showCI) {
+    scatterDs.push({
+      label: '95% CI (upper)',
+      data: ciPoints,
+      type: 'line',
+      borderColor: 'rgba(225,29,72,0.25)',
+      borderWidth: 1,
+      borderDash: [4, 4],
+      backgroundColor: 'rgba(225,29,72,0.07)',
+      pointRadius: 0,
+      tension: 0,
+      fill: '+1',
+    });
+    scatterDs.push({
+      label: '95% CI (lower)',
+      data: ciPointsLow,
+      type: 'line',
+      borderColor: 'rgba(225,29,72,0.25)',
+      borderWidth: 1,
+      borderDash: [4, 4],
+      pointRadius: 0,
+      tension: 0,
+      fill: false,
+    });
+  }
+
+  if (showResid) {
+    const residLines = data.map((p, i) => {
+      const yHat = intercept + slope * p.x;
+      return {
+        label: i === 0 ? 'Residuals' : '',
+        data: [{ x: p.x, y: p.y }, { x: p.x, y: yHat }],
+        type: 'line',
+        borderColor: 'rgba(107,114,128,0.35)',
+        borderWidth: 1,
+        pointRadius: 0,
+        tension: 0,
+      };
+    });
+    scatterDs.push(...residLines);
+  }
+
+  // Scatter chart
+  if (scatterChart) scatterChart.destroy();
+  scatterChart = new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: { datasets: scatterDs },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: (item) => item.datasetIndex === 0,
+          callbacks: {
+            label: (ctx) => `(${ctx.parsed.x.toFixed(2)}, ${ctx.parsed.y.toFixed(2)})`
+          }
+        },
+        title: {
+          display: true,
+          text: `r = ${r.toFixed(3)}  |  R² = ${(r2 * 100).toFixed(1)}%`,
+          font: { size: 13, weight: 'bold' }, color: '#374151',
+          padding: { bottom: 6 },
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'X', font: { size: 11 } }, grid: { color: '#f3f4f6' } },
+        y: { title: { display: true, text: 'Y', font: { size: 11 } }, grid: { color: '#f3f4f6' } },
+      },
+    }
+  });
+
+  // Residual chart
+  if (residualChart) residualChart.destroy();
+  const zeroLine = [{ x: Math.min(...residuals.map(p => p.x)) - 0.2, y: 0 }, { x: Math.max(...residuals.map(p => p.x)) + 0.2, y: 0 }];
+  residualChart = new Chart(document.getElementById('residualChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Residual',
+          data: residuals,
+          backgroundColor: residuals.map((_, i) =>
+            hasOutlier && i === residuals.length - 1 ? 'rgba(239,68,68,0.85)' : 'rgba(225,29,72,0.5)'
+          ),
+          pointRadius: 4,
+        },
+        {
+          label: 'Zero line',
+          data: zeroLine,
+          type: 'line',
+          borderColor: '#9ca3af',
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `residual: ${ctx.parsed.y.toFixed(3)}` } },
+        title: {
+          display: true,
+          text: 'Residuals should scatter randomly around zero — any pattern signals a problem',
+          font: { size: 11, style: 'italic' }, color: '#6b7280', padding: { bottom: 4 },
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Fitted (ŷ)', font: { size: 11 } }, grid: { color: '#f3f4f6' } },
+        y: { title: { display: true, text: 'Residual (y − ŷ)', font: { size: 11 } }, grid: { color: '#f3f4f6' } },
+      }
+    }
+  });
+}
+
+// Build exercises
+const tabsEl = document.getElementById('exTabs');
+const descEl = document.getElementById('exDesc');
+exercises.forEach((ex, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'ex-tab';
+  btn.textContent = ex.label;
+  btn.onclick = () => {
+    document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    descEl.textContent = ex.desc;
+    // Apply settings
+    document.getElementById('rhoSlider').value = ex.rho;
+    document.getElementById('rhoVal').textContent = ex.rho.toFixed(2);
+    document.getElementById('nSelect').value = ex.n;
+    document.getElementById('noiseSlider').value = ex.noise;
+    document.getElementById('noiseVal').textContent = ex.noise.toFixed(1);
+    document.getElementById('outlierCb').checked = ex.outlier;
+    resample();
+  };
+  tabsEl.appendChild(btn);
+});
+
+// Init
+resample();
+</script>
+</body>
+</html>
