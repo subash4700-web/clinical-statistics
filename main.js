@@ -107,9 +107,15 @@ function activateMachine(licenseKey, licenseId) {
   const req = https.request(options, (res) => {
     let data = "";
     res.on("data", chunk => data += chunk);
-    res.on("end", () => console.log("Machine activation response:", res.statusCode, data));
+    res.on("end", () => {
+      const logPath = path.join(app.getPath('userData'), 'machine-activation.log');
+      fs.writeFileSync(logPath, `status: ${res.statusCode}\n${data}`);
+    });
   });
-  req.on("error", (e) => console.log("Machine activation error:", e.message));
+  req.on("error", (e) => {
+    const logPath = path.join(app.getPath('userData'), 'machine-activation.log');
+    fs.writeFileSync(logPath, `error: ${e.message}`);
+  });
   req.on("timeout", () => { req.destroy(); });
   req.write(body);
   req.end();
