@@ -104,18 +104,8 @@ function activateMachine(licenseKey, licenseId) {
   };
 
   // Fire-and-forget — never blocks or breaks the activation flow
-  const req = https.request(options, (res) => {
-    let data = "";
-    res.on("data", chunk => data += chunk);
-    res.on("end", () => {
-      const logPath = path.join(app.getPath('userData'), 'machine-activation.log');
-      fs.writeFileSync(logPath, `status: ${res.statusCode}\n${data}`);
-    });
-  });
-  req.on("error", (e) => {
-    const logPath = path.join(app.getPath('userData'), 'machine-activation.log');
-    fs.writeFileSync(logPath, `error: ${e.message}`);
-  });
+  const req = https.request(options, (res) => { res.resume(); });
+  req.on("error",   () => {});
   req.on("timeout", () => { req.destroy(); });
   req.write(body);
   req.end();

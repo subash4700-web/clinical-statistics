@@ -77,8 +77,8 @@ A desktop app called **Clinical Statistics** — statistical tools for clinical 
 
 ### Trial license policies — Keygen
 - Two trial policies configured in Keygen dashboard:
-  - **Clinician trial**: policy ID `b7869a97`, env var `KEYGEN_POLICY_TRIAL_CLINICIAN` — Max Machines: 1, Max Uses: 20, 1 year
-  - **Student trial**: policy ID `3d0ad97b`, env var `KEYGEN_POLICY_TRIAL_STUDENT` — Max Machines: 1, Max Uses: 20, 1 year
+  - **Clinician trial**: policy ID `b7869a97`, env var `KEYGEN_POLICY_TRIAL_CLINICIAN` — Max Machines: 1, Max Uses: 20, 1 year, Auth: License Keys
+  - **Student trial**: policy ID `3d0ad97b`, env var `KEYGEN_POLICY_TRIAL_STUDENT` — Max Machines: 1, Max Uses: 20, 1 year, Auth: License Keys
 - Each email can only get one trial key (stored in Upstash Redis for 400 days)
 - To change limits: go to Keygen → Policies → edit the trial policy
 
