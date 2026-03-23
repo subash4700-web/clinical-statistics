@@ -152,6 +152,15 @@ A desktop app called **Clinical Statistics** — statistical tools for clinical 
 
 ---
 
+## Lemon Squeezy (payments)
+- Platform for handling paid license purchases
+- Currently in **test mode** — prices are DKK 5.00 (Professional) and DKK 9.99 (Institution)
+- Two variants: `professional` (variant ID `1431205`) and `institution`
+- Webhook configured: `https://clinical-stats-api.vercel.app/api/lemon-webhook` listening for `order_created`
+- When someone buys → Lemon Squeezy triggers webhook → API creates Keygen license → Resend emails key to buyer
+- To go live: set real prices, switch Lemon Squeezy to live mode
+- Missing Vercel env vars needed for paid flow: `LEMON_WEBHOOK_SECRET`, `KEYGEN_POLICY_PROFESSIONAL`, `KEYGEN_POLICY_INSTITUTION`, `LEMON_VARIANT_INSTITUTION`
+
 ## Pending / Known issues
 - macOS code signing not set up (no Apple Developer account yet) — app shows security warning on first open
 - Windows code signing not set up — SmartScreen warning on install
