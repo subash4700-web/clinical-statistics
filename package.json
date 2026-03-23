@@ -1,6 +1,6 @@
 {
   "name": "electron-app",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -21,11 +21,17 @@
     "productName": "Clinical Statistics",
     "mac": {
       "icon": "icon.icns",
-      "target": "dmg",
-      "hardenedRuntime": true,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist"
+      "identity": null
     },
     "win": {
       "target": "nsis",
