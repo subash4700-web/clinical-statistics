@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Absorbance to Concentration</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <style>
+    /* Pane (non-tab) toggle */
+    .pane{display:none;}
+    .pane.active{display:block;}
+
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    @media(max-width:700px){.grid-4{grid-template-columns:1fr;}}
+    label.lbl{display:block;font-weight:700;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+
+    .btn-small{padding:5px 10px;font-size:12px;border-radius:8px;}
+
+    /* KPI lab/val aliases */
+    .kpi .lab{color:var(--muted);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+    .kpi .val{font-weight:900;font-size:18px;margin-top:4px;}
+
+    /* Named alert variants */
+    .alert-warn{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .alert-good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+    .alert-bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+    .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;}
+
+    /* Formula display */
+    .formula-box{
+      background:#f8fafc;border:1px solid var(--line);border-radius:10px;
+      padding:10px 14px;font-family:ui-monospace,monospace;font-size:13px;color:#1e3a5f;
+      margin-top:10px;line-height:1.8;
+    }
+
+    /* Standards table */
+    .std-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+    .std-table th{background:#f9fafb;font-weight:800;color:#374151;padding:8px 10px;text-align:left;border-bottom:2px solid var(--line);}
+    .std-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+    .std-table input[type="number"]{padding:6px 8px;font-size:13px;}
+    .std-table tr:last-child td{border-bottom:none;}
+    .del-btn{background:#fef2f2;border:1px solid #fecaca;color:#b42318;border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;cursor:pointer;}
+    .del-btn:hover{background:#fee2e2;}
+
+    /* Chart */
+    .chart-wrap{position:relative;height:300px;margin-top:12px;}
+
+    /* Range indicator */
+    .range-bar{height:6px;border-radius:3px;background:#e5e7eb;margin-top:6px;position:relative;}
+    .range-fill{height:100%;border-radius:3px;background:var(--accent);}
+
+    /* Divider */
+    hr.div{border:none;border-top:1px solid var(--line);margin:16px 0;}
+
+    /* Sub-section header */
+    .sub-head{font-weight:800;font-size:13px;color:#374151;margin:14px 0 8px;}
+
+    /* Exercises */
+    .exercises{margin-bottom:18px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    @media(max-width:900px){.ex-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-obj{flex:1;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f8faff;border:1px solid #c7d7fd;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#1e3a5f;}
+    .ex-instructions b{color:#1e40af;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    .ex-answer{display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7;color:#14532d;}
+    .ex-answer b{color:#15803d;}
+    .ex-show-btn{margin-top:10px;background:none;border:1px solid #c7d7fd;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;font-family:inherit;}
+    .ex-show-btn:hover{background:#e0eaff;}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Absorbance to Concentration</h1>
+  <p class="subtitle">Lambert-Beer law calculator and calibration curve — for colorimetric and spectrophotometric assays.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="lb">Lambert-Beer</div>
+    <div class="tab" data-tab="cal">Calibration Curve</div>
+  </div>
+
+  <!-- ═══════════════ LAMBERT-BEER PANE ═══════════════ -->
+  <div id="lb" class="pane active">
+
+    <!-- LB Exercises -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="lbExToggle" onclick="toggleEx('lbExPanel','lbExToggle')">
+        <span>📋 Guided Exercises</span>
+        <span class="ex-arrow">▶</span>
+      </button>
+      <div id="lbExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="lbEx1" onclick="loadLBEx(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">Haemoglobin — Drabkin's method</div>
+            <div class="ex-obj">Calculate haemoglobin concentration from absorbance using the cyanomethemoglobin reference method.</div>
+            <div class="ex-params">
+              <span class="ex-param">A = 0.540</span>
+              <span class="ex-param">A₀ = 0.015</span>
+              <span class="ex-param">ε = 44 000</span>
+              <span class="ex-param">l = 1 cm</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="lbEx2" onclick="loadLBEx(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">High absorbance — dilution needed</div>
+            <div class="ex-obj">The sample reads dangerously high. Spot the warning and work out what dilution factor would bring the reading into the linear range.</div>
+            <div class="ex-params">
+              <span class="ex-param">A = 1.75</span>
+              <span class="ex-param">A₀ = 0.020</span>
+              <span class="ex-param">ε = 8 800</span>
+              <span class="ex-param">l = 1 cm</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="lbEx3" onclick="loadLBEx(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Blanking matters</div>
+            <div class="ex-obj">The reagent itself absorbs at the measurement wavelength. Compare the result with and without blank subtraction to see how large the error can be.</div>
+            <div class="ex-params">
+              <span class="ex-param">A = 0.380</span>
+              <span class="ex-param">A₀ = 0.140</span>
+              <span class="ex-param">ε = 6 200</span>
+              <span class="ex-param">l = 1 cm</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="lbEx4" onclick="loadLBEx(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">Micro-cuvette — half path length</div>
+            <div class="ex-obj">You are using a micro-cuvette with l = 0.5 cm. Calculate the concentration, then change path length to 1 cm and compare — what does path length do to the result?</div>
+            <div class="ex-params">
+              <span class="ex-param">A = 0.450</span>
+              <span class="ex-param">A₀ = 0.012</span>
+              <span class="ex-param">ε = 8 800</span>
+              <span class="ex-param">l = 0.5 cm</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="lbExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Parameters</div>
+      <div class="grid-3">
+        <div>
+          <label class="lbl">Measured absorbance (A)</label>
+          <input type="number" id="lbA" value="0.450" min="0" step="any"/>
+        </div>
+        <div>
+          <label class="lbl">Blank / background absorbance (A₀)</label>
+          <input type="number" id="lbA0" value="0.020" min="0" step="any"/>
+          <div class="note">Subtract blank before calculating. Set 0 if already corrected.</div>
+        </div>
+        <div>
+          <label class="lbl">Path length — l (cm)</label>
+          <input type="number" id="lbL" value="1" min="0.001" step="any"/>
+        </div>
+      </div>
+
+      <hr class="div"/>
+
+      <div class="sub-head">Molar absorptivity (ε)</div>
+      <div class="grid-3">
+        <div>
+          <label class="lbl">ε value</label>
+          <input type="number" id="lbEps" value="8000" min="0" step="any"/>
+        </div>
+        <div>
+          <label class="lbl">ε unit</label>
+          <select id="lbEpsUnit">
+            <option value="1">L · mol⁻¹ · cm⁻¹</option>
+            <option value="0.001">mL · µmol⁻¹ · cm⁻¹</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Output unit</label>
+          <select id="lbOutUnit" onchange="toggleMW()">
+            <option value="1">mol/L</option>
+            <option value="1000" selected>mmol/L</option>
+            <option value="1000000">µmol/L</option>
+            <option value="gL">g/L</option>
+            <option value="gdL">g/dL</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="mwRow" style="display:none; margin-top:10px;">
+        <label class="lbl">Molecular weight (g/mol)</label>
+        <input type="number" id="lbMW" value="64458" min="0" step="any" style="max-width:220px;"/>
+        <div class="note">Required to convert mol/L → g/L. E.g. Haemoglobin = 64 458 · Albumin = 66 500 · Glucose = 180.16</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="calcLB()">Calculate</button>
+        <button class="btn-ghost" onclick="resetLB()">Reset</button>
+      </div>
+    </div>
+
+    <div class="card" id="lbResultCard" style="display:none;">
+      <div class="section-title">Result</div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="lab">Corrected absorbance</div>
+          <div class="val" id="lbAcorr">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">Concentration</div>
+          <div class="val" id="lbConc">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">mol/L (reference)</div>
+          <div class="val" id="lbConcMol">—</div>
+        </div>
+      </div>
+
+      <div id="lbAlert" class="alert alert-warn" style="display:none;"></div>
+
+      <div class="formula-box" id="lbFormula"></div>
+      <div class="note" style="margin-top:8px;">Lambert-Beer law: A = ε · l · c &nbsp;→&nbsp; c = (A − A₀) / (ε · l)</div>
+    </div>
+
+    <!-- Theory card -->
+    <details class="card">
+      <summary style="cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;">
+        <span>How it works</span>
+        <span style="color:var(--muted);font-size:12px;font-weight:400;">click to expand</span>
+      </summary>
+      <div style="margin-top:14px;display:grid;gap:12px;">
+        <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:800;color:#1e40af;margin-bottom:6px;">Lambert-Beer law</div>
+          <div style="font-family:ui-monospace,monospace;font-size:13px;color:#1e3a5f;background:#eff6ff;border-radius:6px;padding:8px 12px;margin-bottom:8px;">A = ε · l · c</div>
+          <div style="font-size:12px;color:#374151;line-height:1.7;">
+            <b>A</b> — absorbance (dimensionless, –log₁₀ of transmittance)<br>
+            <b>ε</b> — molar absorptivity (L·mol⁻¹·cm⁻¹), a constant for a given compound at a given wavelength<br>
+            <b>l</b> — optical path length (cm), typically 1 cm for standard cuvettes<br>
+            <b>c</b> — concentration (mol/L)
+          </div>
+        </div>
+        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;font-size:12px;color:#78350f;line-height:1.7;">
+          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Lambert-Beer law is linear only within a certain absorbance range — typically A &lt; 1.5 (ideally &lt; 1.0). At high absorbance, detector saturation and stray light cause negative deviation from linearity. Always measure a reagent blank and subtract it. If the compound absorbs at the measurement wavelength, choose a wavelength at or near the absorption maximum (λmax) for maximum sensitivity.
+        </div>
+      </div>
+    </details>
+
+  </div><!-- /lb pane -->
+
+  <!-- ═══════════════ CALIBRATION CURVE PANE ═══════════════ -->
+  <div id="cal" class="pane">
+
+    <!-- Cal Exercises -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="calExToggle" onclick="toggleEx('calExPanel','calExToggle')">
+        <span>📋 Guided Exercises</span>
+        <span class="ex-arrow">▶</span>
+      </button>
+      <div id="calExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="calEx1" onclick="loadCalEx(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">Glucose standard curve</div>
+            <div class="ex-obj">Build a six-point calibration curve for glucose. Assess linearity, then find the concentration of an unknown patient sample.</div>
+            <div class="ex-params">
+              <span class="ex-param">0 – 10 mmol/L</span>
+              <span class="ex-param">6 standards</span>
+              <span class="ex-param">Unknown A = 0.445</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="calEx2" onclick="loadCalEx(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">Outlier in calibration</div>
+            <div class="ex-obj">One standard was prepared incorrectly. R² drops below 0.99 — identify which point is the outlier and remove it to restore linearity.</div>
+            <div class="ex-params">
+              <span class="ex-param">0 – 5 mmol/L</span>
+              <span class="ex-param">6 standards</span>
+              <span class="ex-param">1 outlier point</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="calEx3" onclick="loadCalEx(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Sample outside calibration range</div>
+            <div class="ex-obj">The patient sample reads above the highest standard. The extrapolation warning fires — decide whether to dilute and re-measure or extend the range.</div>
+            <div class="ex-params">
+              <span class="ex-param">0 – 5 mmol/L</span>
+              <span class="ex-param">Unknown A = 0.830</span>
+              <span class="ex-param">Range exceeded</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="calEx4" onclick="loadCalEx(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">Blank correction — intercept shift</div>
+            <div class="ex-obj">The reagent has a significant background absorbance. Compare the calibration equation and unknown result with blank correction on vs off to see the systematic error introduced.</div>
+            <div class="ex-params">
+              <span class="ex-param">Blank A₀ = 0.085</span>
+              <span class="ex-param">0 – 8 mmol/L</span>
+              <span class="ex-param">Unknown A = 0.520</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="calExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Standards</div>
+
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div>
+          <label class="lbl">Concentration unit</label>
+          <select id="calUnit" onchange="renderCalUnit()">
+            <option value="mmol/L">mmol/L</option>
+            <option value="µmol/L">µmol/L</option>
+            <option value="mg/dL">mg/dL</option>
+            <option value="mg/L">mg/L</option>
+            <option value="g/L">g/L</option>
+            <option value="nmol/L">nmol/L</option>
+            <option value="mol/L">mol/L</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Blank absorbance (A₀) — subtracted from all standards &amp; unknowns</label>
+          <input type="number" id="calBlank" value="0" min="0" step="any" oninput="runCal()"/>
+          <div class="note">Set 0 if your standards already include a blank-corrected reading.</div>
+        </div>
+      </div>
+
+      <table class="std-table" id="stdTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Concentration (<span class="cal-unit-label">mmol/L</span>)</th>
+            <th>Absorbance (A)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="stdBody"></tbody>
+      </table>
+
+      <div class="btn-row">
+        <button class="btn-ghost btn-small" onclick="addStd()">+ Add standard</button>
+        <button class="btn-ghost btn-small" onclick="loadExample()">Load example</button>
+        <button class="btn-primary btn-small" onclick="runCal()">Run calibration</button>
+      </div>
+    </div>
+
+    <!-- Calibration results -->
+    <div class="card" id="calResultCard" style="display:none;">
+      <div class="section-title">Calibration result</div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="lab">Slope (m)</div>
+          <div class="val" id="calSlope">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">Intercept (b)</div>
+          <div class="val" id="calIntercept">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">R²</div>
+          <div class="val" id="calR2">—</div>
+        </div>
+      </div>
+
+      <div id="calR2Alert" class="alert" style="display:none;margin-top:10px;"></div>
+
+      <div class="formula-box" id="calFormula" style="margin-top:10px;"></div>
+
+      <div class="chart-wrap">
+        <canvas id="calChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Unknown sample -->
+    <div class="card" id="calUnknownCard" style="display:none;">
+      <div class="section-title">Unknown sample</div>
+      <div class="note" style="margin-top:0;">Enter the measured absorbance of your unknown sample. Blank correction is applied automatically.</div>
+
+      <div class="grid-2" style="margin-top:10px;">
+        <div>
+          <label class="lbl">Measured absorbance (A)</label>
+          <input type="number" id="calUnkA" step="any" placeholder="e.g. 0.380" oninput="calcUnknown()"/>
+        </div>
+        <div>
+          <label class="lbl">Dilution factor (if diluted before reading)</label>
+          <input type="number" id="calDilution" value="1" min="1" step="any" oninput="calcUnknown()"/>
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="margin-top:12px;">
+        <div class="kpi">
+          <div class="lab">Corrected A</div>
+          <div class="val" id="unkAcorr">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">Concentration</div>
+          <div class="val" id="unkConc">—</div>
+        </div>
+        <div class="kpi">
+          <div class="lab">Corrected for dilution</div>
+          <div class="val" id="unkConcDil">—</div>
+        </div>
+      </div>
+
+      <div id="unkAlert" class="alert" style="display:none;margin-top:10px;"></div>
+    </div>
+
+  </div><!-- /cal pane -->
+
+</div><!-- /container -->
+
+<script>
+// ──────────────────────────────────────────────────────────
+// Utilities
+// ──────────────────────────────────────────────────────────
+function el(id){ return document.getElementById(id); }
+function fmt(n, d=3){ return isNaN(n) ? '—' : Number(n).toPrecision(4).replace(/\.?0+$/, '') || n.toFixed(d); }
+function fmtFixed(n, d=4){ return isNaN(n) ? '—' : n.toFixed(d); }
+
+// ──────────────────────────────────────────────────────────
+// Tab switching
+// ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    el(t.dataset.tab).classList.add('active');
+  });
+});
+
+// ──────────────────────────────────────────────────────────
+// LAMBERT-BEER
+// ──────────────────────────────────────────────────────────
+function toggleMW(){
+  const unit = el('lbOutUnit').value;
+  el('mwRow').style.display = (unit === 'gL' || unit === 'gdL') ? 'block' : 'none';
+}
+
+function calcLB(){
+  const A      = parseFloat(el('lbA').value);
+  const A0     = parseFloat(el('lbA0').value) || 0;
+  const l      = parseFloat(el('lbL').value);
+  const eps    = parseFloat(el('lbEps').value);
+  const epsF   = parseFloat(el('lbEpsUnit').value);
+  const outVal = el('lbOutUnit').value;
+  const outU   = el('lbOutUnit').options[el('lbOutUnit').selectedIndex].text;
+  const mw     = parseFloat(el('lbMW').value);
+
+  if (isNaN(A) || isNaN(l) || isNaN(eps) || l <= 0 || eps <= 0){
+    alert('Please fill in all parameters with positive values.'); return;
+  }
+  if ((outVal === 'gL' || outVal === 'gdL') && (isNaN(mw) || mw <= 0)){
+    alert('Please enter the molecular weight to convert to g/L or g/dL.'); return;
+  }
+
+  const epsAdj = eps * epsF;       // L·mol⁻¹·cm⁻¹
+  const Acorr  = Math.max(0, A - A0);
+  const cMol   = Acorr / (epsAdj * l);  // mol/L
+
+  // Convert to output unit
+  let cOut, formulaExtra = '';
+  if (outVal === 'gL'){
+    cOut = cMol * mw;              // mol/L × g/mol = g/L
+    formulaExtra = `<br>c (g/L) = ${cMol.toExponential(3)} mol/L × ${mw} g/mol = <strong>${cOut.toPrecision(4)} g/L</strong>`;
+  } else if (outVal === 'gdL'){
+    cOut = cMol * mw / 10;        // g/L ÷ 10 = g/dL
+    formulaExtra = `<br>c (g/dL) = ${cMol.toExponential(3)} mol/L × ${mw} g/mol ÷ 10 = <strong>${cOut.toPrecision(4)} g/dL</strong>`;
+  } else {
+    const outF = parseFloat(outVal);
+    cOut = cMol * outF;
+  }
+
+  el('lbAcorr').textContent   = (A - A0).toFixed(4);
+  el('lbConc').textContent    = cOut.toPrecision(4) + ' ' + outU;
+  el('lbConcMol').textContent = cMol.toExponential(3) + ' mol/L';
+
+  // Alerts
+  const alertEl = el('lbAlert');
+  if (Acorr > 1.5){
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert alert-warn';
+    alertEl.innerHTML = '<strong>⚠ High absorbance (A > 1.5):</strong> Lambert-Beer law may deviate from linearity at this absorbance. Results may underestimate true concentration. Consider diluting the sample.';
+  } else if (Acorr > 1.0){
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert alert-warn';
+    alertEl.innerHTML = '<strong>⚠ Elevated absorbance (A > 1.0):</strong> Approaching the upper limit of linearity. Verify linearity with a dilution series if precision is critical.';
+  } else if (Acorr < 0.02){
+    alertEl.style.display = 'block';
+    alertEl.className = 'alert alert-warn';
+    alertEl.innerHTML = '<strong>⚠ Very low corrected absorbance:</strong> Signal is close to noise level. Results may have high relative uncertainty. Consider increasing sample volume or using a more sensitive detection method.';
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  el('lbFormula').innerHTML =
+    `c = (A − A₀) / (ε · l)<br>` +
+    `c = (${A.toFixed(4)} − ${A0.toFixed(4)}) / (${epsAdj.toLocaleString()} × ${l})<br>` +
+    `c = ${Acorr.toFixed(4)} / ${(epsAdj * l).toLocaleString()} = ${cMol.toExponential(3)} mol/L` +
+    formulaExtra;
+
+  el('lbResultCard').style.display = 'block';
+}
+
+function resetLB(){
+  el('lbA').value = '0.450'; el('lbA0').value = '0.020';
+  el('lbL').value = '1'; el('lbEps').value = '8000';
+  el('lbOutUnit').value = '1000';
+  el('mwRow').style.display = 'none';
+  el('lbResultCard').style.display = 'none';
+}
+
+// ──────────────────────────────────────────────────────────
+// CALIBRATION CURVE
+// ──────────────────────────────────────────────────────────
+let stdRows = [];
+let calChart = null;
+let calResult = null;
+
+function addStd(conc='', abs=''){
+  const id = Date.now() + Math.random();
+  stdRows.push(id);
+  const unit = el('calUnit').value;
+  const tbody = el('stdBody');
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + id;
+  tr.innerHTML = `
+    <td style="color:var(--muted);font-size:12px;">${stdRows.length}</td>
+    <td><input type="number" step="any" value="${conc}" placeholder="0.00" oninput="runCal()" style="width:100%;"></td>
+    <td><input type="number" step="any" value="${abs}" placeholder="0.000" oninput="runCal()" style="width:100%;"></td>
+    <td><button class="del-btn" onclick="removeStd('${id}')">×</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeStd(id){
+  el('row-' + id).remove();
+  stdRows = stdRows.filter(x => x != id);
+  renumberRows();
+  runCal();
+}
+
+function renumberRows(){
+  document.querySelectorAll('#stdBody tr').forEach((tr, i) => {
+    tr.querySelector('td:first-child').textContent = i + 1;
+  });
+}
+
+function getStdData(){
+  const blank = parseFloat(el('calBlank').value) || 0;
+  const rows = document.querySelectorAll('#stdBody tr');
+  const pts = [];
+  rows.forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    const c = parseFloat(inputs[0].value);
+    const a = parseFloat(inputs[1].value);
+    if (!isNaN(c) && !isNaN(a)){
+      pts.push({ c, a: a - blank });
+    }
+  });
+  return pts;
+}
+
+function linReg(pts){
+  const n = pts.length;
+  if (n < 2) return null;
+  const sx  = pts.reduce((s, p) => s + p.c, 0);
+  const sy  = pts.reduce((s, p) => s + p.a, 0);
+  const sxy = pts.reduce((s, p) => s + p.c * p.a, 0);
+  const sx2 = pts.reduce((s, p) => s + p.c * p.c, 0);
+  const m   = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
+  const b   = (sy - m * sx) / n;
+  const ymean = sy / n;
+  const SStot = pts.reduce((s, p) => s + Math.pow(p.a - ymean, 2), 0);
+  const SSres = pts.reduce((s, p) => s + Math.pow(p.a - (m * p.c + b), 2), 0);
+  const r2  = SStot > 0 ? 1 - SSres / SStot : 1;
+  return { m, b, r2 };
+}
+
+function renderCalUnit(){
+  const unit = el('calUnit').value;
+  document.querySelectorAll('.cal-unit-label').forEach(el => el.textContent = unit);
+}
+
+function loadExample(){
+  el('stdBody').innerHTML = '';
+  stdRows = [];
+  const examples = [
+    [0, 0.012], [0.5, 0.083], [1.0, 0.162], [2.0, 0.318],
+    [4.0, 0.631], [6.0, 0.944], [8.0, 1.258]
+  ];
+  examples.forEach(([c, a]) => addStd(c, a));
+  el('calBlank').value = '0.012';
+  runCal();
+}
+
+function runCal(){
+  const pts = getStdData();
+  if (pts.length < 2){
+    el('calResultCard').style.display = 'none';
+    el('calUnknownCard').style.display = 'none';
+    return;
+  }
+
+  const reg = linReg(pts);
+  if (!reg){ return; }
+  calResult = { ...reg, pts, unit: el('calUnit').value };
+
+  // KPIs
+  el('calSlope').textContent     = reg.m.toFixed(4);
+  el('calIntercept').textContent = reg.b.toFixed(4);
+  el('calR2').textContent        = reg.r2.toFixed(4);
+
+  // R² alert
+  const r2Alert = el('calR2Alert');
+  if (reg.r2 < 0.99){
+    r2Alert.style.display = 'block';
+    r2Alert.className = reg.r2 < 0.95 ? 'alert alert-bad' : 'alert alert-warn';
+    r2Alert.innerHTML = `<strong>${reg.r2 < 0.95 ? '✕ Poor linearity' : '⚠ Suboptimal linearity'} (R² = ${reg.r2.toFixed(4)}):</strong> ` +
+      (reg.r2 < 0.95
+        ? 'Calibration line is not acceptably linear. Check for outliers, re-prepare standards, or verify the assay range.'
+        : 'R² below 0.99. Results may carry higher uncertainty. Verify standard preparation and consider re-running.');
+  } else {
+    r2Alert.style.display = 'block';
+    r2Alert.className = 'alert alert-good';
+    r2Alert.innerHTML = `<strong>✓ Good linearity (R² = ${reg.r2.toFixed(4)})</strong> — calibration curve is acceptable.`;
+  }
+
+  // Formula
+  const unit = el('calUnit').value;
+  el('calFormula').innerHTML =
+    `A (corrected) = ${reg.m.toFixed(4)} × c [${unit}] + ${reg.b.toFixed(4)}<br>` +
+    `<span style="color:#6b7280;">→ c = (A − ${reg.b.toFixed(4)}) / ${reg.m.toFixed(4)}</span>`;
+
+  // Chart
+  drawCalChart(pts, reg);
+
+  el('calResultCard').style.display = 'block';
+  el('calUnknownCard').style.display = 'block';
+  calcUnknown();
+}
+
+function drawCalChart(pts, reg){
+  const ctx = el('calChart').getContext('2d');
+  if (calChart){ calChart.destroy(); }
+
+  const xs = pts.map(p => p.c);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const xPad = (xMax - xMin) * 0.1 || 0.5;
+  const lineX = [xMin - xPad, xMax + xPad];
+  const lineY = lineX.map(x => reg.m * x + reg.b);
+
+  const unit = el('calUnit').value;
+
+  calChart = new Chart(ctx, {
+    data: {
+      datasets: [
+        {
+          type: 'scatter',
+          label: 'Standards',
+          data: pts.map(p => ({ x: p.c, y: p.a })),
+          backgroundColor: '#1976d2',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+        },
+        {
+          type: 'line',
+          label: 'Regression line',
+          data: lineX.map((x, i) => ({ x, y: lineY[i] })),
+          borderColor: '#ef4444',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 12, weight: '700' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const p = ctx.raw;
+              return ctx.datasetIndex === 0
+                ? `c = ${p.x} ${unit}, A = ${p.y.toFixed(4)}`
+                : `A = ${p.y.toFixed(4)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: `Concentration (${unit})`, font: { weight: '700' } }, grid: { color: '#f3f4f6' } },
+        y: { title: { display: true, text: 'Absorbance (corrected)', font: { weight: '700' } }, grid: { color: '#f3f4f6' } }
+      }
+    }
+  });
+}
+
+function calcUnknown(){
+  if (!calResult) return;
+  const A    = parseFloat(el('calUnkA').value);
+  const dil  = parseFloat(el('calDilution').value) || 1;
+  const blank = parseFloat(el('calBlank').value) || 0;
+  const unit = calResult.unit;
+
+  if (isNaN(A)){
+    el('unkAcorr').textContent = '—';
+    el('unkConc').textContent = '—';
+    el('unkConcDil').textContent = '—';
+    el('unkAlert').style.display = 'none';
+    return;
+  }
+
+  const Acorr = A - blank;
+  const c     = (Acorr - calResult.b) / calResult.m;
+  const cDil  = c * dil;
+
+  el('unkAcorr').textContent   = Acorr.toFixed(4);
+  el('unkConc').textContent    = c.toFixed(4) + ' ' + unit;
+  el('unkConcDil').textContent = cDil.toFixed(4) + ' ' + unit;
+
+  // Range check
+  const xs    = calResult.pts.map(p => p.c);
+  const xMin  = Math.min(...xs), xMax = Math.max(...xs);
+  const alert = el('unkAlert');
+
+  if (c < xMin || c > xMax){
+    alert.style.display = 'block';
+    alert.className = 'alert alert-warn';
+    alert.innerHTML = `<strong>⚠ Outside calibration range:</strong> Calculated concentration (${c.toFixed(4)} ${unit}) is outside the standard range [${xMin} – ${xMax} ${unit}]. Result is an extrapolation and may be inaccurate. Consider diluting the sample or extending the calibration range.`;
+  } else if (Acorr > 1.5){
+    alert.style.display = 'block';
+    alert.className = 'alert alert-warn';
+    alert.innerHTML = '<strong>⚠ High absorbance (A > 1.5):</strong> Non-linearity may affect accuracy. Consider diluting the sample.';
+  } else if (Acorr < 0.01){
+    alert.style.display = 'block';
+    alert.className = 'alert alert-warn';
+    alert.innerHTML = '<strong>⚠ Very low absorbance:</strong> Signal is near blank level. Results have high relative uncertainty.';
+  } else {
+    alert.style.display = 'none';
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// Init — add default rows
+// ──────────────────────────────────────────────────────────
+(function init(){
+  addStd('', '');
+  addStd('', '');
+  addStd('', '');
+})();
+
+// ──────────────────────────────────────────────────────────
+// Exercise toggle
+// ──────────────────────────────────────────────────────────
+function toggleAnswer(answerId, btn){
+  const ans = el(answerId);
+  const visible = ans.style.display === 'block';
+  ans.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? 'Show answer' : 'Hide answer';
+}
+
+function toggleEx(panelId, toggleId){
+  const panel  = el(panelId);
+  const toggle = el(toggleId);
+  const open   = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+// ──────────────────────────────────────────────────────────
+// Lambert-Beer exercises
+// ──────────────────────────────────────────────────────────
+const LB_EXERCISES = {
+  1: {
+    A: 0.540, A0: 0.015, l: 1, eps: 44000, epsUnit: '1', outUnit: 'gL', mw: 64458,
+    title: 'Haemoglobin — Drabkin\'s method',
+    steps: `
+      <b>Context:</b> In the cyanomethemoglobin (Drabkin's) method, whole blood is lysed and haemoglobin is converted to cyanomethemoglobin, which absorbs at 540 nm. The molar absorptivity of cyanomethemoglobin at 540 nm is approximately 44 000 L·mol⁻¹·cm⁻¹.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Note the corrected absorbance (A − A₀). A small reagent blank of 0.015 is normal for the Drabkin reagent.</li>
+        <li>Calculate the concentration in µmol/L. Haemoglobin has a molecular weight of 64 458 g/mol — can you convert to g/L?</li>
+        <li>A reference interval for adult males is approximately 130–170 g/L. Is this result within range?</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> c ≈ 11.96 µmol/L &nbsp;→&nbsp; 0.771 g/L (this is a diluted cuvette reading — in practice the blood sample is diluted 1:251 before measurement, so the true Hb in whole blood ≈ 0.771 × 251 ≈ 194 g/L — above reference, indicating possible polycythaemia at this fictive example dilution).`
+  },
+  2: {
+    A: 1.75, A0: 0.020, l: 1, eps: 8800, epsUnit: '1', outUnit: '1000',
+    title: 'High absorbance — dilution needed',
+    steps: `
+      <b>Context:</b> A sample reads A = 1.75 — well above the reliable linear range for most spectrophotometers (A &lt; 1.0 recommended, A &lt; 1.5 absolute maximum).<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Run the calculation and note the warning that fires. The result is unreliable due to detector saturation and stray light effects.</li>
+        <li>To bring the reading into range, dilute the sample 1:2 (expected corrected A ≈ 0.865) or 1:4 (A ≈ 0.433).</li>
+        <li>Try entering A = 0.865 with the same ε and l. Compare the concentrations — after multiplying by dilution factor 2, do they agree?</li>
+      </ol>`,
+    answer: `<b>Key lesson:</b> Lambert-Beer law is only valid within the linear range of your instrument. Always dilute when A > 1.0–1.5 and multiply the result by the dilution factor.<br><br>
+      <b>Expected concentrations:</b> At A = 1.73 (corrected): c ≈ 196.6 mmol/L (unreliable). After 1:2 dilution, A_corr ≈ 0.865 → c ≈ 98.3 mmol/L × 2 = <b>196.6 mmol/L</b> — same result, now trustworthy.`
+  },
+  3: {
+    A: 0.380, A0: 0.140, l: 1, eps: 6200, epsUnit: '1', outUnit: '1000',
+    title: 'Blanking matters',
+    steps: `
+      <b>Context:</b> The reagent itself absorbs significantly at the measurement wavelength (A₀ = 0.140 — not uncommon in colorimetric enzyme assays). If you forget to subtract the blank, you overestimate the analyte concentration.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Run the calculation with A₀ = 0.140. Note the concentration.</li>
+        <li>Now change A₀ to 0 and recalculate. The concentration is now based on A = 0.380 — compare to the corrected value.</li>
+        <li>Calculate the percentage error introduced by not blanking. Is it clinically acceptable?</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      With blank correction (A₀ = 0.140): c = (0.380 − 0.140) / 6200 = <b>38.7 µmol/L</b><br>
+      Without blank correction (A₀ = 0): c = 0.380 / 6200 = <b>61.3 µmol/L</b><br>
+      Error = (61.3 − 38.7) / 38.7 × 100 ≈ <b>+58%</b> — clinically unacceptable for any diagnostic assay.`
+  },
+  4: {
+    A: 0.450, A0: 0.012, l: 0.5, eps: 8800, epsUnit: '1', outUnit: '1000',
+    title: 'Micro-cuvette — half path length',
+    steps: `
+      <b>Context:</b> Micro-volume cuvettes or flow cells may have path lengths of 0.2–0.5 cm instead of the standard 1 cm. Forgetting to account for this is a common error.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Calculate the concentration with l = 0.5 cm (as loaded).</li>
+        <li>Change path length to 1.0 cm and recalculate. What happens to the result?</li>
+        <li>The relationship is inverse: halving path length doubles the calculated concentration. This makes sense because the light travels through half as much sample.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      l = 0.5 cm: c = (0.450 − 0.012) / (8800 × 0.5) = 0.438 / 4400 ≈ <b>99.5 µmol/L</b><br>
+      l = 1.0 cm: c = 0.438 / 8800 ≈ <b>49.8 µmol/L</b><br>
+      <b>Key lesson:</b> A 1 cm assumption on a 0.5 cm cell introduces a 2× systematic error — always verify your cuvette path length.`
+  }
+};
+
+function loadLBEx(n){
+  const ex = LB_EXERCISES[n];
+  if (!ex) return;
+
+  // Highlight active card
+  document.querySelectorAll('[id^="lbEx"]').forEach(c => c.classList.remove('active'));
+  el('lbEx' + n).classList.add('active');
+
+  // Switch to LB tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="lb"]').classList.add('active');
+  el('lb').classList.add('active');
+
+  // Fill fields
+  el('lbA').value       = ex.A;
+  el('lbA0').value      = ex.A0;
+  el('lbL').value       = ex.l;
+  el('lbEps').value     = ex.eps;
+  el('lbEpsUnit').value = ex.epsUnit;
+  el('lbOutUnit').value = ex.outUnit;
+  if (ex.mw) el('lbMW').value = ex.mw;
+  toggleMW();
+
+  // Run calculation
+  calcLB();
+
+  // Show instructions
+  const instr = el('lbExInstructions');
+  instr.style.display = 'block';
+  instr.innerHTML = `
+    <strong style="color:#1e40af;">📌 ${ex.title}</strong><br><br>
+    ${ex.steps}
+    <br>
+    <button class="ex-show-btn" onclick="toggleAnswer('lbAns${n}', this)">Show answer</button>
+    <div class="ex-answer" id="lbAns${n}">${ex.answer}</div>`;
+  instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ──────────────────────────────────────────────────────────
+// Calibration curve exercises
+// ──────────────────────────────────────────────────────────
+const CAL_EXERCISES = {
+  1: {
+    unit: 'mmol/L', blank: 0.008, unknownA: 0.445, dilution: 1,
+    standards: [[0,0.008],[2,0.181],[4,0.356],[6,0.528],[8,0.703],[10,0.878]],
+    title: 'Glucose standard curve',
+    steps: `
+      <b>Context:</b> A six-point glucose calibration curve using a colorimetric oxidase-peroxidase (GOD-POD) assay. Absorbance is measured at 505 nm after colour development.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Check R² — a well-prepared glucose curve should be ≥ 0.999. Is this curve acceptable?</li>
+        <li>Note the slope and intercept of the regression line. After blank correction the intercept should be close to zero.</li>
+        <li>Enter the unknown absorbance (A = 0.445) in the Unknown sample section. What is the calculated glucose concentration?</li>
+        <li>Is the result within the calibration range? Is it within the clinical reference interval for fasting glucose (3.9–6.1 mmol/L)?</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> Unknown concentration ≈ <b>4.97 mmol/L</b> — within the calibration range (0–10 mmol/L) and within the fasting reference interval (3.9–6.1 mmol/L). R² should be ≥ 0.9999 and the intercept close to 0 after blank correction.`
+  },
+  2: {
+    unit: 'mmol/L', blank: 0, unknownA: 0.295, dilution: 1,
+    standards: [[0,0.010],[1,0.095],[2,0.188],[3,0.420],[4,0.382],[5,0.471]],
+    title: 'Outlier in calibration',
+    steps: `
+      <b>Context:</b> Standard 3 (3 mmol/L) was prepared incorrectly — the absorbance (0.420) is far too high compared to the trend. This could be due to a pipetting error, contamination, or using the wrong stock solution.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Look at R² — it should be below 0.99. The calibration curve plot will show which point falls off the line.</li>
+        <li>Delete the row for the outlier (3 mmol/L, A = 0.420) using the × button.</li>
+        <li>R² should recover to ≥ 0.999 with that point removed.</li>
+        <li>Now enter the unknown (A = 0.295) — what concentration do you get before and after removing the outlier?</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      With outlier included: R² ≈ 0.956, unknown c ≈ <b>3.04 mmol/L</b> (inaccurate)<br>
+      After removing the outlier (3 mmol/L row): R² ≈ 0.9998, unknown c ≈ <b>3.10 mmol/L</b><br>
+      <b>Key lesson:</b> A single erroneous standard can introduce systematic error across the entire calibration. Always inspect the curve visually and check R².`
+  },
+  3: {
+    unit: 'mmol/L', blank: 0, unknownA: 0.830, dilution: 1,
+    standards: [[0,0.010],[1,0.097],[2,0.191],[3,0.285],[4,0.378],[5,0.472]],
+    title: 'Sample outside calibration range',
+    steps: `
+      <b>Context:</b> The patient sample has an absorbance of 0.830, which is higher than the highest standard (5 mmol/L, A ≈ 0.472). Extrapolating beyond the calibration range is unreliable.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Enter A = 0.830 in the Unknown sample section and note the extrapolation warning.</li>
+        <li>The result is mathematically possible but unreliable — the assay may not be linear beyond 5 mmol/L.</li>
+        <li>Option 1: Dilute the sample 1:2, re-measure (expected A ≈ 0.415), then set dilution factor = 2 to back-calculate. Try entering A = 0.415 and dilution = 2.</li>
+        <li>Option 2: Extend the calibration range by adding higher concentration standards.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      Extrapolated (unreliable): c ≈ <b>8.66 mmol/L</b> — outside calibration range, do not report.<br>
+      After 1:2 dilution (A = 0.415, dilution = 2): c within range ≈ 4.25 mmol/L × 2 = <b>8.50 mmol/L</b> — now trustworthy.<br>
+      <b>Key lesson:</b> Never report a concentration extrapolated beyond the calibration range without experimental justification.`
+  },
+  4: {
+    unit: 'mmol/L', blank: 0.085, unknownA: 0.520, dilution: 1,
+    standards: [[0,0.085],[2,0.256],[4,0.425],[6,0.594],[8,0.763]],
+    title: 'Blank correction — intercept shift',
+    steps: `
+      <b>Context:</b> The reagent has a background absorbance of A₀ = 0.085. If this is not subtracted, the regression line has a shifted intercept and all calculated concentrations will be systematically wrong.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>With blank = 0.085 (as loaded), note the intercept and slope of the regression. The intercept should be close to 0 after correction.</li>
+        <li>Enter the unknown (A = 0.520) and note the result.</li>
+        <li>Now change blank to 0 and re-run. The intercept shifts up by ~0.085. Recalculate the unknown — how much does the concentration change?</li>
+        <li>Which result is correct? The blank-corrected one — the blank absorbance is not caused by the analyte.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      With blank correction (blank = 0.085): intercept ≈ 0, unknown c ≈ <b>5.06 mmol/L</b><br>
+      Without blank correction (blank = 0): intercept ≈ 0.085, unknown c ≈ <b>4.11 mmol/L</b><br>
+      Systematic error introduced by missing blank ≈ <b>−0.95 mmol/L (−19%)</b> — clinically significant.<br>
+      <b>Key lesson:</b> Always measure and subtract a reagent blank. Even A₀ = 0.085 can shift results by ~1 mmol/L.`
+  }
+};
+
+function loadCalEx(n){
+  const ex = CAL_EXERCISES[n];
+  if (!ex) return;
+
+  // Highlight active card
+  document.querySelectorAll('[id^="calEx"]').forEach(c => c.classList.remove('active'));
+  el('calEx' + n).classList.add('active');
+
+  // Switch to cal tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="cal"]').classList.add('active');
+  el('cal').classList.add('active');
+
+  // Set unit and blank
+  el('calUnit').value  = ex.unit;
+  el('calBlank').value = ex.blank;
+  renderCalUnit();
+
+  // Clear and populate standards
+  el('stdBody').innerHTML = '';
+  stdRows = [];
+  ex.standards.forEach(([c, a]) => addStd(c, a));
+
+  // Run calibration
+  runCal();
+
+  // Set unknown
+  el('calUnkA').value    = ex.unknownA;
+  el('calDilution').value = ex.dilution;
+  calcUnknown();
+
+  // Show instructions
+  const instr = el('calExInstructions');
+  instr.style.display = 'block';
+  instr.innerHTML = `
+    <strong style="color:#1e40af;">📌 ${ex.title}</strong><br><br>
+    ${ex.steps}
+    <br>
+    <button class="ex-show-btn" onclick="toggleAnswer('calAns${n}', this)">Show answer</button>
+    <div class="ex-answer" id="calAns${n}">${ex.answer}</div>`;
+  instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>

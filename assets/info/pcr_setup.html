@@ -1,0 +1,80 @@
+<h2>PCR Setup — Master Mix Calculator</h2>
+
+<p>
+  The PCR Setup tool calculates reagent volumes for a PCR master mix.
+  Enter the number of reactions, the total reaction volume, and your reagent concentrations —
+  the tool outputs per-reaction and total volumes for the entire batch.
+</p>
+
+<h3>When to use this tool</h3>
+<ul>
+  <li>Preparing a master mix for a PCR run</li>
+  <li>Scaling an existing protocol to a different number of reactions or reaction volume</li>
+  <li>Converting final concentrations (in the reaction) to stock volumes to add</li>
+</ul>
+
+<h3>How it works</h3>
+<p>
+  For each reagent, the tool applies:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  Volume to add = (Final concentration × Total reaction volume) / Stock concentration
+</p>
+<p>
+  The tool sums all reagent volumes and calculates how much water to add to reach the target
+  total reaction volume. It also accounts for a <strong>10% overage</strong> (dead volume) so
+  that the last reaction is not short-changed by pipetting losses.
+</p>
+
+<h3>Typical reaction components</h3>
+<ul>
+  <li><strong>Buffer / polymerase mix:</strong> usually supplied as a 2× or 5× concentrate</li>
+  <li><strong>dNTPs:</strong> typical final concentration 200 µM each</li>
+  <li><strong>Forward and reverse primers:</strong> typical final 200–500 nM per primer</li>
+  <li><strong>Template DNA:</strong> typically 1–50 ng/µL final (see below)</li>
+  <li><strong>Water:</strong> to volume</li>
+</ul>
+
+<h3>Template concentration guidance</h3>
+
+<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;">
+  <tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
+    <th style="padding:7px 10px;">Template type</th>
+    <th style="padding:7px 10px;">Typical range (in reaction)</th>
+    <th style="padding:7px 10px;">Optimal</th>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;">Genomic DNA</td>
+    <td style="padding:7px 10px;">1–50 ng/µL</td>
+    <td style="padding:7px 10px;">5–20 ng/µL</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;">Plasmid / circular DNA</td>
+    <td style="padding:7px 10px;">0.1–10 ng/µL</td>
+    <td style="padding:7px 10px;">1–5 ng/µL</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;">cDNA (RT-PCR)</td>
+    <td style="padding:7px 10px;">1–10 ng/µL equivalent</td>
+    <td style="padding:7px 10px;">1:5 to 1:20 dilution of RT product</td>
+  </tr>
+  <tr>
+    <td style="padding:7px 10px;">PCR product (re-amplification)</td>
+    <td style="padding:7px 10px;">0.01–1 ng/µL</td>
+    <td style="padding:7px 10px;">&lt; 1 ng/µL</td>
+  </tr>
+</table>
+
+<p style="margin-top:8px; font-size:13px;">
+  Excess template (&gt; 100 ng/µL in reaction) can inhibit amplification.
+  Too little template increases the risk of stochastic failure.
+</p>
+
+<h3>Accuracy &amp; limitations</h3>
+<div style="margin-top:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.6;">
+  <strong>Accuracy &amp; limitations:</strong>
+  Calculations assume accurate pipetting. Small volumes (&lt; 1 µL) carry significant pipetting error
+  — pre-dilute concentrated stocks where possible. Always follow the reagent manufacturer's
+  recommended concentrations; the tool does not validate whether your chosen concentrations
+  are optimal for amplification.
+</div>

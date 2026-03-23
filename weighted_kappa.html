@@ -4,45 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Weighted Cohen's Kappa</title>
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    :root {
-      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
-      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
-    .container { max-width: 920px; margin: 0 auto; padding: 24px 20px 48px; }
-    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
-    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
-
-    /* TABS */
-    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
-    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
-      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
-    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    /* CARD */
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
-    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
-
-    /* GRID */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-    @media (max-width: 760px) { .grid-3 { grid-template-columns: 1fr; } }
-    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    /* FORM */
-    select, input[type="number"], input[type="text"] {
-      width: 100%; padding: 8px 10px;
-      border: 1px solid var(--line); border-radius: 10px;
-      background: #fff; font-size: 13px; color: var(--ink);
-    }
-    label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
-
     /* WEIGHT TOGGLE */
     .weight-toggle { display: flex; gap: 8px; }
     .weight-btn { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px;
@@ -50,35 +13,10 @@
       cursor: pointer; text-align: center; transition: all .15s; }
     .weight-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    /* BUTTONS */
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
-      font-size: 13px; cursor: pointer; transition: transform .05s; }
-    button:active { transform: translateY(1px); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
     .btn-small { padding: 8px 12px; font-size: 12.5px; border-radius: 9px; }
 
-    /* ALERTS */
-    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
-      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
-    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
-    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
-    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
-
-    /* KPI GRID */
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
-    @media (max-width: 760px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
-    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
     .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
     .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
-
-    /* TABLE */
-    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
-    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
-    th { background: #f9fafb; font-weight: 800; color: #374151; }
-    tr:last-child td, tr:last-child th { border-bottom: none; }
 
     .ctable { border-collapse: separate; border-spacing: 0; }
     .ctable th.axis { background: #eef2ff; color: #1f2937; font-weight: 900; }
@@ -115,7 +53,7 @@
   <p class="subtitle">Inter-rater agreement for ordinal categories (ordinal scales)</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="analysis">Analysis</div>
   </div>
 
@@ -123,18 +61,17 @@
   <div id="input" class="tab-content active">
 
     <!-- Study Context & Assumptions (top card) -->
-    <div class="card">
-      <div class="section-title">Study Context & Assumptions</div>
-      <p class="note" style="margin-top:0; margin-bottom:12px;">
-        Before running the test, verify that your study design meets the assumptions:
-      </p>
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="assumption1" /> Two independent raters / observers</label>
-        <label><input type="checkbox" id="assumption2" /> Ordinal categories (categories have meaningful order)</label>
-        <label><input type="checkbox" id="assumption3" /> Disagreement severity matters (penalize large disagreements more)</label>
-        <label><input type="checkbox" id="assumption4" /> Sample size adequate for stable estimate</label>
+    <details class="assumptions-panel">
+      <summary>Assumptions &amp; Study Context</summary>
+      <div class="assumptions-body">
+        <div class="assump-grid">
+          <label><input type="checkbox" id="assumption1" /> Two independent raters / observers</label>
+          <label><input type="checkbox" id="assumption2" /> Ordinal categories (categories have meaningful order)</label>
+          <label><input type="checkbox" id="assumption3" /> Disagreement severity matters (penalize large disagreements more)</label>
+          <label><input type="checkbox" id="assumption4" /> Sample size adequate for stable estimate</label>
+        </div>
       </div>
-    </div>
+    </details>
 
     <!-- Weight Scheme & Test Settings (side by side) -->
     <div class="grid-2">
@@ -230,6 +167,9 @@
       <div class="note">Weighted κ measures diagonal agreement (⬤ cells) with penalties for distance. Colors show how much diagonal cells deviate from expected by-chance distribution. Off-diagonal cells remain neutral as they represent disagreement with varying weight penalties.</div>
       <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
         <canvas id="heatmapWkappa" height="480"></canvas>
+      </div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Weighted Kappa extends Cohen's Kappa by penalising disagreements proportionally to their distance. The choice of weight scheme matters: linear weights penalise all disagreements equally per step; quadratic weights penalise larger disagreements more heavily and are equivalent to an intraclass correlation for ordinal data. The 95% CI is an asymptotic approximation and should be interpreted cautiously for small samples. Weighted Kappa requires the same ordered categories for both raters — it is not suitable for unordered (nominal) categories, where unweighted Cohen's Kappa should be used instead.
       </div>
     </div>
   </div>

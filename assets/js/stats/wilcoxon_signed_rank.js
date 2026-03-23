@@ -374,9 +374,15 @@ function renderResults(res){
         `;
       }
       
+      vizHTML += `
+        <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Boxplots show the actual observed data and differences — these are exact representations of your sample. The normal approximation for the z-score (shown when using the large-sample method) is reliable for n ≥ 20 non-zero differences and becomes less accurate with many tied ranks or very small samples. For small samples the exact permutation p-value is used instead, and no sampling distribution is displayed. The Wilcoxon signed-rank test assumes the differences are symmetrically distributed around the median — if differences are strongly skewed, the sign test is a more assumption-free alternative.
+        </div>
+      `;
+
       vizCard.innerHTML = vizHTML;
       resultsDiv.appendChild(vizCard);
-      
+
       renderDiffHistogram(before, after, diffs);
       if(exactP === null){
         renderNormalViz(z, significant, alpha, tail);
@@ -822,6 +828,7 @@ function useGeneratedData(){
   if(!generated) return;
   el('pairs').value = generated;
   el('inputError').style.display = 'none';
+  runWilcoxon();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{

@@ -9,162 +9,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    :root{
-      --bg:#f4f6f8;
-      --card:#ffffff;
-      --ink:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --accent:#1976d2;
-      --warn:#b45309;
-      --bad:#c62828;
-      --good:#2e7d32;
+    /* Module-specific styles only */
+    tr.outlier td { background: #fff7ed; }
+    .copybox {
+      display: flex; gap: 10px; align-items: flex-start;
+      border: 1px dashed var(--line);
+      padding: 10px; border-radius: 12px; background: #fff;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    body{ background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, sans-serif; margin:0; padding: 20px 16px 60px; }
-    .container{ max-width:1100px; margin: 0 auto; }
-    h1{ margin-bottom:6px; font-size: 1.6rem; }
-    .subtitle{ color:var(--muted); margin-top:0; }
-
-    .back-home{
-      display:inline-block;
-      margin-bottom:16px;
-      color:var(--accent);
-      text-decoration:none;
-      font-weight:600;
-      font-size:14px;
+    .copybox pre {
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+      font-size: 12px; line-height: 1.5; flex: 1;
     }
-    .back-home:hover{ text-decoration:underline; }
-
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media (max-width: 900px){ .grid-2{ grid-template-columns:1fr; } }
-
-    textarea{
-      width:100%;
-      min-height:160px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      padding:10px;
-      border:1px solid var(--line);
-      border-radius:10px;
-      background:#fff;
-    }
-    select, input[type="number"]{
-      width:100%;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:10px;
-      background:#fff;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-    .section-title{
-      font-weight:700;
-      margin:0 0 8px 0;
-      font-size: 14px;
-    }
-    .note{ color:var(--muted); font-size: 12.5px; margin-top:6px; }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:12.5px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color: var(--muted);
-    }
-    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-    button{
-      border:none;
-      border-radius:10px;
-      padding:10px 14px;
-      font-weight:700;
-      cursor:pointer;
-      transition: transform .05s ease, opacity .15s ease;
-    }
-    button:active{ transform: translateY(1px); }
-    .btn-primary{ background:var(--accent); color:#fff; }
-    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
-    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
-
-    .tabs{ display:flex; gap:10px; margin: 12px 0 14px; }
-    .tab{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      cursor:pointer;
-      font-weight:700;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
-    .tab-content{ display:none; }
-    .tab-content.active{ display:block; }
-
-    .alert{
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size: 13px;
-      line-height:1.4;
-    }
-    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color: #7c2d12; }
-    .alert.bad{ border-color:#ef444455; background:#fef2f2; color: #7f1d1d; }
-    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color: #14532d; }
-
-    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
-    table{ width:100%; border-collapse:collapse; font-size: 13px; background:#fff; }
-    th, td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
-    th{ background:#f9fafb; font-weight:800; color:#374151; }
-    td.num, th.num{ text-align:right; font-family: ui-monospace, monospace; }
-    tr.outlier td{ background:#fff7ed; }
-    .small{ font-size:12px; color:var(--muted); }
-    .copybox{
-      display:flex; gap:10px; align-items:flex-start;
-      border:1px dashed var(--line);
-      padding:10px; border-radius:12px; background:#fff;
-    }
-    .copybox pre{
-      margin:0; white-space:pre-wrap; word-break:break-word;
-      font-size: 12.5px; line-height:1.5;
-      flex:1;
-    }
-
-    canvas{ max-width:100%; }
-    .viz-wrap{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:#fff;
-    }
-
-    .assump-grid{
-      display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;
-    }
-    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
-    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
-    .assump-item input{ margin-top:2px; }
-    .kpi-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr; } }
-    .kpi{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px;
-      background:#fff;
-    }
-    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
-    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
   </style>
 </head>
 
@@ -176,7 +33,7 @@
   <p class="subtitle" style="margin-top:0;">Compare a sample mean to a known or hypothesized population mean (μ₀).</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="results">Results</div>
   </div>
 
@@ -185,46 +42,47 @@
 
     <div class="grid-2">
 
-      <div class="card">
-        <div class="section-title">Study context</div>
-        <div class="assump-grid">
-          <label class="assump-item">
-            <input type="checkbox" id="chkContinuous" checked />
-            <span>
-              <strong>Outcome is continuous</strong><br />
-              <span class="small">Numeric measurements (not categories)</span>
-            </span>
-          </label>
+      <details class="assumptions-panel">
+        <summary>Assumptions &amp; study context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" id="chkContinuous" checked />
+              <span>
+                <strong>Outcome is continuous</strong><br />
+                <span class="small">Numeric measurements (not categories)</span>
+              </span>
+            </label>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkIndep" checked />
-            <span>
-              <strong>Observations are independent</strong><br />
-              <span class="small">Each value comes from a different subject</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkIndep" checked />
+              <span>
+                <strong>Observations are independent</strong><br />
+                <span class="small">Each value comes from a different subject</span>
+              </span>
+            </label>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkMuKnown" checked />
-            <span>
-              <strong>μ₀ is a known reference</strong><br />
-              <span class="small">Not estimated from the same sample</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkMuKnown" checked />
+              <span>
+                <strong>μ₀ is a known reference</strong><br />
+                <span class="small">Not estimated from the same sample</span>
+              </span>
+            </label>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkOkCheck" checked />
-            <span>
-              <strong>Run assumption checks</strong><br />
-              <span class="small">Normality + extreme outliers</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkOkCheck" checked />
+              <span>
+                <strong>Run assumption checks</strong><br />
+                <span class="small">Normality + extreme outliers</span>
+              </span>
+            </label>
+          </div>
+          <div style="margin-top:12px;">
+            <span class="pill">Tip: For n ≥ 30 the t-test is robust to mild non-normality (CLT).</span>
+          </div>
         </div>
-
-        <div style="margin-top:10px;">
-          <span class="pill">Tip: For n ≥ 30 the t-test is robust to mild non-normality (CLT).</span>
-        </div>
-      </div>
+      </details>
 
       <div class="card">
         <div class="section-title">Test settings</div>
@@ -382,10 +240,12 @@
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Assumption checks</div>
-      <div id="assumptionArea" class="note">Assumption checks will appear here.</div>
-    </div>
+    <details class="assumptions-panel" style="margin-top:16px;" id="assumptionPanel">
+      <summary>Assumption checks</summary>
+      <div class="assumptions-body">
+        <div id="assumptionArea" class="note">Run the analysis to see assumption checks.</div>
+      </div>
+    </details>
 
     <div class="card" style="margin-top:16px;">
       <div class="section-title">Data review</div>
@@ -428,6 +288,9 @@
       </div>
       <!-- footer verdict bar -->
       <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The red sampling distribution curve is theoretical — it assumes the CLT applies (recommended n ≥ 30, or normally distributed raw data). With small, heavily skewed samples the actual sampling distribution may differ from the displayed curve. Verify assumptions in the section below; if normality is violated and n is small, consider the non-parametric Mann-Whitney U test instead.
+      </div>
     </div>
 
     <details class="card" style="margin-top:16px;">
@@ -619,20 +482,23 @@ function renderTViz({ xbar, mu0, se, sd, n, df, alpha, ciLo, ciHi, refLo, refHi,
   const verdictEl = el("vizVerdict");
   const footerEl  = el("vizFooter");
   const ciPct     = Math.round((1 - alpha) * 100);
+  const mu0Raw    = el("mu0").value.trim();
+  const mu0Dec    = mu0Raw.includes('.') ? mu0Raw.split('.')[1].length : 0;
+  const fmtMu0    = mu0.toFixed(mu0Dec);
 
   if (mu0InCI){
     verdictEl.textContent = "YES — fail to reject H₀";
     verdictEl.style.color = "#374151";
     footerEl.style.background = "#f1f5f9";
     footerEl.style.color      = "#374151";
-    footerEl.innerHTML = `H₀ not rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] includes μ₀ = ${fmt(mu0,4)}<br>
+    footerEl.innerHTML = `H₀ not rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] includes μ₀ = ${fmtMu0}<br>
       <span style="font-weight:400;font-size:12px;">The difference is not statistically significant (p = ${fmtP(p)})</span>`;
   } else {
     verdictEl.textContent = "NO — reject H₀";
     verdictEl.style.color = "#15803d";
     footerEl.style.background = "#ecfdf5";
     footerEl.style.color      = "#14532d";
-    footerEl.innerHTML = `H₀ rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] does not include μ₀ = ${fmt(mu0,4)}<br>
+    footerEl.innerHTML = `H₀ rejected — ${ciPct}% CI [${fmt(ciLo,2)}, ${fmt(ciHi,2)}] does not include μ₀ = ${fmtMu0}<br>
       <span style="font-weight:400;font-size:12px;">The difference is statistically significant (p = ${fmtP(p)})</span>`;
   }
 

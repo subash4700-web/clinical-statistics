@@ -4,61 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dilution Calculator</title>
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    :root {
-      --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
-    }
-    body{background:var(--bg);color:var(--ink);margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-    .container{max-width:1100px;padding:20px;}
-    .subtitle{color:var(--muted);margin-top:0;}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-    @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
-
-    select,input[type="number"],input[type="text"]{
-      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
-      box-sizing:border-box;background:#fff;font-size:14px;color:var(--ink);
-    }
-    input:focus,select:focus{outline:none;border-color:var(--accent);}
-
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;}
-    .section-title{font-weight:700;margin:0 0 10px 0;font-size:14px;}
-    .note{color:var(--muted);font-size:12.5px;margin-top:6px;}
-    .small{font-size:12px;color:var(--muted);}
-    .field-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;display:block;}
-    hr{border:none;border-top:1px solid var(--line);margin:16px 0;}
-
-    button{border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px;transition:transform .05s ease,opacity .15s ease;}
-    button:active{transform:translateY(1px);}
-    .btn-primary{background:var(--accent);color:#fff;}
     .btn-accent{background:#0d5fa9;color:#fff;}
-    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
     .btn-sm{padding:6px 10px;font-size:12px;}
 
-    .tabs{display:flex;gap:10px;margin:12px 0 14px;flex-wrap:wrap;}
-    .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
-    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
-
-    .alert{border-radius:12px;padding:10px 12px;border:1px solid var(--line);background:#fff;font-size:13px;line-height:1.5;}
-    .alert.warn{border-color:#f59e0b55;background:#fffbeb;color:#7c2d12;}
-    .alert.bad{border-color:#ef444455;background:#fef2f2;color:#7f1d1d;}
-    .alert.good{border-color:#22c55e55;background:#ecfdf5;color:#14532d;}
     .alert.info{border-color:#3b82f655;background:#eff6ff;color:#1e3a5f;}
 
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;}
-    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
-    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
-    th{background:#f9fafb;font-weight:800;color:#374151;}
     td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
-    tr:last-child td{border-bottom:none;}
     tr.total-row td{background:#f0f7ff;font-weight:700;border-top:2px solid var(--accent);}
 
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-    @media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr;}}
-    .kpi{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;}
     .kpi .label{color:var(--muted);font-size:12px;font-weight:700;}
     .kpi .value{font-size:15px;font-weight:900;margin-top:4px;font-family:ui-monospace,monospace;}
 
@@ -158,9 +113,6 @@
 </head>
 <body>
 <div class="container">
-  <h1 style="margin-bottom:6px;">Dilution Calculator</h1>
-  <p class="subtitle">Quick dilution and serial dilution.</p>
-
   <div class="tabs">
     <div class="tab active" data-tab="tab-simple">Quick Dilution</div>
     <div class="tab" data-tab="tab-serial">Serial Dilution</div>
@@ -270,6 +222,10 @@
             <input type="number" id="tpl-vol-plan" value="2" min="0" step="0.5" oninput="calcReactions()">
             <select><option>μl</option></select>
           </div>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer;">
+            <input type="checkbox" id="tpl-in-mm" onchange="buildMMTable();calcReactions();" style="margin:0;">
+            Include in master mix
+          </label>
         </div>
         <div>
           <label class="field-label">Pipetting overage (%)</label>
@@ -361,7 +317,7 @@
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;">Step 3 — Master mix</div>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <p class="note" style="margin:0;">H₂O is auto-calculated to fill remaining volume. Master mix excludes template.</p>
+        <p class="note" id="mm-note" style="margin:0;">H₂O fills remaining volume. Use the "In MM?" column to control what goes into the master mix.</p>
         <div style="display:flex;gap:8px;">
           <button class="btn-ghost btn-sm" onclick="addReagent()">+ Add reagent</button>
           <button class="btn-ghost btn-sm" onclick="resetReagents()">↺ Reset</button>
@@ -374,6 +330,7 @@
               <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:left;">Reagent</th>
               <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:70px;">Stock conc.</th>
               <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:left;min-width:75px;">Unit / ×</th>
+              <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:left;min-width:100px;">Working sol.</th>
               <th style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:110px;">Per rxn (μl)</th>
               <th id="mm-header-total" style="padding:7px 10px;background:#f9fafb;font-weight:800;color:#374151;border-bottom:1px solid var(--line);text-align:right;min-width:130px;">× — reactions</th>
               <th style="padding:7px 10px;background:#f9fafb;border-bottom:1px solid var(--line);min-width:80px;"></th>
@@ -653,6 +610,7 @@ function calcPrimers(){
   const stockConc  = fv('p-stock');
   const workingVol = fv('p-working-vol');
   const finalConc  = fv('p-final');
+  // Sync reaction volume from PCR Setup if available
   const rxnVol     = fv('p-rxn-vol');
   const addVol     = fv('p-add-vol');
   const finalConcUM = finalConc * parseFloat(el('p-final-unit').value);
@@ -739,19 +697,36 @@ function buildMMTable(){
       <td style="padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;">
         <input type="number" value="${r.stockConc??''}" min="0" step="any" placeholder="—"
           style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:62px;text-align:right;font-family:ui-monospace,monospace;"
-          oninput="reagents[${i}].stockConc=parseFloat(this.value)||0;buildMMTable();">
+          oninput="reagents[${i}].stockConc=parseFloat(this.value)||0;calcMM();"
+          onchange="buildMMTable();">
       </td>
       <td style="padding:5px 8px;border-bottom:1px solid var(--line);">
         <input type="text" list="unit-list" value="${r.stockUnit||''}" placeholder="unit"
           style="font-size:12px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;width:68px;"
           onchange="reagents[${i}].stockUnit=this.value;buildMMTable();">
       </td>
+      ${(()=>{
+          const pp=primerProtocols.find(p=>p.reagentIdx===i);
+          if(pp){
+            return `<td style="padding:5px 8px;border-bottom:1px solid var(--line);font-size:12px;font-family:ui-monospace,monospace;white-space:nowrap;line-height:1.6;">
+              <span style="color:#15803d;font-weight:700;">${fmt(pp.workingConc)} ${pp.unit}</span>
+              <span style="color:var(--muted);font-size:10px;"> (from ${fmt(pp.stockConc)} ${pp.unit})</span><br>
+              <span style="font-size:11px;color:#374151;">Take <strong>${fmt(pp.stockNeeded)} ${pp.volUnit}</strong> stock</span><br>
+              <span style="font-size:11px;color:#374151;">+ <strong>${fmt(Math.max(0,pp.waterNeeded))} ${pp.volUnit}</strong> H₂O</span><br>
+              <span style="font-size:10px;color:var(--muted);">→ ${fmt(pp.workingVol)} ${pp.volUnit} at ${fmt(pp.workingConc)} ${pp.unit} (${fmt(pp.df)}× dil.)</span>
+            </td>`;
+          }
+          return `<td style="padding:5px 8px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;">${r.isPrimer?'—':''}</td>`;
+        })()}
       <td style="padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;">
         ${isAuto
           ? `<span style="font-size:13px;font-family:ui-monospace,monospace;color:#2563eb;font-weight:700;padding:4px 8px;background:#eff6ff;border-radius:7px;display:inline-block;">${fmt(effVol)} μl</span>`
-          : `<input type="number" value="${r.vol}" min="0" step="0.1"
-              style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:70px;text-align:right;font-family:ui-monospace,monospace;"
-              oninput="reagents[${i}].vol=parseFloat(this.value)||0;calcMM();">`
+          : `<span style="display:inline-flex;align-items:center;gap:4px;">
+              <input type="number" value="${r.vol}" min="0" step="0.1"
+                style="font-size:13px;padding:4px 7px;border:1px solid var(--line);border-radius:7px;width:60px;text-align:right;font-family:ui-monospace,monospace;"
+                oninput="reagents[${i}].vol=parseFloat(this.value)||0;calcMM();">
+              <span style="font-size:12px;color:var(--muted);">μl</span>
+            </span>`
         }
       </td>
       <td id="mm-row-total-${i}" style="padding:5px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;color:var(--muted);">—</td>
@@ -763,12 +738,29 @@ function buildMMTable(){
       </td>`;
     tbody.appendChild(tr);
   });
+  // Template row (shown only when template is included in MM)
+  const tplInMMNow=el('tpl-in-mm')?.checked||false;
+  const tplVolNow=fvd('tpl-vol-plan',2);
+  if(tplInMMNow){
+    const tplTr=document.createElement('tr');
+    tplTr.id='mm-tpl-row';
+    tplTr.style.background='#fafafa';
+    tplTr.innerHTML=`
+      <td colspan="3" style="padding:7px 10px;border-bottom:1px solid var(--line);font-weight:700;color:#374151;">Template DNA <span style="font-size:11px;color:var(--muted);font-weight:400;">(in MM)</span></td>
+      <td id="mm-tpl-per" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;font-weight:700;">${fmt(tplVolNow)} μl</td>
+      <td style="border-bottom:1px solid var(--line);"></td>
+      <td id="mm-tpl-total" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;color:var(--muted);">—</td>
+      <td style="border-bottom:1px solid var(--line);"></td>
+      <td style="border-bottom:1px solid var(--line);"></td>`;
+    tbody.appendChild(tplTr);
+  }
   // H₂O row (auto-calculated)
   const waterTr=document.createElement('tr');
   waterTr.style.background='#f0f7ff';
   waterTr.innerHTML=`
-    <td colspan="3" style="padding:7px 10px;border-bottom:1px solid var(--line);font-weight:700;">dH₂O <span style="font-size:11px;color:var(--muted);font-weight:400;">(auto)</span> <span style="font-size:12px;color:var(--muted);font-weight:400;">— fills to total vol − template vol</span></td>
+    <td colspan="3" style="padding:7px 10px;border-bottom:1px solid var(--line);font-weight:700;">dH₂O <span style="font-size:11px;color:var(--muted);font-weight:400;">(auto)</span> <span style="font-size:12px;color:var(--muted);font-weight:400;">— fills remaining volume</span></td>
     <td id="mm-water-per" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;font-weight:700;">—</td>
+    <td style="border-bottom:1px solid var(--line);"></td>
     <td id="mm-water-total" style="padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:ui-monospace,monospace;font-weight:700;">—</td>
     <td style="border-bottom:1px solid var(--line);"></td>
     <td style="border-bottom:1px solid var(--line);"></td>`;
@@ -777,8 +769,9 @@ function buildMMTable(){
   const totalTr=document.createElement('tr');
   totalTr.style.cssText='background:#f0f7ff;font-weight:700;border-top:2px solid var(--accent);';
   totalTr.innerHTML=`
-    <td colspan="3" style="padding:7px 10px;font-weight:700;">Master mix total <span style="font-size:11px;color:var(--muted);font-weight:400;">(per tube, excl. template)</span></td>
+    <td colspan="3" style="padding:7px 10px;font-weight:700;">Master mix total <span style="font-size:11px;color:var(--muted);font-weight:400;">(per tube)</span></td>
     <td id="mm-total-per" style="padding:7px 10px;text-align:right;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">—</td>
+    <td></td>
     <td id="mm-total-total" style="padding:7px 10px;text-align:right;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">—</td>
     <td></td>
     <td></td>`;
@@ -787,22 +780,36 @@ function buildMMTable(){
 }
 
 function calcMM(){
-  const rxnVol = fvd('rxn-vol-plan',25);
-  const tplVol = fvd('tpl-vol-plan',2);
-  const ovPct  = parseFloat(el('overage-pct')?.value)||0;
+  const rxnVol  = fvd('rxn-vol-plan',25);
+  const tplVol  = fvd('tpl-vol-plan',2);
+  const tplInMM = el('tpl-in-mm')?.checked||false;
+  const ovPct   = parseFloat(el('overage-pct')?.value)||0;
   const nControls=CONTROLS.filter(c=>c.checked).length;
   const nSamples=el('spl-tbody')?.querySelectorAll('tr.spl-data-row').length||0;
-  const nBase=nControls+nSamples;
-  const n=nBase>0 ? Math.ceil(nBase*stripRuns*(1+ovPct/100)) : 0;
+  const n=nControls+nSamples>0 ? Math.ceil((nControls+nSamples)*stripRuns*(1+ovPct/100)) : 0;
+
   if(el('mm-header-total')) el('mm-header-total').textContent=n>0?`× ${n} reactions`:'× — reactions';
+
   const effVols=reagents.map(r=>(r.stockUnit==='×'&&r.stockConc>0)?rxnVol/r.stockConc:(r.vol||0));
-  const sumVol=effVols.reduce((s,v)=>s+v,0);
-  const mmPerRxn=rxnVol-tplVol;
-  const waterVol=Math.max(0,mmPerRxn-sumVol);
+  const sumReagents=effVols.reduce((s,v)=>s+v,0);
+
+  // Water fills whatever space remains after reagents (+ template if in MM)
+  const waterVol=Math.max(0, rxnVol - sumReagents - tplVol);
+
+  // MM total per rxn = reagents + template (if included) + water
+  const mmPerRxn = sumReagents + (tplInMM ? tplVol : 0) + waterVol;
+
+  if(el('mm-note')) el('mm-note').textContent = tplInMM
+    ? 'Template is included in the master mix — aliquot the full reaction volume per tube.'
+    : `H₂O fills remaining volume. Add ${fmt(tplVol)} μl template separately per tube.`;
+
   reagents.forEach((r,i)=>{
     const c=el(`mm-row-total-${i}`);
     if(c) c.textContent=n>0?fmt(effVols[i]*n)+' μl':'—';
   });
+  // Template row total (visible only when tplInMM)
+  if(el('mm-tpl-total')) el('mm-tpl-total').textContent=n>0?fmt(tplVol*n)+' μl':'—';
+
   if(el('mm-water-per'))   el('mm-water-per').textContent=fmt(waterVol)+' μl';
   if(el('mm-water-total')) el('mm-water-total').textContent=n>0?fmt(waterVol*n)+' μl':'—';
   if(el('mm-total-per'))   el('mm-total-per').textContent=fmt(mmPerRxn)+' μl';
@@ -815,12 +822,17 @@ function addReagent(){
 }
 function openPrimerSetup(i){
   pendingPrimerTransfer={idx:i, name:reagents[i].name};
-  // Switch to Primer Dilution tab
-  document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
-  document.querySelector('.tab[data-tab="tab-primers"]').classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
   el('tab-primers').classList.add('active');
+  const tabsNav=document.querySelector('.tabs');
+  if(tabsNav) tabsNav.style.display='none';
+  // Sync reaction volume from PCR Setup on entry
+  const rxnVolPlanEl = el('rxn-vol-plan');
+  if(rxnVolPlanEl && rxnVolPlanEl.value) el('p-rxn-vol').value = rxnVolPlanEl.value;
   updatePrimerSetupBanner();
   updatePrimerTransferSection();
+  calcPrimers();
 }
 function cancelPrimerSetup(){
   pendingPrimerTransfer=null;
@@ -871,9 +883,8 @@ function transferPrimerToPCR(){
   const df=stockConc/workingConc;
   const finalInRxn=(workingConc*addVol)/rxnVol;
   const {idx,name}=pendingPrimerTransfer;
-  // Update reagent row vol
+  // Update reagent row vol (keep existing stockUnit/stockConc)
   reagents[idx].vol=addVol;
-  reagents[idx].stockUnit='µl';
   // Store protocol
   primerProtocols=primerProtocols.filter(p=>p.reagentIdx!==idx);
   primerProtocols.push({reagentIdx:idx,name,stockConc,workingConc,workingVol,stockNeeded,waterNeeded,df,addVol,finalInRxn,unit,volUnit});
@@ -881,10 +892,27 @@ function transferPrimerToPCR(){
   updatePrimerSetupBanner();
   updatePrimerTransferSection();
   // Switch back to PCR Setup
-  document.querySelectorAll('.tab,.tab-content').forEach(e=>e.classList.remove('active'));
-  document.querySelector('.tab[data-tab="tab-reactions"]').classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
   el('tab-reactions').classList.add('active');
+  const tabsNav=document.querySelector('.tabs');
+  if(tabsNav) tabsNav.style.display='none';
   buildMMTable();
+  renderPrimerProtocols();
+}
+function updatePrimerProtocol(idx, field, val){
+  const p = primerProtocols.find(p=>p.reagentIdx===idx);
+  if(!p) return;
+  const num = parseFloat(val);
+  if(!isNaN(num)) p[field] = num;
+  else if(field==='unit') p.unit = val;
+  // Recalculate derived values
+  if(p.stockConc > 0 && p.workingConc > 0 && p.workingVol > 0){
+    p.stockNeeded = (p.workingConc * p.workingVol) / p.stockConc;
+    p.waterNeeded = p.workingVol - p.stockNeeded;
+    p.df = p.stockConc / p.workingConc;
+    p.finalInRxn = (p.workingConc * p.addVol) / fvd('rxn-vol-plan', 25);
+  }
   renderPrimerProtocols();
 }
 function renderPrimerProtocols(){
@@ -897,22 +925,43 @@ function renderPrimerProtocols(){
         <div class="section-title" style="margin:0;">Primer Dilution Protocols</div>
         <button class="btn-ghost btn-sm" onclick="primerProtocols=[];buildMMTable();renderPrimerProtocols();" style="font-size:11px;">Clear all</button>
       </div>`;
-  primerProtocols.forEach(p=>{
+  primerProtocols.forEach((p,pi)=>{
+    const idx=p.reagentIdx;
     html+=`
       <div class="dil-protocol-item" style="border-color:#c4b5fd;background:#faf5ff;">
         <div class="dpi-header">
           <div class="dpi-name">🧪 ${p.name}</div>
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="small">DF: ${fmt(p.df)}×</span>
-            <button class="btn-ghost btn-sm" style="padding:2px 6px;font-size:10px;" onclick="primerProtocols=primerProtocols.filter(p=>p.reagentIdx!==${p.reagentIdx});buildMMTable();renderPrimerProtocols();">✕</button>
+            <button class="btn-ghost btn-sm" style="padding:2px 6px;font-size:10px;" onclick="primerProtocols=primerProtocols.filter(p=>p.reagentIdx!==${idx});buildMMTable();renderPrimerProtocols();">✕</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-end;">
+          <div>
+            <label class="field-label" style="font-size:10px;">Stock conc.</label>
+            <div class="input-unit" style="max-width:140px;">
+              <input type="number" value="${p.stockConc}" min="0" step="any" style="font-size:12px;padding:4px 6px;" oninput="updatePrimerProtocol(${idx},'stockConc',this.value)">
+              <select style="font-size:12px;padding:2px 4px;" onchange="updatePrimerProtocol(${idx},'unit',this.value)">
+                <option ${p.unit==='μM'?'selected':''}>μM</option>
+                <option ${p.unit==='nM'?'selected':''}>nM</option>
+                <option ${p.unit==='pmol/μl'?'selected':''}>pmol/μl</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-label" style="font-size:10px;">Working sol. conc.</label>
+            <div class="input-unit" style="max-width:140px;">
+              <input type="number" value="${p.workingConc}" min="0" step="any" style="font-size:12px;padding:4px 6px;" oninput="updatePrimerProtocol(${idx},'workingConc',this.value)">
+              <span style="font-size:12px;padding:2px 6px;color:var(--muted);">${p.unit}</span>
+            </div>
           </div>
         </div>
         <div class="dpi-calc-grid">
           <div class="dpi-calc-box">
             <div class="dpi-calc-title">Step 1 — Working solution</div>
-            <div class="dpi-calc-eq">Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> stock (${fmt(p.stockConc)} µM)</div>
+            <div class="dpi-calc-eq">Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> stock (${fmt(p.stockConc)} ${p.unit})</div>
             <div class="dpi-calc-eq">+ <strong>${fmt(Math.max(0,p.waterNeeded))} ${p.volUnit}</strong> water/buffer</div>
-            <div class="dpi-calc-val">→ <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> at <strong>${fmt(p.workingConc)} µM</strong></div>
+            <div class="dpi-calc-val">→ <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> at <strong>${fmt(p.workingConc)} ${p.unit}</strong></div>
           </div>
           <div class="dpi-calc-box">
             <div class="dpi-calc-title">Step 2 — Per reaction</div>
@@ -921,7 +970,7 @@ function renderPrimerProtocols(){
           </div>
         </div>
         <div class="step-list">
-          <span class="step-pill">1</span> Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> of stock (${fmt(p.stockConc)} µM) + <strong>${fmt(Math.max(0,p.waterNeeded))} ${p.volUnit}</strong> water → <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> working solution at <strong>${fmt(p.workingConc)} µM</strong><br>
+          <span class="step-pill">1</span> Take <strong>${fmt(p.stockNeeded)} ${p.volUnit}</strong> of stock (${fmt(p.stockConc)} ${p.unit}) + <strong>${fmt(Math.max(0,p.waterNeeded))} ${p.volUnit}</strong> water → <strong>${fmt(p.workingVol)} ${p.volUnit}</strong> working solution at <strong>${fmt(p.workingConc)} ${p.unit}</strong><br>
           <span class="step-pill">2</span> Add <strong>${fmt(p.addVol)} µl</strong> per ${fvd('rxn-vol-plan',25)} µl PCR reaction → <strong>${fmt(p.finalInRxn)} ${p.unit}</strong> final
         </div>
       </div>`;
@@ -943,26 +992,39 @@ function renderProtocolOutput(){
   if(!outEl)return;
   const rxnVol=fvd('rxn-vol-plan',25);
   const tplVol=fvd('tpl-vol-plan',2);
-  const mmVol=rxnVol-tplVol;
+  const tplInMM=el('tpl-in-mm')?.checked||false;
+
+  // Mirror calcMM
+  const effVols=reagents.map(r=>(r.stockUnit==='×'&&r.stockConc>0)?rxnVol/r.stockConc:(r.vol||0));
+  const sumReagents=effVols.reduce((s,v)=>s+v,0);
+  const waterVol=Math.max(0,rxnVol-sumReagents-tplVol);
+  const mmVol=sumReagents+(tplInMM?tplVol:0)+waterVol;
+
   const reactions=[];
   CONTROLS.forEach(ctrl=>{
     if(!ctrl.checked)return;
     let tplDesc='—';
-    if(ctrl.id==='ntc')  tplDesc=`${fmt(tplVol)} μl H₂O`;
+    if(tplInMM) tplDesc='In master mix';
+    else if(ctrl.id==='ntc')  tplDesc=`${fmt(tplVol)} μl H₂O`;
     else if(ctrl.id==='nort') tplDesc=`${fmt(tplVol)} μl sample (no RT)`;
     else if(ctrl.id==='pos')  tplDesc=`${fmt(tplVol)} μl positive ctrl`;
     else if(ctrl.id==='neg')  tplDesc=`${fmt(tplVol)} μl H₂O`;
+    else tplDesc=`${fmt(tplVol)} μl ${ctrl.label}`;
     reactions.push({label:ctrl.label,color:ctrl.color,bg:ctrl.bg,tplDesc});
   });
   el('spl-tbody').querySelectorAll('tr.spl-data-row').forEach((row,si)=>{
     const name=row.querySelector('input[type="text"]').value||`S${si+1}`;
-    reactions.push({label:name,color:'#1976d2',bg:'#eff6ff',tplDesc:`${fmt(tplVol)} μl ${name}`});
+    const tplDesc=tplInMM?'In master mix':`${fmt(tplVol)} μl ${name}`;
+    reactions.push({label:name,color:'#1976d2',bg:'#eff6ff',tplDesc});
   });
   if(!reactions.length){outEl.innerHTML='';return;}
+
+  const tdStyle='padding:6px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);text-align:center;';
   const thCells=reactions.map(r=>`<th style="padding:6px 10px;background:${r.bg};color:${r.color};border-bottom:2px solid ${r.color};border-left:1px solid var(--line);font-weight:700;text-align:center;min-width:80px;">${r.label}</th>`).join('');
-  const mmCells=reactions.map(()=>`<td style="padding:6px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);text-align:center;font-family:ui-monospace,monospace;font-weight:700;">${fmt(mmVol)} μl</td>`).join('');
-  const tplCells=reactions.map(r=>`<td style="padding:6px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);text-align:center;font-size:12px;color:var(--muted);">${r.tplDesc}</td>`).join('');
+  const mmCells=reactions.map(()=>`<td style="${tdStyle}font-family:ui-monospace,monospace;font-weight:700;">${fmt(mmVol)} μl</td>`).join('');
+  const tplRow=tplInMM?'':`<tr><td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">+ Template DNA</td>${reactions.map(r=>`<td style="${tdStyle}font-size:12px;color:var(--muted);">${r.tplDesc}</td>`).join('')}</tr>`;
   const totCells=reactions.map(()=>`<td style="padding:6px 10px;border-left:1px solid var(--line);text-align:center;font-family:ui-monospace,monospace;font-weight:900;color:var(--accent);">${fmt(rxnVol)} μl</td>`).join('');
+
   outEl.innerHTML=`
     <div class="card">
       <div class="section-title" style="margin-bottom:10px;">Protocol — Per Tube Setup</div>
@@ -973,12 +1035,8 @@ function renderProtocolOutput(){
             ${thCells}
           </tr></thead>
           <tbody>
-            <tr>
-              <td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">Master mix</td>${mmCells}
-            </tr>
-            <tr>
-              <td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">Template DNA</td>${tplCells}
-            </tr>
+            <tr><td style="padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600;">Master mix</td>${mmCells}</tr>
+            ${tplRow}
             <tr style="background:#f0f7ff;">
               <td style="padding:6px 10px;font-weight:700;">Total</td>${totCells}
             </tr>
@@ -993,6 +1051,7 @@ function renderProtocolOutput(){
 ══════════════════════════════════════════════════════ */
 const CONTROLS=[
   {id:'ntc',  label:'NTC',         desc:'No Template Control',      color:'#4b5563',bg:'#f3f4f6',checked:true,  fixed:true},
+  {id:'wt',   label:'WT',          desc:'Wild-type Control',        color:'#15803d',bg:'#f0fdf4',checked:true,  fixed:true},
   {id:'nort', label:'NoRT',        desc:'No Reverse Transcriptase', color:'#b45309',bg:'#fffbeb',checked:false, fixed:true},
   {id:'het',  label:'Heterozygote',desc:'Heterozygous Control',     color:'#7c3aed',bg:'#f5f3ff',checked:false, fixed:true},
   {id:'hom',  label:'Homozygote',  desc:'Homozygous Control',       color:'#0369a1',bg:'#f0f9ff',checked:false, fixed:true},
@@ -1832,6 +1891,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       const hashTab = document.querySelector(`.tab[data-tab="${hash}"]`);
       if(hashTab) hashTab.classList.add('active');
       hashContent.classList.add('active');
+      // Hide dilution tabs nav for sections that don't use it
+      const tabsNav = document.querySelector('.tabs');
+      if(tabsNav) tabsNav.style.display = (hash==='tab-primers'||hash==='tab-reactions') ? 'none' : '';
     }
   }
 
@@ -1842,6 +1904,57 @@ document.addEventListener('DOMContentLoaded',()=>{
   calcSerial();
   calcReactions();
 });
+
+// ── Save / Load hooks for universal Save Data button ─────────────────────────
+window.getSaveData = function() {
+  return {
+    reagents: JSON.parse(JSON.stringify(reagents)),
+    primerProtocols: JSON.parse(JSON.stringify(primerProtocols)),
+    controls: JSON.parse(JSON.stringify(CONTROLS)),
+    fields: {
+      'rxn-vol-plan':   el('rxn-vol-plan')?.value   || '',
+      'tpl-vol-plan':   el('tpl-vol-plan')?.value   || '',
+      'overage-pct':    el('overage-pct')?.value    || '',
+      'tpl-in-mm':      el('tpl-in-mm')?.checked    ?? false,
+      'tpl-range-min':  el('tpl-range-min')?.value  || '',
+      'tpl-target-conc':el('tpl-target-conc')?.value|| '',
+      'tpl-range-max':  el('tpl-range-max')?.value  || ''
+    }
+  };
+};
+
+window.loadSaveData = function(data) {
+  if (data.reagents && Array.isArray(data.reagents)) {
+    reagents = data.reagents;
+  }
+  if (data.primerProtocols && Array.isArray(data.primerProtocols)) {
+    primerProtocols = data.primerProtocols;
+  }
+  if (data.controls && Array.isArray(data.controls)) {
+    // Restore checked state for fixed controls; re-add custom ones
+    data.controls.forEach(saved => {
+      const existing = CONTROLS.find(c => c.id === saved.id);
+      if (existing) {
+        existing.checked = saved.checked;
+      } else if (!saved.fixed) {
+        CONTROLS.push(saved);
+      }
+    });
+  }
+  if (data.fields) {
+    Object.entries(data.fields).forEach(([id, val]) => {
+      const elem = el(id);
+      if (!elem) return;
+      if (elem.type === 'checkbox') { elem.checked = !!val; }
+      else { elem.value = val; }
+    });
+  }
+  buildControls();
+  buildMMTable();
+  calcMM();
+  renderPrimerProtocols();
+  calcReactions();
+};
 </script>
 </body>
 </html>

@@ -7,92 +7,17 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
-    :root{
-      --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body{ background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,sans-serif; margin:0; padding:20px 16px 60px; }
-    .container{ max-width:1100px; margin:0 auto; }
-    h1{ margin-bottom:6px; font-size:1.6rem; }
-    .subtitle{ color:var(--muted); margin-top:0; }
-
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
-
-    textarea{
-      width:100%; min-height:180px;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-      font-size:13px; padding:10px; border:1px solid var(--line);
-      border-radius:10px; background:#fff;
-    }
-    select, input[type="number"], input[type="text"]{
-      width:100%; padding:8px 10px; border:1px solid var(--line);
-      border-radius:10px; background:#fff;
-    }
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
-    .section-title{ font-weight:700; margin:0 0 8px 0; font-size:14px; }
-    .note{ color:var(--muted); font-size:12.5px; margin-top:6px; }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px; font-size:12.5px;
-      padding:6px 10px; border-radius:999px; border:1px solid var(--line);
-      background:#fff; color:var(--muted);
-    }
-    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-    button{
-      border:none; border-radius:10px; padding:10px 14px; font-weight:700;
-      cursor:pointer; transition:transform .05s ease,opacity .15s ease;
-    }
-    button:active{ transform:translateY(1px); }
-    .btn-primary{ background:var(--accent); color:#fff; }
-    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
-    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
-    .btn-sm{ padding:6px 10px; font-size:12px; }
-
-    .tabs{ display:flex; gap:10px; margin:12px 0 14px; }
-    .tab{
-      padding:8px 12px; border-radius:999px; border:1px solid var(--line);
-      background:#fff; cursor:pointer; font-weight:700; color:var(--muted); font-size:13px;
-    }
-    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
-    .tab-content{ display:none; }
-    .tab-content.active{ display:block; }
-
-    .alert{ border-radius:12px; padding:10px 12px; border:1px solid var(--line); background:#fff; font-size:13px; line-height:1.4; }
-    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color:#7c2d12; }
-    .alert.bad{ border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
-    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color:#14532d; }
-
-    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
-    table{ width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
-    th,td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
-    th{ background:#f9fafb; font-weight:800; color:#374151; }
-    td.num,th.num{ text-align:right; font-family:ui-monospace,monospace; }
-    .small{ font-size:12px; color:var(--muted); }
     .copybox{
       display:flex; gap:10px; align-items:flex-start;
       border:1px dashed var(--line); padding:10px; border-radius:12px; background:#fff;
     }
     .copybox pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.5; flex:1; }
 
-    .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
-    .kpi{ border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; }
-    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
-    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
-
-    .assump-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
-    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
-    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
-    .assump-item input{ margin-top:2px; }
-
     .group-name-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
     .group-name-input{ width:120px !important; }
-
-    canvas{ max-width:100%; }
-    .viz-wrap{ overflow:hidden; border-radius:12px; background:#f8fafc; }
   </style>
 </head>
 <body>
@@ -101,7 +26,7 @@
   <p class="subtitle" style="margin-top:0;">Compare means across three or more independent groups.</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="results">Results</div>
   </div>
 
@@ -109,30 +34,32 @@
   <div id="input" class="tab-content active">
 
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">Study context</div>
-        <div class="assump-grid">
-          <label class="assump-item">
-            <input type="checkbox" id="chkIndep" checked />
-            <span><strong>Groups are independent</strong><br/><span class="small">Each subject in only one group</span></span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkContinuous" checked />
-            <span><strong>Outcome is continuous</strong><br/><span class="small">Numeric measurements</span></span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkRandom" checked />
-            <span><strong>Random / representative sampling</strong><br/><span class="small">Observations independent within groups</span></span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkOkCheck" checked />
-            <span><strong>Run assumption checks</strong><br/><span class="small">Normality + outliers per group</span></span>
-          </label>
+      <details class="assumptions-panel">
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" id="chkIndep" checked />
+              <span><strong>Groups are independent</strong><br/><span class="small">Each subject in only one group</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkContinuous" checked />
+              <span><strong>Outcome is continuous</strong><br/><span class="small">Numeric measurements</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkRandom" checked />
+              <span><strong>Random / representative sampling</strong><br/><span class="small">Observations independent within groups</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkOkCheck" checked />
+              <span><strong>Run assumption checks</strong><br/><span class="small">Normality + outliers per group</span></span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Tip: ANOVA tests whether any group means differ — post-hoc tests identify which pairs.</span>
+          </div>
         </div>
-        <div style="margin-top:10px;">
-          <span class="pill">Tip: ANOVA tests whether any group means differ — post-hoc tests identify which pairs.</span>
-        </div>
-      </div>
+      </details>
 
       <div class="card">
         <div class="section-title">Test settings</div>
@@ -319,7 +246,7 @@
     <div class="card" style="margin-top:16px; display:none;" id="vizCard">
       <div class="section-title">Hypothesis visualisation</div>
       <div class="note" style="margin-top:0;">
-        Population distributions for each group using their actual standard deviations. Wider curves indicate higher variability within that group. The grand mean (dashed) shows the common reference under H₀. Arrows indicate between-group spread vs within-group spread — the essence of the F-ratio.
+        Bell curves show the estimated distribution for each group using sample mean and SD. Below the baseline: <strong>pink arrows</strong> show the actual data range (min–max) within each group — this is what SS_within measures. <strong>Cyan arrows</strong> show how far each group mean sits from the grand mean — this is what SS_between measures. The F-ratio compares these two sources of variation.
       </div>
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px; padding:0 4px;">
         <div>
@@ -332,9 +259,12 @@
         </div>
       </div>
       <div class="viz-wrap" style="margin-top:8px;">
-        <canvas id="anovaVizCanvas" height="300"></canvas>
+        <canvas id="anovaVizCanvas"></canvas>
       </div>
       <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Bell curves represent the estimated within-group distributions using sample means and SDs — they are not a direct output of the F-test. ANOVA assumes normality within each group and homogeneity of variance across groups (checked by Levene's test). With small group sizes (n &lt; 10 per group) and marked non-normality, the F-test p-value becomes less reliable. In those cases consider the Kruskal-Wallis test.
+      </div>
     </div>
 
     <div class="card" style="margin-top:16px;">
@@ -632,17 +562,21 @@ function renderAnovaViz({ groupData, groupNames, means, grandMean, MSW, alpha, p
     : `No significant difference between group means — F(${dfB}, ${dfW}) = ${fmt(F,3)}, p = ${fmtP(p)}<br>
        <span style="font-weight:400;font-size:12px;">The data do not provide sufficient evidence to reject H₀.</span>`;
 
-  // canvas setup
+  // canvas setup — height grows with number of groups
   const W = canvas.parentElement.clientWidth || 800;
-  const H = 300;
+  const k = groupData.length;
+  const padL=50, padR=30;
+  const btwRowH = 15;                        // px per between-arrow row
+  const withinRowH = 18;                     // px per within-arrow row
+  const padT = 26 + k * btwRowH + 12;        // room for staggered between arrows
+  const plotH = 160;
+  const padB  = 28 + k * withinRowH + 34;    // room for staggered within arrows
+  const H     = padT + plotH + padB;
   canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0,0,W,H);
-
-  const k = groupData.length;
-  const padL=50, padR=30, padT=55, padB=70;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const plotW = W - padL - padR;
 
   // Calculate individual SD for each group
   const groupSDs = groupData.map((g, i) => {
@@ -652,11 +586,14 @@ function renderAnovaViz({ groupData, groupNames, means, grandMean, MSW, alpha, p
     return Math.sqrt(variance);
   });
 
-  // x-range: cover all means ± 3 SDs (using max SD for range)
+  // x-range: must cover actual data min/max AND means ± 3SD for the bell curves
   const maxSD = Math.max(...groupSDs);
-  const allMeans = means;
-  const xMin = Math.min(...allMeans) - maxSD * 3;
-  const xMax = Math.max(...allMeans) + maxSD * 3;
+  const allValues = groupData.flat();
+  const dataMin = Math.min(...allValues);
+  const dataMax = Math.max(...allValues);
+  const pad = Math.max(maxSD * 0.5, (dataMax - dataMin) * 0.08);
+  const xMin = Math.min(dataMin, Math.min(...means) - maxSD * 3) - pad;
+  const xMax = Math.max(dataMax, Math.max(...means) + maxSD * 3) + pad;
   const toX = v => padL + ((v-xMin)/(xMax-xMin))*plotW;
 
   // pdf per group (population distribution using SD)
@@ -751,75 +688,93 @@ function renderAnovaViz({ groupData, groupNames, means, grandMean, MSW, alpha, p
   ctx.strokeStyle="#9ca3af"; ctx.lineWidth=1.5; ctx.stroke();
   ctx.restore();
 
-  // --- grand mean dashed line ---
+  // --- grand mean dashed line (runs full height) ---
   const gmX = toX(grandMean);
   ctx.save();
-  ctx.setLineDash([7,5]);
+  ctx.setLineDash([6,4]);
   ctx.beginPath();
-  ctx.moveTo(gmX,padT); ctx.lineTo(gmX,baseY);
-  ctx.strokeStyle="#ca8a04"; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.moveTo(gmX, padT); ctx.lineTo(gmX, baseY);
+  ctx.strokeStyle="#ca8a04"; ctx.lineWidth=2; ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
 
-  // grand mean label
-  ctx.save();
-  ctx.font="bold 12px system-ui,sans-serif";
-  ctx.fillStyle="#92400e"; ctx.textAlign="center";
-  ctx.fillText("Grand mean", gmX, padT-22);
-  ctx.fillText(`(x̄̄ = ${fmt(grandMean,2)})`, gmX, padT-9);
-  ctx.restore();
-
-  // --- between-group spread arrows (from grand mean to each group mean) ---
-  means.forEach((m,i)=>{
-    if(Math.abs(m-grandMean)<(xMax-xMin)*0.005) return;
-    const color=GROUP_COLORS[i%GROUP_COLORS.length];
-    const x1=gmX, x2=toX(m);
-    const arrowY=baseY+26;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x1,arrowY); ctx.lineTo(x2,arrowY);
-    ctx.strokeStyle=color; ctx.lineWidth=2;
-    // arrowhead
-    const dir=x2>x1?1:-1;
-    ctx.moveTo(x2,arrowY);
-    ctx.lineTo(x2-dir*8,arrowY-5);
-    ctx.moveTo(x2,arrowY);
-    ctx.lineTo(x2-dir*8,arrowY+5);
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  // between-group label
-  ctx.save();
-  ctx.font="italic 10px system-ui,sans-serif";
-  ctx.fillStyle="#6b7280"; ctx.textAlign="center";
-  ctx.fillText("Between-group spread", padL+plotW/2, baseY+42);
-  ctx.restore();
-
-  // --- within-group spread arrows (±1 pooled SD from each mean) ---
-  means.forEach((m,i)=>{
-    const se = pooledSD/Math.sqrt(groupData[i].length);
-    const x1=toX(m-se), x2=toX(m+se);
-    const arrowY=baseY+14;
-    const color=GROUP_COLORS[i%GROUP_COLORS.length];
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(x1,arrowY); ctx.lineTo(x2,arrowY);
-    ctx.strokeStyle=color+"99"; ctx.lineWidth=1.5;
-    // arrowheads both ends
-    ctx.moveTo(x1,arrowY); ctx.lineTo(x1+7,arrowY-4); ctx.moveTo(x1,arrowY); ctx.lineTo(x1+7,arrowY+4);
-    ctx.moveTo(x2,arrowY); ctx.lineTo(x2-7,arrowY-4); ctx.moveTo(x2,arrowY); ctx.lineTo(x2-7,arrowY+4);
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  // --- F statistic badge ---
-  const fBadgeX = padL+plotW/2;
-  const fBadgeY = baseY+56;
+  // grand mean label (inside plot, just below top edge — avoids between arrows)
   ctx.save();
   ctx.font="bold 11px system-ui,sans-serif";
-  ctx.fillStyle="#111827"; ctx.textAlign="center";
-  ctx.fillText(`F(${dfB},${dfW}) = ${fmt(F,3)}   p = ${fmtP(p)}`, fBadgeX, fBadgeY);
+  ctx.fillStyle="#92400e"; ctx.textAlign="center";
+  ctx.fillText(`Grand mean  x̄̄=${fmt(grandMean,2)}`, gmX, padT+14);
+  ctx.restore();
+
+  // --- CYAN between-group arrows — staggered rows, each group mean → grand mean ---
+  // Sort by distance from grand mean: shortest arrow = innermost row (closest to curves)
+  const btwOrder = [...Array(k).keys()].sort((a,b) =>
+    Math.abs(means[a]-grandMean) - Math.abs(means[b]-grandMean)
+  );
+  btwOrder.forEach((gi, row)=>{
+    const m    = means[gi];
+    const x1   = gmX, x2 = toX(m);
+    if(Math.abs(x2-x1) < 3) return;
+    const dir  = x2 > x1 ? 1 : -1;
+    const arrowY = padT - 8 - row * btwRowH;
+
+    const btwColor = GROUP_COLORS[gi % GROUP_COLORS.length];
+    ctx.save();
+    ctx.strokeStyle=btwColor; ctx.fillStyle=btwColor; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x1, arrowY); ctx.lineTo(x2, arrowY); ctx.stroke();
+    // arrowhead at group mean end
+    ctx.beginPath();
+    ctx.moveTo(x2, arrowY);
+    ctx.lineTo(x2-dir*10, arrowY-4);
+    ctx.lineTo(x2-dir*10, arrowY+4);
+    ctx.closePath(); ctx.fill();
+    // tick at grand mean end
+    ctx.beginPath(); ctx.moveTo(x1, arrowY-5); ctx.lineTo(x1, arrowY+5); ctx.stroke();
+    // group label at arrow tip
+    ctx.font="bold 10px system-ui,sans-serif"; ctx.textAlign = dir>0 ? "left" : "right";
+    ctx.fillText(groupNames[gi], x2 + dir*4, arrowY+4);
+    ctx.restore();
+  });
+
+  // between section label
+  ctx.save();
+  ctx.font="bold 10px system-ui,sans-serif"; ctx.fillStyle="#374151"; ctx.textAlign="center";
+  ctx.fillText("Between-group spread (group mean → grand mean)", padL+plotW/2, 12);
+  ctx.restore();
+
+  // --- MAGENTA within-group arrows — staggered rows, spans ±3 SD (bell curve extent) ---
+  const withinStartY = baseY + 22;
+  means.forEach((m,i)=>{
+    const sd     = groupSDs[i];
+    const x1     = toX(m - 3*sd), x2 = toX(m + 3*sd);
+    const arrowY = withinStartY + i * withinRowH;
+    const color  = GROUP_COLORS[i % GROUP_COLORS.length];
+
+    ctx.save();
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x1+9, arrowY); ctx.lineTo(x2-9, arrowY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1,arrowY); ctx.lineTo(x1+10,arrowY-4); ctx.lineTo(x1+10,arrowY+4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x2,arrowY); ctx.lineTo(x2-10,arrowY-4); ctx.lineTo(x2-10,arrowY+4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x1, arrowY-6); ctx.lineTo(x1, arrowY+6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, arrowY-6); ctx.lineTo(x2, arrowY+6); ctx.stroke();
+    ctx.restore();
+
+    // group label in group colour
+    ctx.save();
+    ctx.font="bold 10px system-ui,sans-serif"; ctx.fillStyle=color; ctx.textAlign="left";
+    ctx.fillText(groupNames[i], x2+5, arrowY+4);
+    ctx.restore();
+  });
+
+  // within section label
+  ctx.save();
+  ctx.font="bold 10px system-ui,sans-serif"; ctx.fillStyle="#374151"; ctx.textAlign="left";
+  ctx.fillText("Within-group spread (±3 SD)", padL, withinStartY + k*withinRowH + 14);
+  ctx.restore();
+
+  // --- F badge (below all within rows) ---
+  ctx.save();
+  ctx.font="bold 11px system-ui,sans-serif"; ctx.fillStyle="#111827"; ctx.textAlign="center";
+  ctx.fillText(`F(${dfB},${dfW}) = ${fmt(F,3)}   p = ${fmtP(p)}`, padL+plotW/2, withinStartY + k*rowH + 30);
   ctx.restore();
 
   // --- x-axis tick labels ---
@@ -1148,6 +1103,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ["genN","genDist"].forEach(id => el(id).addEventListener("change", refreshGeneratedAnova));
   el("useGeneratedBtn").addEventListener("click", () => {
     el("dataInput").value = el("generatedOutput").value;
+    run();
   });
 
   el("showViz").addEventListener("change",()=>{

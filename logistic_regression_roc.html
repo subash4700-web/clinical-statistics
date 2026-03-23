@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Logistic Regression &amp; ROC Analysis</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#2b6cb0;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1380px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .panel-bd{padding:12px 14px;}
+
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    select,textarea{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    select:focus,textarea:focus{border-color:var(--accent);}
+    textarea{min-height:130px;font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;font-size:11.5px;resize:vertical;}
+
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-ghost{background:#fff;border-color:var(--line);color:#344054;}
+    .btn-sm{padding:5px 10px;font-size:12px;}
+
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;}
+    .chart-bd{padding:12px 14px;}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+    .kpi{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .kpi-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .kpi-v{font-size:15px;font-weight:800;margin-top:2px;}
+    .kpi-v.good{color:var(--good);}
+    .kpi-v.warn{color:var(--warn);}
+    .kpi-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+
+    .note-box{margin-top:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fbfcff;font-size:12px;line-height:1.6;color:#344054;}
+
+    .col-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+    .col-tag{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid;user-select:none;}
+    .col-tag.outcome{background:#fef3c7;border-color:#fcd34d;color:#78350f;}
+    .col-tag.analyte{background:#e0f2fe;border-color:#7dd3fc;color:#075985;}
+    .col-tag.ignore{background:#f3f4f6;border-color:#d1d5db;color:#6b7280;}
+
+    .cutoff-row{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;margin-top:4px;}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    input[type=number]{padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;background:#fff;outline:none;box-sizing:border-box;}
+    input[type=number]:focus{border-color:var(--accent);}
+
+    .ex-cutoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;}
+
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    thead tr{background:#f9fafb;}
+    th{padding:8px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--line);}
+    td{padding:8px 10px;border-bottom:1px solid var(--line);}
+    tr:last-child td{border-bottom:none;}
+    .num{text-align:right;font-variant-numeric:tabular-nums;}
+
+    .badge{display:inline-flex;align-items:center;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;}
+    .badge-green{background:#ecfdf5;color:#065f46;}
+    .badge-blue{background:#eff6ff;color:#1e40af;}
+    .badge-gray{background:#f3f4f6;color:#374151;}
+
+    .alert{border-radius:9px;padding:9px 12px;border:1px solid;font-size:13px;line-height:1.5;}
+    .alert.err{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d;}
+    .alert.info{background:#eff6ff;border-color:#bfdbfe;color:#1e40af;}
+
+    .mode-tab{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .mode-tab.active{background:#fff;color:#1e3a5f;border-color:#fff;}
+    .mode-tab:hover{background:rgba(255,255,255,0.22);}
+
+    /* exercises */
+    .exercises{margin-bottom:20px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr 1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f8faff;border:1px solid #c7d7fd;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#1e3a5f;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#1e40af;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ROC &amp; Diagnostic Performance</h1>
+  <p class="subtitle">Evaluate diagnostic accuracy, find optimal cut-offs, and — when multiple analytes are entered — combine them into a single score using logistic regression.</p>
+
+  <!-- ── EXERCISES ── -->
+  <div class="exercises">
+    <button class="ex-toggle" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel" style="display:none">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">Reading a ROC curve</div>
+          <div class="ex-obj">What does AUC mean? Why does the curve bow upward for a good test, and what is the diagonal?</div>
+          <div class="ex-params">
+            <span class="ex-param">Troponin — AMI</span>
+            <span class="ex-param">n = 30</span>
+            <span class="ex-param">Single analyte</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Choosing a cut-off</div>
+          <div class="ex-obj">The Youden index maximises J = Sens + Spec − 1. Is it always the right clinical choice?</div>
+          <div class="ex-params">
+            <span class="ex-param">CRP — Sepsis</span>
+            <span class="ex-param">n = 40</span>
+            <span class="ex-param">Cut-off selection</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Screening vs confirmation</div>
+          <div class="ex-obj">Missing a case vs raising a false alarm — explore how the intended use determines the right cut-off.</div>
+          <div class="ex-params">
+            <span class="ex-param">D-dimer — DVT</span>
+            <span class="ex-param">n = 40</span>
+            <span class="ex-param">Clinical trade-off</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">Combining analytes</div>
+          <div class="ex-obj">Three analytes with modest individual AUC. Combined via logistic regression — does the model outperform each alone?</div>
+          <div class="ex-params">
+            <span class="ex-param">Troponin + CRP + Age</span>
+            <span class="ex-param">n = 40</span>
+            <span class="ex-param">Multi-analyte model</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Comparing two markers</div>
+          <div class="ex-obj">Troponin vs myoglobin: which has better diagnostic accuracy? Use AUC and 95% CI to decide.</div>
+          <div class="ex-params">
+            <span class="ex-param">Troponin vs Myoglobin</span>
+            <span class="ex-param">n = 40</span>
+            <span class="ex-param">Compare AUCs</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── LEFT PANEL ── -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">Data input
+          <div style="display:flex;gap:4px;">
+            <button class="mode-tab active" id="modeTabSimple" onclick="switchMode('simple')">Simple</button>
+            <button class="mode-tab" id="modeTabCsv" onclick="switchMode('csv')">CSV / multi-analyte</button>
+          </div>
+        </div>
+
+        <!-- SIMPLE MODE -->
+        <div class="panel-bd" id="modeSimple">
+          <label style="margin-top:0">Analyte name</label>
+          <input type="text" id="analyteName" placeholder="e.g. Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+
+          <label>Disease <span style="font-weight:400;color:var(--muted);">(outcome = 1) — values from this group</span></label>
+          <textarea id="posValues" placeholder="Enter values separated by commas or one per line:&#10;312&#10;245&#10;198&#10;287" style="min-height:80px;"></textarea>
+
+          <label>No disease <span style="font-weight:400;color:var(--muted);">(outcome = 0) — values from this group</span></label>
+          <textarea id="negValues" placeholder="Enter values separated by commas or one per line:&#10;28&#10;35&#10;22&#10;41" style="min-height:80px;"></textarea>
+
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
+            <button class="btn btn-primary" style="flex:1" onclick="runSimpleMode()">▶ Run analysis</button>
+          </div>
+        </div>
+
+        <!-- CSV MODE -->
+        <div class="panel-bd" id="modeCsv" style="display:none">
+          <div style="background:#f8faff;border:1px solid #c7d7fd;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.7;color:#1e3a5f;margin-bottom:10px;">
+            <b>Format:</b> first row = headers, one patient per row, comma-separated.<br>
+            One column named <code>outcome</code> with <b>1</b> (positive) or <b>0</b> (negative).<br>
+            Remaining columns = analytes. Multiple analytes triggers logistic regression.
+            <div style="margin-top:6px;font-family:monospace;font-size:11px;background:#fff;border:1px solid #dde;border-radius:5px;padding:6px 8px;white-space:pre;">outcome,Analyte1,Analyte2
+1,312,145
+1,245,89
+0,28,18
+0,35,22</div>
+          </div>
+          <textarea id="dataTa" placeholder="outcome,Troponin&#10;1,312&#10;0,28&#10;..."></textarea>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
+            <button class="btn btn-primary" style="flex:1" onclick="parseAndRun()">▶ Run analysis</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="colConfigPanel" style="display:none">
+        <div class="panel-hd">Column roles <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);">click to cycle</span></div>
+        <div class="panel-bd">
+          <div class="col-tags" id="colTags"></div>
+          <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.8;">
+            <span class="col-tag outcome" style="cursor:default">outcome</span> binary 0/1 &nbsp;
+            <span class="col-tag analyte" style="cursor:default">analyte</span> predictor &nbsp;
+            <span class="col-tag ignore" style="cursor:default">ignore</span> skip
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" style="flex:1" onclick="runWithConfig()">▶ Run analysis</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="cutoffPanel" style="display:none">
+        <div class="panel-hd">Cut-off explorer</div>
+        <div class="panel-bd">
+          <div id="cutoffActiveLabel" style="font-size:11px;color:var(--muted);margin-bottom:6px;"></div>
+          <label style="margin-top:0">Threshold</label>
+          <div class="cutoff-row">
+            <input type="range" id="cutoffSlider" min="0" max="1000" value="500" oninput="onCutoffSlider()">
+            <input type="number" id="cutoffValInput" step="any" oninput="onCutoffValInput()">
+          </div>
+          <div class="ex-cutoff-grid" id="cutoffKpis"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT AREA ── -->
+    <div class="charts-col">
+      <div id="alertArea"></div>
+
+      <div class="chart-panel" id="rocPanel" style="display:none">
+        <div class="chart-hd">ROC Curve <span id="rocSubtitle"></span></div>
+        <div class="chart-bd">
+          <canvas id="rocCanvas" height="340"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-panel" id="kpiPanel" style="display:none">
+        <div class="chart-hd">Diagnostic performance <span id="kpiSubtitle"></span></div>
+        <div class="chart-bd">
+          <div class="kpi-grid" id="kpiGrid"></div>
+          <div class="note-box" id="interpBox"></div>
+        </div>
+      </div>
+
+      <div class="chart-panel" id="tablePanel" style="display:none">
+        <div class="chart-hd">AUC comparison <span id="tableSubtitle"></span></div>
+        <div class="chart-bd" id="aucTableBd"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// EXERCISE DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+const EX_DATA = {
+  1: {
+    csv: [
+      'outcome,Troponin (ng/L)',
+      '1,312','1,245','1,198','1,287','1,322','1,189','1,267','1,401',
+      '1,178','1,234','1,298','1,365','1,211','1,278','1,55',
+      '0,28','0,35','0,22','0,41','0,31','0,45','0,289','0,38',
+      '0,19','0,52','0,33','0,25','0,44','0,29','0,37'
+    ].join('\n'),
+    instructions: `<b>Exercise 1 — Reading a ROC curve</b>
+<ol>
+  <li>Click <b>Run analysis</b>. The ROC curve bows toward the <b>top-left</b> corner — the ideal corner where sensitivity = 1 and 1-specificity = 0.</li>
+  <li>The <b>diagonal dashed line</b> represents a coin-flip test (AUC = 0.500). A useful biomarker always curves above it.</li>
+  <li><b>AUC</b> = the probability that a randomly chosen diseased patient scores <i>higher</i> than a randomly chosen non-diseased patient. AUC 0.90 → 90% of random disease/non-disease pairs are correctly ranked by the test.</li>
+  <li>In the Cut-off explorer, slide the threshold. Watch how <b>sensitivity</b> and <b>specificity</b> trade off — raising one always lowers the other.</li>
+  <li>Notice: one AMI patient has troponin = 55 ng/L, and one non-AMI patient has 289 ng/L. These overlapping cases are why no test achieves AUC = 1.00 in real data.</li>
+</ol>`
+  },
+  2: {
+    csv: [
+      'outcome,CRP (mg/L)',
+      '1,145','1,89','1,234','1,67','1,178','1,123','1,289','1,45',
+      '1,156','1,98','1,201','1,78','1,134','1,267','1,56','1,188',
+      '1,112','1,245','1,92','1,166',
+      '0,12','0,28','0,95','0,8','0,34','0,52','0,21','0,67',
+      '0,15','0,38','0,24','0,56','0,31','0,85','0,48','0,22',
+      '0,41','0,14','0,36','0,28'
+    ].join('\n'),
+    instructions: `<b>Exercise 2 — Choosing a cut-off</b>
+<ol>
+  <li>Run the analysis. The <b>Youden cut-off</b> in the KPI panel maximises J = Sensitivity + Specificity − 1. This is the mathematically optimal balance point.</li>
+  <li>Move the slider <b>downward</b> (lower CRP threshold). Sensitivity rises — you catch more sepsis cases early. What happens to specificity? How many healthy patients are now falsely flagged?</li>
+  <li>Move the slider <b>upward</b>. Specificity rises — fewer false alarms. How many septic patients are now missed?</li>
+  <li><b>Key question:</b> In a busy emergency department, a missed sepsis case (false negative) may be fatal. What minimum sensitivity would you require? Is the Youden cut-off appropriate here, or would you choose a lower threshold?</li>
+  <li>The ROC curve shows <i>all possible thresholds at once</i>. The clinical context — not the mathematics — determines which point on that curve to operate at.</li>
+</ol>`
+  },
+  3: {
+    csv: [
+      'outcome,D-dimer (mg/L FEU)',
+      '1,2.1','1,1.8','1,3.4','1,1.5','1,2.8','1,4.2','1,1.2','1,2.5',
+      '1,3.8','1,1.9','1,2.3','1,0.7','1,3.1','1,2.7','1,1.6','1,4.5',
+      '1,2.0','1,1.4','1,3.3','1,2.6',
+      '0,0.3','0,0.8','0,0.5','0,1.1','0,0.4','0,0.7','0,0.6','0,0.9',
+      '0,0.2','0,1.3','0,0.5','0,0.8','0,0.4','0,0.6','0,1.0','0,0.3',
+      '0,0.7','0,0.4','0,1.2','0,0.5'
+    ].join('\n'),
+    instructions: `<b>Exercise 3 — Screening vs confirmation</b>
+<ol>
+  <li>D-dimer is used clinically to <b>rule out DVT</b>, not confirm it. A negative result rules DVT out; a positive result triggers imaging.</li>
+  <li>For a rule-out test, you need <b>very high sensitivity</b> (≥ 97%). Use the cut-off slider to reach 97% sensitivity. What is the specificity at that point?</li>
+  <li>That means many patients <i>without</i> DVT will receive unnecessary imaging. This is the price of high sensitivity — accepted because missing a DVT carries higher harm than an extra ultrasound.</li>
+  <li>Now flip the scenario: set specificity = 97%. What is sensitivity now? How many real DVT cases would be missed?</li>
+  <li><b>Key insight:</b> The intended clinical use (rule-out vs rule-in) determines <i>which end</i> of the ROC curve matters. There is no universally "correct" cut-off — only context-appropriate ones.</li>
+</ol>`
+  },
+  4: {
+    csv: [
+      'outcome,Troponin (ng/L),CRP (mg/L),Age',
+      '1,290,145,67','1,230,89,71','1,180,210,58','1,310,130,74','1,260,178,62',
+      '1,200,98,69','1,340,220,76','1,175,85,55','1,270,160,70','1,220,110,64',
+      '1,300,195,73','1,165,75,59','1,315,240,77','1,245,120,66','1,190,92,61',
+      '1,280,170,72','1,210,105,63','1,330,215,75','1,185,88,57','1,255,148,68',
+      '0,35,18,45','0,28,28,52','0,42,55,61','0,22,12,38','0,38,34,57',
+      '0,51,62,48','0,29,22,43','0,44,38,55','0,19,8,36','0,56,45,64',
+      '0,33,31,50','0,27,25,42','0,48,52,59','0,31,19,46','0,40,36,54',
+      '0,24,15,40','0,53,48,62','0,36,32,49','0,26,21,41','0,46,42,57'
+    ].join('\n'),
+    instructions: `<b>Exercise 4 — Combining analytes</b>
+<ol>
+  <li>Run the analysis. The tool auto-detects 3 analyte columns and fits a <b>logistic regression model</b> weighting each analyte by its contribution to discriminating disease from no-disease.</li>
+  <li>In the <b>Per-analyte AUC table</b>, compare each single-analyte AUC with the <b>Combined model AUC</b>. Which analyte is weakest alone?</li>
+  <li>Why does combining improve AUC? Each analyte captures <i>partially independent</i> information. Logistic regression finds the optimal linear combination — producing a single probability score per patient.</li>
+  <li>The ROC curve for the combined model (red dashed) should sit <i>above</i> the individual curves, correctly ranking more patient pairs.</li>
+  <li><b>Key question:</b> Age has low AUC alone in this dataset. Does adding it still improve the combined model? This is the value of multivariable analysis — even a weak predictor can contribute incremental discrimination when combined with others.</li>
+</ol>`
+  },
+  5: {
+    csv: [
+      'outcome,Troponin (ng/L),Myoglobin (ng/L)',
+      '1,290,185','1,230,142','1,180,210','1,310,98','1,260,175',
+      '1,200,138','1,340,220','1,175,95','1,270,165','1,220,112',
+      '1,300,190','1,165,88','1,315,230','1,245,125','1,190,102',
+      '1,280,172','1,210,115','1,330,215','1,185,92','1,255,155',
+      '0,35,75','0,28,92','0,42,130','0,22,55','0,38,110',
+      '0,51,145','0,29,68','0,44,125','0,19,48','0,56,160',
+      '0,33,88','0,27,72','0,48,138','0,31,82','0,40,115',
+      '0,24,58','0,53,148','0,36,95','0,26,65','0,46,128'
+    ].join('\n'),
+    instructions: `<b>Exercise 5 — Comparing two markers</b>
+<ol>
+  <li>Run the analysis. The <b>Per-analyte AUC table</b> shows each marker's AUC with a 95% CI. Which has higher AUC?</li>
+  <li>Do the 95% confidence intervals overlap? <b>Non-overlapping CIs</b> are strong evidence that one marker truly outperforms the other. Overlapping CIs suggest the difference may be chance.</li>
+  <li>On the <b>ROC chart</b>, one curve should track consistently above the other. A higher curve at all threshold points means unambiguously better discrimination.</li>
+  <li>Try the <b>Cut-off explorer</b> for each analyte: at the same sensitivity, which marker achieves higher specificity?</li>
+  <li><b>Key insight:</b> Myoglobin rises <i>earlier</i> after AMI than troponin. In patients presenting within 2 hours of symptom onset, myoglobin AUC might actually be higher — illustrating that diagnostic performance depends heavily on <i>when</i> the sample is collected, not just which analyte is measured.</li>
+</ol>`
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+let parsedData   = null;
+let colRoles     = {};
+let rocChartInst = null;
+let cutoffState  = null;   // {scores, labels, roc, col}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXERCISES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function toggleExercises() {
+  const btn   = document.getElementById('exToggle');
+  const panel = document.getElementById('exPanel');
+  btn.classList.toggle('open');
+  panel.style.display = (panel.style.display === 'none') ? '' : 'none';
+}
+
+function loadExercise(n) {
+  document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('exCard' + n).classList.add('active');
+  const d = EX_DATA[n];
+  const instrEl = document.getElementById('exInstructions');
+  instrEl.innerHTML = d.instructions;
+  instrEl.classList.add('visible');
+
+  // Detect single vs multi-analyte to pick the right mode
+  const headers = d.csv.split('\n')[0].split(',');
+  const isMulti = headers.length > 2;
+
+  if (isMulti) {
+    switchMode('csv');
+    document.getElementById('dataTa').value = d.csv;
+    parseAndRun();
+  } else {
+    switchMode('simple');
+    const analyteName = headers[1]?.trim() || 'Analyte';
+    document.getElementById('analyteName').value = analyteName;
+    const rows = d.csv.split('\n').slice(1).filter(Boolean);
+    const pos = rows.filter(r => r.startsWith('1,')).map(r => r.split(',')[1]).join('\n');
+    const neg = rows.filter(r => r.startsWith('0,')).map(r => r.split(',')[1]).join('\n');
+    document.getElementById('posValues').value = pos;
+    document.getElementById('negValues').value = neg;
+    runSimpleMode();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARSE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length < 3) return null;
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',');
+    const row = {};
+    headers.forEach((h, j) => { row[h] = parseFloat(vals[j] ?? ''); });
+    if (Object.values(row).some(isNaN)) continue;
+    rows.push(row);
+  }
+  return rows.length >= 4 ? {headers, rows} : null;
+}
+
+function autoRoles(headers) {
+  const roles = {};
+  let outcomeSet = false;
+  headers.forEach(h => {
+    if (!outcomeSet && /^(outcome|result|disease|diagnosis|status)$/i.test(h)) {
+      roles[h] = 'outcome'; outcomeSet = true;
+    } else {
+      roles[h] = 'analyte';
+    }
+  });
+  if (!outcomeSet) roles[headers[0]] = 'outcome';
+  return roles;
+}
+
+function parseAndRun() {
+  const text = document.getElementById('dataTa').value;
+  parsedData = parseCSV(text);
+  if (!parsedData) { showAlert('Could not parse data. Ensure first row is headers, values are comma-separated numbers.', 'err'); return; }
+  colRoles = autoRoles(parsedData.headers);
+  renderColTags();
+  document.getElementById('colConfigPanel').style.display = '';
+  clearAlert();
+  runWithConfig();
+}
+
+function renderColTags() {
+  const el = document.getElementById('colTags');
+  el.innerHTML = '';
+  parsedData.headers.forEach(h => {
+    const role = colRoles[h] || 'ignore';
+    const tag = document.createElement('span');
+    tag.className = 'col-tag ' + role;
+    tag.textContent = h + ' [' + role + ']';
+    tag.onclick = () => { cycleRole(h); };
+    el.appendChild(tag);
+  });
+}
+
+function cycleRole(h) {
+  const cycle = {outcome:'analyte', analyte:'ignore', ignore:'outcome'};
+  colRoles[h] = cycle[colRoles[h] || 'ignore'];
+  renderColTags();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATH
+// ─────────────────────────────────────────────────────────────────────────────
+
+function sigmoid(z) { return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, z)))); }
+
+function logisticRegress(X, y) {
+  const n = X.length, p = X[0].length;
+  // Standardise
+  const means = new Array(p).fill(0), stds = new Array(p).fill(1);
+  for (let j = 0; j < p; j++) {
+    const col = X.map(r => r[j]);
+    means[j] = col.reduce((a, b) => a + b, 0) / n;
+    stds[j]  = Math.sqrt(col.reduce((a, v) => a + (v - means[j]) ** 2, 0) / n) || 1;
+  }
+  const Xn = X.map(row => row.map((v, j) => (v - means[j]) / stds[j]));
+  // Gradient descent
+  let w = new Array(p).fill(0), b = 0;
+  const lr = 0.15, iters = 3000;
+  for (let it = 0; it < iters; it++) {
+    let db = 0;
+    const dw = new Array(p).fill(0);
+    for (let i = 0; i < n; i++) {
+      const z   = b + Xn[i].reduce((s, x, j) => s + w[j] * x, 0);
+      const err = sigmoid(z) - y[i];
+      db += err;
+      for (let j = 0; j < p; j++) dw[j] += err * Xn[i][j];
+    }
+    b -= (lr / n) * db;
+    for (let j = 0; j < p; j++) w[j] -= (lr / n) * dw[j];
+  }
+  return Xn.map(row => sigmoid(b + row.reduce((s, x, j) => s + w[j] * x, 0)));
+}
+
+function calcROC(scores, labels) {
+  const P = labels.reduce((a, v) => a + v, 0), N = labels.length - P;
+  if (P === 0 || N === 0) return null;
+  const pairs = scores.map((s, i) => [s, labels[i]]).sort((a, b) => b[0] - a[0]);
+  const pts = [{fpr: 0, tpr: 0, thresh: Infinity}];
+  let tp = 0, fp = 0;
+  for (const [s, l] of pairs) {
+    if (l) tp++; else fp++;
+    pts.push({fpr: fp / N, tpr: tp / P, thresh: s});
+  }
+  let auc = 0;
+  for (let i = 1; i < pts.length; i++) {
+    auc += (pts[i].fpr - pts[i - 1].fpr) * (pts[i].tpr + pts[i - 1].tpr) / 2;
+  }
+  return {pts, auc, P, N};
+}
+
+function bootstrapCI(scores, labels, B = 600) {
+  const n   = scores.length;
+  const aucs = [];
+  for (let b = 0; b < B; b++) {
+    const idx = Array.from({length: n}, () => Math.floor(Math.random() * n));
+    const bs  = idx.map(i => scores[i]);
+    const bl  = idx.map(i => labels[i]);
+    const P   = bl.reduce((a, v) => a + v, 0);
+    if (P === 0 || P === n) continue;
+    const r = calcROC(bs, bl);
+    if (r) aucs.push(r.auc);
+  }
+  aucs.sort((a, b) => a - b);
+  return [
+    aucs[Math.floor(0.025 * aucs.length)] ?? 0,
+    aucs[Math.floor(0.975 * aucs.length)] ?? 1
+  ];
+}
+
+function youdenPoint(roc) {
+  let best = {j: -1, idx: 0};
+  roc.pts.forEach((p, i) => {
+    const j = p.tpr - p.fpr;
+    if (j > best.j) best = {j, idx: i};
+  });
+  return roc.pts[best.idx];
+}
+
+function cutoffStats(scores, labels, threshold) {
+  let tp = 0, fp = 0, tn = 0, fn = 0;
+  scores.forEach((s, i) => {
+    const pred = s >= threshold ? 1 : 0;
+    if (pred && labels[i])       tp++;
+    else if (pred && !labels[i]) fp++;
+    else if (!pred && !labels[i])tn++;
+    else                         fn++;
+  });
+  const sens = tp + fn > 0 ? tp / (tp + fn) : 0;
+  const spec = tn + fp > 0 ? tn / (tn + fp) : 0;
+  const ppv  = tp + fp > 0 ? tp / (tp + fp) : 0;
+  const npv  = tn + fn > 0 ? tn / (tn + fn) : 0;
+  const lrp  = (1 - spec) > 0 ? sens / (1 - spec) : Infinity;
+  const lrn  = spec > 0       ? (1 - sens) / spec  : 0;
+  return {tp, fp, tn, fn, sens, spec, ppv, npv, lrp, lrn};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RUN
+// ─────────────────────────────────────────────────────────────────────────────
+
+function runWithConfig() {
+  clearAlert();
+  const outcomeCol  = Object.keys(colRoles).find(k => colRoles[k] === 'outcome');
+  const analyteCols = Object.keys(colRoles).filter(k => colRoles[k] === 'analyte');
+  if (!outcomeCol)         { showAlert('No outcome column — click a column tag to set one.', 'err'); return; }
+  if (!analyteCols.length) { showAlert('No analyte column set.', 'err'); return; }
+
+  const rows   = parsedData.rows;
+  const labels = rows.map(r => r[outcomeCol]);
+  if (labels.some(v => v !== 0 && v !== 1)) {
+    showAlert('Outcome column must contain only 0 (non-diseased) and 1 (diseased).', 'err'); return;
+  }
+
+  // Single-analyte ROCs
+  const analResults = analyteCols.map(col => {
+    const scores = rows.map(r => r[col]);
+    const roc    = calcROC(scores, labels);
+    const ci     = roc ? bootstrapCI(scores, labels) : [0, 1];
+    return {col, scores, roc, ci};
+  });
+
+  // Multi-analyte logistic regression
+  let combined = null;
+  if (analyteCols.length > 1) {
+    const X              = rows.map(r => analyteCols.map(c => r[c]));
+    const combinedScores = logisticRegress(X, labels);
+    const combinedRoc    = calcROC(combinedScores, labels);
+    const combinedCi     = bootstrapCI(combinedScores, labels);
+    combined = {col: 'Combined model', scores: combinedScores, roc: combinedRoc, ci: combinedCi};
+  }
+
+  window._analResults = analResults;
+  window._combined    = combined;
+  window._labels      = labels;
+
+  drawROC(analResults, combined);
+  renderKpis(analResults, combined, labels);
+  renderAucTable(analResults, combined);
+  setupCutoffExplorer(analResults, combined, labels);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHART
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PALETTE = ['#2b6cb0', '#e05e00', '#118a4b', '#7c3aed', '#0891b2'];
+
+function drawROC(analResults, combined) {
+  document.getElementById('rocPanel').style.display = '';
+  const ctx = document.getElementById('rocCanvas').getContext('2d');
+  if (rocChartInst) { rocChartInst.destroy(); rocChartInst = null; }
+
+  const datasets = [];
+  analResults.forEach((ar, i) => {
+    if (!ar.roc) return;
+    datasets.push({
+      label: `${ar.col} (AUC ${ar.roc.auc.toFixed(3)})`,
+      data:  ar.roc.pts.map(p => ({x: p.fpr, y: p.tpr})),
+      borderColor: PALETTE[i % PALETTE.length],
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      pointRadius: 0,
+      showLine: true,
+      tension: 0.3,
+      order: 2
+    });
+  });
+
+  if (combined?.roc) {
+    datasets.push({
+      label: `Combined model (AUC ${combined.roc.auc.toFixed(3)})`,
+      data:  combined.roc.pts.map(p => ({x: p.fpr, y: p.tpr})),
+      borderColor: '#b42318',
+      backgroundColor: 'transparent',
+      borderWidth: 3,
+      borderDash: [7, 4],
+      pointRadius: 0,
+      showLine: true,
+      tension: 0.3,
+      order: 2
+    });
+  }
+
+  // Reference diagonal
+  datasets.push({
+    label: 'No skill (AUC 0.500)',
+    data: [{x: 0, y: 0}, {x: 1, y: 1}],
+    borderColor: '#9ca3af',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderDash: [5, 5],
+    pointRadius: 0,
+    showLine: true,
+    order: 3
+  });
+
+  // Cut-off marker (hidden by default)
+  datasets.push({
+    label: '_marker',
+    data: [],
+    showLine: false,
+    borderColor: 'transparent',
+    backgroundColor: '#e05e00',
+    pointRadius: 9,
+    pointHoverRadius: 11,
+    order: 1
+  });
+
+  const P = analResults[0]?.roc?.P ?? 0, N = analResults[0]?.roc?.N ?? 0;
+  document.getElementById('rocSubtitle').textContent = `${P} positives · ${N} negatives`;
+
+  rocChartInst = new Chart(ctx, {
+    type: 'scatter',
+    data: {datasets},
+    options: {
+      responsive: true,
+      interaction: {mode: 'nearest', intersect: false},
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {font: {size: 11}, boxWidth: 18, filter: item => !item.text.startsWith('_')}
+        },
+        tooltip: {
+          filter: item => !item.dataset.label.startsWith('_'),
+          callbacks: {
+            label: item => `${item.dataset.label}: (${item.parsed.x.toFixed(3)}, ${item.parsed.y.toFixed(3)})`
+          }
+        }
+      },
+      scales: {
+        x: {min: 0, max: 1, title: {display: true, text: '1 − Specificity  (false positive rate)', font: {size: 12}}, grid: {color: '#f3f4f6'}},
+        y: {min: 0, max: 1, title: {display: true, text: 'Sensitivity  (true positive rate)', font: {size: 12}}, grid: {color: '#f3f4f6'}}
+      }
+    }
+  });
+}
+
+function moveMarker(fpr, tpr) {
+  if (!rocChartInst) return;
+  const ds = rocChartInst.data.datasets.find(d => d.label === '_marker');
+  if (ds) { ds.data = [{x: fpr, y: tpr}]; rocChartInst.update('none'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderKpis(analResults, combined, labels) {
+  document.getElementById('kpiPanel').style.display = '';
+  const primary = combined ?? analResults[0];
+  if (!primary?.roc) return;
+  const yPt   = youdenPoint(primary.roc);
+  const st    = cutoffStats(primary.scores, labels, yPt.thresh);
+  const auc   = primary.roc.auc;
+  const gradeText = auc >= 0.9 ? 'Excellent (≥ 0.90)' : auc >= 0.8 ? 'Good (0.80–0.89)' : auc >= 0.7 ? 'Fair (0.70–0.79)' : 'Poor (< 0.70)';
+
+  const kpis = [
+    {k: 'AUC',                v: auc.toFixed(3),                               sub: gradeText,                    cls: auc >= 0.8 ? 'good' : auc < 0.7 ? 'warn' : ''},
+    {k: '95% CI',             v: `[${primary.ci[0].toFixed(3)}, ${primary.ci[1].toFixed(3)}]`, sub: 'bootstrap 600 iterations'},
+    {k: 'Youden cut-off',     v: typeof yPt.thresh === 'number' ? fmtN(yPt.thresh) : '—', sub: `J = ${(yPt.tpr - yPt.fpr).toFixed(3)}`},
+    {k: 'Sensitivity',        v: pct(st.sens),                                 sub: 'at Youden cut-off',          cls: st.sens >= 0.8 ? 'good' : st.sens < 0.7 ? 'warn' : ''},
+    {k: 'Specificity',        v: pct(st.spec),                                 sub: 'at Youden cut-off',          cls: st.spec >= 0.8 ? 'good' : st.spec < 0.7 ? 'warn' : ''},
+    {k: 'PPV',                v: pct(st.ppv),                                  sub: 'positive predictive value'},
+    {k: 'NPV',                v: pct(st.npv),                                  sub: 'negative predictive value'},
+    {k: 'LR+',                v: isFinite(st.lrp) ? st.lrp.toFixed(2) : '∞',  sub: 'likelihood ratio pos.',      cls: st.lrp >= 10 ? 'good' : ''},
+    {k: 'LR−',                v: st.lrn.toFixed(2),                            sub: 'likelihood ratio neg.',      cls: st.lrn <= 0.1 ? 'good' : ''},
+  ];
+
+  document.getElementById('kpiSubtitle').textContent = combined ? 'combined — logistic regression' : primary.col;
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
+    `<div class="kpi">
+      <div class="kpi-k">${k.k}</div>
+      <div class="kpi-v ${k.cls || ''}">${k.v}</div>
+      <div class="kpi-sub">${k.sub || ''}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('interpBox').innerHTML =
+    `<b>At the Youden cut-off:</b> ${st.tp} TP · ${st.fp} FP · ${st.tn} TN · ${st.fn} FN.<br>
+    <b>AUC ${auc.toFixed(3)}</b> — ${gradeText}. Probability that a randomly chosen positive patient
+    scores higher than a randomly chosen negative patient = ${(auc * 100).toFixed(1)}%.`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUC TABLE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderAucTable(analResults, combined) {
+  if (analResults.length < 2 && !combined) {
+    document.getElementById('tablePanel').style.display = 'none'; return;
+  }
+  document.getElementById('tablePanel').style.display = '';
+  const subtitleEl = document.getElementById('tableSubtitle');
+  if (subtitleEl) subtitleEl.textContent = combined ? '· individual analytes vs logistic regression model' : '· individual analytes';
+  const all = [...analResults, ...(combined ? [combined] : [])];
+  const rows = all.map(a => {
+    const auc = a.roc?.auc;
+    const badge = auc == null ? '—'
+      : auc >= 0.9 ? '<span class="badge badge-green">Excellent</span>'
+      : auc >= 0.8 ? '<span class="badge badge-blue">Good</span>'
+      : auc >= 0.7 ? '<span class="badge badge-gray">Fair</span>'
+      : `<span style="color:var(--warn);font-weight:700;">Poor</span>`;
+    const isCombined = a.col === 'Combined model';
+    return `<tr ${isCombined ? 'style="background:#fef2f2;"' : ''}>
+      <td>${isCombined ? '<b>' + a.col + '</b>' : a.col}</td>
+      <td class="num">${auc != null ? auc.toFixed(3) : '—'}</td>
+      <td class="num">[${a.ci[0].toFixed(3)}, ${a.ci[1].toFixed(3)}]</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('aucTableBd').innerHTML =
+    `<table><thead><tr><th>Analyte / model</th><th class="num">AUC</th><th class="num">95% CI</th><th>Grade</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <p style="font-size:11px;color:var(--muted);margin:8px 0 0;">
+    Overlapping 95% CIs between two analytes suggest the AUC difference may not be statistically significant.
+    Non-overlapping CIs are strong evidence of a real difference in diagnostic accuracy.</p>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUT-OFF EXPLORER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function setupCutoffExplorer(analResults, combined, labels) {
+  const primary = combined ?? analResults[0];
+  if (!primary?.roc) return;
+  document.getElementById('cutoffPanel').style.display = '';
+  document.getElementById('cutoffActiveLabel').textContent = 'Active: ' + primary.col;
+  cutoffState = {scores: primary.scores, labels, roc: primary.roc};
+
+  const vals = [...primary.scores].sort((a, b) => a - b);
+  const mn = vals[0], mx = vals[vals.length - 1];
+  document.getElementById('cutoffSlider')._mn = mn;
+  document.getElementById('cutoffSlider')._mx = mx;
+
+  const yPt = youdenPoint(primary.roc);
+  const ySlider = Math.round((yPt.thresh - mn) / (mx - mn) * 1000);
+  document.getElementById('cutoffSlider').value = Math.max(0, Math.min(1000, ySlider));
+  document.getElementById('cutoffValInput').value = fmtN(yPt.thresh);
+  refreshCutoff(yPt.thresh);
+}
+
+function onCutoffSlider() {
+  const slider = document.getElementById('cutoffSlider');
+  const t = slider._mn + (slider.value / 1000) * (slider._mx - slider._mn);
+  document.getElementById('cutoffValInput').value = fmtN(t);
+  refreshCutoff(t);
+}
+
+function onCutoffValInput() {
+  const t = parseFloat(document.getElementById('cutoffValInput').value);
+  if (isNaN(t) || !cutoffState) return;
+  const slider = document.getElementById('cutoffSlider');
+  slider.value = Math.round((t - slider._mn) / (slider._mx - slider._mn) * 1000);
+  refreshCutoff(t);
+}
+
+function refreshCutoff(t) {
+  if (!cutoffState) return;
+  const {scores, labels, roc} = cutoffState;
+  const st = cutoffStats(scores, labels, t);
+  const kpis = [
+    {k: 'Sensitivity', v: pct(st.sens), cls: st.sens >= 0.8 ? 'good' : st.sens < 0.6 ? 'warn' : ''},
+    {k: 'Specificity', v: pct(st.spec), cls: st.spec >= 0.8 ? 'good' : st.spec < 0.6 ? 'warn' : ''},
+    {k: 'PPV',         v: pct(st.ppv)},
+    {k: 'NPV',         v: pct(st.npv)},
+    {k: 'LR+',         v: isFinite(st.lrp) ? st.lrp.toFixed(2) : '∞', cls: st.lrp >= 10 ? 'good' : ''},
+    {k: 'LR−',         v: st.lrn.toFixed(2), cls: st.lrn <= 0.1 ? 'good' : ''},
+    {k: 'Youden J',    v: (st.sens + st.spec - 1).toFixed(3)},
+    {k: 'TP/FP/TN/FN', v: `${st.tp} / ${st.fp} / ${st.tn} / ${st.fn}`},
+  ];
+  document.getElementById('cutoffKpis').innerHTML = kpis.map(k =>
+    `<div class="kpi">
+      <div class="kpi-k">${k.k}</div>
+      <div class="kpi-v ${k.cls || ''}" style="font-size:13px">${k.v}</div>
+    </div>`
+  ).join('');
+
+  // Move dot on ROC chart
+  if (roc) {
+    let closest = roc.pts[0], bestD = Infinity;
+    roc.pts.forEach(p => {
+      const d = Math.abs(p.thresh - t);
+      if (d < bestD) { bestD = d; closest = p; }
+    });
+    moveMarker(closest.fpr, closest.tpr);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+
+function fmtN(v) {
+  if (v == null || !isFinite(v)) return '—';
+  return Math.abs(v) >= 100 ? v.toFixed(1) : Math.abs(v) >= 10 ? v.toFixed(2) : v.toFixed(3);
+}
+
+function showAlert(msg, type) {
+  document.getElementById('alertArea').innerHTML =
+    `<div class="alert ${type}" style="margin-bottom:12px">${msg}</div>`;
+}
+function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
+
+function switchMode(mode) {
+  const isSimple = mode === 'simple';
+  document.getElementById('modeSimple').style.display = isSimple ? '' : 'none';
+  document.getElementById('modeCsv').style.display   = isSimple ? 'none' : '';
+  document.getElementById('modeTabSimple').classList.toggle('active', isSimple);
+  document.getElementById('modeTabCsv').classList.toggle('active', !isSimple);
+}
+
+function runSimpleMode() {
+  const name = document.getElementById('analyteName').value.trim() || 'Analyte';
+  const posRaw = document.getElementById('posValues').value;
+  const negRaw = document.getElementById('negValues').value;
+
+  const parse = raw => raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean).map(Number).filter(v => !isNaN(v));
+  const pos = parse(posRaw);
+  const neg = parse(negRaw);
+
+  if (pos.length < 2) { showAlert('Enter at least 2 positive values.', 'err'); return; }
+  if (neg.length < 2) { showAlert('Enter at least 2 negative values.', 'err'); return; }
+
+  // Build CSV and hand off to existing pipeline
+  const header = `outcome,${name}`;
+  const rows = [...pos.map(v => `1,${v}`), ...neg.map(v => `0,${v}`)];
+  document.getElementById('dataTa').value = [header, ...rows].join('\n');
+  parseAndRun();
+}
+
+function loadSampleData() {
+  switchMode('simple');
+  document.getElementById('analyteName').value = 'Troponin (ng/L)';
+  const ex1 = EX_DATA[1].csv.split('\n').slice(1); // skip header
+  const pos = ex1.filter(r => r.startsWith('1,')).map(r => r.split(',')[1]).join('\n');
+  const neg = ex1.filter(r => r.startsWith('0,')).map(r => r.split(',')[1]).join('\n');
+  document.getElementById('posValues').value = pos;
+  document.getElementById('negValues').value = neg;
+  runSimpleMode();
+}
+
+document.addEventListener('DOMContentLoaded', loadSampleData);
+
+window.exportToExcel = function() {
+  if (!parsedData || !colRoles) { alert('Run analysis first.'); return; }
+
+  const outcomeCol  = Object.keys(colRoles).find(k => colRoles[k] === 'outcome');
+  const analyteCols = Object.keys(colRoles).filter(k => colRoles[k] === 'analyte');
+  if (!outcomeCol) { alert('No outcome column set.'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const labels = parsedData.rows.map(r => r[outcomeCol]);
+
+  // ── AUC Summary sheet ──
+  const aucRows = [
+    ['ROC & Diagnostic Performance'],
+    ['Generated: ' + new Date().toLocaleString()],
+    [],
+    ['Analyte / Model', 'AUC', '95% CI Lower', '95% CI Upper', 'Grade',
+     'Youden Threshold', 'Sensitivity', 'Specificity', 'PPV', 'NPV', 'LR+', 'LR−', 'TP', 'FP', 'TN', 'FN']
+  ];
+
+  const allResults = [...(window._analResults || []), ...(window._combined ? [window._combined] : [])];
+  allResults.forEach(ar => {
+    if (!ar.roc) return;
+    const yPt = youdenPoint(ar.roc);
+    const st  = cutoffStats(ar.scores, labels, yPt.thresh);
+    const auc = ar.roc.auc;
+    const grade = auc >= 0.9 ? 'Excellent' : auc >= 0.8 ? 'Good' : auc >= 0.7 ? 'Fair' : 'Poor';
+    aucRows.push([
+      ar.col, auc.toFixed(4), ar.ci[0].toFixed(4), ar.ci[1].toFixed(4), grade,
+      fmtN(yPt.thresh),
+      (st.sens * 100).toFixed(1) + '%', (st.spec * 100).toFixed(1) + '%',
+      (st.ppv * 100).toFixed(1) + '%',  (st.npv * 100).toFixed(1) + '%',
+      isFinite(st.lrp) ? st.lrp.toFixed(2) : '∞', st.lrn.toFixed(2),
+      st.tp, st.fp, st.tn, st.fn
+    ]);
+  });
+
+  const aucWs = XLSX.utils.aoa_to_sheet(aucRows);
+  aucWs['!cols'] = [{wch:22},{wch:8},{wch:14},{wch:14},{wch:12},{wch:18},{wch:12},{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:6},{wch:6},{wch:6}];
+  XLSX.utils.book_append_sheet(wb, aucWs, 'AUC Summary');
+
+  // ── ROC points sheet (primary analyte or combined) ──
+  const primary = window._combined || (window._analResults && window._analResults[0]);
+  if (primary?.roc) {
+    const rocRows = [['Threshold', '1 − Specificity (FPR)', 'Sensitivity (TPR)', 'Youden J']];
+    primary.roc.pts.forEach(p => {
+      rocRows.push([
+        isFinite(p.thresh) ? fmtN(p.thresh) : '',
+        p.fpr.toFixed(4), p.tpr.toFixed(4),
+        (p.tpr - p.fpr).toFixed(4)
+      ]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rocRows), 'ROC Points');
+  }
+
+  // ── Patient data sheet ──
+  const patientHeader = ['Patient #', 'Outcome', ...analyteCols];
+  if (window._combined) patientHeader.push('Combined Probability');
+  const patientRows = [patientHeader];
+  parsedData.rows.forEach((row, i) => {
+    const r = [i + 1, labels[i], ...analyteCols.map(c => row[c])];
+    if (window._combined) r.push(window._combined.scores[i].toFixed(4));
+    patientRows.push(r);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(patientRows), 'Patient Data');
+
+  XLSX.writeFile(wb, 'ROC_Analysis_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+};
+</script>
+</body>
+</html>

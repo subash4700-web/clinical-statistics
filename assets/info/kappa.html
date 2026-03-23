@@ -59,11 +59,13 @@
     <li><strong>P<sub>e</sub></strong> = expected proportion of agreement by chance (based on marginal proportions)</li>
   </ul>
 
-  <h3 id="kp-ci">Confidence Interval</h3>
-  <p>The 95% CI for κ is computed using the asymptotic standard error:</p>
+  <h3 id="kp-ci">Confidence Interval <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;vertical-align:middle;">Supplementary — not part of the core Kappa test</span></h3>
+  <p>A 95% CI for κ can be constructed using the asymptotic standard error:</p>
   <p><strong>SE(κ) ≈ √(P<sub>o</sub>(1 − P<sub>o</sub>) / (N(1 − P<sub>e</sub>)²))</strong></p>
   <p><strong>95% CI: κ ± 1.96 × SE(κ)</strong></p>
-  <p class="note">Confidence intervals for κ are asymptotic approximations and should be interpreted cautiously for small N.</p>
+  <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#78350f;line-height:1.6;">
+    <strong>Important:</strong> The CI displayed in this tool is an asymptotic approximation that is <em>not</em> an official component of the Cohen's Kappa statistic. It is included as a supplementary precision indicator only. The core Kappa test produces κ, P<sub>o</sub>, and P<sub>e</sub> — not a CI. The approximation becomes unreliable with small N (&lt; 30) or highly imbalanced marginal distributions. Treat it as a rough guide, not a definitive interval.
+  </div>
 
   <h3 id="kp-interpret">Interpretation Scale</h3>
   <ul>
@@ -111,6 +113,9 @@
     The heatmap reveals not just the overall κ value, but <em>where</em> disagreement occurs —
     which categories are most often confused between raters.
     This is essential for identifying systematic biases in classification.
+  </p>
+  <p class="note" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;color:#78350f;">
+    <strong>Note on the hypothesis visualisation:</strong> The normal distribution curve and CI shown in the results are supplementary — they approximate whether κ is significantly greater than 0 using a normal SE. This is <em>not</em> a standard output of the Kappa test. The core result is the κ value and its verbal interpretation. Use the hypothesis display as an informal guide only.
   </p>
 
   <h3 id="kp-clinical">Clinical Interpretation</h3>

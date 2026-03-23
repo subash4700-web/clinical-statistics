@@ -5,70 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chi-square Test of Independence</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+
   <style>
-    :root {
-      --bg: #f4f6f8; --card: #ffffff; --ink: #111827; --muted: #6b7280;
-      --line: #e5e7eb; --accent: #1976d2; --warn: #b45309; --bad: #c62828; --good: #2e7d32;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
-    .container { max-width: 900px; margin: 0 auto; padding: 24px 20px 48px; }
-    h1 { font-size: 22px; font-weight: 900; margin: 0 0 4px; }
-    .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
     a.back-link { display: inline-block; margin-bottom: 18px; color: var(--accent);
       font-size: 13px; font-weight: 700; text-decoration: none; }
     a.back-link:hover { text-decoration: underline; }
-
-    .tabs { display: flex; gap: 10px; margin: 0 0 16px; }
-    .tab { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
-      background: #fff; cursor: pointer; font-weight: 700; color: var(--muted); font-size: 13px; user-select: none; }
-    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-    .section-title { font-weight: 700; font-size: 14px; margin: 0 0 10px; }
-    .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    select, input[type="number"] {
-      width: 100%; padding: 8px 10px; border: 1px solid var(--line);
-      border-radius: 10px; background: #fff; font-size: 13px; color: var(--ink);
-    }
-    label.field-label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 6px; }
     label.small { font-weight: 700; font-size: 12px; display: block; margin-bottom: 6px; color: #374151; }
-
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-    button { border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700;
-      font-size: 13px; cursor: pointer; transition: transform .05s, opacity .15s; }
-    button:active { transform: translateY(1px); }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-secondary { background: var(--good); color: #fff; }
-    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
-    .btn-sm { padding: 8px 16px; font-size: 12px; }
-
-    .alert { border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line);
-      background: #fff; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
-    .alert.warn { border-color: #f59e0b55; background: #fffbeb; color: #7c2d12; }
-    .alert.bad  { border-color: #ef444455; background: #fef2f2; color: #7f1d1d; }
-    .alert.good { border-color: #22c55e55; background: #ecfdf5; color: #14532d; }
-    .alert.info { border-color: #3b82f655; background: #eff6ff; color: #1e3a5f; }
-
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
-    .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
-    .kpi .label { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-    .kpi .value { font-size: 20px; font-weight: 900; margin-top: 4px; }
-
-    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
-    th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; }
-    th { background: #f9fafb; font-weight: 800; color: #374151; }
-    td.num { text-align: right; font-family: ui-monospace, monospace; }
-    tr:last-child td, tr:last-child th { border-bottom: none; }
 
     .ctable th { background: #f9fafb; }
     .ctable th input[type="text"] {
@@ -83,9 +26,6 @@
     .ctable tr:last-child td, .ctable tr:last-child th { border-bottom: none; }
 
     /* Viz */
-    .viz-wrap { border: 1px solid var(--line); border-radius: 12px;
-      background: #f8fafc; overflow: hidden; }
-    canvas { display: block; max-width: 100%; }
     .viz-footer { margin-top: 8px; border-radius: 10px; padding: 10px 14px;
       font-size: 13px; font-weight: 700; text-align: center;
       background: #f1f5f9; color: var(--muted); }
@@ -104,7 +44,7 @@
   <p class="subtitle">Tests whether two categorical variables are statistically independent</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="analysis">Analysis</div>
   </div>
 
@@ -112,30 +52,29 @@
   <div id="input" class="tab-content active">
 
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">Study context</div>
-        <p class="note" style="margin-top:0; margin-bottom:12px;">
-          Before running the test, verify that your study design meets the assumptions:
-        </p>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="chkCategorical" style="margin-top:4px;">
-            <span style="font-size:13px; line-height:1.5;"><strong>Both variables are categorical</strong> – Each variable has distinct, mutually exclusive categories</span>
-          </label>
-          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="chkIndependent" style="margin-top:4px;">
-            <span style="font-size:13px; line-height:1.5;"><strong>Observations are independent</strong> – Each observation is independent from others (no repeated measures)</span>
-          </label>
-          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="chkExpected" style="margin-top:4px;">
-            <span style="font-size:13px; line-height:1.5;"><strong>Expected counts ≥ 5</strong> – All expected cell counts should be at least 5 for valid χ² approximation</span>
-          </label>
-          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="chkHypothesis" style="margin-top:4px;">
-            <span style="font-size:13px; line-height:1.5;"><strong>Clear hypothesis</strong> – Testing independence between two categorical variables</span>
-          </label>
+      <details class="assumptions-panel">
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="chkCategorical" style="margin-top:4px;">
+              <span style="font-size:13px; line-height:1.5;"><strong>Both variables are categorical</strong> – Each variable has distinct, mutually exclusive categories</span>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="chkIndependent" style="margin-top:4px;">
+              <span style="font-size:13px; line-height:1.5;"><strong>Observations are independent</strong> – Each observation is independent from others (no repeated measures)</span>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="chkExpected" style="margin-top:4px;">
+              <span style="font-size:13px; line-height:1.5;"><strong>Expected counts ≥ 5</strong> – All expected cell counts should be at least 5 for valid χ² approximation</span>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="chkHypothesis" style="margin-top:4px;">
+              <span style="font-size:13px; line-height:1.5;"><strong>Clear hypothesis</strong> – Testing independence between two categorical variables</span>
+            </label>
+          </div>
         </div>
-      </div>
+      </details>
       <div class="card">
         <div class="section-title">Test settings</div>
         <div style="margin-top:12px;">
@@ -319,6 +258,9 @@
       </p>
       <div class="viz-wrap">
         <canvas id="barCanvas"></canvas>
+      </div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The chi-square approximation is valid when all expected cell counts are ≥ 5. Expected counts are shown in the table above; any cell below 5 is flagged. For 2×2 tables with low expected counts, use Fisher's Exact Test instead — it gives an exact p-value regardless of sample size.
       </div>
     </div>
 
@@ -927,6 +869,7 @@
 
     // Scroll to the table
     document.querySelector(".ctable").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    document.getElementById("runBtn").click();
   });
 
 </script>

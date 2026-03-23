@@ -1,0 +1,82 @@
+<h2>Primer Dilution</h2>
+
+<p>
+  The Primer Dilution tool calculates how to prepare working stock solutions from
+  lyophilised or concentrated primer stocks. It also calculates per-reaction primer volumes
+  when used together with PCR Setup.
+</p>
+
+<h3>When to use this tool</h3>
+<ul>
+  <li>Reconstituting a lyophilised primer to a standard stock concentration (e.g. 100 µM)</li>
+  <li>Preparing a working dilution from the stock (e.g. 100 µM → 10 µM)</li>
+  <li>Calculating how much primer to add to each PCR reaction to reach a target final concentration</li>
+</ul>
+
+<h3>Typical primer concentrations</h3>
+
+<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;">
+  <tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
+    <th style="padding:7px 10px;">Stage</th>
+    <th style="padding:7px 10px;">Typical concentration</th>
+    <th style="padding:7px 10px;">Notes</th>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;">Manufacturer stock (lyophilised)</td>
+    <td style="padding:7px 10px;">nmol supplied on tube</td>
+    <td style="padding:7px 10px;">Add TE buffer: nmol × 10 µL = 100 µM stock</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;">Working stock</td>
+    <td style="padding:7px 10px;">10 µM</td>
+    <td style="padding:7px 10px;">Dilute 1:10 from 100 µM stock; freeze in aliquots</td>
+  </tr>
+  <tr>
+    <td style="padding:7px 10px;">Final in reaction</td>
+    <td style="padding:7px 10px;">200–500 nM</td>
+    <td style="padding:7px 10px;">For a 25 µL reaction, 0.5–1.25 µL of 10 µM working stock per primer</td>
+  </tr>
+</table>
+
+<h3>Reconstituting from lyophilised primer</h3>
+<p>
+  Manufacturers supply the amount of primer in <strong>nmol</strong>.
+  To make a 100 µM stock, add:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  Volume of TE (µL) = nmol × 10
+</p>
+<p>
+  Example: 25 nmol primer → add 250 µL TE buffer → 100 µM stock.
+</p>
+
+<h3>C₁V₁ = C₂V₂ — working dilution</h3>
+<p>
+  To prepare a 10 µM working stock from a 100 µM stock:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  V₁ = (C₂ × V₂) / C₁ = (10 µM × 200 µL) / 100 µM = 20 µL stock + 180 µL TE
+</p>
+
+<h3>PCR Setup integration</h3>
+<p>
+  When opened from the PCR Setup tab, the total reaction volume is automatically transferred.
+  The tool calculates per-reaction primer volume and total volume for the entire batch including
+  10% dead-volume overage.
+</p>
+
+<h3>Storage recommendations</h3>
+<ul>
+  <li>Store stock solutions (100 µM) at −20 °C as single-use or small aliquots to avoid repeated freeze-thaw</li>
+  <li>Store working stocks (10 µM) at −20 °C; keep a small working aliquot at 4 °C for active use</li>
+  <li>Avoid exposing primers to UV light — nucleic acids absorb at 260 nm</li>
+</ul>
+
+<h3>Accuracy &amp; limitations</h3>
+<div style="margin-top:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.6;">
+  <strong>Accuracy &amp; limitations:</strong>
+  Calculations assume the nmol value from the manufacturer is accurate and that the primer is
+  fully dissolved. Pipetting volumes below 1 µL carry significant error — pre-dilute stocks further
+  where necessary. Final concentrations in the reaction are approximate; optimise empirically
+  if amplification efficiency is suboptimal.
+</div>

@@ -5,58 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Method Comparison Analysis</title>
 
+  <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
-    :root {
-      --bg:     #f4f6f8;
-      --card:   #ffffff;
-      --ink:    #111827;
-      --muted:  #6b7280;
-      --line:   #e5e7eb;
-      --accent: #1976d2;
-      --warn:   #b45309;
-      --bad:    #c62828;
-      --good:   #2e7d32;
-    }
-
-    body { margin:0; background:var(--bg); color:var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-
-    .container { max-width:1200px; padding:20px 20px 40px; margin:0 auto; }
-    .subtitle  { color:var(--muted); margin-top:0; font-size:14px; }
-
-    /* ---- GRID ---- */
-    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
-
-    /* ---- CARD ---- */
-    .card {
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:16px;
-    }
-    .section-title { font-weight:700; font-size:14px; margin:0 0 10px; }
-    .note { color:var(--muted); font-size:12.5px; margin-top:6px; }
-
-    /* ---- FORM ELEMENTS ---- */
-    textarea {
-      width:100%; min-height:160px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size:13px; padding:10px;
-      border:1px solid var(--line); border-radius:10px;
-      box-sizing:border-box; background:#fff;
-    }
-    select, input[type="number"], input[type="text"] {
-      width:100%; padding:8px 10px;
-      border:1px solid var(--line); border-radius:10px;
-      box-sizing:border-box; background:#fff;
-      font-size:13px;
-    }
     label { display:block; font-weight:700; font-size:12.5px; margin-bottom:4px; color:#374151; }
 
     /* ---- CHECKBOXES ---- */
@@ -68,65 +24,6 @@
     .check-item span { font-size:13px; }
     .check-item strong { display:block; }
     .check-item .small { color:var(--muted); font-size:12px; }
-
-    /* ---- BUTTONS ---- */
-    button {
-      border:none; border-radius:10px; padding:10px 14px;
-      font-weight:700; cursor:pointer;
-      transition: transform .05s ease, opacity .15s ease;
-      font-size:13px;
-    }
-    button:active { transform:translateY(1px); }
-    .btn-primary   { background:var(--accent); color:#fff; }
-    .btn-secondary { background:#111827; color:#fff; opacity:.9; }
-    .btn-ghost     { background:#fff; color:var(--ink); border:1px solid var(--line); }
-    .btn-success   { background:#15803d; color:#fff; }
-    .btn-danger    { background:#b91c1c; color:#fff; }
-    .btn-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-
-    /* ---- TABS ---- */
-    .tabs { display:flex; gap:10px; margin:12px 0 14px; }
-    .tab {
-      padding:8px 14px; border-radius:999px;
-      border:1px solid var(--line); background:#fff;
-      cursor:pointer; font-weight:700; color:var(--muted); font-size:13px;
-    }
-    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-    .tab-content { display:none; }
-    .tab-content.active { display:block; }
-
-    /* ---- ALERTS ---- */
-    .alert {
-      border-radius:12px; padding:10px 12px;
-      border:1px solid var(--line); background:#fff;
-      font-size:13px; line-height:1.5;
-    }
-    .alert.warn  { border-color:#f59e0b55; background:#fffbeb; color:#7c2d12; }
-    .alert.bad   { border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
-    .alert.good  { border-color:#22c55e55; background:#ecfdf5; color:#14532d; }
-    .alert.info  { border-color:#3b82f655; background:#eff6ff; color:#1e3a5f; }
-
-    /* ---- PILL ---- */
-    .pill {
-      display:inline-flex; align-items:center; gap:8px;
-      font-size:12.5px; padding:6px 10px;
-      border-radius:999px; border:1px solid var(--line);
-      background:#fff; color:var(--muted);
-    }
-
-    /* ---- KPI GRID ---- */
-    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    @media(max-width:900px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
-    .kpi { border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; }
-    .kpi .label { color:var(--muted); font-size:12px; font-weight:700; }
-    .kpi .value { font-size:16px; font-weight:900; margin-top:4px; }
-
-    /* ---- TABLES ---- */
-    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; }
-    table { width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
-    th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
-    th { background:#f9fafb; font-weight:800; color:#374151; }
-    td.num, th.num { text-align:right; font-family:ui-monospace, monospace; }
 
     /* Spreadsheet input table */
     table.spreadsheet th { background:var(--accent); color:#fff; }
@@ -153,13 +50,8 @@
     .coll-body.collapsed { display:none; }
 
     /* ---- CHART / VIZ ---- */
-    .viz-wrap {
-      border:1px solid var(--line); border-radius:14px;
-      padding:12px; background:#fff;
-    }
     .chart-container { position:relative; height:500px; }
     .chart-container.short { height:380px; }
-    canvas { max-width:100%; }
 
     /* ---- AXIS CONTROLS ---- */
     .axis-grid {
@@ -216,7 +108,7 @@
   <p class="subtitle">Bland-Altman Analysis &amp; Regression with Enhanced Visualization</p>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('input', this)">Data & presumptions</div>
+    <div class="tab active" onclick="switchTab('input', this)">Data &amp; Assumptions</div>
     <div class="tab"        onclick="switchTab('analysis', this)">Analysis &amp; Interpretation</div>
   </div>
 
@@ -349,6 +241,51 @@
       </div>
     </div>
 
+    <!-- EFLM Analyte Selector -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">EFLM Performance Specifications</div>
+      <div class="note" style="margin-bottom:10px;">Select an analyte to auto-fill TAE and bias limits based on EFLM biological variation database (Ricos et al. 2014).</div>
+      <input type="hidden" id="eflm-tier" value="desirable">
+      <div style="margin-bottom:10px;">
+        <label for="eflm-analyte">Analyte</label>
+        <select id="eflm-analyte" onchange="updateEFLMSpecs()">
+          <option value="">— Select analyte —</option>
+          <option value="albumin">Albumin</option>
+          <option value="alp">ALP</option>
+          <option value="alt">ALT</option>
+          <option value="amylase">Amylase</option>
+          <option value="ast">AST</option>
+          <option value="bilirubin">Bilirubin (total)</option>
+          <option value="calcium">Calcium</option>
+          <option value="chloride">Chloride</option>
+          <option value="cholesterol">Cholesterol (total)</option>
+          <option value="ck">CK</option>
+          <option value="creatinine">Creatinine</option>
+          <option value="crp">CRP</option>
+          <option value="ferritin">Ferritin</option>
+          <option value="freet4">Free T4</option>
+          <option value="ggт">GGT</option>
+          <option value="glucose">Glucose</option>
+          <option value="hba1c">HbA1c</option>
+          <option value="hdl">HDL cholesterol</option>
+          <option value="hemoglobin">Hemoglobin</option>
+          <option value="iron">Iron</option>
+          <option value="ldh">LDH</option>
+          <option value="ldl">LDL cholesterol</option>
+          <option value="magnesium">Magnesium</option>
+          <option value="phosphate">Phosphate</option>
+          <option value="potassium">Potassium</option>
+          <option value="protein">Protein (total)</option>
+          <option value="sodium">Sodium</option>
+          <option value="triglycerides">Triglycerides</option>
+          <option value="tsh">TSH</option>
+          <option value="urea">Urea</option>
+          <option value="uricacid">Uric acid</option>
+        </select>
+      </div>
+      <div id="eflm-specs-display" style="display:none; font-size:13px;"></div>
+    </div>
+
     <!-- Parameters -->
     <div class="card" style="margin-bottom:16px;">
       <div class="section-title">Analysis Parameters</div>
@@ -421,16 +358,25 @@
       </label>
 
       <div id="discriminationInputs" class="hidden" style="margin-top:12px;">
-        <div class="grid-2">
-          <div>
-            <label for="thresholdX">Threshold – X-axis (Gold Std / Reference)</label>
-            <input type="number" id="thresholdX" step="any" placeholder="e.g. 6.5">
-          </div>
-          <div>
-            <label for="thresholdY">Threshold – Y-axis (Test Method)</label>
-            <input type="number" id="thresholdY" step="any" placeholder="e.g. 6.5">
+
+        <!-- Reference value info from EFLM selection -->
+        <div id="discrim-ref-info" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:13px;"></div>
+
+        <!-- Threshold type -->
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Threshold type</label>
+          <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="discrim-type" value="upper" checked onchange="updateDiscrimInputs()"> Upper (high = abnormal)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="discrim-type" value="lower" onchange="updateDiscrimInputs()"> Lower (low = abnormal)
+            </label>
           </div>
         </div>
+
+        <div id="discrim-fields"></div>
+
         <div class="alert warn" style="margin-top:8px;">
           <strong>Quadrants:</strong> The crosshairs split the plot into four regions. If a gold-standard method is set:
           <strong>TP</strong> = both above threshold &nbsp;
@@ -445,7 +391,7 @@
     <details style="margin-bottom:16px;">
       <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
       <div class="card" style="margin-top:8px;">
-        <div class="note" style="margin-bottom:12px;">Simulate paired measurements with configurable bias and imprecision. Useful for exploring how different error structures affect Bland-Altman and regression outputs.</div>
+        <div class="note" style="margin-bottom:12px;">Simulate paired measurements using clinically meaningful error parameters.</div>
         <div class="grid-2">
           <div>
             <label for="gen-n">Number of pairs</label>
@@ -456,22 +402,19 @@
             <input type="number" id="gen-mean" value="10.0" step="any">
           </div>
           <div>
-            <label for="gen-cv">Biological / pre-analytical CV% <span style="font-weight:400;color:#6b7280;">(sample-to-sample spread)</span></label>
-            <input type="number" id="gen-cv" value="15" min="0" step="any">
+            <label for="gen-bias-pct">Bias % <span style="font-weight:400;color:#6b7280;">(Method 1 − Method 2, positive = M1 reads higher)</span></label>
+            <input type="number" id="gen-bias-pct" value="5" step="any">
           </div>
           <div>
-            <label for="gen-imp">Analytical imprecision CV% <span style="font-weight:400;color:#6b7280;">(per method, within-run)</span></label>
-            <input type="number" id="gen-imp" value="3" min="0" step="any">
-          </div>
-          <div>
-            <label for="gen-bias">Constant bias <span style="font-weight:400;color:#6b7280;">(Method 2 − Method 1, same units)</span></label>
-            <input type="number" id="gen-bias" value="0.5" step="any">
-          </div>
-          <div>
-            <label for="gen-slope">Proportional bias — slope <span style="font-weight:400;color:#6b7280;">(1.0 = no proportional bias)</span></label>
-            <input type="number" id="gen-slope" value="1.0" step="0.01">
+            <label for="gen-te-pct">Total Error % <span style="font-weight:400;color:#6b7280;">(TE to simulate, must be > |Bias|)</span></label>
+            <input type="number" id="gen-te-pct" value="10" min="0" step="any">
           </div>
         </div>
+        <label class="check-item" style="margin-top:10px;">
+          <input type="checkbox" id="gen-golden-std" checked>
+          <span><strong>Method 1 is a gold standard</strong> — Method 1 has no random error; all imprecision is in Method 2</span>
+        </label>
+        <div class="note" style="margin-top:6px;" id="gen-te-note">Random SD per pair = (TE − |Bias|) / 1.65</div>
         <div class="btn-row" style="margin-top:12px; justify-content:flex-start;">
           <button class="btn-ghost" onclick="generateSampleData()">Generate</button>
           <button class="btn-primary" onclick="useSampleData()">Use in analysis</button>
@@ -638,6 +581,7 @@
             cb.addEventListener('change', function() {
                 if (cb.checked) {
                     inputs.classList.remove('hidden');
+                    updateDiscrimInputs();
                 } else {
                     inputs.classList.add('hidden');
                 }
@@ -1180,7 +1124,13 @@
                 testMethod = method1Name; refMethod = method2Name;
             }
             
-            let html = `<div class="interpretation"><h3>Clinical Interpretation Summary</h3>`;
+            const eflmKey  = document.getElementById('eflm-analyte').value;
+            const eflmTier = document.getElementById('eflm-tier').value;
+            const eflmName = eflmKey && EFLM_DB[eflmKey] ? EFLM_DB[eflmKey].name : null;
+            const eflmBadge = eflmName
+              ? `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;margin-left:8px;">${eflmName} — ${eflmTier.charAt(0).toUpperCase()+eflmTier.slice(1)} EFLM</span>`
+              : '';
+            let html = `<div class="interpretation"><h3>Clinical Interpretation Summary ${eflmBadge}</h3>`;
             
             html += `<p><strong>Bias Assessment:</strong> The mean difference between ${method1Name} and ${method2Name} is ${stats.meanDiff.toFixed(3)}${suffix}. `;
             if (Math.abs(stats.meanDiff) < 0.1) {
@@ -1207,19 +1157,20 @@
             }
             html += `</p>`;
             
+            const eflmSource = eflmName ? ` (EFLM ${eflmTier} for ${eflmName})` : '';
             html += `<p><strong>Calculated Total Error:</strong> TE (|Bias| + ${stats.zValueTE}×SD) = ${stats.te_calculated.toFixed(3)}${suffix}. `;
             if (stats.te_calculated <= stats.teaPercentage) {
-                html += `Since this is within your TAE of ${stats.teaPercentage.toFixed(teaDec)}${suffix}, the method shows acceptable performance.`;
+                html += `Since this is within the TAE limit of ${stats.teaPercentage.toFixed(teaDec)}${suffix}${eflmSource}, the method shows acceptable performance.`;
             } else {
-                html += `Since this exceeds your TAE of ${stats.teaPercentage.toFixed(teaDec)}${suffix}, consider whether the method meets your quality requirements.`;
+                html += `Since this exceeds the TAE limit of ${stats.teaPercentage.toFixed(teaDec)}${suffix}${eflmSource}, consider whether the method meets your quality requirements.`;
             }
             html += `</p>`;
-            
+
             html += `<p><strong>Max Bias Assessment:</strong> The observed bias is ${stats.meanDiff.toFixed(3)}${suffix}. `;
             if (Math.abs(stats.meanDiff) <= stats.maxBias) {
-                html += `This is within the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}, indicating acceptable systematic error.`;
+                html += `This is within the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}${eflmSource}, indicating acceptable systematic error.`;
             } else {
-                html += `This exceeds the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}. Consider recalibration or correction factors.`;
+                html += `This exceeds the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}${eflmSource}. Consider recalibration or correction factors.`;
             }
             html += `</p>`;
             
@@ -1802,26 +1753,140 @@
             return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
         }
 
+        // EFLM_DB and calcEFLMTiers loaded from shared file (assets/js/eflm_db.js)
+
+        function updateEFLMSpecs(selectedTier) {
+          const key  = document.getElementById('eflm-analyte').value;
+          const tierEl = document.getElementById('eflm-tier');
+          if (selectedTier) tierEl.value = selectedTier;
+          const tier = tierEl.value;
+          const display = document.getElementById('eflm-specs-display');
+          if (!key || !EFLM_DB[key]) { display.style.display='none'; return; }
+          const a = EFLM_DB[key];
+          const tiers = calcEFLMTiers(a.cvi, a.cvg);
+          const colors = { optimal:'#059669', desirable:'#2563eb', minimum:'#d97706' };
+          const bgs    = { optimal:'#ecfdf5', desirable:'#eff6ff', minimum:'#fffbeb' };
+          const borders= { optimal:'#6ee7b7', desirable:'#bfdbfe', minimum:'#fde68a' };
+          // Update discrimination threshold reference info panel
+          const discrimInfo = document.getElementById('discrim-ref-info');
+          if (discrimInfo && a.ref) {
+            const r = a.ref;
+            const parts = [];
+            if (r.lo != null && r.hi != null) parts.push(`Reference interval: ${r.lo} – ${r.hi} ${a.unit}`);
+            else if (r.hi != null) parts.push(`Upper limit: ${r.hi} ${a.unit}`);
+            else if (r.lo != null) parts.push(`Lower limit: ${r.lo} ${a.unit}`);
+            if (r.cutoff != null) parts.push(`Clinical cutoff: ${r.cutoff} ${a.unit}`);
+            if (r.note) parts.push(`<em>${r.note}</em>`);
+            discrimInfo.style.display = 'block';
+            discrimInfo.innerHTML = `<strong>${a.name}</strong> — ${parts.join(' &nbsp;·&nbsp; ')}
+              <button class="btn-ghost btn-sm" style="margin-left:10px;" onclick="applyRefToDiscrim()">Apply to thresholds</button>`;
+          }
+          display.style.display = 'block';
+          display.innerHTML = `
+            <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">
+              <strong>${a.name}</strong> &nbsp;·&nbsp; ${a.unit} &nbsp;·&nbsp; CVi: ${a.cvi}% &nbsp;·&nbsp; CVg: ${a.cvg}%
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              ${['optimal','desirable','minimum'].map(tr=>`
+                <div onclick="updateEFLMSpecs('${tr}');applyEFLMSpecs();"
+                     style="cursor:pointer;background:${tr===tier?bgs[tr]:'#fff'};border:2px solid ${tr===tier?borders[tr]:'#e5e7eb'};border-radius:10px;padding:10px 14px;min-width:120px;transition:all .15s;${tr===tier?'box-shadow:0 0 0 3px '+borders[tr]+'80;':''}">
+                  <div style="font-weight:700;font-size:11px;text-transform:uppercase;color:${colors[tr]};margin-bottom:6px;">${tr}</div>
+                  <div style="font-size:12px;line-height:1.7;">
+                    CV ≤ <strong>${tiers[tr].cv}%</strong><br>
+                    Bias ≤ <strong>${tiers[tr].bias}%</strong><br>
+                    TEa ≤ <strong>${tiers[tr].tea}%</strong>
+                  </div>
+                  ${tr===tier?`<div style="font-size:10px;color:${colors[tr]};margin-top:6px;font-weight:700;">✓ Applied</div>`:''}
+                </div>`).join('')}
+            </div>`;
+        }
+
+        function updateDiscrimInputs() {
+          const type = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+          const fields = document.getElementById('discrim-fields');
+          if (type === 'upper') {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Upper threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 6.5"></div>
+                <div><label for="thresholdY">Upper threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 6.5"></div>
+              </div>`;
+          } else if (type === 'lower') {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Lower threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 3.9"></div>
+                <div><label for="thresholdY">Lower threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 3.9"></div>
+              </div>`;
+          } else {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Upper threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 6.1"></div>
+                <div><label for="thresholdY">Upper threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 6.1"></div>
+              </div>
+              <div class="grid-2" style="margin-top:8px;">
+                <div><label for="thresholdXLo">Lower threshold – X-axis</label><input type="number" id="thresholdXLo" step="any" placeholder="e.g. 3.9"></div>
+                <div><label for="thresholdYLo">Lower threshold – Y-axis</label><input type="number" id="thresholdYLo" step="any" placeholder="e.g. 3.9"></div>
+              </div>`;
+          }
+        }
+
+        function applyRefToDiscrim() {
+          const key = document.getElementById('eflm-analyte').value;
+          if (!key || !EFLM_DB[key]?.ref) return;
+          const ref = EFLM_DB[key].ref;
+          const type = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+          const val = type === 'lower' ? ref.lo : (ref.cutoff || ref.hi);
+          const loVal = ref.lo;
+          if (type === 'both') {
+            const xHi = document.getElementById('thresholdX'); if(xHi) xHi.value = ref.hi || ref.cutoff || '';
+            const yHi = document.getElementById('thresholdY'); if(yHi) yHi.value = ref.hi || ref.cutoff || '';
+            const xLo = document.getElementById('thresholdXLo'); if(xLo) xLo.value = ref.lo || '';
+            const yLo = document.getElementById('thresholdYLo'); if(yLo) yLo.value = ref.lo || '';
+          } else {
+            const x = document.getElementById('thresholdX'); if(x) x.value = val || '';
+            const y = document.getElementById('thresholdY'); if(y) y.value = val || '';
+          }
+        }
+
+        function applyEFLMSpecs() {
+          const key  = document.getElementById('eflm-analyte').value;
+          const tier = document.getElementById('eflm-tier').value;
+          if (!key || !EFLM_DB[key]) return;
+          const t = calcEFLMTiers(EFLM_DB[key].cvi, EFLM_DB[key].cvg)[tier];
+          document.getElementById('teaPercentage').value = t.tea;
+          document.getElementById('maxBias').value = t.bias;
+          document.getElementById('relativeBlandAltman').checked = true;
+        }
+
         function generateSampleData() {
-            const n      = Math.max(5, parseInt(document.getElementById('gen-n').value)    || 30);
-            const mu     = parseFloat(document.getElementById('gen-mean').value)            || 10;
-            const cvBio  = (parseFloat(document.getElementById('gen-cv').value)   || 15) / 100;
-            const cvImp  = (parseFloat(document.getElementById('gen-imp').value)  || 3)  / 100;
-            const bias   = parseFloat(document.getElementById('gen-bias').value)            || 0;
-            const slope  = parseFloat(document.getElementById('gen-slope').value)           || 1;
+            const n       = Math.max(5, parseInt(document.getElementById('gen-n').value) || 30);
+            const mu      = parseFloat(document.getElementById('gen-mean').value) || 10;
+            const biasPct = (parseFloat(document.getElementById('gen-bias-pct').value) || 0) / 100;
+            const tePct   = (parseFloat(document.getElementById('gen-te-pct').value)   || 10) / 100;
+            const golden  = document.getElementById('gen-golden-std').checked;
+
+            const biasAbs = mu * biasPct;
+            const sdRandom = Math.max(0, (tePct * mu - Math.abs(biasAbs))) / 1.65;
 
             _genData = [];
             for (let i = 0; i < n; i++) {
-                // True sample concentration drawn from biological spread
-                const truVal = Math.max(0.001, mu + randn() * mu * cvBio);
-                // Method 1: true value + analytical noise
-                const m1 = Math.max(0.001, truVal + randn() * truVal * cvImp);
-                // Method 2: slope × true value + constant bias + analytical noise
-                const m2 = Math.max(0.001, slope * truVal + bias + randn() * truVal * cvImp);
-                _genData.push({ method1: parseFloat(m1.toFixed(4)), method2: parseFloat(m2.toFixed(4)) });
+                // True sample value — moderate biological spread
+                const truVal = Math.max(0.001, mu * (1 + randn() * 0.15));
+                if (golden) {
+                    // Method 1 = gold standard (no random error)
+                    const m1 = truVal;
+                    const m2 = Math.max(0.001, truVal - biasAbs + randn() * sdRandom);
+                    _genData.push({ method1: parseFloat(m1.toFixed(4)), method2: parseFloat(m2.toFixed(4)) });
+                } else {
+                    // Both methods have error — split SD equally
+                    const m1 = Math.max(0.001, truVal + randn() * (sdRandom / Math.sqrt(2)));
+                    const m2 = Math.max(0.001, truVal - biasAbs + randn() * (sdRandom / Math.sqrt(2)));
+                    _genData.push({ method1: parseFloat(m1.toFixed(4)), method2: parseFloat(m2.toFixed(4)) });
+                }
             }
+            const meanM1 = _genData.reduce((s,d)=>s+d.method1,0)/n;
+            const meanM2 = _genData.reduce((s,d)=>s+d.method2,0)/n;
             document.getElementById('gen-preview').textContent =
-                `${n} pairs generated. Mean M1: ${(_genData.reduce((s,d)=>s+d.method1,0)/n).toFixed(3)}, Mean M2: ${(_genData.reduce((s,d)=>s+d.method2,0)/n).toFixed(3)}. Click "Use in analysis" to load.`;
+                `${n} pairs generated. Mean M1: ${meanM1.toFixed(3)}, Mean M2: ${meanM2.toFixed(3)}, Observed bias: ${(meanM2-meanM1).toFixed(3)}. Click "Use in analysis" to load.`;
         }
 
         function useSampleData() {
@@ -1835,6 +1900,8 @@
                 if (m1) m1.value = d.method1;
                 if (m2) m2.value = d.method2;
             });
+            generateAnalysis();
+            document.querySelector('.tab[onclick*="analysis"]').click();
             // Ensure manual input is visible
             document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.toggle-btn')[0].classList.add('active');

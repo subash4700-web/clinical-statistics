@@ -5,18 +5,16 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>PCR</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+	<link rel="stylesheet" href="assets/css/components.css">
 	<style>
 		:root{
-			--bg:#f4f6f8;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#2563eb;
 			--good:#166534;--warn:#92400e;--bad:#b91c1c;
 		}
-		body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-		.container{max-width:1200px;padding:18px}
+		body{margin:0;}
+		.container{max-width:1600px;padding:18px}
 		h1{margin:0 0 6px 0;font-size:28px}
-		.subtitle{margin:0 0 16px 0;color:var(--muted)}
 		.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
-		.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
-		@media(max-width:980px){.grid{grid-template-columns:1fr}}
 		.row{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;align-items:end}
 		@media(max-width:900px){.row{grid-template-columns:1fr 1fr}}
 		@media(max-width:600px){.row{grid-template-columns:1fr}}
@@ -44,12 +42,15 @@
 		.chip.fwd{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
 		.chip.rev{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
 		.chip.enz{background:#ecfdf5;border-color:#86efac;color:#166534}
-		.viewer{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:auto;max-height:520px;padding:8px}
-		.seq-line{display:grid;grid-template-columns:74px 1fr;gap:10px;align-items:start;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;margin-bottom:2px}
-		.coord{color:#6b7280;text-align:right;padding-top:2px}
+		.viewer{border:1px solid var(--line);border-radius:10px;background:#0f172a;overflow:auto;height:52vh;min-height:280px;padding:12px 16px}
+		.viewer .mini{color:#94a3b8}
+		.tools-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:start}
+		@media(max-width:900px){.tools-grid{grid-template-columns:1fr}}
+		.seq-line{display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:start;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;margin-bottom:4px}
+		.coord{color:#60a5fa;text-align:right;padding-top:2px;font-size:11px;font-weight:600}
 		.seq-content{display:inline-block;vertical-align:top;min-width:max-content;position:relative}
-		.bases{display:block;width:max-content;white-space:pre;overflow-x:visible;font-size:13px;letter-spacing:0px;line-height:1.5}
-		.strand-label{font-size:10px;color:#9ca3af;font-weight:700;margin-right:6px;display:inline-block;width:24px;line-height:1.5}
+		.bases{display:block;width:max-content;white-space:pre;overflow-x:visible;font-size:13px;letter-spacing:0px;line-height:1.5;color:#e2e8f0}
+		.strand-label{font-size:10px;color:#64748b;font-weight:700;margin-right:6px;display:inline-block;width:24px;line-height:1.5}
 		.track-wrap{position:relative;height:19.5px;border-bottom:none;margin-bottom:0;margin-left:30px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5}
 		.track-lane{position:relative;height:19.5px;width:100%;display:flex;align-items:flex-start}
 		.annot{position:absolute;top:50%;transform:translateY(-50%);height:16px;border-radius:4px;border:1px solid transparent;padding:0 4px;font-size:10px;font-weight:800;white-space:nowrap;line-height:14px;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
@@ -61,7 +62,8 @@
 		.annot.enz{background:#ecfdf5;border-color:#86efac;color:#166534}
 		.annot.primer{background:#ffffff;border:2px solid #c026d3;color:#111827;border-radius:0;height:16px;line-height:13px;padding:1px 2px;box-sizing:border-box;overflow:visible;z-index:3;font-size:13px;font-weight:600;letter-spacing:0px}
 		.annot.primer::before{display:none}
-		.annot.primer::after{content:attr(data-name);position:absolute;left:2px;font-size:10px;font-weight:700;color:#a21caf;white-space:nowrap;z-index:4}
+		.annot.primer::after{content:attr(data-name);position:absolute;left:2px;font-size:10px;font-weight:700;color:#a21caf;white-space:nowrap;z-index:4;opacity:0;pointer-events:none;transition:opacity .15s}
+		.annot.primer:hover::after{opacity:1}
 		.annot.primer.fwd::after{top:-14px}
 		.annot.primer.rev::after{bottom:-14px}
 		.annot.primer .connector{position:absolute;width:16px;height:10px;border:2px solid #c026d3;border-left:none;background:transparent}
@@ -80,10 +82,10 @@
 			animation: preview-pulse 1.5s ease-in-out infinite;
 			font-weight: 900;
 		}
-		.base-mut{background:#fee2e2;color:#991b1b;font-weight:800}
-		.base-fwd{background:#dbeafe;color:#1e3a8a;font-weight:700}
-		.base-rev{background:#ede9fe;color:#5b21b6;font-weight:700}
-		.base-enz{background:#dcfce7;color:#166534;font-weight:700}
+		.base-mut{background:#7f1d1d;color:#fca5a5;font-weight:800;border-radius:2px}
+		.base-fwd{background:#1e3a8a;color:#bfdbfe;font-weight:700;border-radius:2px}
+		.base-rev{background:#3b0764;color:#e9d5ff;font-weight:700;border-radius:2px}
+		.base-enz{background:#14532d;color:#86efac;font-weight:700;border-radius:2px}
 		.legend{margin-bottom:8px}
 		.gel-wrap{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px}
 		.gel-title{font-size:12px;font-weight:700;color:#374151;margin-bottom:8px}
@@ -108,6 +110,16 @@
 		.abar-cut-label{position:absolute;left:34px;top:-8px;font-size:9px;color:#ef4444;white-space:nowrap;font-weight:600}
 		.abar-frag-label{position:absolute;left:0;font-size:9px;color:#374151;white-space:nowrap;transform:translateY(-50%)}
 		.abar-len{font-size:10px;color:#6b7280}
+		/* Right-panel tabs */
+		.pcr-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+		/* Probe annotation in sequence viewer */
+		.annot.probe{background:#fef9c3;border:2px solid #ca8a04;color:#111827;border-radius:0;height:16px;line-height:13px;padding:1px 2px;box-sizing:border-box;overflow:visible;z-index:3;font-size:13px;font-weight:600;}
+		.annot.probe::before{display:none;}
+		.annot.probe.rev::before{display:none;}
+		.annot.probe::after{content:attr(data-name);position:absolute;left:2px;font-size:10px;font-weight:700;color:#92400e;white-space:nowrap;z-index:4;opacity:0;pointer-events:none;transition:opacity .15s;}
+		.annot.probe:hover::after{opacity:1;}
+		.annot.probe.fwd::after{top:-14px;}
+		.annot.probe.rev::after{bottom:-14px;}
 	</style>
 </head>
 <body>
@@ -128,10 +140,6 @@
 					<input id="flank-bp" type="number" min="100" max="20000" step="50" value="2000" />
 				</div>
 				<div>
-					<label>Line width (bp)</label>
-					<input id="line-width" type="number" min="40" max="120" value="50" oninput="renderViewer()" />
-				</div>
-				<div>
 					<button onclick="loadFromRs()">Load from NCBI</button>
 				</div>
 			</div>
@@ -149,171 +157,335 @@
 			<p class="mini" style="margin-top:8px;">Uses NCBI E-utilities: SNP metadata + nuccore FASTA region fetch.</p>
 
 			<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
-				<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Or load a local FASTA file</div>
+				<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Or load a local sequence file</div>
 				<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-					<input type="file" id="fasta-file-input" accept=".fasta,.fa,.fna,.txt" style="display:none;" onchange="loadFromFastaFile()" />
-					<button class="secondary" onclick="document.getElementById('fasta-file-input').click()">Choose FASTA file</button>
+					<input type="file" id="fasta-file-input" accept=".fasta,.fa,.fna,.txt,.gb,.gbk,.flat" style="display:none;" onchange="loadFromFastaFile()" />
+					<button class="secondary" onclick="document.getElementById('fasta-file-input').click()">Choose file</button>
 					<span id="fasta-filename" style="font-size:13px;color:#6b7280;">No file selected</span>
 				</div>
-				<p class="mini" style="margin-top:6px;">Single or multi-FASTA (first entry used). Accepted: .fasta .fa .fna .txt</p>
-			</div>
-		</div>
-		<div class="grid">
-			<div>
-				<div class="card">
-					<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-						<div class="legend">
-							<span class="chip mut">Mutation position</span>
-							<span class="chip fwd">Forward primer binding</span>
-							<span class="chip rev">Reverse primer binding</span>
-							<span class="chip enz">Restriction site</span>
-						</div>
-						<div style="display:flex;gap:12px;align-items:center;">
-							<div style="font-size:12px;color:var(--muted);font-weight:700;">View sequence:</div>
-							<label style="font-size:13px;cursor:pointer;font-weight:400;">
-								<input type="radio" name="view-variant" value="wt" checked onchange="switchVariant('wt')" style="margin-right:4px;">Wild-type
-							</label>
-							<label style="font-size:13px;cursor:pointer;font-weight:400;">
-								<input type="radio" name="view-variant" value="mut" onchange="switchVariant('mut')" style="margin-right:4px;">Mutant
-							</label>
-						</div>
-						<div style="margin-bottom:8px;">
-							<label style="font-size:13px;cursor:pointer;">
-								<input type="checkbox" id="show-complement" onchange="toggleComplement()" style="margin-right:4px;">
-								Show complement strand
-							</label>
-						</div>
-					</div>
-					<div class="viewer" id="seq-viewer"><div class="mini">Load an rs number to render sequence.</div></div>
+				<p class="mini" style="margin-top:6px;">FASTA (.fasta .fa .fna .txt) or GenBank flat file (.gb .gbk .flat)</p>
+				<div id="gb-variant-selector" style="display:none;margin-top:8px;">
+					<label style="font-size:12px;font-weight:600;color:var(--muted);">Select variant:</label>
+					<select id="gb-variant-select" style="margin-left:8px;font-size:12px;" onchange="applyGenBankVariant(this.value)"></select>
 				</div>
 			</div>
-			<div>
-				<div class="card">
-					<h3 style="margin:0 0 4px 0;">Primer Design</h3>
-					<div class="mini" style="margin-bottom:8px;color:#059669;font-weight:600;">
-						✓ Primer3-like algorithm: Nearest-neighbor Tm, self-complementarity check, hairpin detection, 3' stability analysis
+		</div>
+	<!-- SEQUENCE VIEWER — full width -->
+	<div class="card" style="background:#1e293b;border-color:#334155;">
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+			<div class="legend" style="margin:0;">
+				<span class="chip mut" style="background:#7f1d1d;color:#fca5a5;border-color:#991b1b;">Mutation</span>
+				<span class="chip fwd" style="background:#1e3a8a;color:#93c5fd;border-color:#1d4ed8;">Fwd primer</span>
+				<span class="chip rev" style="background:#3b0764;color:#d8b4fe;border-color:#7c3aed;">Rev primer</span>
+				<span class="chip enz" style="background:#14532d;color:#86efac;border-color:#16a34a;">RE site</span>
+			</div>
+			<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+				<div style="display:flex;gap:10px;align-items:center;">
+					<span style="font-size:12px;color:#94a3b8;font-weight:700;">Sequence:</span>
+					<label style="font-size:13px;cursor:pointer;font-weight:500;color:#e2e8f0;margin:0;">
+						<input type="radio" name="view-variant" value="wt" checked onchange="switchVariant('wt')" style="margin-right:4px;">WT
+					</label>
+					<label style="font-size:13px;cursor:pointer;font-weight:500;color:#e2e8f0;margin:0;">
+						<input type="radio" name="view-variant" value="mut" onchange="switchVariant('mut')" style="margin-right:4px;">Mut
+					</label>
+				</div>
+				<label style="font-size:13px;cursor:pointer;font-weight:500;color:#e2e8f0;margin:0;">
+					<input type="checkbox" id="show-complement" onchange="toggleComplement()" style="margin-right:4px;">
+					Complement
+				</label>
+				<div style="display:flex;align-items:center;gap:6px;">
+					<span style="font-size:12px;color:#64748b;font-weight:700;">Font</span>
+					<input type="range" id="viewer-font-size" min="10" max="18" value="13" style="width:70px;padding:0;accent-color:#60a5fa;" oninput="updateViewerFont(this.value)">
+					<span id="viewer-font-label" style="font-size:11px;color:#64748b;min-width:28px;">13px</span>
+				</div>
+				<div style="display:flex;align-items:center;gap:6px;">
+					<span style="font-size:12px;color:#64748b;font-weight:700;">bp/line</span>
+					<input id="line-width" type="number" min="40" max="120" value="60" oninput="renderViewer()" style="width:58px;padding:4px 6px;background:#0f172a;border-color:#334155;color:#e2e8f0;" />
+				</div>
+			</div>
+		</div>
+		<div class="viewer" id="seq-viewer"><div class="mini" style="padding:20px;color:#94a3b8;">Load an rs number to render sequence.</div></div>
+	</div>
+
+	<!-- RESULTS — full width, shown after simulate -->
+	<div id="pcr-status" class="status" style="display:none;margin-bottom:10px;"></div>
+	<div id="pcr-results" style="display:none;margin-bottom:12px;"></div>
+	<!-- MELT CURVE — shown for probe assay -->
+	<!-- SYBR melt curve (SYBR mode only) -->
+	<div id="melt-curve-wrap" style="display:none;margin-bottom:12px;">
+		<div class="card">
+			<h3 style="margin:0 0 4px 0;">SYBR Green Melt Curve</h3>
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+				<div>
+					<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;">Fluorescence signal (RFU vs Temperature)</div>
+					<canvas id="fluorChart" style="width:100%;height:260px;"></canvas>
+				</div>
+				<div>
+					<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;">Melt peak (−dF/dT vs Temperature)</div>
+					<canvas id="meltChart" style="width:100%;height:260px;"></canvas>
+				</div>
+			</div>
+			<div id="melt-probe-summary" style="margin-top:12px;font-size:12px;"></div>
+		</div>
+	</div>
+
+	<!-- Probe qPCR results (probe mode only) -->
+	<div id="probe-amp-wrap" style="display:none;margin-bottom:12px;">
+		<div class="card">
+			<h3 style="margin:0 0 4px 0;">Probe qPCR — Amplification &amp; Allelic Discrimination</h3>
+			<p class="mini" style="margin:0 0 12px 0;">
+				Signal accumulates each cycle as Taq cleaves probes hybridised to matching template. A probe that does not match the allele is not cleaved → no signal.
+			</p>
+			<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+				<div>
+					<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--muted);">Amplification curves (RFU vs cycle)</div>
+					<canvas id="ampChart" style="width:100%;height:280px;"></canvas>
+				</div>
+				<div>
+					<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--muted);">Allelic discrimination plot (endpoint RFU)</div>
+					<canvas id="discrimChart" style="width:100%;height:280px;"></canvas>
+				</div>
+			</div>
+			<div id="probe-amp-summary" style="margin-top:12px;font-size:12px;"></div>
+		</div>
+	</div>
+
+	<!-- TOOLS — 3 columns below viewer -->
+	<div class="tools-grid">
+
+		<!-- COLUMN 1: PRIMERS & PROBES -->
+		<div id="pcrTab-primers">
+			<div class="card" style="padding:10px;">
+				<!-- Mini tab bar -->
+				<div style="display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:8px;">
+					<button class="tool-subtab active" id="subtab-btn-primers" onclick="switchSubtab('primers',this)" style="padding:4px 12px;font-size:12px;border-radius:999px;border:1px solid var(--line);background:var(--accent);color:#fff;cursor:pointer;font-weight:700;">Primers</button>
+					<button class="tool-subtab" id="subtab-btn-probes" onclick="switchSubtab('probes',this)" style="padding:4px 12px;font-size:12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);">Probes</button>
+				</div>
+
+				<!-- PRIMERS subtab -->
+				<div id="subtab-primers">
+					<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+						<div><label>Length</label><input id="primer-len" type="number" min="16" max="30" value="20" /></div>
+						<div><label>Target Tm (°C)</label><input id="primer-tm" type="number" min="45" max="72" value="60" /></div>
+						<div><label>Min flank</label><input id="primer-min-flank" type="number" min="20" max="400" value="40" /></div>
+						<div><label>Max flank</label><input id="primer-max-flank" type="number" min="60" max="600" value="240" /></div>
 					</div>
-					<div class="row" style="grid-template-columns:1fr 1fr;">
-						<div>
-							<label>Primer length (bp)</label>
-							<input id="primer-len" type="number" min="16" max="30" value="20" />
-						</div>
-						<div>
-							<label>Target Tm (°C)</label>
-							<input id="primer-tm" type="number" min="45" max="72" value="60" />
-						</div>
-					</div>
-					<div class="row" style="grid-template-columns:1fr 1fr;margin-top:8px;">
-						<div>
-							<label>Min flank from mutation (bp)</label>
-							<input id="primer-min-flank" type="number" min="20" max="400" value="40" />
-						</div>
-						<div>
-							<label>Max flank from mutation (bp)</label>
-							<input id="primer-max-flank" type="number" min="60" max="600" value="240" />
-						</div>
-					</div>
-					<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-						<button onclick="findPrimerCandidates_UI()">Find primer candidates</button>
-						<button class="secondary" onclick="toggleManualPrimer()">Add manual primers</button>
+					<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+						<button onclick="findPrimerCandidates_UI()">Find candidates</button>
+						<button class="secondary" onclick="toggleManualPrimer()">Add manual</button>
 						<button class="secondary" onclick="clearAllPrimers()">Clear all</button>
 					</div>
-					<div id="primer-candidates-panel" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f0f9ff;">
-						<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:#1e40af;">Select Primer Pairs to Add</div>
-						<div id="primer-candidates-list"></div>
-						<div style="margin-top:8px;display:flex;gap:8px;">
-							<button onclick="addSelectedCandidates()">Add selected pairs</button>
-							<button class="secondary" onclick="closeCandidatesPanel()">Cancel</button>
+						<div id="primer-candidates-panel" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f0f9ff;">
+							<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:#1e40af;">Select Primer Pairs to Add</div>
+							<div id="primer-candidates-list"></div>
+							<div style="margin-top:8px;display:flex;gap:8px;">
+								<button onclick="addSelectedCandidates()">Add selected pairs</button>
+								<button class="secondary" onclick="closeCandidatesPanel()">Cancel</button>
+							</div>
 						</div>
-					</div>
-					<div id="manual-primer-form" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f9fafb;">
-						<div style="margin-bottom:4px;font-size:12px;font-weight:700;color:var(--muted);">Add Individual Primer</div>
-						<div style="margin-bottom:8px;font-size:11px;color:#059669;">✓ Live preview shows where primer binds as you type</div>
-						<div style="margin-bottom:8px;">
-							<label>Primer name</label>
-							<input id="manual-primer-name" type="text" placeholder="e.g., Forward-1, Rev-SNP" />
+						<div id="manual-primer-form" style="display:none;margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#f9fafb;">
+							<div style="margin-bottom:4px;font-size:12px;font-weight:700;color:var(--muted);">Add Individual Primer</div>
+							<div style="margin-bottom:8px;font-size:11px;color:#059669;">✓ Live preview shows where primer binds as you type</div>
+							<div style="margin-bottom:8px;">
+								<label>Primer name</label>
+								<input id="manual-primer-name" type="text" placeholder="e.g., Forward-1, Rev-SNP" />
+							</div>
+							<div style="margin-bottom:8px;">
+								<label>Primer type</label>
+								<select id="manual-primer-type">
+									<option value="forward">Forward (5' → 3' on plus strand)</option>
+									<option value="reverse">Reverse (5' → 3' on minus strand, complementary)</option>
+								</select>
+							</div>
+							<div>
+								<label>Primer sequence (5' → 3')</label>
+								<input id="manual-primer-seq" type="text" placeholder="ACGT..." style="font-family:ui-monospace,monospace;" oninput="previewPrimerBinding()" />
+							</div>
+							<div id="manual-primer-preview" style="margin-top:8px;padding:8px;border-radius:6px;background:#f0f9ff;border:1px solid #bae6fd;display:none;">
+								<div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:4px;">Binding Preview:</div>
+								<div id="manual-primer-preview-info" style="font-size:11px;color:#374151;"></div>
+							</div>
+							<div style="margin-top:8px;display:flex;gap:8px;">
+								<button onclick="addSinglePrimer()">Add this primer</button>
+								<button class="secondary" onclick="toggleManualPrimer()">Cancel</button>
+							</div>
 						</div>
-						<div style="margin-bottom:8px;">
-							<label>Primer type</label>
-							<select id="manual-primer-type">
-								<option value="forward">Forward (5' → 3' on plus strand)</option>
-								<option value="reverse">Reverse (5' → 3' on minus strand, complementary)</option>
-							</select>
-						</div>
-						<div>
-							<label>Primer sequence (5' → 3')</label>
-							<input id="manual-primer-seq" type="text" placeholder="ACGT..." style="font-family:ui-monospace,monospace;" oninput="previewPrimerBinding()" />
-						</div>
-						<div id="manual-primer-preview" style="margin-top:8px;padding:8px;border-radius:6px;background:#f0f9ff;border:1px solid #bae6fd;display:none;">
-							<div style="font-size:11px;font-weight:700;color:#0369a1;margin-bottom:4px;">Binding Preview:</div>
-							<div id="manual-primer-preview-info" style="font-size:11px;color:#374151;"></div>
-						</div>
-						<div style="margin-top:8px;display:flex;gap:8px;">
-							<button onclick="addSinglePrimer()">Add this primer</button>
-							<button class="secondary" onclick="toggleManualPrimer()">Cancel</button>
-						</div>
-					</div>
-					<div id="primer-status" class="status" style="margin-top:10px;">No primers yet.</div>
-					<table class="enzyme-table" style="margin-top:10px;" id="primer-table-wrap">
+						<div id="primer-status" class="status" style="margin-top:8px;font-size:12px;">No primers yet.</div>
+					<table class="enzyme-table" style="margin-top:8px;" id="primer-table-wrap">
 						<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Forward</th><th>Reverse</th><th>Amplicon</th><th></th></tr></thead>
 						<tbody id="primer-tbody"></tbody>
 					</table>
 				</div>
-				<div class="card">
-					<h3 style="margin:0 0 8px 0;">Restriction Enzymes</h3>
-					<div style="margin-bottom:10px;">
-						<label>Search common enzymes</label>
-						<input id="enz-search" type="text" placeholder="Type enzyme name..." oninput="filterEnzymeSearch()" />
-						<div id="enz-search-results" style="display:none;max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-top:4px;background:#fff;"></div>
+
+				<!-- PROBES subtab -->
+				<div id="subtab-probes" style="display:none;">
+					<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
+							<div>
+								<label>Probe name</label>
+								<input id="probe-name" type="text" placeholder="e.g., Probe-FAM" />
+							</div>
+							<div>
+								<label>Probe type</label>
+								<select id="probe-type">
+									<option value="forward">Forward (plus strand)</option>
+									<option value="reverse">Reverse (minus strand)</option>
+								</select>
+							</div>
+							<div>
+								<label>Target allele</label>
+								<select id="probe-allele">
+									<option value="wt">Wild-type only</option>
+									<option value="mut">Mutant only</option>
+									<option value="both">Both alleles</option>
+								</select>
+							</div>
+						</div>
+					<div style="margin-bottom:6px;">
+						<label>Probe sequence (5' → 3')</label>
+						<input id="probe-seq" type="text" placeholder="ACGT..." style="font-family:ui-monospace,monospace;" />
 					</div>
-					<div class="row" style="grid-template-columns:1fr 1fr auto;">
-						<div>
-							<label>Custom enzyme name</label>
-							<input id="enz-name" type="text" placeholder="EcoRI" />
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+							<div>
+								<label>Fluorophore (5' label)</label>
+								<select id="probe-fluor">
+									<option value="FAM">FAM (green)</option>
+									<option value="HEX">HEX (yellow)</option>
+									<option value="VIC">VIC (orange)</option>
+									<option value="ROX">ROX (red)</option>
+									<option value="Cy5">Cy5 (magenta)</option>
+									<option value="TET">TET (teal)</option>
+									<option value="TAMRA">TAMRA (amber)</option>
+									<option value="JOE">JOE (green-yellow)</option>
+								</select>
+							</div>
+							<div>
+								<label>Quencher (3' label)</label>
+								<select id="probe-quencher">
+									<option value="BHQ1">BHQ1</option>
+									<option value="BHQ2">BHQ2</option>
+									<option value="TAMRA">TAMRA</option>
+									<option value="MGB">MGB</option>
+									<option value="IBFQ">IBFQ</option>
+								</select>
+							</div>
 						</div>
-						<div>
-							<label>Custom recognition site</label>
-							<input id="enz-site" type="text" placeholder="GAATTC" />
-						</div>
-						<div>
-							<button onclick="addEnzyme()">Add custom</button>
-						</div>
-					</div>
-					<table class="enzyme-table" style="margin-top:10px;">
-						<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Site (5'→3')</th><th>Complement (3'→5')</th><th>Hits</th><th></th></tr></thead>
-						<tbody id="enzyme-tbody"></tbody>
+					<button onclick="addProbe()">Add probe</button>
+					<div id="probe-status" class="status" style="margin-top:8px;font-size:12px;display:none;"></div>
+					<table class="enzyme-table" style="margin-top:8px;display:none;" id="probe-table-wrap">
+						<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Sequence</th><th>Fluor</th><th>Quencher</th><th>Allele</th><th>Tm</th><th></th></tr></thead>
+						<tbody id="probe-tbody"></tbody>
 					</table>
 				</div>
-				<div class="card">
-					<h3 style="margin:0 0 8px 0;">PCR Simulation</h3>
-					<p class="mini" style="margin:0 0 10px 0;">Simulate PCR products with selected primers and restriction enzyme digestion patterns.</p>
-					<div style="margin-bottom:10px;">
+			</div>
+		</div>
+
+		<!-- COLUMN 2: ENZYMES -->
+		<div id="pcrTab-enzymes">
+			<div class="card" style="padding:10px;">
+				<h3 style="margin:0 0 8px 0;font-size:13px;">Restriction Enzymes</h3>
+				<input id="enz-search" type="text" placeholder="Search enzymes..." oninput="filterEnzymeSearch()" style="margin-bottom:6px;" />
+				<div id="enz-search-results" style="display:none;max-height:140px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:#fff;"></div>
+				<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:8px;align-items:end;">
+					<div><label>Name</label><input id="enz-name" type="text" placeholder="EcoRI" /></div>
+					<div><label>Site</label><input id="enz-site" type="text" placeholder="GAATTC" /></div>
+					<div><button onclick="addEnzyme()">Add</button></div>
+				</div>
+				<table class="enzyme-table">
+					<thead><tr><th style="width:30px;">Use</th><th>Name</th><th>Site (5'→3')</th><th>Complement</th><th>Hits</th><th></th></tr></thead>
+					<tbody id="enzyme-tbody"></tbody>
+				</table>
+			</div>
+		</div>
+
+		<!-- COLUMN 3: SIMULATE OPTIONS -->
+		<div id="pcrTab-simulate">
+			<!-- Sample genotype selector -->
+			<div id="sample-geno-ctrl" class="card" style="padding:10px;min-width:180px;margin-bottom:10px;">
+				<h3 style="margin:0 0 8px 0;font-size:13px;">Sample Genotype</h3>
+				<div style="display:flex;flex-direction:column;gap:4px;">
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;" id="geno-lbl-wt">
+						<input type="radio" name="sample-geno" value="wt" checked onchange="switchSampleGenotype('wt')" style="margin:0;">
+						<span><strong>WT / WT</strong> <span style="color:var(--muted);font-weight:400;">— homozygous wild-type</span></span>
+					</label>
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;" id="geno-lbl-hz">
+						<input type="radio" name="sample-geno" value="hz" onchange="switchSampleGenotype('hz')" style="margin:0;">
+						<span><strong>Heterozygous</strong> <span style="color:var(--muted);font-weight:400;">— one of each allele</span></span>
+					</label>
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;" id="geno-lbl-mut">
+						<input type="radio" name="sample-geno" value="mut" onchange="switchSampleGenotype('mut')" style="margin:0;">
+						<span><strong>Mut / Mut</strong> <span style="color:var(--muted);font-weight:400;">— homozygous mutant</span></span>
+					</label>
+				</div>
+			</div>
+
+			<div class="card" style="padding:10px;min-width:180px;">
+				<h3 style="margin:0 0 8px 0;font-size:13px;">Assay Type &amp; Simulate</h3>
+				<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;white-space:nowrap;" id="assay-lbl-pcr">
+						<input type="radio" name="assay-type" value="pcr" checked onchange="switchAssayType('pcr')" style="margin:0;">
+						<span><strong>Normal PCR</strong></span>
+					</label>
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;white-space:nowrap;" id="assay-lbl-rflp">
+						<input type="radio" name="assay-type" value="rflp" onchange="switchAssayType('rflp')" style="margin:0;">
+						<span><strong>PCR-RFLP</strong></span>
+					</label>
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;white-space:nowrap;" id="assay-lbl-probe">
+						<input type="radio" name="assay-type" value="probe" onchange="switchAssayType('probe')" style="margin:0;">
+						<span><strong>Probe qPCR</strong></span>
+					</label>
+					<label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid var(--line);border-radius:7px;white-space:nowrap;" id="assay-lbl-sybr">
+						<input type="radio" name="assay-type" value="sybr" onchange="switchAssayType('sybr')" style="margin:0;">
+						<span><strong>SYBR / dye qPCR</strong></span>
+					</label>
+				</div>
+
+				<!-- SYBR options -->
+				<div id="assay-opts-sybr" style="display:none;">
+					<div style="border-top:1px solid var(--line);padding-top:10px;">
+						<label>Intercalating dye</label>
+						<select id="sybr-dye">
+							<option value="SYBR Green">SYBR Green I</option>
+							<option value="EvaGreen">EvaGreen</option>
+							<option value="SYBR Gold">SYBR Gold</option>
+							<option value="LC Green">LC Green</option>
+						</select>
+					</div>
+				</div>
+
+				<!-- RFLP options -->
+				<div id="assay-opts-rflp" style="display:none;">
+					<div style="border-top:1px solid var(--line);padding-top:10px;">
 						<label>Gel ladder</label>
 						<select id="ladder-type">
 							<option value="100">100 bp ladder</option>
 							<option value="50">50 bp ladder</option>
 						</select>
-					</div>
-					<div style="margin-bottom:10px;">
-						<label>Show genotype patterns</label>
-						<div style="display:flex;gap:12px;margin-top:6px;">
-							<label style="font-size:13px;font-weight:400;cursor:pointer;">
-								<input type="checkbox" id="show-wt" checked style="margin-right:4px;">Wild-type
-							</label>
-							<label style="font-size:13px;font-weight:400;cursor:pointer;">
-								<input type="checkbox" id="show-hz" checked style="margin-right:4px;">Heterozygous
-							</label>
-							<label style="font-size:13px;font-weight:400;cursor:pointer;">
-								<input type="checkbox" id="show-mut" checked style="margin-right:4px;">Homozygous mutant
-							</label>
+						<div style="margin-top:10px;">
+							<label>Show genotype patterns</label>
+							<div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+								<label style="font-size:13px;font-weight:400;cursor:pointer;"><input type="checkbox" id="show-wt" checked style="margin-right:4px;">WT</label>
+								<label style="font-size:13px;font-weight:400;cursor:pointer;"><input type="checkbox" id="show-hz" checked style="margin-right:4px;">Heterozygous</label>
+								<label style="font-size:13px;font-weight:400;cursor:pointer;"><input type="checkbox" id="show-mut" checked style="margin-right:4px;">Homozygous mut</label>
+							</div>
 						</div>
 					</div>
-					<button onclick="simulatePCR()" style="width:100%;">Simulate PCR & Restriction Digest</button>
-					<div id="pcr-status" class="status" style="margin-top:10px;display:none;"></div>
-					<div id="pcr-results" style="margin-top:10px;display:none;"></div>
+				</div>
+
+				<!-- Probe options -->
+				<div id="assay-opts-probe" style="display:none;">
+					<div style="border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted);">
+						Melt curve will be calculated for all selected probes against both WT and mutant alleles.
+					</div>
+				</div>
+
+				<!-- Simulate button -->
+				<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+					<button onclick="simulatePCR()" style="width:100%;padding:10px;font-size:14px;font-weight:700;">&#9654;&nbsp; Simulate</button>
 				</div>
 			</div>
 		</div>
+	</div>
+
 	</div>
 	<script src="assets/js/version.js"></script>
 	<script>
@@ -345,21 +517,24 @@
       seq:null,
       meta:null,
       variantInfo:null,
+      gbVariants:[],
       primerSets:[],
       enzymes:[
-        {name:'EcoRI', site:'GAATTC', selected:true},
-        {name:'BamHI', site:'GGATCC', selected:true},
-        {name:'HindIII', site:'AAGCTT', selected:true},
-        {name:'RsaI', site:'GTAC', selected:true},
-        {name:'BstBI', site:'TTCGAA', selected:true}
+        {name:'EcoRI', site:'GAATTC', selected:false},
+        {name:'BamHI', site:'GGATCC', selected:false},
+        {name:'HindIII', site:'AAGCTT', selected:false},
+        {name:'RsaI', site:'GTAC', selected:false},
+        {name:'BstBI', site:'TTCGAA', selected:false}
       ],
       enzymeHits:[],
       showComplement:false,
       alleles:null,
-      viewVariant:'wt', // 'wt' = wild-type, 'mut' = mutant
+      viewVariant:'wt',    // 'wt' = wild-type, 'mut' = mutant (sequence viewer)
+      sampleGenotype:'wt', // 'wt', 'hz', 'mut'  (simulation sample)
       candidatePairs:[], // Store primer candidates for selection
       individualPrimers:[], // Store individual primers (not pairs)
       previewPrimer:null, // Current primer being previewed
+      probes:[],
       primerStore:{},
       rsHistory:[]
     };
@@ -388,7 +563,8 @@
       if(!key) return;
       state.primerStore[key]={
         primerSets:state.primerSets||[],
-        individualPrimers:state.individualPrimers||[]
+        individualPrimers:state.individualPrimers||[],
+        probes:state.probes||[]
       };
       savePersistentData();
     }
@@ -397,7 +573,9 @@
       const saved=key ? state.primerStore[key] : null;
       state.primerSets=Array.isArray(saved?.primerSets)?saved.primerSets:[];
       state.individualPrimers=Array.isArray(saved?.individualPrimers)?saved.individualPrimers:[];
+      state.probes=Array.isArray(saved?.probes)?saved.probes:[];
       renderPrimerTable();
+      renderProbeTable();
       renderViewer();
     }
     function recordRsLookup(){
@@ -672,15 +850,19 @@
           }else if(inserted){
             altSet.add(inserted);
             if(!ref && deleted) ref=deleted;
+          }else if(deleted && inserted===''){
+            // Pure deletion: ref = deleted bases, alt = '' (empty)
+            ref=deleted;
+            altSet.add('');
           }
         }
 
-        const alts=[...altSet].filter(a=>a && a!==ref);
+        const alts=[...altSet].filter(a=>a!==ref);
         if(ref && alts.length>0){
           return {ref, alts};
         }
         if(!fallback && ref && altSet.size>0){
-          fallback={ref, alts:[...altSet].filter(a=>a)};
+          fallback={ref, alts:[...altSet].filter(a=>a!==ref)};
         }
       }
 
@@ -857,12 +1039,30 @@
         const seq=parseFasta(fastaText);
         if(!seq || seq.length<50) throw new Error('Received empty/short FASTA sequence');
 
-        const mutIdx=(pos-start); // 0-based in fetched seq
+        let mutIdx=(pos-start); // 0-based in fetched seq
+        // Right-normalize deletions (HGVS 3' rule)
+        if(alleles){
+          const ref=(alleles.ref||'').toUpperCase();
+          const alts=(alleles.alts||[]);
+          const isDeletion = ref.length > 0 && alts.some(a=>a.length < ref.length || a==='');
+          if(isDeletion && ref.length > 0){
+            const seqUpper = seq.toUpperCase();
+            // NCBI SPDI may use anchor convention — actual deletion starts at mutIdx+1
+            let delStart = mutIdx;
+            if(seqUpper.substring(delStart, delStart + ref.length) !== ref &&
+               seqUpper.substring(delStart + 1, delStart + 1 + ref.length) === ref){
+              delStart = mutIdx + 1;
+            }
+            mutIdx = rightNormalize(seqUpper, delStart, ref);
+          }
+        }
 
         state.seq=seq;
         state.meta={rs:'rs'+rs, chr, pos, accession, start, stop, mutIdx};
-          state.viewVariant='wt';
-          document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+        state.viewVariant='wt';
+        state.sampleGenotype='wt';
+        document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+        switchSampleGenotype('wt');
 
         refreshEnzymeHits();
           loadPrimersForCurrentRs();
@@ -908,39 +1108,116 @@
       return {header, seq:seqLines.join('')};
     }
 
+    function parseGenBankFile(text){
+      // Extract LOCUS name
+      const locusMatch=text.match(/^LOCUS\s+(\S+)/m);
+      const label=locusMatch?locusMatch[1]:'GenBank';
+
+      // Extract sequence between ORIGIN and //
+      const originMatch=text.match(/^ORIGIN\s*\n([\s\S]*?)\/\//m);
+      if(!originMatch) throw new Error('No ORIGIN section found in GenBank file');
+      const seq=originMatch[1].replace(/[^acgtnACGTN]/g,'').toUpperCase();
+      if(!seq || seq.length<10) throw new Error('No valid sequence found in GenBank file');
+
+      // Parse variation features from FEATURES section
+      const variants=[];
+      const featuresMatch=text.match(/^FEATURES[\s\S]*?(?=^ORIGIN)/m);
+      if(featuresMatch){
+        const featText=featuresMatch[0];
+        // Match each variation block
+        const varRegex=/variation\s+(\d+)\.\.(\d+)([\s\S]*?)(?=\n {5}\S|\nORIGIN|$)/g;
+        let m;
+        while((m=varRegex.exec(featText))!==null){
+          const start=parseInt(m[1])-1; // convert to 0-based
+          const end=parseInt(m[2])-1;
+          const block=m[3];
+          const replaceMatch=block.match(/\/replace="([^"]*)"/);
+          const dbxrefMatch=block.match(/\/db_xref="dbSNP:(\d+)"/i);
+          const rs=dbxrefMatch?'rs'+dbxrefMatch[1]:null;
+          const alt=replaceMatch!==null?replaceMatch[1]:null; // null = not found, '' = deletion
+          const ref=seq.substring(start, end+1);
+          if(ref && alt!==null){
+            variants.push({start, end, ref, alt, rs});
+          }
+        }
+      }
+
+      return {header:label, seq, variants};
+    }
+
+    function applyGenBankVariant(idx){
+      const v=state.gbVariants[parseInt(idx)];
+      if(!v || !state.seq) return;
+      state.meta.rs=v.rs||state.meta.rs;
+      state.meta.pos=v.start+1;
+      state.meta.mutIdx=v.start;
+      state.alleles={ref:v.ref, alts:[v.alt]};
+      state.viewVariant='wt';
+      document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+      refreshEnzymeHits();
+      renderKpi();
+      renderAlleleInfo();
+      renderVariantInfo();
+      renderViewer();
+    }
+
     function loadFromFastaFile(){
       const input=document.getElementById('fasta-file-input');
       const file=input.files[0];
       if(!file) return;
       el('fasta-filename').textContent=file.name;
-      setStatus('load-status','Reading FASTA file…','warn');
+      const isGenBank=/\.(gb|gbk|flat)$/i.test(file.name);
+      setStatus('load-status',`Reading ${isGenBank?'GenBank':'FASTA'} file…`,'warn');
       const reader=new FileReader();
       reader.onload=function(e){
         try{
-          const {header,seq}=parseFirstFastaEntry(e.target.result);
-          if(!seq || seq.length<10) throw new Error('No valid sequence found in FASTA file');
-          if(!/^[ACGTNRYMKSWHBVD]+$/.test(seq)) throw new Error('Sequence contains non-DNA characters. Ensure the file is a DNA FASTA.');
+          const parsed=isGenBank
+            ? parseGenBankFile(e.target.result)
+            : parseFirstFastaEntry(e.target.result);
+          const {header, seq}=parsed;
+          const variants=parsed.variants||[];
+          if(!seq || seq.length<10) throw new Error('No valid sequence found in file');
+          if(!/^[ACGTNRYMKSWHBVD]+$/.test(seq)) throw new Error('Sequence contains non-DNA characters');
           const label=header||file.name.replace(/\.[^.]+$/,'');
           state.seq=seq;
-          state.meta={rs:label.slice(0,60), chr:'FASTA', pos:null, accession:label.slice(0,40), start:1, stop:seq.length, mutIdx:null};
-          state.alleles=null;
+          // Use first variant for mutation display if available
+          const v=variants[0]||null;
+          state.meta={
+            rs: v?.rs||label.slice(0,60),
+            chr:isGenBank?'GenBank':'FASTA',
+            pos: v!=null ? v.start+1 : null,
+            accession:label.slice(0,40),
+            start:1, stop:seq.length,
+            mutIdx: v!=null ? v.start : null
+          };
+          state.gbVariants = variants;
+          state.alleles = v!=null ? {ref:v.ref, alts:[v.alt]} : null;
           state.variantInfo=null;
           state.viewVariant='wt';
           document.querySelector('input[name="view-variant"][value="wt"]').checked=true;
+          // Populate variant selector
+          const sel=el('gb-variant-select');
+          const selectorWrap=el('gb-variant-selector');
+          if(variants.length>0){
+            sel.innerHTML=variants.map((v,i)=>`<option value="${i}">${v.rs||('pos '+( v.start+1))} — ${v.ref||'–'}→${v.alt===''?'del':v.alt}</option>`).join('');
+            selectorWrap.style.display='block';
+          } else {
+            selectorWrap.style.display='none';
+          }
           refreshEnzymeHits();
           renderKpi();
           renderAlleleInfo();
           renderVariantInfo();
           renderViewer();
-          setStatus('load-status',`Loaded FASTA: "${label.slice(0,50)}" — ${fmt(seq.length)} bp`,'good');
+          const varNote=variants.length>0?` — ${variants.length} variant(s) found`:'';
+          setStatus('load-status',`Loaded ${isGenBank?'GenBank':'FASTA'}: "${label.slice(0,50)}" — ${fmt(seq.length)} bp${varNote}`,'good');
           setStatus('primer-status','No primers yet. Click Find primer candidates.','warn');
         }catch(err){
-          setStatus('load-status',err.message||'Failed to parse FASTA file','bad');
+          setStatus('load-status',err.message||'Failed to parse file','bad');
         }
       };
       reader.onerror=()=>setStatus('load-status','Failed to read file','bad');
       reader.readAsText(file);
-      // Reset input so the same file can be reloaded if needed
       input.value='';
     }
 
@@ -992,9 +1269,9 @@
       box.style.display='block';
       box.innerHTML=`
           <strong>Currently viewing: ${variantLabel}</strong><br>
-        <strong>SNP Alleles at position ${m.mutIdx} (genomic ${fmt(m.pos)}):</strong><br>
-        Reference: <span style="font-family:ui-monospace,monospace;color:#166534;font-weight:700;">${state.alleles.ref}</span> | 
-        Alternate(s): <span style="font-family:ui-monospace,monospace;color:#991b1b;font-weight:700;">${state.alleles.alts.join(', ')}</span> | 
+        <strong>${classifyMutationType(state.alleles.ref, state.alleles.alts[0])} at position ${m.mutIdx} (genomic ${fmt(m.pos)}):</strong><br>
+        Reference: <span style="font-family:ui-monospace,monospace;color:#166534;font-weight:700;">${state.alleles.ref||'—'}</span> |
+        Alternate(s): <span style="font-family:ui-monospace,monospace;color:#991b1b;font-weight:700;">${state.alleles.alts.map(a=>a===''?'del (−'+state.alleles.ref.length+' bp)':a).join(', ')}</span> |
         Base at position: <span style="font-family:ui-monospace,monospace;font-weight:700;">${observedBase}</span>
       `;
     }
@@ -1013,6 +1290,19 @@
       refreshEnzymeHits();
       renderViewer();
       renderAlleleInfo();
+    }
+
+    function switchSampleGenotype(g){
+      state.sampleGenotype = g;
+      ['wt','hz','mut'].forEach(v => {
+        const lbl = el('geno-lbl-'+v);
+        if(lbl) lbl.style.borderColor = v===g ? 'var(--accent)' : 'var(--line)';
+      });
+      // Only re-run simulations if results are already showing (i.e. Simulate was already pressed)
+      const ampVisible  = el('probe-amp-wrap')?.style.display  !== 'none';
+      const meltVisible = el('melt-curve-wrap')?.style.display !== 'none';
+      if(ampVisible)  simulateProbeAmplification();
+      if(meltVisible) { simulateSybrMeltCurve(); simulateMeltCurve(); }
     }
 
     function toggleComplement(){
@@ -1462,10 +1752,678 @@
     function clearAllPrimers(){
       state.primerSets=[];
       state.individualPrimers=[];
+      state.probes=[];
       savePrimersForCurrentRs();
       renderPrimerTable();
+      renderProbeTable();
       renderViewer();
-      setStatus('primer-status','All primers cleared.','warn');
+      setStatus('primer-status','All primers and probes cleared.','warn');
+    }
+
+    function updateViewerFont(size){
+      size=parseInt(size)||13;
+      const lbl=el('viewer-font-label');
+      if(lbl) lbl.textContent=size+'px';
+      const viewer=el('seq-viewer');
+      if(viewer){
+        viewer.style.fontSize=size+'px';
+        // Re-render so ch-based widths recalculate
+        renderViewer();
+      }
+    }
+
+    /* ── Probe qPCR — amplification + allelic discrimination ── */
+    let ampChart = null, discrimChart = null;
+
+    function logisticRFU(cycle, ct, plateau, efficiency){
+      // S-shaped amplification curve
+      const slope = efficiency * 0.7;
+      return 10 + (plateau - 10) / (1 + Math.exp(-slope * (cycle - ct)));
+    }
+
+    function simulateProbeAmplification(){
+      const wrap = el('probe-amp-wrap');
+      const probes = state.probes.filter(p => p.selected);
+      if(!probes.length || !state.seq){ wrap.style.display='none'; return; }
+      wrap.style.display = 'block';
+
+      const genotype = state.sampleGenotype || 'wt';
+      const wtSeq  = state.seq;
+      const mutSeq = state.alleles ? getSequenceVariant(state.seq, state.meta.mutIdx, 'mut') : null;
+      const cycles = Array.from({length:40}, (_,i) => i+1);
+
+      function probeBinding(probe, seq){
+        if(!seq) return false;
+        const search = probe.strand === 'reverse' ? rc(probe.seq) : probe.seq;
+        return seq.toUpperCase().indexOf(search.toUpperCase()) >= 0;
+      }
+
+      // Pre-compute binding on both alleles (needed for discrimination plot regardless of genotype)
+      const bindingWT  = probes.map(p => probeBinding(p, wtSeq));
+      const bindingMut = probes.map(p => mutSeq ? probeBinding(p, mutSeq) : false);
+
+      // Build per-genotype amplification curves
+      // endpointRFU[i] = RFU at cycle 40 for probe i in the current genotype sample
+      const ampDatasets = [];
+      const endpointRFU = {};
+
+      probes.forEach((p, i) => {
+        const fc  = FLUOR_COLORS[p.fluor] || {border:'#2563eb', bg:'#eff6ff', text:'#1e3a8a'};
+        const col = fc.border;
+        const bWT  = bindingWT[i];
+        const bMut = bindingMut[i];
+
+        if(genotype === 'wt' || !mutSeq){
+          // Only WT template in the tube
+          const ct  = bWT  ? 25 : 38;
+          const pl  = bWT  ? 1000 : 40;
+          const eff = bWT  ? 0.95 : 0.15;
+          ampDatasets.push({
+            label: `${p.fluor} · ${p.name}`,
+            data: cycles.map(c => ({x:c, y:logisticRFU(c,ct,pl,eff)})),
+            borderColor:col, borderWidth:2, borderDash:[], pointRadius:0, fill:false, tension:0.3
+          });
+          endpointRFU[i] = { wt: logisticRFU(40,ct,pl,eff), mut: null };
+
+        } else if(genotype === 'mut'){
+          // Only MUT template in the tube
+          const ct  = bMut ? 25 : 38;
+          const pl  = bMut ? 1000 : 40;
+          const eff = bMut ? 0.95 : 0.15;
+          ampDatasets.push({
+            label: `${p.fluor} · ${p.name}`,
+            data: cycles.map(c => ({x:c, y:logisticRFU(c,ct,pl,eff)})),
+            borderColor:col, borderWidth:2, borderDash:[], pointRadius:0, fill:false, tension:0.3
+          });
+          endpointRFU[i] = { wt: null, mut: logisticRFU(40,ct,pl,eff) };
+
+        } else {
+          // Heterozygous — 50% WT + 50% MUT template
+          // WT allele: Ct+1 for 50% input, full efficiency
+          // Mut allele: Ct+2, slightly lower plateau & efficiency (MUT probes typically less optimised)
+          if(bWT){
+            ampDatasets.push({
+              label: `${p.fluor} · ${p.name} on WT allele`,
+              data: cycles.map(c => ({x:c, y:logisticRFU(c,26,1000,0.95)})),
+              borderColor:col, borderWidth:2, borderDash:[], pointRadius:0, fill:false, tension:0.3
+            });
+          }
+          if(bMut){
+            ampDatasets.push({
+              label: `${p.fluor} · ${p.name} on Mut allele`,
+              data: cycles.map(c => ({x:c, y:logisticRFU(c,28,850,0.82)})),
+              borderColor:col, borderWidth:2, borderDash:[5,4], pointRadius:0, fill:false, tension:0.3
+            });
+          }
+          if(!bWT && !bMut){
+            ampDatasets.push({
+              label: `${p.fluor} · ${p.name} (no binding)`,
+              data: cycles.map(c => ({x:c, y:logisticRFU(c,38,40,0.15)})),
+              borderColor:col, borderWidth:1.5, borderDash:[3,3], pointRadius:0, fill:false, tension:0.3
+            });
+          }
+          const epWT  = bWT  ? logisticRFU(40,26,1000,0.95) : logisticRFU(40,38,40,0.15);
+          const epMut = bMut ? logisticRFU(40,28,850,0.82)  : logisticRFU(40,38,40,0.15);
+          endpointRFU[i] = { wt: epWT, mut: epMut };
+        }
+      });
+
+      // Render amplification chart
+      const genoLabel = genotype==='wt'?'WT/WT sample':genotype==='mut'?'Mut/Mut sample':'Heterozygous sample';
+      if(ampChart){ ampChart.destroy(); ampChart=null; }
+      ampChart = new Chart(el('ampChart').getContext('2d'), {
+        type: 'line', data: { datasets: ampDatasets },
+        options:{
+          animation: false,
+          plugins:{
+            title:{ display:true, text: genoLabel, font:{size:12,weight:'600'}, color:'#374151', padding:{bottom:6} },
+            legend:{ display:true, labels:{ font:{size:10}, boxWidth:16 } },
+            tooltip:{ callbacks:{ label: c=>`${c.dataset.label}: ${c.parsed.y.toFixed(0)} RFU` } }
+          },
+          scales:{
+            x:{ type:'linear', min:1, max:40,
+              title:{ display:true, text:'Cycle', font:{size:11} }, ticks:{ stepSize:5 } },
+            y:{ min:0, title:{ display:true, text:'RFU', font:{size:11} } }
+          }
+        }
+      });
+
+      // Allelic discrimination scatter — always shows all 3 genotype clusters for context,
+      // with the currently selected genotype highlighted
+      const famIdx = probes.findIndex(p => ['FAM','TET','JOE'].includes(p.fluor));
+      const hexIdx = probes.findIndex(p => ['HEX','VIC','ROX','Cy5','TAMRA'].includes(p.fluor));
+      const discrimDatasets = [];
+
+      if(famIdx >= 0 && hexIdx >= 0 && mutSeq){
+        const famWt_ep  = logisticRFU(40, bindingWT[famIdx]  ? 25:38, bindingWT[famIdx]  ? 1000:40, bindingWT[famIdx]  ? 0.95:0.15);
+        const famMut_ep = logisticRFU(40, bindingMut[famIdx] ? 25:38, bindingMut[famIdx] ? 1000:40, bindingMut[famIdx] ? 0.95:0.15);
+        const hexWt_ep  = logisticRFU(40, bindingWT[hexIdx]  ? 25:38, bindingWT[hexIdx]  ? 1000:40, bindingWT[hexIdx]  ? 0.95:0.15);
+        const hexMut_ep = logisticRFU(40, bindingMut[hexIdx] ? 25:38, bindingMut[hexIdx] ? 1000:40, bindingMut[hexIdx] ? 0.95:0.15);
+
+        function jitter(v, pct=0.05){ return v + v*(Math.random()-0.5)*pct*2; }
+        const isWT  = genotype==='wt';
+        const isHz  = genotype==='hz';
+        const isMut = genotype==='mut';
+
+        discrimDatasets.push(
+          { label:'WT/WT',        data: Array.from({length:8},()=>({x:jitter(famWt_ep),  y:jitter(hexWt_ep)})),
+            backgroundColor: isWT  ? 'rgba(37,99,235,0.9)'  : 'rgba(37,99,235,0.25)',  pointRadius: isWT  ? 9:6, pointStyle:'circle' },
+          { label:'Heterozygous', data: Array.from({length:8},()=>({x:jitter((famWt_ep+famMut_ep)/2,0.08), y:jitter((hexWt_ep+hexMut_ep)/2,0.08)})),
+            backgroundColor: isHz  ? 'rgba(22,163,74,0.9)'  : 'rgba(22,163,74,0.25)',  pointRadius: isHz  ? 9:6, pointStyle:'circle' },
+          { label:'Mut/Mut',      data: Array.from({length:8},()=>({x:jitter(famMut_ep), y:jitter(hexMut_ep)})),
+            backgroundColor: isMut ? 'rgba(220,38,38,0.9)'  : 'rgba(220,38,38,0.25)',  pointRadius: isMut ? 9:6, pointStyle:'circle' }
+        );
+      }
+
+      if(discrimChart){ discrimChart.destroy(); discrimChart=null; }
+      discrimChart = new Chart(el('discrimChart').getContext('2d'), {
+        type: 'scatter', data: { datasets: discrimDatasets },
+        options:{
+          animation: false,
+          plugins:{
+            title:{ display:true, text:'Allelic discrimination (all genotypes)', font:{size:12,weight:'600'}, color:'#374151', padding:{bottom:4} },
+            legend:{ display:true, labels:{ font:{size:10}, boxWidth:14 } }
+          },
+          scales:{
+            x:{ title:{ display:true, text:`${famIdx>=0?probes[famIdx].fluor:'Ch1'} RFU (endpoint)`, font:{size:11} }, min:0 },
+            y:{ title:{ display:true, text:`${hexIdx>=0?probes[hexIdx].fluor:'Ch2'} RFU (endpoint)`, font:{size:11} }, min:0 }
+          }
+        }
+      });
+
+      // Summary table — shows what this probe does in the selected sample genotype
+      const rows = probes.map((p,i) => {
+        const bWT  = bindingWT[i];
+        const bMut = bindingMut[i];
+        const fc   = FLUOR_COLORS[p.fluor]||{bg:'#f9fafb',border:'#9ca3af',text:'#111'};
+        let status;
+        if(genotype==='wt')       status = bWT  ? '✓ Signal (binds WT allele)'   : '✗ Background only';
+        else if(genotype==='mut') status = bMut ? '✓ Signal (binds Mut allele)'  : '✗ Background only';
+        else                      status = bWT&&bMut ? '✓ Both alleles — Ct+1 each' : bWT ? '✓ WT allele only — Ct+1' : bMut ? '✓ Mut allele only — Ct+1' : '✗ Background only';
+        const col = (bWT&&genotype==='wt')||(bMut&&genotype==='mut')||(genotype==='hz'&&(bWT||bMut)) ? '#166534' : '#991b1b';
+        return `<tr>
+          <td><span style="display:inline-block;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;background:${fc.bg};border:1px solid ${fc.border};color:${fc.text}">${p.fluor}</span> ${p.name}</td>
+          <td style="color:${col}">${status}</td>
+        </tr>`;
+      });
+
+      el('probe-amp-summary').innerHTML = `
+        <table class="enzyme-table">
+          <thead><tr><th>Probe</th><th>Result in ${genoLabel}</th></tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+          Heterozygous: both alleles present at 50% — probes binding either allele fire, Ct shifted +1 cycle.<br>
+          Discrimination plot shows all three genotype clusters; selected genotype is highlighted (larger, opaque points).
+        </div>`;
+    }
+
+    /* ── Subtab (Primers / Probes) ── */
+    function switchSubtab(tab, btn){
+      document.querySelectorAll('.tool-subtab').forEach(b=>{
+        b.style.background='#fff'; b.style.color='var(--muted)'; b.classList.remove('active');
+      });
+      btn.style.background='var(--accent)'; btn.style.color='#fff'; btn.classList.add('active');
+      ['primers','probes'].forEach(t=>{
+        const el2=el('subtab-'+t);
+        if(el2) el2.style.display = t===tab ? 'block' : 'none';
+      });
+    }
+
+    /* ── Assay type ── */
+    let assayType = 'pcr';
+    let meltChart = null;
+
+    function switchAssayType(type){
+      assayType = type;
+      el('assay-opts-rflp').style.display   = type==='rflp'  ? 'block' : 'none';
+      el('assay-opts-probe').style.display  = type==='probe' ? 'block' : 'none';
+      el('assay-opts-sybr').style.display   = type==='sybr'  ? 'block' : 'none';
+      // Highlight active label
+      ['pcr','rflp','probe','sybr'].forEach(t=>{
+        const lbl=el('assay-lbl-'+t);
+        if(lbl) lbl.style.borderColor = t===type ? 'var(--accent)' : 'var(--line)';
+      });
+    }
+
+    /* ── Raw fluorescence curve (Boltzmann sigmoid, for SYBR display) ── */
+    function fluorCurve(tm, width=1.8, tMin=45, tMax=90, step=0.25, amplitude=1.0){
+      const pts = [];
+      const f0 = 1/(1+Math.exp((tMin-tm)/width)); // value at tMin for normalisation
+      for(let t=tMin; t<=tMax; t+=step){
+        const f = 1/(1+Math.exp((t-tm)/width));
+        pts.push({x: Math.round(t*100)/100, y: (f/Math.max(f0, 0.001)) * amplitude});
+      }
+      return pts;
+    }
+
+    /* ── Amplicon Tm (long dsDNA, Bolton-McCarthy formula) ── */
+    function ampliconTm(seq){
+      const s = seq.toUpperCase();
+      const gc = (s.split('').filter(b=>b==='G'||b==='C').length / s.length) * 100;
+      // Tm = 81.5 + 16.6·log10([Na+]) + 0.41·(%GC) − 675/length
+      // Assumes 50 mM Na+
+      return 81.5 + 16.6 * Math.log10(0.05) + 0.41 * gc - 675 / s.length;
+    }
+
+    let sybrFluorChart = null;
+
+    function simulateSybrMeltCurve(pairs){
+      const wrap = el('melt-curve-wrap');
+      if(!pairs) pairs = state.primerSets.filter(p=>p.selected);
+      if(!pairs.length || !state.seq){ wrap.style.display='none'; return; }
+      wrap.style.display='block';
+
+      const genotype = state.sampleGenotype || 'wt';
+      const dyeName = el('sybr-dye') ? el('sybr-dye').value : 'SYBR Green';
+      el('melt-curve-wrap').querySelector('h3').textContent = `${dyeName} Melt Curve`;
+
+      const wtSeq  = state.seq;
+      const mutSeq = state.alleles ? getSequenceVariant(state.seq, state.meta.mutIdx, 'mut') : null;
+      const COLORS = ['#2563eb','#dc2626','#16a34a','#9333ea','#ea580c','#0d9488'];
+
+      const fluorDs = [], derivDs = [], summaryRows = [];
+      const allTms = [];
+
+      pairs.forEach((pair, i)=>{
+        const col    = COLORS[i % COLORS.length];
+        const fwdSeq = pair.forward.seq;
+        const revSeq = pair.reverse.seq;
+
+        const wtAmp = wtSeq.slice(pair.forward.start, pair.reverse.end + 1);
+        const wtTm  = ampliconTm(wtAmp);
+
+        let mutTm = null, mutAmp = null;
+        if(mutSeq){
+          const fwdIdx = mutSeq.toUpperCase().indexOf(fwdSeq.toUpperCase());
+          const revRC  = rc(revSeq);
+          const revIdx = mutSeq.toUpperCase().indexOf(revRC.toUpperCase());
+          if(fwdIdx >= 0 && revIdx >= 0){
+            mutAmp = mutSeq.slice(fwdIdx, revIdx + revSeq.length);
+            mutTm  = ampliconTm(mutAmp);
+          }
+        }
+
+        // Build curves for the selected sample genotype
+        if(genotype === 'wt' || !mutSeq || mutTm === null){
+          allTms.push(wtTm);
+          fluorDs.push({ label:`${pair.name}`, data:[], _tm:wtTm,
+            borderColor:col, borderWidth:2, borderDash:[], backgroundColor:col+'22', pointRadius:0, fill:true, tension:0.4 });
+          derivDs.push({ label:`${pair.name}`, data:[], _tm:wtTm,
+            borderColor:col, borderWidth:2.5, borderDash:[], pointRadius:0, fill:false, tension:0.4 });
+
+        } else if(genotype === 'mut'){
+          allTms.push(mutTm);
+          fluorDs.push({ label:`${pair.name}`, data:[], _tm:mutTm,
+            borderColor:col, borderWidth:2, borderDash:[], backgroundColor:col+'22', pointRadius:0, fill:true, tension:0.4 });
+          derivDs.push({ label:`${pair.name}`, data:[], _tm:mutTm,
+            borderColor:col, borderWidth:2.5, borderDash:[], pointRadius:0, fill:false, tension:0.4 });
+
+        } else {
+          // Heterozygous — both amplicons present at 50%
+          // Fluorescence = 0.5·sigmoid(wtTm) + 0.5·sigmoid(mutTm)
+          allTms.push(wtTm, mutTm);
+          fluorDs.push({ label:`${pair.name} · WT allele (50%)`, data:[], _tm:wtTm, _amp:0.5,
+            borderColor:col, borderWidth:2, borderDash:[], backgroundColor:col+'15', pointRadius:0, fill:true, tension:0.4 });
+          fluorDs.push({ label:`${pair.name} · Mut allele (50%)`, data:[], _tm:mutTm, _amp:0.5,
+            borderColor:col, borderWidth:2, borderDash:[5,4], backgroundColor:col+'10', pointRadius:0, fill:true, tension:0.4 });
+          derivDs.push({ label:`${pair.name} · WT allele (50%)`, data:[], _tm:wtTm, _amp:0.5,
+            borderColor:col, borderWidth:2.5, borderDash:[], pointRadius:0, fill:false, tension:0.4 });
+          derivDs.push({ label:`${pair.name} · Mut allele (50%)`, data:[], _tm:mutTm, _amp:0.5,
+            borderColor:col, borderWidth:2.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0.4 });
+        }
+
+        // Summary row
+        const wtGC   = ((wtAmp.split('').filter(b=>b==='G'||b==='C').length/wtAmp.length)*100).toFixed(0);
+        const dTm    = mutTm !== null ? Math.abs(wtTm - mutTm) : null;
+        const interp = dTm === null ? '—'
+                     : dTm < 0.3   ? 'Indistinguishable — use probe assay'
+                     : dTm < 1.0   ? 'Very small ΔTm — may not separate reliably'
+                     : `ΔTm ${dTm.toFixed(1)}°C — alleles may be resolvable`;
+        summaryRows.push(`<tr>
+          <td>${pair.name}</td><td>${wtAmp.length} bp · ${wtGC}% GC</td>
+          <td style="font-family:ui-monospace,monospace;">${wtTm.toFixed(1)}°C</td>
+          <td style="font-family:ui-monospace,monospace;">${mutTm!==null?mutTm.toFixed(1)+'°C':'—'}</td>
+          <td style="font-size:11px;">${interp}</td>
+        </tr>`);
+      });
+
+      const xMin = Math.floor(Math.min(...allTms) - 10);
+      const xMax = Math.ceil(Math.max(...allTms)  + 12);
+
+      // Fill data — amplitude defaults to 1.0, or 0.5 for HZ alleles
+      fluorDs.forEach(ds => { ds.data = fluorCurve(ds._tm, 1.8, xMin, xMax, ds._amp||1.0); });
+      derivDs.forEach(ds => { ds.data = meltCurveDerivative(ds._tm, 1.8, xMin, xMax, 0.25, ds._amp||1.0); });
+
+      const genoLabel = genotype==='wt'?'WT/WT':genotype==='mut'?'Mut/Mut':'Heterozygous';
+      const xAxis = { type:'linear', min:xMin, max:xMax,
+        title:{ display:true, text:'Temperature (°C)', font:{size:11} }, ticks:{ stepSize:5 } };
+
+      if(sybrFluorChart){ sybrFluorChart.destroy(); sybrFluorChart=null; }
+      sybrFluorChart = new Chart(el('fluorChart').getContext('2d'), {
+        type:'line', data:{ datasets: fluorDs },
+        options:{ animation:false,
+          plugins:{
+            title:{ display:true, text:`${genoLabel} sample`, font:{size:12,weight:'600'}, color:'#374151', padding:{bottom:4} },
+            legend:{ display:true, labels:{ font:{size:10}, boxWidth:14 } }
+          },
+          scales:{ x: xAxis,
+            y:{ min:0, max:1.05, title:{ display:true, text:'Normalised RFU', font:{size:11} },
+              ticks:{ callback: v=>v.toFixed(1) } }
+          }
+        }
+      });
+
+      if(meltChart){ meltChart.destroy(); meltChart=null; }
+      meltChart = new Chart(el('meltChart').getContext('2d'), {
+        type:'line', data:{ datasets: derivDs },
+        options:{ animation:false,
+          plugins:{
+            title:{ display:true, text:`${genoLabel} sample`, font:{size:12,weight:'600'}, color:'#374151', padding:{bottom:4} },
+            legend:{ display:true, labels:{ font:{size:10}, boxWidth:14 } }
+          },
+          scales:{ x: xAxis,
+            y:{ min:0, max:1.05, title:{ display:true, text:'−dF/dT (normalised)', font:{size:11} },
+              ticks:{ callback: v=>v.toFixed(1) } }
+          }
+        }
+      });
+
+      el('melt-probe-summary').innerHTML = summaryRows.length ? `
+        <table class="enzyme-table" style="margin-top:8px;">
+          <thead><tr><th>Primer pair</th><th>Amplicon</th><th>Tm WT</th><th>Tm Mut</th><th>Note</th></tr></thead>
+          <tbody>${summaryRows.join('')}</tbody>
+        </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+          Tm by Bolton-McCarthy formula (50 mM Na⁺). Heterozygous shows two peaks at 50% amplitude — ΔTm must be &gt;1°C to resolve them.
+          <strong>Note:</strong> SYBR cannot reliably detect SNPs in amplicons &gt;150 bp — use probe-based melt for allele discrimination.
+        </div>` : '';
+    }
+
+    /* ── Melt curve engine ── */
+    function mismatchTmPenalty(probeSeq, targetSeq, bindStart){
+      // Align probe against targetSeq starting at bindStart
+      // Returns ΔTm (negative = destabilising)
+      const probe = probeSeq.toUpperCase();
+      const target = (targetSeq||'').toUpperCase();
+      let penalty = 0;
+      const len = probe.length;
+      for(let i=0; i<len; i++){
+        const t = target[bindStart+i];
+        if(!t){ penalty += 8; continue; } // gap/deletion
+        if(t !== probe[i]){
+          // Terminal mismatches less destabilising
+          const isTerm = i<2 || i>=len-2;
+          penalty += isTerm ? 1.5 : 3.0;
+        }
+      }
+      // Extra penalty for insertion/deletion that shifts the frame
+      const targetSlice = target.slice(bindStart, bindStart+len);
+      if(targetSlice.length < len) penalty += (len-targetSlice.length) * 6;
+      return -penalty;
+    }
+
+    function probeTmOnAllele(probe, alleleSeq){
+      // Find the probe binding position on this allele sequence
+      const searchSeq = probe.isReverse ? rc(probe.seq) : probe.seq;
+      const idx = alleleSeq.toUpperCase().indexOf(searchSeq.toUpperCase());
+      if(idx >= 0){
+        // Perfect match — use stored Tm
+        return { tm: probe.tm, found: true, mismatches: 0 };
+      }
+      // Not found — estimate using position on original seq + mismatch penalty
+      const baseTm = probe.tm;
+      // Approximate by aligning at probe.start and counting mismatches
+      const delta = mismatchTmPenalty(searchSeq, alleleSeq, probe.start);
+      return { tm: Math.max(30, baseTm + delta), found: false, mismatches: Math.round(-delta/2.5) };
+    }
+
+    function meltCurveDerivative(tm, width=2.2, tMin=45, tMax=90, step=0.25, amplitude=1.0){
+      // Always include the true Tm in the computation range so normalisation
+      // is based on the real peak — not an artifact of clipping.
+      const computeMin = Math.min(tMin, tm - 15);
+      const computeMax = Math.max(tMax, tm + 15);
+      const pts = [];
+      for(let t=computeMin; t<=computeMax; t+=step){
+        const f = 1/(1+Math.exp((t-tm)/width));
+        pts.push({x: Math.round(t*100)/100, y: f});
+      }
+      const raw = [];
+      for(let i=1; i<pts.length-1; i++){
+        const dFdT = (pts[i+1].y - pts[i-1].y) / (pts[i+1].x - pts[i-1].x);
+        raw.push({x: pts[i].x, y: Math.max(0,-dFdT)});
+      }
+      // Normalise against the true peak then scale by amplitude
+      const peak = Math.max(...raw.map(p=>p.y)) || 1;
+      // Return only the display window
+      return raw
+        .filter(p => p.x >= tMin && p.x <= tMax)
+        .map(p => ({x: p.x, y: (p.y/peak) * amplitude}));
+    }
+
+    function simulateMeltCurve(){
+      const wrap = el('melt-curve-wrap');
+      const probes = state.probes.filter(p=>p.selected);
+      if(!probes.length || !state.seq){
+        wrap.style.display='none';
+        return;
+      }
+      wrap.style.display='block';
+
+      const genotype = state.sampleGenotype || 'wt';
+      const wtSeq  = state.seq;
+      const mutSeq = state.alleles ? getSequenceVariant(state.seq, state.meta.mutIdx, 'mut') : null;
+
+      const datasets = [];
+      const summaryRows = [];
+
+      probes.forEach(p=>{
+        const fc = FLUOR_COLORS[p.fluor] || {border:'#ca8a04'};
+        const lineColor = fc.border;
+
+        const wtResult  = probeTmOnAllele(p, wtSeq);
+        const mutResult = mutSeq ? probeTmOnAllele(p, mutSeq) : null;
+
+        // Determine amplitude for each allele based on sample genotype
+        // Perfect match in sample = 1.0 · mismatch in sample = 0.07 (weak cross-reactive signal) · absent = 0
+        // HZ = 0.5 for each present allele
+        let wtAmp  = 0;
+        let mutAmp = 0;
+
+        if(genotype === 'wt'){
+          wtAmp  = 1.0;
+          mutAmp = mutResult ? (mutResult.found ? 0 : 0.07) : 0; // mismatch bleed-through only
+        } else if(genotype === 'mut'){
+          wtAmp  = wtResult.found ? 0 : 0.07;
+          mutAmp = mutResult ? 1.0 : 0;
+        } else { // hz
+          wtAmp  = 0.5;
+          mutAmp = mutResult ? 0.5 : 0;
+        }
+
+        if(wtAmp > 0){
+          datasets.push({
+            label: `${p.name} [${p.fluor}] · on WT`,
+            data: meltCurveDerivative(wtResult.tm, wtResult.found?2.2:3.5, 45, 90, 0.25, wtAmp),
+            borderColor: lineColor, borderWidth: wtAmp >= 0.5 ? 2.5 : 1.5,
+            borderDash: wtAmp < 0.5 && genotype!=='hz' ? [3,3] : [],
+            pointRadius:0, fill:false, tension:0.4
+          });
+        }
+        if(mutResult && mutAmp > 0){
+          datasets.push({
+            label: `${p.name} [${p.fluor}] · on Mut`,
+            data: meltCurveDerivative(mutResult.tm, mutResult.found?2.2:3.5, 45, 90, 0.25, mutAmp),
+            borderColor: lineColor, borderWidth: mutAmp >= 0.5 ? 2.5 : 1.5,
+            borderDash: mutAmp < 0.5 && genotype!=='hz' ? [3,3] : [5,4],
+            pointRadius:0, fill:false, tension:0.4
+          });
+        }
+
+        // Summary row — always show probe discrimination info regardless of genotype
+        if(mutResult){
+          const dTm = Math.abs(wtResult.tm - mutResult.tm);
+          const wtBetter = wtResult.tm > mutResult.tm;
+          let interp, interpColor;
+          if(!wtResult.found && !mutResult.found){
+            interp='No exact match on either allele'; interpColor='#92400e';
+          } else if(dTm>=15){
+            interp=wtBetter?'Excellent WT specificity':'Excellent Mut specificity'; interpColor='#166534';
+          } else if(dTm>=10){
+            interp=wtBetter?'Good WT specificity (cross-reactivity unlikely)':'Good Mut specificity (cross-reactivity unlikely)'; interpColor='#166534';
+          } else if(dTm>=5){
+            interp='Moderate discrimination — some cross-reactivity possible'; interpColor='#92400e';
+          } else {
+            interp='Poor discrimination — probe will bind both alleles'; interpColor='#991b1b';
+          }
+          summaryRows.push(`
+            <tr>
+              <td><span style="display:inline-block;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;background:${fc.bg||'#f9fafb'};border:1px solid ${lineColor};color:${fc.text||'#111'}">${p.fluor}</span> ${p.name}</td>
+              <td>${p.targetAllele==='mut'?'Mut only':p.targetAllele==='wt'?'WT only':'Both'}</td>
+              <td style="font-family:ui-monospace,monospace;">${wtResult.tm.toFixed(1)}°C ${wtResult.found?'✓':'<span style="color:#991b1b">(~mm)</span>'}</td>
+              <td style="font-family:ui-monospace,monospace;">${mutResult.tm.toFixed(1)}°C ${mutResult.found?'✓':'<span style="color:#991b1b">(~mm)</span>'}</td>
+              <td style="font-weight:700;color:${dTm>=3?'#166534':'#92400e'}">${dTm.toFixed(1)}°C</td>
+              <td style="font-size:11px;color:${interpColor};font-weight:600;">${interp}</td>
+            </tr>`);
+        } else {
+          summaryRows.push(`<tr><td colspan="6" style="color:var(--muted)">Load a variant to compare alleles.</td></tr>`);
+        }
+      });
+
+      const genoLabel = genotype==='wt'?'WT/WT':genotype==='mut'?'Mut/Mut':'Heterozygous';
+      const canvas = el('meltChart');
+      if(meltChart){ meltChart.destroy(); meltChart=null; }
+      meltChart = new Chart(canvas.getContext('2d'), {
+        type:'line', data:{ datasets },
+        options:{
+          animation:false,
+          plugins:{
+            title:{ display:true, text:`${genoLabel} sample`, font:{size:12,weight:'600'}, color:'#374151', padding:{bottom:4} },
+            legend:{ display:true, labels:{ font:{size:11}, boxWidth:20 } },
+            tooltip:{ callbacks:{ label: ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)}` } }
+          },
+          scales:{
+            x:{ type:'linear', min:45, max:90,
+              title:{ display:true, text:'Temperature (°C)', font:{size:12} }, ticks:{ stepSize:5 } },
+            y:{ min:0, max:1.05,
+              title:{ display:true, text:'−dF/dT (normalised)', font:{size:12} },
+              ticks:{ callback: v=>v.toFixed(1) } }
+          }
+        }
+      });
+
+      el('melt-probe-summary').innerHTML = summaryRows.length ? `
+        <table class="enzyme-table" style="margin-top:8px;">
+          <thead><tr><th>Probe</th><th>Target</th><th>Tm on WT</th><th>Tm on Mut</th><th>ΔTm</th><th>Discrimination</th></tr></thead>
+          <tbody>${summaryRows.join('')}</tbody>
+        </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+          WT/WT: matching probe at full height · Heterozygous: both allele peaks at 50% · Mut/Mut: matching probe at full height.<br>
+          Dotted low-amplitude curve = mismatch cross-reactivity (weak background signal, ~7% of perfect-match signal).<br>
+          <strong>ΔTm:</strong> &lt;5°C = poor · 5–10°C = moderate · &gt;10°C = good · &gt;15°C = excellent.
+        </div>` : '';
+    }
+
+    /* ── Probe fluorophore colour map ── */
+    const FLUOR_COLORS={
+      FAM:  {bg:'#dcfce7',border:'#16a34a',text:'#14532d'},
+      HEX:  {bg:'#fef9c3',border:'#ca8a04',text:'#713f12'},
+      VIC:  {bg:'#ffedd5',border:'#ea580c',text:'#7c2d12'},
+      ROX:  {bg:'#fee2e2',border:'#dc2626',text:'#7f1d1d'},
+      Cy5:  {bg:'#f5f3ff',border:'#7c3aed',text:'#4c1d95'},
+      TET:  {bg:'#ccfbf1',border:'#0d9488',text:'#134e4a'},
+      TAMRA:{bg:'#fef3c7',border:'#d97706',text:'#78350f'},
+      JOE:  {bg:'#d1fae5',border:'#059669',text:'#064e3b'},
+    };
+
+    function addProbe(){
+      if(!state.seq || !state.meta){
+        setStatus('probe-status','Load a sequence first.','bad');
+        el('probe-status').style.display='block';
+        return;
+      }
+      const name=(el('probe-name').value||'').trim()||`Probe-${state.probes.length+1}`;
+      const rawSeq=(el('probe-seq').value||'').trim().toUpperCase().replace(/[^ACGT]/g,'');
+      const isReverse=el('probe-type').value==='reverse';
+      const fluor=el('probe-fluor').value;
+      const quencher=el('probe-quencher').value;
+      const targetAllele=(el('probe-allele')?.value)||'both';
+      if(!rawSeq){
+        setStatus('probe-status','Enter a probe sequence.','bad');
+        el('probe-status').style.display='block';
+        return;
+      }
+      if(rawSeq.length<10){
+        setStatus('probe-status','Probe must be at least 10 nt.','bad');
+        el('probe-status').style.display='block';
+        return;
+      }
+      const seq=getCurrentSequence();
+      if(!seq){
+        setStatus('probe-status','No sequence loaded.','bad');
+        el('probe-status').style.display='block';
+        return;
+      }
+      // Find binding position
+      const searchSeq=isReverse?rc(rawSeq):rawSeq;
+      const idx=seq.toUpperCase().indexOf(searchSeq);
+      if(idx<0){
+        setStatus('probe-status',`Probe sequence not found in current sequence.${isReverse?' (searched reverse complement)':''}`, 'bad');
+        el('probe-status').style.display='block';
+        return;
+      }
+      const metrics=primerPenalty(rawSeq, 65); // probes typically higher Tm
+      state.probes.push({
+        name, seq:rawSeq, isReverse, fluor, quencher, targetAllele,
+        start:idx, end:idx+searchSeq.length-1,
+        tm:metrics.tm, gc:metrics.gc, selected:true
+      });
+      el('probe-name').value='';
+      el('probe-seq').value='';
+      savePrimersForCurrentRs();
+      renderProbeTable();
+      renderViewer();
+      setStatus('probe-status',`Added probe "${name}" (${fluor}-${quencher}, pos ${idx}–${idx+searchSeq.length-1}, Tm ${metrics.tm.toFixed(1)}°C).`,'good');
+      el('probe-status').style.display='block';
+    }
+
+    function removeProbe(i){
+      const name=state.probes[i]?.name||'';
+      state.probes.splice(i,1);
+      savePrimersForCurrentRs();
+      renderProbeTable();
+      renderViewer();
+      setStatus('probe-status',`Removed probe "${name}".`,'warn');
+      el('probe-status').style.display='block';
+    }
+
+    function toggleProbeSelection(i){
+      state.probes[i].selected=!state.probes[i].selected;
+      savePrimersForCurrentRs();
+      renderViewer();
+    }
+
+    function renderProbeTable(){
+      const tbody=el('probe-tbody');
+      const wrap=el('probe-table-wrap');
+      if(!tbody||!wrap) return;
+      tbody.innerHTML='';
+      if(!state.probes.length){ wrap.style.display='none'; return; }
+      wrap.style.display='table';
+      state.probes.forEach((p,i)=>{
+        const fc=FLUOR_COLORS[p.fluor]||{bg:'#f9fafb',border:'#d1d5db',text:'#374151'};
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td><input type="checkbox" ${p.selected?'checked':''} onchange="toggleProbeSelection(${i})"></td>
+          <td>${p.name}</td>
+          <td style="font-family:ui-monospace,monospace;font-size:11px;">${p.seq}<br><span style="color:var(--muted);font-size:10px;">pos ${p.start}–${p.end}</span></td>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:${fc.bg};border:1px solid ${fc.border};color:${fc.text};">${p.fluor}</span></td>
+          <td style="font-size:12px;color:var(--muted);">${p.quencher}</td>
+          <td style="font-size:11px;font-weight:700;color:${p.targetAllele==='mut'?'#991b1b':p.targetAllele==='wt'?'#166534':'#374151'}">${p.targetAllele==='mut'?'Mut only':p.targetAllele==='wt'?'WT only':'Both'}</td>
+          <td style="font-family:ui-monospace,monospace;font-size:12px;">${p.tm.toFixed(1)}°C</td>
+          <td><button class="secondary" style="padding:4px 8px;font-size:11px;" onclick="removeProbe(${i})">Remove</button></td>`;
+        tbody.appendChild(tr);
+      });
     }
 
     function togglePrimerSelection(idx){
@@ -1795,6 +2753,16 @@
       `;
     }
 
+    function rightNormalize(seq, pos, ref){
+      // Shift deletion as far right as possible (HGVS 3' rule)
+      let p = pos;
+      const len = ref.length;
+      while(p + len < seq.length && seq[p] === seq[p + len]){
+        p++;
+      }
+      return p;
+    }
+
     function getSequenceVariant(baseSeq, mutIdx, genotype){
       // genotype: 'wt' = wild-type, 'hz' = heterozygous, 'mut' = homozygous mutant
       if(!state.alleles || genotype === 'wt') return baseSeq;
@@ -1803,8 +2771,13 @@
       let alts = (state.alleles.alts||[]).map(a=>(a||'').toUpperCase()).filter(Boolean);
       if(!ref || !alts.length) return baseSeq;
 
-      const refWindow=baseSeq.substring(mutIdx, mutIdx + ref.length).toUpperCase();
-      if(refWindow !== ref){
+      let refWindow=baseSeq.substring(mutIdx, mutIdx + ref.length).toUpperCase();
+      // Handle NCBI anchor convention — deletion starts at mutIdx+1
+      let appliedIdx = mutIdx;
+      if(refWindow !== ref && baseSeq.substring(mutIdx+1, mutIdx+1+ref.length).toUpperCase()===ref){
+        appliedIdx = mutIdx + 1;
+        refWindow = ref;
+      } else if(refWindow !== ref){
         const rcRef=rc(ref);
         const rcWindow=baseSeq.substring(mutIdx, mutIdx + rcRef.length).toUpperCase();
         if(rcWindow===rcRef){
@@ -1817,7 +2790,7 @@
       
       if(genotype === 'mut'){
         // Homozygous mutant: replace with alternate allele
-        return baseSeq.substring(0, mutIdx) + alt + baseSeq.substring(mutIdx + ref.length);
+        return baseSeq.substring(0, appliedIdx) + alt + baseSeq.substring(appliedIdx + ref.length);
       }
       
       // For heterozygous, we would see both alleles (mix), but for digestion we need to consider both possibilities
@@ -1866,7 +2839,8 @@
         }
 
         const selectedPrimers = [...selectedPairSets, ...derivedFromIndividuals];
-        const selectedEnzymes = state.enzymes.filter(e => e.selected);
+        // Only use enzymes in RFLP mode
+        const selectedEnzymes = assayType==='rflp' ? state.enzymes.filter(e => e.selected) : [];
         
         if(selectedPrimers.length === 0){
           throw new Error('Select at least one primer set, or one forward + one reverse individual primer');
@@ -1976,12 +2950,28 @@
           html += `</div>`;
         });
         
-        resultsDiv.innerHTML = html;
-        resultsDiv.style.display = 'block';
+        // Show melt curve or gel depending on assay type
+        if(assayType === 'probe'){
+          resultsDiv.style.display = 'none';
+          el('melt-curve-wrap').style.display = 'none';
+          simulateProbeAmplification();
+        } else if(assayType === 'sybr'){
+          el('probe-amp-wrap').style.display = 'none';
+          resultsDiv.style.display = 'none';
+          simulateSybrMeltCurve(selectedPrimers);
+        } else {
+          el('melt-curve-wrap').style.display = 'none';
+          el('probe-amp-wrap').style.display = 'none';
+          if(meltChart){ meltChart.destroy(); meltChart=null; }
+          resultsDiv.innerHTML = html;
+          resultsDiv.style.display = 'block';
+        }
         statusDiv.style.display = 'block';
         statusDiv.className = 'status good';
         const derivedNote=derivedFromIndividuals.length?` (${derivedFromIndividuals.length} from individual primers)`:'';
-        statusDiv.textContent = `Simulated ${selectedPrimers.length} primer set(s)${derivedNote} with ${selectedEnzymes.length} enzyme(s)`;
+        const assayLabel = assayType==='rflp'?'RFLP':assayType==='probe'?'Probe qPCR':assayType==='sybr'?'SYBR qPCR':'PCR';
+        statusDiv.textContent = `[${assayLabel}] Simulated ${selectedPrimers.length} primer set(s)${derivedNote}${(assayType==='pcr'||assayType==='rflp')?' with '+selectedEnzymes.length+' enzyme(s)':''}`;
+
         
       } catch(err){
         const statusDiv = el('pcr-status');
@@ -2125,16 +3115,17 @@
 
       for(const ps of state.primerSets){
         if(!ps.selected) continue;
-        const f=ps.forward;
-        const r=ps.reverse;
-        if(idx>=f.start && idx<=f.end) return 'base-fwd';
-        if(idx>=r.start && idx<=r.end) return 'base-rev';
+        const fPos = remapToCurrentSeq(ps.forward.seq, false);
+        const rPos = remapToCurrentSeq(ps.reverse.seq, true);
+        if(fPos && idx>=fPos.start && idx<=fPos.end) return 'base-fwd';
+        if(rPos && idx>=rPos.start && idx<=rPos.end) return 'base-rev';
       }
-      
+
       // Check individual primers
       for(const p of state.individualPrimers) {
         if(!p.selected) continue;
-        if(idx >= p.start && idx <= p.end) {
+        const pos = remapToCurrentSeq(p.seq, p.isReverse);
+        if(pos && idx >= pos.start && idx <= pos.end) {
           return p.isReverse ? 'base-rev' : 'base-fwd';
         }
       }
@@ -2145,6 +3136,17 @@
         if(idx>=h.start && idx<=h.end) return 'base-enz';
       }
       return '';
+    }
+
+    // Re-find a primer/probe sequence in the currently displayed sequence.
+    // Returns {start, end} in current-seq coords, or null if not found.
+    function remapToCurrentSeq(storedSeq, isReverse){
+      const curSeq = getCurrentSequence();
+      if(!curSeq || !storedSeq) return null;
+      const search = isReverse ? rc(storedSeq) : storedSeq;
+      const idx = curSeq.toUpperCase().indexOf(search.toUpperCase());
+      if(idx < 0) return null;
+      return { start: idx, end: idx + search.length - 1 };
     }
 
     function buildFeatures(){
@@ -2174,20 +3176,42 @@
 
       state.primerSets.forEach((ps,i)=>{
         if(!ps.selected) return;
-        feats.push({name:`${ps.name} Fwd`,start:ps.forward.start,end:ps.forward.end,cls:'fwd',dir:'fwd',primer:true});
-        feats.push({name:`${ps.name} Rev`,start:ps.reverse.start,end:ps.reverse.end,cls:'rev',dir:'rev',primer:true});
+        const fPos = remapToCurrentSeq(ps.forward.seq, false);
+        const rPos = remapToCurrentSeq(ps.reverse.seq, true);
+        if(fPos) feats.push({name:`${ps.name} Fwd`,start:fPos.start,end:fPos.end,cls:'fwd',dir:'fwd',primer:true});
+        if(rPos) feats.push({name:`${ps.name} Rev`,start:rPos.start,end:rPos.end,cls:'rev',dir:'rev',primer:true});
       });
-      
+
       // Add individual primers
-      state.individualPrimers.forEach((p, i) => {
+      state.individualPrimers.forEach((p) => {
         if(!p.selected) return;
+        const pos = remapToCurrentSeq(p.seq, p.isReverse);
+        if(!pos) return;
         feats.push({
           name: p.name,
-          start: p.start,
-          end: p.end,
+          start: pos.start, end: pos.end,
           cls: p.isReverse ? 'rev' : 'fwd',
           dir: p.isReverse ? 'rev' : 'fwd',
           primer:true
+        });
+      });
+
+      // Add probes
+      state.probes.forEach((p)=>{
+        if(!p.selected) return;
+        const allele=p.targetAllele||'both';
+        if(allele!=='both' && allele!==state.viewVariant) return;
+        const pos = remapToCurrentSeq(p.seq, p.isReverse);
+        if(!pos) return; // probe doesn't bind this allele
+        const fc=FLUOR_COLORS[p.fluor]||{bg:'#fef9c3',border:'#ca8a04',text:'#713f12'};
+        feats.push({
+          name:`${p.name}`,
+          shortLabel:`${p.fluor}`,
+          start:pos.start, end:pos.end,
+          cls:'probe',
+          dir:p.isReverse?'rev':'fwd',
+          probe:true,
+          fluorBg:fc.bg, fluorBorder:fc.border, fluorText:fc.text
         });
       });
 
@@ -2292,12 +3316,22 @@
           const endCol=displayColAt(endOffset);
           const spanCols=Math.max(1,endCol-startCol+1);
           const nameText=(p.name||'').replace(/"/g,'&quot;');
-          const label=p.primer ? sequence.slice(p.s,p.e+1).toLowerCase() : p.name;
-          const connector=p.primer?'<span class="connector"></span>':'';
+          let label, connector='', probeInlineStyle='';
+          if(p.primer){
+            label=sequence.slice(p.s,p.e+1).toLowerCase();
+            connector='<span class="connector"></span>';
+          } else if(p.probe){
+            label=sequence.slice(p.s,p.e+1).toLowerCase();
+            probeInlineStyle=`background:${p.fluorBg||'#fef9c3'};border-color:${p.fluorBorder||'#ca8a04'};color:${p.fluorText||'#713f12'};`;
+          } else {
+            label=p.name;
+          }
+          // For probes, override data-name to show name + fluor for the ::after label
+          const dateName=p.probe ? `${p.name} [${p.shortLabel||''}]`.replace(/"/g,'&quot;') : nameText;
           const hoverAttrs=(p.cls==='enz' && Number.isFinite(p.index))
             ? `onmouseenter="showEnzymeTooltip(event,${p.index},${p.start},${p.end},'${p.strand||'+'}')" onmousemove="moveEnzymeTooltip(event)" onmouseleave="hideEnzymeTooltip()"`
             : '';
-          return `<div class="annot ${p.cls} ${p.dir==='rev'?'rev':''} ${p.primer?'primer':''}" data-name="${nameText}" style="left:${startCol}ch;width:${spanCols}ch" title="${nameText}: ${p.start+1}-${p.end+1}" ${hoverAttrs}>${label}${connector}</div>`;
+          return `<div class="annot ${p.cls} ${p.dir==='rev'?'rev':''} ${p.primer?'primer':''} ${p.probe?'probe':''}" data-name="${dateName}" style="left:${startCol}ch;width:${spanCols}ch;${probeInlineStyle}" title="${nameText}: ${p.start+1}-${p.end+1}" ${hoverAttrs}>${label}${connector}</div>`;
         }).join('');
         return `<div class="track-lane">${anns}</div>`;
       }).join('');
@@ -2375,6 +3409,55 @@
     renderEnzymeTable();
     renderPrimerTable();
     applyToolVersion();
+    // Highlight default sample genotype button
+    switchSampleGenotype(state.sampleGenotype || 'wt');
+
+    // ── Save / Load hooks for universal Save Data button ──────────────────
+    window.getSaveData = function() {
+      return {
+        rsInput:        el('rs-input')?.value || '',
+        flankBp:        el('flank-bp')?.value || '',
+        sampleGenotype: state.sampleGenotype || 'wt',
+        seq:            state.seq,
+        meta:           state.meta,
+        variantInfo:    state.variantInfo,
+        gbVariants:     state.gbVariants,
+        alleles:        state.alleles,
+        viewVariant:    state.viewVariant,
+        primerSets:     JSON.parse(JSON.stringify(state.primerSets)),
+        individualPrimers: JSON.parse(JSON.stringify(state.individualPrimers)),
+        probes:         JSON.parse(JSON.stringify(state.probes)),
+        enzymes:        JSON.parse(JSON.stringify(state.enzymes))
+      };
+    };
+    window.loadSaveData = function(data) {
+      if (data.rsInput)           el('rs-input').value  = data.rsInput;
+      if (data.flankBp)           el('flank-bp').value  = data.flankBp;
+      if (data.sampleGenotype){
+        state.sampleGenotype = data.sampleGenotype;
+        const radio = document.querySelector(`input[name="sample-geno"][value="${data.sampleGenotype}"]`);
+        if(radio) radio.checked = true;
+      }
+      if (data.seq  !== undefined) state.seq            = data.seq;
+      if (data.meta !== undefined) state.meta           = data.meta;
+      if (data.variantInfo !== undefined) state.variantInfo = data.variantInfo;
+      if (data.gbVariants)         state.gbVariants     = data.gbVariants;
+      if (data.alleles !== undefined) state.alleles     = data.alleles;
+      if (data.viewVariant)        state.viewVariant    = data.viewVariant;
+      if (Array.isArray(data.primerSets))       state.primerSets       = data.primerSets;
+      if (Array.isArray(data.individualPrimers)) state.individualPrimers = data.individualPrimers;
+      if (Array.isArray(data.probes))           state.probes           = data.probes;
+      if (Array.isArray(data.enzymes))          state.enzymes          = data.enzymes;
+      // Restore sequence viewer variant toggle
+      if (data.viewVariant) {
+        const vr = document.querySelector(`input[name="view-variant"][value="${data.viewVariant}"]`);
+        if (vr) vr.checked = true;
+      }
+      renderEnzymeTable();
+      renderPrimerTable();
+      renderProbeTable();
+      renderViewer();
+    };
 	</script>
 </body>
 </html>

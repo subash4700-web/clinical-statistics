@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Method Comparison Analysis</title>
+
+  <script src="assets/js/eflm_db.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --bg:     #f4f6f8;
+      --card:   #ffffff;
+      --ink:    #111827;
+      --muted:  #6b7280;
+      --line:   #e5e7eb;
+      --accent: #1976d2;
+      --warn:   #b45309;
+      --bad:    #c62828;
+      --good:   #2e7d32;
+    }
+
+    body { margin:0; background:var(--bg); color:var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    .container { max-width:1200px; padding:20px 20px 40px; margin:0 auto; }
+    .subtitle  { color:var(--muted); margin-top:0; font-size:14px; }
+
+    /* ---- GRID ---- */
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+
+    /* ---- CARD ---- */
+    .card {
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+    }
+    .section-title { font-weight:700; font-size:14px; margin:0 0 10px; }
+    .note { color:var(--muted); font-size:12.5px; margin-top:6px; }
+
+    /* ---- FORM ELEMENTS ---- */
+    textarea {
+      width:100%; min-height:160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size:13px; padding:10px;
+      border:1px solid var(--line); border-radius:10px;
+      box-sizing:border-box; background:#fff;
+    }
+    select, input[type="number"], input[type="text"] {
+      width:100%; padding:8px 10px;
+      border:1px solid var(--line); border-radius:10px;
+      box-sizing:border-box; background:#fff;
+      font-size:13px;
+    }
+    label { display:block; font-weight:700; font-size:12.5px; margin-bottom:4px; color:#374151; }
+
+    /* ---- CHECKBOXES ---- */
+    .check-item {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:4px 0;
+    }
+    .check-item input[type="checkbox"] { margin-top:2px; flex-shrink:0; }
+    .check-item span { font-size:13px; }
+    .check-item strong { display:block; }
+    .check-item .small { color:var(--muted); font-size:12px; }
+
+    /* ---- BUTTONS ---- */
+    button {
+      border:none; border-radius:10px; padding:10px 14px;
+      font-weight:700; cursor:pointer;
+      transition: transform .05s ease, opacity .15s ease;
+      font-size:13px;
+    }
+    button:active { transform:translateY(1px); }
+    .btn-primary   { background:var(--accent); color:#fff; }
+    .btn-secondary { background:#111827; color:#fff; opacity:.9; }
+    .btn-ghost     { background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .btn-success   { background:#15803d; color:#fff; }
+    .btn-danger    { background:#b91c1c; color:#fff; }
+    .btn-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+
+    /* ---- TABS ---- */
+    .tabs { display:flex; gap:10px; margin:12px 0 14px; }
+    .tab {
+      padding:8px 14px; border-radius:999px;
+      border:1px solid var(--line); background:#fff;
+      cursor:pointer; font-weight:700; color:var(--muted); font-size:13px;
+    }
+    .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* ---- ALERTS ---- */
+    .alert {
+      border-radius:12px; padding:10px 12px;
+      border:1px solid var(--line); background:#fff;
+      font-size:13px; line-height:1.5;
+    }
+    .alert.warn  { border-color:#f59e0b55; background:#fffbeb; color:#7c2d12; }
+    .alert.bad   { border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
+    .alert.good  { border-color:#22c55e55; background:#ecfdf5; color:#14532d; }
+    .alert.info  { border-color:#3b82f655; background:#eff6ff; color:#1e3a5f; }
+
+    /* ---- PILL ---- */
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12.5px; padding:6px 10px;
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; color:var(--muted);
+    }
+
+    /* ---- KPI GRID ---- */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    @media(max-width:900px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+    .kpi { border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; }
+    .kpi .label { color:var(--muted); font-size:12px; font-weight:700; }
+    .kpi .value { font-size:16px; font-weight:900; margin-top:4px; }
+
+    /* ---- TABLES ---- */
+    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
+    th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
+    th { background:#f9fafb; font-weight:800; color:#374151; }
+    td.num, th.num { text-align:right; font-family:ui-monospace, monospace; }
+
+    /* Spreadsheet input table */
+    table.spreadsheet th { background:var(--accent); color:#fff; }
+    table.spreadsheet td { padding:0; border:1px solid var(--line); }
+    table.spreadsheet input { width:100%; border:none; padding:8px 10px; font-size:13px; }
+    table.spreadsheet .row-num {
+      text-align:center; padding:8px 10px; background:#f9fafb;
+      font-weight:700; color:var(--muted); font-size:12px;
+    }
+
+    /* ---- COLLAPSIBLE SECTIONS ---- */
+    .collapsible { margin-top:16px; }
+    .coll-header {
+      background:var(--card); border:1px solid var(--line);
+      border-radius:12px; padding:12px 16px;
+      cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+      user-select:none;
+    }
+    .coll-header:hover { background:#f9fafb; }
+    .coll-header h3 { margin:0; font-size:14px; font-weight:700; }
+    .coll-toggle { font-size:16px; color:var(--muted); transition:transform .2s; }
+    .coll-toggle.collapsed { transform:rotate(-90deg); }
+    .coll-body { margin-top:12px; }
+    .coll-body.collapsed { display:none; }
+
+    /* ---- CHART / VIZ ---- */
+    .viz-wrap {
+      border:1px solid var(--line); border-radius:14px;
+      padding:12px; background:#fff;
+    }
+    .chart-container { position:relative; height:500px; }
+    .chart-container.short { height:380px; }
+    canvas { max-width:100%; }
+
+    /* ---- AXIS CONTROLS ---- */
+    .axis-grid {
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px;
+      margin-bottom:10px;
+    }
+
+    /* ---- TOGGLE BUTTONS (input method) ---- */
+    .toggle-group { display:flex; gap:8px; margin-bottom:12px; }
+    .toggle-btn {
+      padding:8px 14px; border:1px solid var(--line);
+      background:#fff; color:var(--muted);
+      border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;
+    }
+    .toggle-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    /* ---- INTERPRETATION ---- */
+    .interpretation {
+      border-radius:12px; padding:14px 16px;
+      border:1px solid #fde68a; background:#fffbeb;
+      font-size:13px; line-height:1.6; color:#78350f;
+    }
+    .interpretation h3 { margin:0 0 10px; color:#92400e; font-size:14px; }
+    .interpretation p { margin:0 0 8px; }
+
+    /* ---- Z VALUE INFO ---- */
+    .z-info {
+      background:#eff6ff; border:1px solid #bfdbfe;
+      border-radius:8px; padding:10px; margin-top:6px;
+      font-size:12px; color:#1e3a5f; line-height:1.5;
+    }
+
+    .hidden { display:none !important; }
+
+    /* ---- OUTLIER ROW ---- */
+    tr.outlier-row td { background:#fff7ed; }
+    tr.excluded-row td { background:#f9fafb; color:#9ca3af; }
+    tr.outlier-row.excluded-row td { background:#fef2f2; color:#9ca3af; }
+
+    /* ---- STAT CARDS (results) ---- */
+    .stat-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:16px; }
+    .stat-card {
+      background:var(--accent); color:#fff;
+      border-radius:12px; padding:14px; text-align:center;
+    }
+    .stat-card .stat-label { font-size:11px; opacity:.85; margin-bottom:4px; font-weight:600; }
+    .stat-card .stat-value { font-size:20px; font-weight:900; }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <h1 style="margin-bottom:6px;">Method Comparison Analysis</h1>
+  <p class="subtitle">Bland-Altman Analysis &amp; Regression with Enhanced Visualization</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('input', this)">Data & presumptions</div>
+    <div class="tab"        onclick="switchTab('analysis', this)">Analysis &amp; Interpretation</div>
+  </div>
+
+  <!-- ========================================================= TAB 1: INPUT -->
+  <div id="inputTab" class="tab-content active">
+
+    <!-- Welcome info -->
+    <div class="alert info" style="margin-bottom:16px;">
+      <strong>Welcome to the Method Comparison Tool</strong><br>
+      Enter paired measurements from two methods, configure analysis options, and generate comprehensive statistics including Bland-Altman plots, XY regression, and normality tests.
+    </div>
+
+    <!-- Input method toggle -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">Data Entry</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="setInputMethod('manual', this)">Manual Entry</button>
+        <button class="toggle-btn"        onclick="setInputMethod('paste', this)">Paste from Spreadsheet</button>
+      </div>
+
+      <!-- Manual input -->
+      <div id="manualInput">
+        <div class="grid-2">
+          <div>
+            <label for="method1Name">Method 1 Name</label>
+            <input type="text" id="method1Name" placeholder="e.g., New Method" value="Method 1">
+          </div>
+          <div>
+            <label for="method2Name">Method 2 Name</label>
+            <input type="text" id="method2Name" placeholder="e.g., Reference Method" value="Method 2">
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label for="numPairs">Number of Measurement Pairs</label>
+          <input type="number" id="numPairs" min="2" value="10" onchange="generateSpreadsheet()" style="width:160px;">
+        </div>
+
+        <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
+          <button class="btn-ghost" onclick="generateSpreadsheet()">Generate Table</button>
+        </div>
+
+        <div class="table-wrap" style="margin-top:12px;">
+          <table class="spreadsheet" id="dataTable">
+            <thead>
+              <tr>
+                <th style="width:50px;">#</th>
+                <th>Method 1</th>
+                <th>Method 2</th>
+              </tr>
+            </thead>
+            <tbody id="dataTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Paste input -->
+      <div id="pasteInput" class="hidden">
+        <div class="alert info" style="margin-bottom:12px;">
+          Copy two columns from Excel/Google Sheets (Method 1, Method 2) and paste below. Data should be tab-separated.
+        </div>
+        <div class="grid-2">
+          <div>
+            <label for="method1NamePaste">Method 1 Name</label>
+            <input type="text" id="method1NamePaste" placeholder="e.g., New Method" value="Method 1">
+          </div>
+          <div>
+            <label for="method2NamePaste">Method 2 Name</label>
+            <input type="text" id="method2NamePaste" placeholder="e.g., Reference Method" value="Method 2">
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <label for="pasteData">Paste Data (Two Columns: Method 1, Method 2)</label>
+          <textarea id="pasteData" rows="10" placeholder="Method1&#9;Method2&#10;100&#9;98&#10;105&#9;103&#10;..."></textarea>
+        </div>
+        <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
+          <button class="btn-primary" onclick="parsePastedData()">Parse Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis configuration -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">Analysis Configuration</div>
+
+      <div class="grid-2">
+        <div>
+          <label for="methodDesignation">Method Designation</label>
+          <select id="methodDesignation" onchange="toggleNewMethodSelection()">
+            <option value="none">No Gold Standard</option>
+            <option value="method1">Method 1 is Gold Standard</option>
+            <option value="method2">Method 2 is Gold Standard</option>
+            <option value="oldnew">Old vs New Method</option>
+          </select>
+        </div>
+        <div id="newMethodGroup" class="hidden">
+          <label for="newMethodSelection">Which is the New Method?</label>
+          <select id="newMethodSelection">
+            <option value="method1">Method 1 is New</option>
+            <option value="method2">Method 2 is New</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+        <label class="check-item">
+          <input type="checkbox" id="relativeBlandAltman">
+          <span><strong>Use Relative Differences (%)</strong> for Bland-Altman</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="showLoA" checked>
+          <span><strong>Show Limits of Agreement (LoA)</strong> on Bland-Altman Plot</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="showTEBands" checked>
+          <span><strong>Show Total Allowable Error (TAE) Bands</strong> on Bland-Altman Plot</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="showCalculatedTE">
+          <span><strong>Show Calculated Total Error (TE) Band</strong> on Bland-Altman Plot</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="oneSidedTEDisplay">
+          <span><strong>Display Only One-Sided TE Band</strong> (on bias direction side)</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="showMaxBias">
+          <span><strong>Show Maximum Acceptable Bias Limit</strong> on Bland-Altman Plot</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- EFLM Analyte Selector -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">EFLM Performance Specifications</div>
+      <div class="note" style="margin-bottom:10px;">Select an analyte to auto-fill TAE and bias limits based on EFLM biological variation database (Ricos et al. 2014).</div>
+      <input type="hidden" id="eflm-tier" value="desirable">
+      <div style="margin-bottom:10px;">
+        <label for="eflm-analyte">Analyte</label>
+        <select id="eflm-analyte" onchange="updateEFLMSpecs()">
+          <option value="">— Select analyte —</option>
+          <option value="albumin">Albumin</option>
+          <option value="alp">ALP</option>
+          <option value="alt">ALT</option>
+          <option value="amylase">Amylase</option>
+          <option value="ast">AST</option>
+          <option value="bilirubin">Bilirubin (total)</option>
+          <option value="calcium">Calcium</option>
+          <option value="chloride">Chloride</option>
+          <option value="cholesterol">Cholesterol (total)</option>
+          <option value="ck">CK</option>
+          <option value="creatinine">Creatinine</option>
+          <option value="crp">CRP</option>
+          <option value="ferritin">Ferritin</option>
+          <option value="freet4">Free T4</option>
+          <option value="ggт">GGT</option>
+          <option value="glucose">Glucose</option>
+          <option value="hba1c">HbA1c</option>
+          <option value="hdl">HDL cholesterol</option>
+          <option value="hemoglobin">Hemoglobin</option>
+          <option value="iron">Iron</option>
+          <option value="ldh">LDH</option>
+          <option value="ldl">LDL cholesterol</option>
+          <option value="magnesium">Magnesium</option>
+          <option value="phosphate">Phosphate</option>
+          <option value="potassium">Potassium</option>
+          <option value="protein">Protein (total)</option>
+          <option value="sodium">Sodium</option>
+          <option value="triglycerides">Triglycerides</option>
+          <option value="tsh">TSH</option>
+          <option value="urea">Urea</option>
+          <option value="uricacid">Uric acid</option>
+        </select>
+      </div>
+      <div id="eflm-specs-display" style="display:none; font-size:13px;"></div>
+    </div>
+
+    <!-- Parameters -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">Analysis Parameters</div>
+
+      <div class="grid-2">
+        <div>
+          <label for="regressionMethod">Regression Method</label>
+          <select id="regressionMethod">
+            <option value="ols">Ordinary Least Squares (OLS)</option>
+            <option value="deming">Deming Regression</option>
+          </select>
+        </div>
+        <div>
+          <label for="varianceRatio">Variance Ratio (λ) for Deming</label>
+          <input type="number" id="varianceRatio" value="1" step="0.1" min="0.1">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:12px;">
+        <div>
+          <label for="teaPercentage">TAE — Total Allowable Error (absolute or %)</label>
+          <input type="number" id="teaPercentage" value="10" step="0.1" min="0">
+          <div class="note">Maximum acceptable error threshold. The calculated TE shows what % of measurements fall within this.</div>
+        </div>
+        <div>
+          <label for="maxBias">Maximum Acceptable Bias (absolute or %)</label>
+          <input type="number" id="maxBias" value="5" step="0.1" min="0">
+          <div class="note">Maximum allowable systematic error (bias).</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:12px;">
+        <div>
+          <label for="zValue">Z-Value for Limits of Agreement (LoA)</label>
+          <input type="number" id="zValue" value="1.96" step="0.01" min="0.1">
+          <div class="z-info">
+            <strong>Common Z-Values for LoA:</strong><br>
+            1.96 = 95% (most common) &nbsp;·&nbsp; 2.58 = 99% &nbsp;·&nbsp; 1.64 = 90%<br>
+            Formula: LoA = Mean ± Z × SD
+          </div>
+        </div>
+        <div>
+          <label for="zValueTE">Z-Value for Total Error (TE)</label>
+          <input type="number" id="zValueTE" value="1.65" step="0.01" min="0.1">
+          <div class="z-info">
+            <strong>Common Z-Values for TE:</strong><br>
+            1.65 = 90% one-sided &nbsp;·&nbsp; 1.96 = 95% one-sided &nbsp;·&nbsp; 2.33 = 99% one-sided<br>
+            Formula: TE = |Bias| + Z × SD
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label for="explanationText">Explanation Text (below Bland-Altman plot)</label>
+        <textarea id="explanationText" rows="2" style="min-height:60px;" placeholder="Optional explanation or notes about the analysis"></textarea>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label for="explanationTextXY">Explanation Text (below XY plot)</label>
+        <textarea id="explanationTextXY" rows="2" style="min-height:60px;" placeholder="Optional explanation or notes about the XY plot"></textarea>
+      </div>
+    </div>
+
+    <!-- Discrimination threshold -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">Discrimination Threshold (XY Plot)</div>
+      <label class="check-item">
+        <input type="checkbox" id="showDiscriminationThreshold">
+        <span><strong>Show Discrimination Threshold on XY Plot</strong></span>
+      </label>
+
+      <div id="discriminationInputs" class="hidden" style="margin-top:12px;">
+
+        <!-- Reference value info from EFLM selection -->
+        <div id="discrim-ref-info" style="display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:13px;"></div>
+
+        <!-- Threshold type -->
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Threshold type</label>
+          <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="discrim-type" value="upper" checked onchange="updateDiscrimInputs()"> Upper (high = abnormal)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="discrim-type" value="lower" onchange="updateDiscrimInputs()"> Lower (low = abnormal)
+            </label>
+          </div>
+        </div>
+
+        <div id="discrim-fields"></div>
+
+        <div class="alert warn" style="margin-top:8px;">
+          <strong>Quadrants:</strong> The crosshairs split the plot into four regions. If a gold-standard method is set:
+          <strong>TP</strong> = both above threshold &nbsp;
+          <strong>TN</strong> = both below &nbsp;
+          <strong>FP</strong> = test above, gold std below &nbsp;
+          <strong>FN</strong> = test below, gold std above.
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate sample data -->
+    <details style="margin-bottom:16px;">
+      <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
+      <div class="card" style="margin-top:8px;">
+        <div class="note" style="margin-bottom:12px;">Simulate paired measurements using clinically meaningful error parameters.</div>
+        <div class="grid-2">
+          <div>
+            <label for="gen-n">Number of pairs</label>
+            <input type="number" id="gen-n" value="30" min="5" step="1">
+          </div>
+          <div>
+            <label for="gen-mean">Mean concentration</label>
+            <input type="number" id="gen-mean" value="10.0" step="any">
+          </div>
+          <div>
+            <label for="gen-bias-pct">Bias % <span style="font-weight:400;color:#6b7280;">(Method 1 − Method 2, positive = M1 reads higher)</span></label>
+            <input type="number" id="gen-bias-pct" value="5" step="any">
+          </div>
+          <div>
+            <label for="gen-te-pct">Total Error % <span style="font-weight:400;color:#6b7280;">(TE to simulate, must be > |Bias|)</span></label>
+            <input type="number" id="gen-te-pct" value="10" min="0" step="any">
+          </div>
+        </div>
+        <label class="check-item" style="margin-top:10px;">
+          <input type="checkbox" id="gen-golden-std" checked>
+          <span><strong>Method 1 is a gold standard</strong> — Method 1 has no random error; all imprecision is in Method 2</span>
+        </label>
+        <div class="note" style="margin-top:6px;" id="gen-te-note">Random SD per pair = (TE − |Bias|) / 1.65</div>
+        <div class="btn-row" style="margin-top:12px; justify-content:flex-start;">
+          <button class="btn-ghost" onclick="generateSampleData()">Generate</button>
+          <button class="btn-primary" onclick="useSampleData()">Use in analysis</button>
+        </div>
+        <div id="gen-preview" class="note" style="margin-top:8px;"></div>
+      </div>
+    </details>
+
+    <div class="btn-row" style="justify-content:flex-start;">
+      <button class="btn-primary" onclick="generateAnalysis()" style="padding:12px 24px; font-size:14px;">
+        Generate Analysis
+      </button>
+    </div>
+    <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
+
+  </div><!-- /inputTab -->
+
+  <!-- ========================================================= TAB 2: ANALYSIS -->
+  <div id="analysisTab" class="tab-content">
+
+    <div class="btn-row" style="margin-bottom:16px; justify-content:flex-start;">
+      <button class="btn-success" onclick="exportToExcel()">Export to Excel</button>
+      <button class="btn-danger"  onclick="exportToPDF()">Export to PDF</button>
+    </div>
+
+    <!-- KPI cards -->
+    <div id="statsDisplay" class="stat-cards"></div>
+
+    <!-- Paired t-test -->
+    <div id="ttestDisplay" style="margin-bottom:16px;"></div>
+
+    <!-- CV on differences -->
+    <div id="cvDiffDisplay" style="margin-bottom:16px;"></div>
+
+    <!-- Interpretation -->
+    <div id="interpretationContent" style="margin-bottom:16px;"></div>
+
+    <!-- Normality -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('normality')">
+        <h3>Normality Analysis of Differences</h3>
+        <span class="coll-toggle" id="normality-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="normality-content">
+        <div id="normalityStats" style="margin-bottom:14px;"></div>
+        <div class="grid-2">
+          <div class="viz-wrap"><div class="chart-container short"><canvas id="qqPlotChart"></canvas></div></div>
+          <div class="viz-wrap"><div class="chart-container short"><canvas id="histogramChart"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bland-Altman -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('blandaltman')">
+        <h3>Bland-Altman Plot</h3>
+        <span class="coll-toggle" id="blandaltman-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="blandaltman-content">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="section-title">Axis Controls</div>
+          <div class="axis-grid">
+            <div><label for="baXMin">X Min</label><input type="number" id="baXMin" step="any" placeholder="Auto"></div>
+            <div><label for="baXMax">X Max</label><input type="number" id="baXMax" step="any" placeholder="Auto"></div>
+            <div><label for="baYMin">Y Min</label><input type="number" id="baYMin" step="any" placeholder="Auto"></div>
+            <div><label for="baYMax">Y Max</label><input type="number" id="baYMax" step="any" placeholder="Auto"></div>
+            <div><label for="baXMajorTick">X Grid Interval</label><input type="number" id="baXMajorTick" step="any" placeholder="Auto"></div>
+            <div><label for="baYMajorTick">Y Grid Interval</label><input type="number" id="baYMajorTick" step="any" placeholder="Auto"></div>
+          </div>
+          <button class="btn-ghost" onclick="updateChartAxes('ba')">Apply Axis Settings</button>
+        </div>
+        <div class="viz-wrap"><div class="chart-container"><canvas id="blandAltmanChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- XY Plot -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('xyplot')">
+        <h3>XY Plot — Method Comparison</h3>
+        <span class="coll-toggle" id="xyplot-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="xyplot-content">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="section-title">Axis Controls</div>
+          <div class="axis-grid">
+            <div><label for="xyXMin">X Min</label><input type="number" id="xyXMin" step="any" placeholder="Auto"></div>
+            <div><label for="xyXMax">X Max</label><input type="number" id="xyXMax" step="any" placeholder="Auto"></div>
+            <div><label for="xyYMin">Y Min</label><input type="number" id="xyYMin" step="any" placeholder="Auto"></div>
+            <div><label for="xyYMax">Y Max</label><input type="number" id="xyYMax" step="any" placeholder="Auto"></div>
+            <div><label for="xyXMajorTick">X Grid Interval</label><input type="number" id="xyXMajorTick" step="any" placeholder="Auto"></div>
+            <div><label for="xyYMajorTick">Y Grid Interval</label><input type="number" id="xyYMajorTick" step="any" placeholder="Auto"></div>
+          </div>
+          <button class="btn-ghost" onclick="updateChartAxes('xy')">Apply Axis Settings</button>
+        </div>
+        <div class="viz-wrap"><div class="chart-container"><canvas id="xyPlotChart"></canvas></div></div>
+        <div id="regressionStats" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Data review + outliers -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('datatable')">
+        <h3>Data Review &amp; Outlier Exclusion</h3>
+        <span class="coll-toggle" id="datatable-toggle">&#x25BC;</span>
+      </div>
+      <div class="coll-body" id="datatable-content">
+        <div id="outlierInfo" class="note" style="margin-bottom:10px;"></div>
+        <div class="note" style="margin-bottom:10px;">
+          Outliers are flagged on the <strong>differences</strong> using the IQR rule (Q1 - 1.5xIQR, Q3 + 1.5xIQR).
+          Uncheck a row to exclude it - all statistics and plots update instantly.
+        </div>
+        <div class="btn-row" style="justify-content:flex-start; margin-bottom:10px; gap:8px;">
+          <button class="btn-ghost" style="font-size:12px; padding:6px 12px;" onclick="setAllIncluded(true)">Include All</button>
+          <button class="btn-ghost" style="font-size:12px; padding:6px 12px;" onclick="setAllIncluded(false)">Exclude All</button>
+          <button class="btn-ghost" style="font-size:12px; padding:6px 12px;" onclick="excludeOutliers()">Exclude Flagged Outliers</button>
+        </div>
+        <div class="table-wrap">
+          <table id="resultsTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Method 1</th>
+                <th>Method 2</th>
+                <th id="xValueHeader">X-Value</th>
+                <th>Difference</th>
+                <th>Relative Diff (%)</th>
+                <th>Outlier</th>
+                <th>Include</th>
+              </tr>
+            </thead>
+            <tbody id="resultsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /analysisTab -->
+
+</div><!-- /container -->
+
+<script>
+        let chart = null;
+        function showInputError(msg) {
+            const el = document.getElementById('inputError');
+            if (el) { el.style.display = 'block'; el.innerHTML = msg; }
+            else { console.error(msg); }
+        }
+        function clearInputError() {
+            const el = document.getElementById('inputError');
+            if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+        }
+
+        let xyChart = null;
+        let qqChart = null;
+        let histChart = null;
+        let currentData = null;
+        let currentStats = null;
+        let currentClassification = null;
+
+        // Toggle visibility of discrimination threshold inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const cb = document.getElementById('showDiscriminationThreshold');
+            const inputs = document.getElementById('discriminationInputs');
+            cb.addEventListener('change', function() {
+                if (cb.checked) {
+                    inputs.classList.remove('hidden');
+                    updateDiscrimInputs();
+                } else {
+                    inputs.classList.add('hidden');
+                }
+            });
+        });
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const toggle = document.getElementById(sectionId + '-toggle');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        }
+
+        function switchTab(tabName, clickedEl) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            clickedEl.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function setInputMethod(method, clickedEl) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            clickedEl.classList.add('active');
+            
+            if (method === 'manual') {
+                document.getElementById('manualInput').classList.remove('hidden');
+                document.getElementById('pasteInput').classList.add('hidden');
+            } else {
+                document.getElementById('manualInput').classList.add('hidden');
+                document.getElementById('pasteInput').classList.remove('hidden');
+            }
+        }
+
+        function toggleNewMethodSelection() {
+            const designation = document.getElementById('methodDesignation').value;
+            const group = document.getElementById('newMethodGroup');
+            
+            if (designation === 'oldnew') {
+                group.classList.remove('hidden');
+            } else {
+                group.classList.add('hidden');
+            }
+        }
+
+        function generateSpreadsheet() {
+            const numPairs = parseInt(document.getElementById('numPairs').value);
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            for (let i = 0; i < numPairs; i++) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="row-num">${i + 1}</td>
+                    <td><input type="number" step="any" id="m1_${i}" placeholder="0.00"></td>
+                    <td><input type="number" step="any" id="m2_${i}" placeholder="0.00"></td>
+                `;
+            }
+        }
+
+        function parsePastedData() {
+            const pasteData = document.getElementById('pasteData').value.trim();
+            if (!pasteData) {
+                showInputError('Please paste data first.');
+                return;
+            }
+            
+            const lines = pasteData.split('\n').filter(line => line.trim());
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('numPairs').value = lines.length;
+            
+            lines.forEach((line, i) => {
+                const values = line.split('\t').map(v => v.trim());
+                if (values.length >= 2) {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td class="row-num">${i + 1}</td>
+                        <td><input type="number" step="any" id="m1_${i}" value="${values[0]}"></td>
+                        <td><input type="number" step="any" id="m2_${i}" value="${values[1]}"></td>
+                    `;
+                }
+            });
+            
+            document.getElementById('method1Name').value = document.getElementById('method1NamePaste').value;
+            document.getElementById('method2Name').value = document.getElementById('method2NamePaste').value;
+            
+            // switch back to manual view
+            const manualBtn = document.querySelector('.toggle-btn');
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            manualBtn.classList.add('active');
+            document.getElementById('manualInput').classList.remove('hidden');
+            document.getElementById('pasteInput').classList.add('hidden');
+        }
+
+        function getData() {
+            const numPairs = parseInt(document.getElementById('numPairs').value);
+            const data = [];
+            
+            for (let i = 0; i < numPairs; i++) {
+                const m1Input = document.getElementById(`m1_${i}`);
+                const m2Input = document.getElementById(`m2_${i}`);
+                
+                if (m1Input && m2Input && m1Input.value && m2Input.value) {
+                    data.push({
+                        method1: parseFloat(m1Input.value),
+                        method2: parseFloat(m2Input.value)
+                    });
+                }
+            }
+            
+            return data;
+        }
+
+        function calculateStats(data, useRelative = false, designation = 'none', newMethod = 'method1') {
+            const n = data.length;
+            let differences, xValues;
+            
+            if (designation === 'method1') {
+                differences = data.map(d => d.method2 - d.method1);
+                xValues = data.map(d => d.method1);
+            } else if (designation === 'method2') {
+                differences = data.map(d => d.method1 - d.method2);
+                xValues = data.map(d => d.method2);
+            } else if (designation === 'oldnew') {
+                if (newMethod === 'method1') {
+                    differences = data.map(d => d.method1 - d.method2);
+                    xValues = data.map(d => (d.method1 + d.method2) / 2);
+                } else {
+                    differences = data.map(d => d.method2 - d.method1);
+                    xValues = data.map(d => (d.method1 + d.method2) / 2);
+                }
+            } else {
+                differences = data.map(d => d.method1 - d.method2);
+                xValues = data.map(d => (d.method1 + d.method2) / 2);
+            }
+            
+            if (useRelative) {
+                differences = differences.map((diff, i) => (diff / xValues[i]) * 100);
+            }
+            
+            const meanDiff = differences.reduce((a, b) => a + b, 0) / n;
+            const variance = differences.reduce((sum, d) => sum + Math.pow(d - meanDiff, 2), 0) / (n - 1);
+            const sd = Math.sqrt(variance);
+            
+            const zValue = parseFloat(document.getElementById('zValue').value) || 1.96;
+            const loa_upper = meanDiff + zValue * sd;
+            const loa_lower = meanDiff - zValue * sd;
+            
+            const zValueTE = parseFloat(document.getElementById('zValueTE').value) || 1.65;
+            const te_calculated = Math.abs(meanDiff) + zValueTE * sd;
+            
+            const teaPercentage = parseFloat(document.getElementById('teaPercentage').value) || 10;
+            const maxBias = parseFloat(document.getElementById('maxBias').value) || 5;
+            const teaRaw = document.getElementById('teaPercentage').value;
+            const maxBiasRaw = document.getElementById('maxBias').value;
+            
+            const totalWithinTE = differences.filter(d => Math.abs(d) <= teaPercentage).length;
+            const te_percentage = (totalWithinTE / n) * 100;
+            
+            return {
+                n, meanDiff, sd, loa_upper, loa_lower, differences, xValues,
+                teaPercentage, te_percentage, te_calculated, maxBias,
+                zValue, zValueTE, teaRaw, maxBiasRaw
+            };
+        }
+
+        function decimalCount(rawStr) {
+            if (!rawStr || rawStr.indexOf('.') === -1) return 0;
+            return rawStr.split('.')[1].length;
+        }
+
+        function updateStatsDisplay(stats) {
+            const suffix = document.getElementById('relativeBlandAltman').checked ? '%' : '';
+            const showLoA = document.getElementById('showLoA').checked;
+            const teaDec = decimalCount(stats.teaRaw);
+            const maxBiasDec = decimalCount(stats.maxBiasRaw);
+            
+            let html = `
+                <div class="stat-card">
+                    <div class="stat-label">Sample Size</div>
+                    <div class="stat-value">${stats.n}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mean Bias</div>
+                    <div class="stat-value">${stats.meanDiff.toFixed(3)}${suffix}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Standard Deviation</div>
+                    <div class="stat-value">${stats.sd.toFixed(3)}${suffix}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Calculated TE (|Bias|+${stats.zValueTE}SD)</div>
+                    <div class="stat-value">${stats.te_calculated.toFixed(3)}${suffix}</div>
+                </div>`;
+
+            if (showLoA) {
+                html += `
+                <div class="stat-card">
+                    <div class="stat-label">Upper LoA (Z=${stats.zValue})</div>
+                    <div class="stat-value">${stats.loa_upper.toFixed(3)}${suffix}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Lower LoA (Z=${stats.zValue})</div>
+                    <div class="stat-value">${stats.loa_lower.toFixed(3)}${suffix}</div>
+                </div>`;
+            }
+
+            html += `
+                <div class="stat-card">
+                    <div class="stat-label">TE within TAE (±${stats.teaPercentage.toFixed(teaDec)}${suffix})</div>
+                    <div class="stat-value">${stats.te_percentage.toFixed(1)}%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Max Acceptable Bias</div>
+                    <div class="stat-value">±${stats.maxBias.toFixed(maxBiasDec)}${suffix}</div>
+                </div>
+            `;
+            
+            document.getElementById('statsDisplay').innerHTML = html;
+        }
+
+        // ===== OUTLIER STATE =====
+        // rowState[i] = { include: bool, outlier: bool }
+        let rowState = [];
+
+        function iqrOutliers(values) {
+            const sorted = values.slice().sort((a, b) => a - b);
+            const n = sorted.length;
+            if (n < 4) return { lo: -Infinity, hi: Infinity, q1: NaN, q3: NaN, iqr: NaN };
+            const q1 = sorted[Math.floor(n * 0.25)];
+            const q3 = sorted[Math.floor(n * 0.75)];
+            const iqr = q3 - q1;
+            return { q1, q3, iqr, lo: q1 - 1.5 * iqr, hi: q3 + 1.5 * iqr };
+        }
+
+        function buildRowState(differences) {
+            const out = iqrOutliers(differences);
+            rowState = differences.map((diff, i) => ({
+                include: true,
+                outlier: isFinite(out.lo) && (diff < out.lo || diff > out.hi)
+            }));
+            // Show outlier IQR info
+            const infoEl = document.getElementById('outlierInfo');
+            if (infoEl && isFinite(out.q1)) {
+                const nOut = rowState.filter(r => r.outlier).length;
+                infoEl.innerHTML = `IQR bounds on differences: Q1=${out.q1.toFixed(4)}, Q3=${out.q3.toFixed(4)}, IQR=${out.iqr.toFixed(4)} &nbsp;&rarr;&nbsp; [${out.lo.toFixed(4)}, ${out.hi.toFixed(4)}] &nbsp;|&nbsp; <strong>${nOut} outlier${nOut!==1?'s':''} flagged</strong>`;
+            }
+        }
+
+        function setAllIncluded(value) {
+            rowState.forEach(r => r.include = value);
+            recomputeAndRender();
+        }
+
+        function excludeOutliers() {
+            rowState.forEach(r => { if (r.outlier) r.include = false; });
+            recomputeAndRender();
+        }
+
+        function getIncludedData() {
+            if (!currentData || rowState.length !== currentData.length) return currentData;
+            return currentData.filter((_, i) => rowState[i] && rowState[i].include);
+        }
+
+        function recomputeAndRender() {
+            if (!currentData || !currentStats) return;
+            const includedData = getIncludedData();
+            if (includedData.length < 2) {
+                showInputError('Need at least 2 included pairs. Please include more rows.');
+                return;
+            }
+            clearInputError();
+
+            const useRelative = document.getElementById('relativeBlandAltman').checked;
+            const designation = document.getElementById('methodDesignation').value;
+            const newMethod = document.getElementById('newMethodSelection').value;
+
+            const stats = calculateStats(includedData, useRelative, designation, newMethod);
+            currentStats = stats;
+
+            const ttest = pairedTTestFromDifferences(stats.differences);
+            renderTTest(ttest);
+            updateStatsDisplay(stats);
+            renderCVDifferences(stats, includedData);
+            updateNormalityStats(stats);
+
+            const regressionStats = updateRegressionStats(includedData);
+            generateXYPlot(includedData, regressionStats);
+            generateInterpretation(stats, includedData, regressionStats);
+            generateBlandAltmanPlot(includedData, stats);
+            generateQQPlot(stats.differences);
+            generateHistogram(stats.differences);
+
+            renderDataTable();
+        }
+
+        function renderDataTable() {
+            const tbody = document.getElementById('resultsTableBody');
+            if (!tbody || !currentData) return;
+            const useRelative = document.getElementById('relativeBlandAltman').checked;
+            const designation = document.getElementById('methodDesignation').value;
+            const method1Name = document.getElementById('method1Name').value || 'Method 1';
+            const method2Name = document.getElementById('method2Name').value || 'Method 2';
+
+            const headerElement = document.getElementById('xValueHeader');
+            if (designation === 'method1') {
+                headerElement.textContent = `${method1Name} (Gold Std)`;
+            } else if (designation === 'method2') {
+                headerElement.textContent = `${method2Name} (Gold Std)`;
+            } else {
+                headerElement.textContent = 'Mean';
+            }
+
+            // We need per-row xValue and difference from full (unfiltered) stats
+            // Recompute full stats for display purposes
+            const fullStats = calculateStats(currentData, useRelative, designation, document.getElementById('newMethodSelection').value);
+
+            tbody.innerHTML = currentData.map((d, i) => {
+                const xValue = fullStats.xValues[i];
+                const diff = fullStats.differences[i];
+                const relativeDiff = useRelative ? diff : ((diff / xValue) * 100);
+                const rs = rowState[i] || { include: true, outlier: false };
+                const rowClass = (rs.outlier ? 'outlier-row' : '') + ' ' + (!rs.include ? 'excluded-row' : '');
+                return `<tr class="${rowClass.trim()}">
+                    <td>${i + 1}</td>
+                    <td>${d.method1.toFixed(3)}</td>
+                    <td>${d.method2.toFixed(3)}</td>
+                    <td>${xValue.toFixed(3)}</td>
+                    <td>${diff.toFixed(3)}</td>
+                    <td>${relativeDiff.toFixed(3)}%</td>
+                    <td>${rs.outlier ? '<span style="color:#b45309; font-weight:700;">&#9888; flagged</span>' : ''}</td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" data-i="${i}" ${rs.include ? 'checked' : ''} />
+                    </td>
+                </tr>`;
+            }).join('');
+
+            tbody.querySelectorAll('input[type="checkbox"][data-i]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const i = Number(e.target.dataset.i);
+                    rowState[i].include = e.target.checked;
+                    recomputeAndRender();
+                });
+            });
+        }
+
+        function updateDataTable(data, stats) {
+            // Legacy wrapper — just render the full table
+            renderDataTable();
+        }
+
+        function performRegression(data, method = 'ols', lambda = 1) {
+            const designation = document.getElementById('methodDesignation').value;
+            let x, y;
+            
+            if (designation === 'method2') {
+                x = data.map(d => d.method2);
+                y = data.map(d => d.method1);
+            } else {
+                x = data.map(d => d.method1);
+                y = data.map(d => d.method2);
+            }
+            
+            const n = x.length;
+            const meanX = x.reduce((a, b) => a + b, 0) / n;
+            const meanY = y.reduce((a, b) => a + b, 0) / n;
+            
+            if (method === 'ols') {
+                const num = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0);
+                const den = x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0);
+                const slope = num / den;
+                const intercept = meanY - slope * meanX;
+                return { slope, intercept };
+            } else {
+                const sxx = x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0) / (n - 1);
+                const syy = y.reduce((sum, yi) => sum + Math.pow(yi - meanY, 2), 0) / (n - 1);
+                const sxy = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0) / (n - 1);
+                const slope = (syy - lambda * sxx + Math.sqrt(Math.pow(syy - lambda * sxx, 2) + 4 * lambda * Math.pow(sxy, 2))) / (2 * sxy);
+                const intercept = meanY - slope * meanX;
+                return { slope, intercept };
+            }
+        }
+
+        function calculateRSquared(data, regression) {
+            const designation = document.getElementById('methodDesignation').value;
+            let x, y;
+            if (designation === 'method2') {
+                x = data.map(d => d.method2);
+                y = data.map(d => d.method1);
+            } else {
+                x = data.map(d => d.method1);
+                y = data.map(d => d.method2);
+            }
+            const meanY = y.reduce((a, b) => a + b, 0) / y.length;
+            const predicted = x.map(xi => regression.slope * xi + regression.intercept);
+            const ssRes = y.reduce((sum, yi, i) => sum + Math.pow(yi - predicted[i], 2), 0);
+            const ssTot = y.reduce((sum, yi) => sum + Math.pow(yi - meanY, 2), 0);
+            return 1 - (ssRes / ssTot);
+        }
+
+        function calculateSpearmanCorrelation(data) {
+            const designation = document.getElementById('methodDesignation').value;
+            let x, y;
+            if (designation === 'method2') {
+                x = data.map(d => d.method2);
+                y = data.map(d => d.method1);
+            } else {
+                x = data.map(d => d.method1);
+                y = data.map(d => d.method2);
+            }
+            const n = x.length;
+            const rankX = getRanks(x);
+            const rankY = getRanks(y);
+            const d = rankX.map((rx, i) => Math.pow(rx - rankY[i], 2));
+            const sumD = d.reduce((a, b) => a + b, 0);
+            return 1 - (6 * sumD) / (n * (Math.pow(n, 2) - 1));
+        }
+
+        function getRanks(arr) {
+            const sorted = arr.slice().sort((a, b) => a - b);
+            return arr.map(val => sorted.indexOf(val) + 1);
+        }
+
+        function updateRegressionStats(data) {
+            const method = document.getElementById('regressionMethod').value;
+            const lambda = parseFloat(document.getElementById('varianceRatio').value);
+            const regression = performRegression(data, method, lambda);
+            const rSquared = calculateRSquared(data, regression);
+            const spearmanRho = calculateSpearmanCorrelation(data);
+            
+            const html = `
+                <div class="card">
+                    <div class="section-title">Regression Statistics</div>
+                    <table><tbody>
+                        <tr><td><strong>Regression Equation</strong></td><td>y = ${regression.slope.toFixed(4)}x + ${regression.intercept.toFixed(4)}</td></tr>
+                        <tr><td><strong>R² (Coefficient of Determination)</strong></td><td>${rSquared.toFixed(4)}</td></tr>
+                        <tr><td><strong>Spearman Correlation (ρ)</strong></td><td>${spearmanRho.toFixed(4)}</td></tr>
+                        <tr><td><strong>Method</strong></td><td>${method === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression (λ=' + lambda + ')'}</td></tr>
+                    </tbody></table>
+                </div>
+                <div id="classificationBox"></div>
+            `;
+            
+            document.getElementById('regressionStats').innerHTML = html;
+            return { regression, rSquared, spearmanRho };
+        }
+
+        function renderClassificationBox() {
+            const container = document.getElementById('classificationBox');
+            if (!container) return;
+            if (!currentClassification) { container.innerHTML = ''; return; }
+
+            const c = currentClassification;
+            const total = c.TP + c.TN + c.FP + c.FN;
+            const sensitivity  = c.TP + c.FN > 0 ? (c.TP / (c.TP + c.FN)) * 100 : null;
+            const specificity  = c.TN + c.FP > 0 ? (c.TN / (c.TN + c.FP)) * 100 : null;
+            const fpr          = specificity !== null ? 100 - specificity : null;
+            const fnr          = sensitivity !== null ? 100 - sensitivity : null;
+            const ppv          = c.TP + c.FP > 0 ? (c.TP / (c.TP + c.FP)) * 100 : null;
+            const npv          = c.TN + c.FN > 0 ? (c.TN / (c.TN + c.FN)) * 100 : null;
+            const fmt = v => v !== null ? v.toFixed(1) + '%' : 'n/a';
+
+            container.innerHTML = `
+                <div class="card" style="margin-top:12px;">
+                    <div class="section-title">Diagnostic Classification (threshold: ${c.xLabel} = ${c.threshX}, ${c.yLabel} = ${c.threshY})</div>
+                    <div class="table-wrap" style="margin-bottom:12px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Gold Std ≥ ${c.threshX} (Condition +)</th>
+                                <th>Gold Std &lt; ${c.threshX} (Condition −)</th>
+                                <th>Row total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Test ≥ ${c.threshY}</strong> (Predicted +)</td>
+                                <td style="color:#15803d; font-weight:800;">TP = ${c.TP}</td>
+                                <td style="color:#b91c1c; font-weight:800;">FP = ${c.FP}</td>
+                                <td>${c.TP + c.FP}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Test &lt; ${c.threshY}</strong> (Predicted −)</td>
+                                <td style="color:#b45309; font-weight:800;">FN = ${c.FN}</td>
+                                <td style="color:#1976d2; font-weight:800;">TN = ${c.TN}</td>
+                                <td>${c.FN + c.TN}</td>
+                            </tr>
+                            <tr>
+                                <td><em>Column total</em></td>
+                                <td>${c.TP + c.FN}</td>
+                                <td>${c.TN + c.FP}</td>
+                                <td><strong>${total}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:13px;">
+                        <div><strong>Sensitivity (TPR):</strong> ${fmt(sensitivity)}</div>
+                        <div><strong>Specificity (TNR):</strong> ${fmt(specificity)}</div>
+                        <div style="color:#b91c1c;"><strong>FPR:</strong> ${fmt(fpr)}</div>
+                        <div style="color:#b45309;"><strong>FNR:</strong> ${fmt(fnr)}</div>
+                        <div><strong>PPV:</strong> ${fmt(ppv)}</div>
+                        <div><strong>NPV:</strong> ${fmt(npv)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateInterpretation(stats, data, regressionStats) {
+            const method1Name = document.getElementById('method1Name').value || 'Method 1';
+            const method2Name = document.getElementById('method2Name').value || 'Method 2';
+            const useRelative = document.getElementById('relativeBlandAltman').checked;
+            const showLoA = document.getElementById('showLoA').checked;
+            const suffix = useRelative ? '%' : '';
+            const teaDec = decimalCount(stats.teaRaw);
+            const maxBiasDec = decimalCount(stats.maxBiasRaw);
+            
+            const designation = document.getElementById('methodDesignation').value;
+            const newMethod = document.getElementById('newMethodSelection').value;
+            let testMethod, refMethod;
+            
+            if (designation === 'method1') {
+                testMethod = method2Name; refMethod = method1Name;
+            } else if (designation === 'method2') {
+                testMethod = method1Name; refMethod = method2Name;
+            } else if (designation === 'oldnew') {
+                testMethod = newMethod === 'method1' ? method1Name : method2Name;
+                refMethod  = newMethod === 'method1' ? method2Name : method1Name;
+            } else {
+                testMethod = method1Name; refMethod = method2Name;
+            }
+            
+            const eflmKey  = document.getElementById('eflm-analyte').value;
+            const eflmTier = document.getElementById('eflm-tier').value;
+            const eflmName = eflmKey && EFLM_DB[eflmKey] ? EFLM_DB[eflmKey].name : null;
+            const eflmBadge = eflmName
+              ? `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;margin-left:8px;">${eflmName} — ${eflmTier.charAt(0).toUpperCase()+eflmTier.slice(1)} EFLM</span>`
+              : '';
+            let html = `<div class="interpretation"><h3>Clinical Interpretation Summary ${eflmBadge}</h3>`;
+            
+            html += `<p><strong>Bias Assessment:</strong> The mean difference between ${method1Name} and ${method2Name} is ${stats.meanDiff.toFixed(3)}${suffix}. `;
+            if (Math.abs(stats.meanDiff) < 0.1) {
+                html += `This suggests minimal systematic bias between the methods.`;
+            } else if (stats.meanDiff > 0) {
+                html += `${testMethod} tends to read higher than ${refMethod}.`;
+            } else {
+                html += `${testMethod} tends to read lower than ${refMethod}.`;
+            }
+            html += `</p>`;
+            
+            if (showLoA) {
+                const confidenceLevel = getConfidenceLevel(stats.zValue);
+                html += `<p><strong>Agreement:</strong> The limits of agreement (Z=${stats.zValue}) range from ${stats.loa_lower.toFixed(3)}${suffix} to ${stats.loa_upper.toFixed(3)}${suffix}. Approximately ${confidenceLevel}% of differences fall within this range. SD = ${stats.sd.toFixed(3)}${suffix}.</p>`;
+            }
+            
+            html += `<p><strong>Total Error (two-sided):</strong> ${stats.te_percentage.toFixed(1)}% of measurements fall within the TAE of ±${stats.teaPercentage.toFixed(teaDec)}${suffix}. `;
+            if (stats.te_percentage >= 95) {
+                html += `This excellent agreement suggests the methods are highly interchangeable.`;
+            } else if (stats.te_percentage >= 80) {
+                html += `This indicates good agreement, but some caution may be warranted in critical applications.`;
+            } else {
+                html += `This suggests limited agreement. Clinical evaluation is recommended before substitution.`;
+            }
+            html += `</p>`;
+            
+            const eflmSource = eflmName ? ` (EFLM ${eflmTier} for ${eflmName})` : '';
+            html += `<p><strong>Calculated Total Error:</strong> TE (|Bias| + ${stats.zValueTE}×SD) = ${stats.te_calculated.toFixed(3)}${suffix}. `;
+            if (stats.te_calculated <= stats.teaPercentage) {
+                html += `Since this is within the TAE limit of ${stats.teaPercentage.toFixed(teaDec)}${suffix}${eflmSource}, the method shows acceptable performance.`;
+            } else {
+                html += `Since this exceeds the TAE limit of ${stats.teaPercentage.toFixed(teaDec)}${suffix}${eflmSource}, consider whether the method meets your quality requirements.`;
+            }
+            html += `</p>`;
+
+            html += `<p><strong>Max Bias Assessment:</strong> The observed bias is ${stats.meanDiff.toFixed(3)}${suffix}. `;
+            if (Math.abs(stats.meanDiff) <= stats.maxBias) {
+                html += `This is within the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}${eflmSource}, indicating acceptable systematic error.`;
+            } else {
+                html += `This exceeds the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}${eflmSource}. Consider recalibration or correction factors.`;
+            }
+            html += `</p>`;
+            
+            html += `<p><strong>Correlation:</strong> R² = ${regressionStats.rSquared.toFixed(4)}, Spearman ρ = ${regressionStats.spearmanRho.toFixed(4)}. `;
+            if (regressionStats.rSquared > 0.95) {
+                html += `Excellent correlation between methods.`;
+            } else if (regressionStats.rSquared > 0.85) {
+                html += `Good correlation between methods.`;
+            } else {
+                html += `Moderate correlation. Further investigation may be needed.`;
+            }
+            html += `</p>`;
+            
+            if (currentClassification) {
+                const c = currentClassification;
+                const total = c.TP + c.TN + c.FP + c.FN;
+                const sensitivity = (c.TP + c.FN) > 0 ? (c.TP / (c.TP + c.FN)) * 100 : null;
+                const specificity = (c.TN + c.FP) > 0 ? (c.TN / (c.TN + c.FP)) * 100 : null;
+                const fpr = specificity !== null ? 100 - specificity : null;
+                const fnr = sensitivity !== null ? 100 - sensitivity : null;
+                const fmt = v => v !== null ? v.toFixed(1) + '%' : 'n/a';
+
+                html += `<p><strong>Diagnostic Classification</strong> (thresholds: ${c.xLabel} = ${c.threshX}, ${c.yLabel} = ${c.threshY}): `;
+                html += `Of ${total} paired measurements, ${c.TP} TP, ${c.TN} TN, ${c.FP} FP, and ${c.FN} FN. `;
+                html += `<strong>False positive rate: ${fmt(fpr)}</strong>. <strong>False negative rate: ${fmt(fnr)}</strong>. `;
+                if (fpr !== null && fpr < 5) {
+                    html += `Low FPR — test rarely flags a negative as positive. `;
+                } else if (fpr !== null && fpr >= 5 && fpr < 15) {
+                    html += `Moderate FPR — some positive results should be verified. `;
+                } else if (fpr !== null) {
+                    html += `Elevated FPR — clinical correlation recommended. `;
+                }
+                if (fnr !== null && fnr < 5) {
+                    html += `Low FNR — test reliably detects true positives.`;
+                } else if (fnr !== null && fnr >= 5 && fnr < 15) {
+                    html += `Moderate FNR — a proportion of true positives may be missed.`;
+                } else if (fnr !== null) {
+                    html += `Elevated FNR — supplementary testing is advisable.`;
+                }
+                html += `</p>`;
+            }
+
+            html += `</div>`;
+            document.getElementById('interpretationContent').innerHTML = html;
+        }
+
+        function getConfidenceLevel(zValue) {
+            const z = parseFloat(zValue);
+            if (Math.abs(z - 1.96) < 0.01) return "95";
+            if (Math.abs(z - 2.58) < 0.01) return "99";
+            if (Math.abs(z - 1.64) < 0.01) return "90";
+            if (Math.abs(z - 2.33) < 0.01) return "98";
+            if (Math.abs(z - 1.28) < 0.01) return "80";
+            return Math.round((1 - 2 * (1 - 0.5 * (1 + erf(z / Math.sqrt(2))))) * 100);
+        }
+
+        function erf(x) {
+            const sign = x >= 0 ? 1 : -1;
+            const absX = Math.abs(x);
+            const a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741;
+            const a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911;
+            const t = 1.0 / (1.0 + p * absX);
+            const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
+            return sign * y;
+        }
+
+        function generateBlandAltmanPlot(data, stats) {
+            const ctx = document.getElementById('blandAltmanChart').getContext('2d');
+            if (chart) { chart.destroy(); }
+            
+            const useRelative = document.getElementById('relativeBlandAltman').checked;
+            const showTEBands = document.getElementById('showTEBands').checked;
+            const showLoA = document.getElementById('showLoA').checked;
+            const suffix = useRelative ? '%' : '';
+            const teaDec = decimalCount(stats.teaRaw);
+            const maxBiasDec = decimalCount(stats.maxBiasRaw);
+            
+            const datasets = [
+                {
+                    label: 'Individual Differences',
+                    data: data.map((d, i) => ({ x: stats.xValues[i], y: stats.differences[i] })),
+                    backgroundColor: 'rgba(25, 118, 210, 0.55)',
+                    borderColor: 'rgba(25, 118, 210, 1)',
+                    pointRadius: 6, pointHoverRadius: 8, order: 1
+                },
+                {
+                    label: `Mean Bias: ${stats.meanDiff.toFixed(3)}${suffix}`,
+                    data: [
+                        { x: Math.min(...stats.xValues), y: stats.meanDiff },
+                        { x: Math.max(...stats.xValues), y: stats.meanDiff }
+                    ],
+                    type: 'line', borderColor: '#EB1414', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                    fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 2
+                }
+            ];
+            
+            if (showLoA) {
+                datasets.push({
+                    label: `Upper LoA (+${stats.zValue}SD): ${stats.loa_upper.toFixed(3)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: stats.loa_upper }, { x: Math.max(...stats.xValues), y: stats.loa_upper }],
+                    type: 'line', borderColor: '#FF6600', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                    fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 3
+                });
+                datasets.push({
+                    label: `Lower LoA (-${stats.zValue}SD): ${stats.loa_lower.toFixed(3)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: stats.loa_lower }, { x: Math.max(...stats.xValues), y: stats.loa_lower }],
+                    type: 'line', borderColor: '#FF6600', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                    fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 4
+                });
+            }
+            
+            if (showTEBands) {
+                datasets.push({
+                    label: `Upper TAE: +${stats.teaPercentage.toFixed(teaDec)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: stats.teaPercentage }, { x: Math.max(...stats.xValues), y: stats.teaPercentage }],
+                    type: 'line', borderColor: '#2914EB', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false, order: 5
+                });
+                datasets.push({
+                    label: `Lower TAE: -${stats.teaPercentage.toFixed(teaDec)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: -stats.teaPercentage }, { x: Math.max(...stats.xValues), y: -stats.teaPercentage }],
+                    type: 'line', borderColor: '#2914EB', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false, order: 6
+                });
+            }
+            
+            const showCalculatedTE = document.getElementById('showCalculatedTE').checked;
+            const oneSidedTEDisplay = document.getElementById('oneSidedTEDisplay').checked;
+            
+            if (showCalculatedTE) {
+                if (oneSidedTEDisplay) {
+                    if (stats.meanDiff >= 0) {
+                        datasets.push({
+                            label: `Calculated TE (|Bias|+${stats.zValueTE}SD): +${stats.te_calculated.toFixed(3)}${suffix}`,
+                            data: [{ x: Math.min(...stats.xValues), y: stats.te_calculated }, { x: Math.max(...stats.xValues), y: stats.te_calculated }],
+                            type: 'line', borderColor: '#2914EB', borderWidth: 3,
+                            pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                            fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 7
+                        });
+                    } else {
+                        datasets.push({
+                            label: `Calculated TE (|Bias|+${stats.zValueTE}SD): -${stats.te_calculated.toFixed(3)}${suffix}`,
+                            data: [{ x: Math.min(...stats.xValues), y: -stats.te_calculated }, { x: Math.max(...stats.xValues), y: -stats.te_calculated }],
+                            type: 'line', borderColor: '#2914EB', borderWidth: 3,
+                            pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                            fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 7
+                        });
+                    }
+                } else {
+                    datasets.push({
+                        label: `Calculated TE (|Bias|+${stats.zValueTE}SD): +${stats.te_calculated.toFixed(3)}${suffix}`,
+                        data: [{ x: Math.min(...stats.xValues), y: stats.te_calculated }, { x: Math.max(...stats.xValues), y: stats.te_calculated }],
+                        type: 'line', borderColor: '#2914EB', borderWidth: 3,
+                        pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                        fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 7
+                    });
+                    datasets.push({
+                        label: `Calculated TE (negative): -${stats.te_calculated.toFixed(3)}${suffix}`,
+                        data: [{ x: Math.min(...stats.xValues), y: -stats.te_calculated }, { x: Math.max(...stats.xValues), y: -stats.te_calculated }],
+                        type: 'line', borderColor: '#2914EB', borderWidth: 3,
+                        pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
+                        fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 8
+                    });
+                }
+            }
+            
+            const showMaxBias = document.getElementById('showMaxBias').checked;
+            if (showMaxBias) {
+                datasets.push({
+                    label: `Max Acceptable Bias: +${stats.maxBias.toFixed(maxBiasDec)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: stats.maxBias }, { x: Math.max(...stats.xValues), y: stats.maxBias }],
+                    type: 'line', borderColor: '#EB1414', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false, order: 9
+                });
+                datasets.push({
+                    label: `Max Acceptable Bias: -${stats.maxBias.toFixed(maxBiasDec)}${suffix}`,
+                    data: [{ x: Math.min(...stats.xValues), y: -stats.maxBias }, { x: Math.max(...stats.xValues), y: -stats.maxBias }],
+                    type: 'line', borderColor: '#EB1414', borderWidth: 2,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false, order: 10
+                });
+            }
+            
+            const method1Name = document.getElementById('method1Name').value || 'Method 1';
+            const method2Name = document.getElementById('method2Name').value || 'Method 2';
+            const designation = document.getElementById('methodDesignation').value;
+            
+            let xAxisLabel = `Mean of ${method1Name} and ${method2Name}`;
+            let xAxisLabelShort = 'Mean';
+            if (designation === 'method1') { xAxisLabel = `${method1Name} (Gold Standard)`; xAxisLabelShort = method1Name; }
+            else if (designation === 'method2') { xAxisLabel = `${method2Name} (Gold Standard)`; xAxisLabelShort = method2Name; }
+            
+            let yAxisLabel;
+            if (designation === 'method1') {
+                yAxisLabel = useRelative ? 'Relative Difference (%)' : `Difference (${method2Name} - ${method1Name})`;
+            } else if (designation === 'method2') {
+                yAxisLabel = useRelative ? 'Relative Difference (%)' : `Difference (${method1Name} - ${method2Name})`;
+            } else if (designation === 'oldnew') {
+                const newMethodSel = document.getElementById('newMethodSelection').value;
+                const newName = newMethodSel === 'method1' ? method1Name : method2Name;
+                const oldName = newMethodSel === 'method1' ? method2Name : method1Name;
+                yAxisLabel = useRelative ? 'Relative Difference (%)' : `Difference (${newName} - ${oldName})`;
+            } else {
+                yAxisLabel = useRelative ? 'Relative Difference (%)' : `Difference (${method1Name} - ${method2Name})`;
+            }
+            
+            const plotTitle = (useRelative ? 'Relative ' : '') + 'Bland-Altman Plot – ' + method1Name + ' vs ' + method2Name;
+            const explanationText = document.getElementById('explanationText').value;
+            
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: plotTitle + (explanationText ? '\n' + explanationText : ''), font: { size: 14, weight: 'bold' }, padding: 16 },
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            enabled: true, mode: 'point', intersect: false,
+                            callbacks: {
+                                title: ctx => ctx[0].dataset.label === 'Individual Differences' ? `Data Point ${ctx[0].dataIndex + 1}` : ctx[0].dataset.label,
+                                label: ctx => {
+                                    if (ctx.dataset.label === 'Individual Differences') {
+                                        return [`${xAxisLabelShort}: ${ctx.parsed.x.toFixed(3)}`, `Difference: ${ctx.parsed.y.toFixed(3)}${suffix}`];
+                                    }
+                                    return ctx.dataset.label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: xAxisLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' } },
+                        y: { title: { display: true, text: yAxisLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' }, ticks: { callback: v => v.toFixed(1) + suffix } }
+                    },
+                    interaction: { mode: 'point', intersect: false }
+                }
+            });
+        }
+
+        function generateXYPlot(data, regressionStats) {
+            const ctx = document.getElementById('xyPlotChart').getContext('2d');
+            if (xyChart) { xyChart.destroy(); }
+            
+            const method1Name = document.getElementById('method1Name').value || 'Method 1';
+            const method2Name = document.getElementById('method2Name').value || 'Method 2';
+            const designation = document.getElementById('methodDesignation').value;
+            
+            let xData, yData, xLabel, yLabel;
+            if (designation === 'method1') {
+                xData = data.map(d => d.method1); yData = data.map(d => d.method2);
+                xLabel = `${method1Name} (Gold Standard)`; yLabel = method2Name;
+            } else if (designation === 'method2') {
+                xData = data.map(d => d.method2); yData = data.map(d => d.method1);
+                xLabel = `${method2Name} (Gold Standard)`; yLabel = method1Name;
+            } else {
+                xData = data.map(d => d.method1); yData = data.map(d => d.method2);
+                xLabel = method1Name; yLabel = method2Name;
+            }
+            
+            const minX = Math.min(...xData);
+            const maxX = Math.max(...xData);
+            const padding = (maxX - minX) * 0.1 || 1;
+            
+            const linePoints = [
+                { x: minX - padding, y: regressionStats.regression.slope * (minX - padding) + regressionStats.regression.intercept },
+                { x: maxX + padding, y: regressionStats.regression.slope * (maxX + padding) + regressionStats.regression.intercept }
+            ];
+            const identityLinePoints = [{ x: minX - padding, y: minX - padding }, { x: maxX + padding, y: maxX + padding }];
+            
+            const explanationText = document.getElementById('explanationTextXY').value;
+            const regressionMethod = document.getElementById('regressionMethod').value;
+            const methodName = regressionMethod === 'ols' ? 'OLS' : 'Deming';
+
+            const datasets = [
+                {
+                    label: 'Measured Data Points',
+                    data: data.map((d, i) => ({ x: xData[i], y: yData[i] })),
+                    backgroundColor: 'rgba(25, 118, 210, 0.55)',
+                    borderColor: 'rgba(25, 118, 210, 1)',
+                    pointRadius: 6, pointHoverRadius: 8
+                },
+                {
+                    label: `${methodName} Regression: y = ${regressionStats.regression.slope.toFixed(3)}x + ${regressionStats.regression.intercept.toFixed(3)}`,
+                    data: linePoints, type: 'line',
+                    borderColor: 'rgba(231, 76, 60, 1)', borderWidth: 3,
+                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false
+                },
+                {
+                    label: 'Identity Line: y = x',
+                    data: identityLinePoints, type: 'line',
+                    borderColor: 'rgba(149, 165, 166, 1)', borderWidth: 2,
+                    borderDash: [10, 5], pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false
+                }
+            ];
+
+            const showThresh = document.getElementById('showDiscriminationThreshold').checked;
+            const threshX = parseFloat(document.getElementById('thresholdX').value);
+            const threshY = parseFloat(document.getElementById('thresholdY').value);
+            currentClassification = null;
+
+            if (showThresh && !isNaN(threshX) && !isNaN(threshY)) {
+                const minY = Math.min(...yData), maxY = Math.max(...yData);
+                const padY = (maxY - minY) * 0.1 || 1;
+
+                datasets.push({ label: `${xLabel} threshold = ${threshX}`, data: [{ x: threshX, y: minY - padY }, { x: threshX, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
+                datasets.push({ label: `${yLabel} threshold = ${threshY}`, data: [{ x: minX - padding, y: threshY }, { x: maxX + padding, y: threshY }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
+
+                const tp = [], tn = [], fp = [], fn = [];
+                for (let i = 0; i < xData.length; i++) {
+                    const aboveX = xData[i] >= threshX, aboveY = yData[i] >= threshY;
+                    const pt = { x: xData[i], y: yData[i] };
+                    if (aboveX && aboveY) tp.push(pt);
+                    else if (!aboveX && !aboveY) tn.push(pt);
+                    else if (!aboveX && aboveY) fp.push(pt);
+                    else fn.push(pt);
+                }
+
+                currentClassification = { TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length, threshX, threshY, xLabel, yLabel };
+
+                if (tp.length) datasets.push({ label: `TP (${tp.length})`, data: tp, backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', pointRadius: 7, pointHoverRadius: 9 });
+                if (tn.length) datasets.push({ label: `TN (${tn.length})`, data: tn, backgroundColor: 'rgba(52,152,219,0.75)', borderColor: '#3498db', pointRadius: 7, pointHoverRadius: 9 });
+                if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
+                if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
+
+                datasets[0].pointRadius = 0; datasets[0].pointHoverRadius = 0;
+            }
+
+            xyChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'XY Plot - Method Comparison' + (explanationText ? '\n' + explanationText : '') + `\nR² = ${regressionStats.rSquared.toFixed(4)}, Spearman ρ = ${regressionStats.spearmanRho.toFixed(4)}`, font: { size: 14, weight: 'bold' }, padding: 16 },
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            enabled: true, mode: 'point', intersect: false,
+                            callbacks: {
+                                title: ctx => ctx[0].dataset.label === 'Measured Data Points' ? `Data Point ${ctx[0].dataIndex + 1}` : ctx[0].dataset.label,
+                                label: ctx => {
+                                    if (ctx.dataset.label === 'Measured Data Points') return [`${xLabel}: ${ctx.parsed.x.toFixed(3)}`, `${yLabel}: ${ctx.parsed.y.toFixed(3)}`];
+                                    return ctx.dataset.label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: xLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' } },
+                        y: { title: { display: true, text: yLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' } }
+                    },
+                    interaction: { mode: 'point', intersect: false }
+                }
+            });
+
+            renderClassificationBox();
+        }
+
+        function updateChartAxes(chartType) {
+            if (chartType === 'ba') {
+                const xMin = document.getElementById('baXMin').value, xMax = document.getElementById('baXMax').value;
+                const yMin = document.getElementById('baYMin').value, yMax = document.getElementById('baYMax').value;
+                const xMajor = document.getElementById('baXMajorTick').value, yMajor = document.getElementById('baYMajorTick').value;
+                if (chart) {
+                    if (xMin) chart.options.scales.x.min = parseFloat(xMin);
+                    if (xMax) chart.options.scales.x.max = parseFloat(xMax);
+                    if (yMin) chart.options.scales.y.min = parseFloat(yMin);
+                    if (yMax) chart.options.scales.y.max = parseFloat(yMax);
+                    if (xMajor) chart.options.scales.x.ticks.stepSize = parseFloat(xMajor);
+                    if (yMajor) chart.options.scales.y.ticks.stepSize = parseFloat(yMajor);
+                    chart.update();
+                }
+            } else if (chartType === 'xy') {
+                const xMin = document.getElementById('xyXMin').value, xMax = document.getElementById('xyXMax').value;
+                const yMin = document.getElementById('xyYMin').value, yMax = document.getElementById('xyYMax').value;
+                const xMajor = document.getElementById('xyXMajorTick').value, yMajor = document.getElementById('xyYMajorTick').value;
+                if (xyChart) {
+                    if (xMin) xyChart.options.scales.x.min = parseFloat(xMin);
+                    if (xMax) xyChart.options.scales.x.max = parseFloat(xMax);
+                    if (yMin) xyChart.options.scales.y.min = parseFloat(yMin);
+                    if (yMax) xyChart.options.scales.y.max = parseFloat(yMax);
+                    if (xMajor) xyChart.options.scales.x.ticks.stepSize = parseFloat(xMajor);
+                    if (yMajor) xyChart.options.scales.y.ticks.stepSize = parseFloat(yMajor);
+                    xyChart.update();
+                }
+            }
+        }
+
+        function calculateShapiroWilk(data) {
+            const n = data.length;
+            if (n < 3) return { W: 1, pValue: 1 };
+
+            function qnorm(p) {
+                if (p <= 0) return -Infinity;
+                if (p >= 1) return  Infinity;
+                if (p === 0.5) return 0;
+                const t = p < 0.5 ? Math.sqrt(-2 * Math.log(p)) : Math.sqrt(-2 * Math.log(1 - p));
+                const c0 = 2.515517, c1 = 0.802853, c2 = 0.010328;
+                const d1 = 1.432788, d2 = 0.189269, d3 = 0.001308;
+                let val = t - (c0 + c1 * t + c2 * t * t) / (1 + d1 * t + d2 * t * t + d3 * t * t * t);
+                return p < 0.5 ? -val : val;
+            }
+            function pnorm(z) { return 0.5 * (1 + erf(z / Math.SQRT2)); }
+
+            const sorted = data.slice().sort((a, b) => a - b);
+            const mean  = data.reduce((s, v) => s + v, 0) / n;
+            const m = [];
+            for (let i = 0; i < n; i++) m.push(qnorm((i + 1 - 0.375) / (n + 0.25)));
+            const mSumSq = m.reduce((s, v) => s + v * v, 0);
+            const mNorm  = Math.sqrt(mSumSq);
+            const a      = m.map(v => v / mNorm);
+            let dot = 0;
+            for (let i = 0; i < n; i++) dot += a[i] * sorted[i];
+            const SS = data.reduce((s, v) => s + (v - mean) * (v - mean), 0);
+            const W  = (dot * dot) / SS;
+
+            let pValue;
+            const logN = Math.log(n);
+            if (n <= 11) {
+                const gamma =  0.459 * n - 2.273;
+                const mu    = -0.0006714 * Math.pow(n, 3) + 0.025054 * Math.pow(n, 2) - 0.39978 * n + 0.5440;
+                const sigma =  Math.exp(0.00389 * Math.pow(n, 3) - 0.083751 * Math.pow(n, 2) + 0.38915 * n - 1.5861);
+                const y     = -Math.log(gamma - Math.log(1 - W));
+                const z     = (y - mu) / sigma;
+                pValue      = 1 - pnorm(z);
+            } else {
+                const mu    = -1.5861 - 0.31082 * logN - 0.083751 * logN * logN + 0.0038915 * Math.pow(logN, 3);
+                const sigma =  Math.exp(-0.4803 - 0.082676 * logN + 0.0030302 * logN * logN);
+                const y     = Math.log(1 - W);
+                const z     = (y - mu) / sigma;
+                pValue      = 1 - pnorm(z);
+            }
+            pValue = Math.max(0, Math.min(1, pValue));
+            return { W, pValue };
+        }
+
+        function inverseErf(x) {
+            const a = 0.147;
+            const b = 2 / (Math.PI * a) + Math.log(1 - x * x) / 2;
+            const sqrt1 = Math.sqrt(b * b - Math.log(1 - x * x) / a);
+            const sqrt2 = Math.sqrt(sqrt1 - b);
+            return sqrt2 * Math.sign(x);
+        }
+
+        function generateQQPlot(differences) {
+            const ctx = document.getElementById('qqPlotChart').getContext('2d');
+            if (qqChart) { qqChart.destroy(); }
+            
+            const sorted = differences.slice().sort((a, b) => a - b);
+            const n = sorted.length;
+            const theoreticalQuantiles = [], sampleQuantiles = [];
+            
+            for (let i = 0; i < n; i++) {
+                const p = (i + 0.5) / n;
+                const z = Math.sqrt(2) * inverseErf(2 * p - 1);
+                theoreticalQuantiles.push(z);
+                sampleQuantiles.push(sorted[i]);
+            }
+            
+            const mean = differences.reduce((a, b) => a + b, 0) / n;
+            const sd = Math.sqrt(differences.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) / (n - 1));
+            const normalizedSample = sampleQuantiles.map(q => (q - mean) / sd);
+            const minQ = Math.min(...theoreticalQuantiles), maxQ = Math.max(...theoreticalQuantiles);
+            
+            qqChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        { label: 'Sample Quantiles', data: theoreticalQuantiles.map((q, i) => ({ x: q, y: normalizedSample[i] })), backgroundColor: 'rgba(25, 118, 210, 0.55)', borderColor: 'rgba(25, 118, 210, 1)', pointRadius: 4, pointHoverRadius: 6 },
+                        { label: 'Reference Line', data: [{ x: minQ, y: minQ }, { x: maxQ, y: maxQ }], type: 'line', borderColor: 'rgba(231, 76, 60, 1)', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Q-Q Plot (Normal Distribution)', font: { size: 13, weight: 'bold' } },
+                        legend: { display: true, position: 'top' },
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Sample Quantiles' ? `Theoretical: ${ctx.parsed.x.toFixed(3)}, Sample: ${ctx.parsed.y.toFixed(3)}` : ctx.dataset.label } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Theoretical Quantiles', font: { size: 12, weight: 'bold' } } },
+                        y: { title: { display: true, text: 'Sample Quantiles (Normalized)', font: { size: 12, weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        function generateHistogram(differences) {
+            const ctx = document.getElementById('histogramChart').getContext('2d');
+            if (histChart) { histChart.destroy(); }
+            
+            const n = differences.length;
+            const numBins = Math.ceil(Math.sqrt(n));
+            const min = Math.min(...differences), max = Math.max(...differences);
+            const binWidth = (max - min) / numBins;
+            const bins = Array(numBins).fill(0);
+            const binLabels = [];
+            for (let i = 0; i < numBins; i++) binLabels.push((min + i * binWidth).toFixed(2));
+            differences.forEach(d => { const idx = Math.min(Math.floor((d - min) / binWidth), numBins - 1); bins[idx]++; });
+            
+            histChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: binLabels, datasets: [{ label: 'Frequency', data: bins, backgroundColor: 'rgba(25, 118, 210, 0.55)', borderColor: 'rgba(25, 118, 210, 1)', borderWidth: 1 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Histogram of Differences', font: { size: 13, weight: 'bold' } },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Difference', font: { size: 12, weight: 'bold' } } },
+                        y: { title: { display: true, text: 'Frequency', font: { size: 12, weight: 'bold' } }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateNormalityStats(stats) {
+            const shapiroWilk = calculateShapiroWilk(stats.differences);
+            const isNormal = shapiroWilk.pValue > 0.05;
+            const html = `
+                <div class="alert ${isNormal ? 'good' : 'warn'}">
+                    <strong>Shapiro-Wilk Normality Test</strong><br>
+                    W = ${shapiroWilk.W.toFixed(4)} &nbsp;·&nbsp; p = ${shapiroWilk.pValue.toFixed(4)} &nbsp;·&nbsp; n = ${stats.n}<br>
+                    ${isNormal
+                        ? 'Differences appear normally distributed — supports validity of Bland-Altman analysis.'
+                        : 'Evidence of non-normality. Consider reviewing outliers or using non-parametric methods.'}
+                </div>
+            `;
+            document.getElementById('normalityStats').innerHTML = html;
+        }
+
+        function pairedTTestFromDifferences(differences) {
+            const n = differences.length;
+            if (n < 2) return null;
+            const mean = differences.reduce((a,b) => a + b, 0) / n;
+            const variance = differences.reduce((s, d) => s + Math.pow(d - mean, 2), 0) / (n - 1);
+            const sd = Math.sqrt(variance);
+            const se = sd / Math.sqrt(n);
+            const t = mean / se;
+            const df = n - 1;
+            function normalCDF(x) { return 0.5 * (1 + erf(x / Math.sqrt(2))); }
+            const p = 2 * (1 - normalCDF(Math.abs(t)));
+            return { n, mean, sd, t, df, p };
+        }
+
+        function renderTTest(ttest) {
+            const box = document.getElementById('ttestDisplay');
+            if (!ttest) { box.innerHTML = ''; return; }
+            const pText = ttest.p < 0.001 ? '< 0.001' : ttest.p.toFixed(4);
+            const sig = ttest.p < 0.05;
+            box.innerHTML = `
+                <div class="card">
+                    <div class="section-title">Paired t-Test</div>
+                    <p class="note" style="margin-bottom:10px;"><em>Tests whether the mean difference is significantly different from zero (H₀: μ<sub>difference</sub> = 0)</em></p>
+                    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+                        <div class="kpi"><div class="label">n</div><div class="value">${ttest.n}</div></div>
+                        <div class="kpi"><div class="label">Mean difference</div><div class="value">${ttest.mean.toFixed(4)}</div></div>
+                        <div class="kpi"><div class="label">t(${ttest.df})</div><div class="value">${ttest.t.toFixed(3)}</div></div>
+                        <div class="kpi"><div class="label">p-value (two-sided)</div><div class="value">${pText}</div></div>
+                    </div>
+                    <div class="alert ${sig ? 'warn' : 'good'}" style="margin-top:10px;">
+                        ${sig
+                            ? '<strong>Significant:</strong> Differences are statistically different from zero (p < 0.05). A systematic bias between the methods has been detected.'
+                            : '<strong>Not significant:</strong> No statistically significant bias detected (p ≥ 0.05).'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Generate sample data ──
+        let _genData = null;
+
+        function randn() {
+            // Box-Muller transform
+            let u, v;
+            do { u = Math.random(); } while (u === 0);
+            do { v = Math.random(); } while (v === 0);
+            return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        }
+
+        // EFLM_DB and calcEFLMTiers loaded from shared file (assets/js/eflm_db.js)
+
+        function updateEFLMSpecs(selectedTier) {
+          const key  = document.getElementById('eflm-analyte').value;
+          const tierEl = document.getElementById('eflm-tier');
+          if (selectedTier) tierEl.value = selectedTier;
+          const tier = tierEl.value;
+          const display = document.getElementById('eflm-specs-display');
+          if (!key || !EFLM_DB[key]) { display.style.display='none'; return; }
+          const a = EFLM_DB[key];
+          const tiers = calcEFLMTiers(a.cvi, a.cvg);
+          const colors = { optimal:'#059669', desirable:'#2563eb', minimum:'#d97706' };
+          const bgs    = { optimal:'#ecfdf5', desirable:'#eff6ff', minimum:'#fffbeb' };
+          const borders= { optimal:'#6ee7b7', desirable:'#bfdbfe', minimum:'#fde68a' };
+          // Update discrimination threshold reference info panel
+          const discrimInfo = document.getElementById('discrim-ref-info');
+          if (discrimInfo && a.ref) {
+            const r = a.ref;
+            const parts = [];
+            if (r.lo != null && r.hi != null) parts.push(`Reference interval: ${r.lo} – ${r.hi} ${a.unit}`);
+            else if (r.hi != null) parts.push(`Upper limit: ${r.hi} ${a.unit}`);
+            else if (r.lo != null) parts.push(`Lower limit: ${r.lo} ${a.unit}`);
+            if (r.cutoff != null) parts.push(`Clinical cutoff: ${r.cutoff} ${a.unit}`);
+            if (r.note) parts.push(`<em>${r.note}</em>`);
+            discrimInfo.style.display = 'block';
+            discrimInfo.innerHTML = `<strong>${a.name}</strong> — ${parts.join(' &nbsp;·&nbsp; ')}
+              <button class="btn-ghost btn-sm" style="margin-left:10px;" onclick="applyRefToDiscrim()">Apply to thresholds</button>`;
+          }
+          display.style.display = 'block';
+          display.innerHTML = `
+            <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">
+              <strong>${a.name}</strong> &nbsp;·&nbsp; ${a.unit} &nbsp;·&nbsp; CVi: ${a.cvi}% &nbsp;·&nbsp; CVg: ${a.cvg}%
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              ${['optimal','desirable','minimum'].map(tr=>`
+                <div onclick="updateEFLMSpecs('${tr}');applyEFLMSpecs();"
+                     style="cursor:pointer;background:${tr===tier?bgs[tr]:'#fff'};border:2px solid ${tr===tier?borders[tr]:'#e5e7eb'};border-radius:10px;padding:10px 14px;min-width:120px;transition:all .15s;${tr===tier?'box-shadow:0 0 0 3px '+borders[tr]+'80;':''}">
+                  <div style="font-weight:700;font-size:11px;text-transform:uppercase;color:${colors[tr]};margin-bottom:6px;">${tr}</div>
+                  <div style="font-size:12px;line-height:1.7;">
+                    CV ≤ <strong>${tiers[tr].cv}%</strong><br>
+                    Bias ≤ <strong>${tiers[tr].bias}%</strong><br>
+                    TEa ≤ <strong>${tiers[tr].tea}%</strong>
+                  </div>
+                  ${tr===tier?`<div style="font-size:10px;color:${colors[tr]};margin-top:6px;font-weight:700;">✓ Applied</div>`:''}
+                </div>`).join('')}
+            </div>`;
+        }
+
+        function updateDiscrimInputs() {
+          const type = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+          const fields = document.getElementById('discrim-fields');
+          if (type === 'upper') {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Upper threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 6.5"></div>
+                <div><label for="thresholdY">Upper threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 6.5"></div>
+              </div>`;
+          } else if (type === 'lower') {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Lower threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 3.9"></div>
+                <div><label for="thresholdY">Lower threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 3.9"></div>
+              </div>`;
+          } else {
+            fields.innerHTML = `
+              <div class="grid-2">
+                <div><label for="thresholdX">Upper threshold – X-axis</label><input type="number" id="thresholdX" step="any" placeholder="e.g. 6.1"></div>
+                <div><label for="thresholdY">Upper threshold – Y-axis</label><input type="number" id="thresholdY" step="any" placeholder="e.g. 6.1"></div>
+              </div>
+              <div class="grid-2" style="margin-top:8px;">
+                <div><label for="thresholdXLo">Lower threshold – X-axis</label><input type="number" id="thresholdXLo" step="any" placeholder="e.g. 3.9"></div>
+                <div><label for="thresholdYLo">Lower threshold – Y-axis</label><input type="number" id="thresholdYLo" step="any" placeholder="e.g. 3.9"></div>
+              </div>`;
+          }
+        }
+
+        function applyRefToDiscrim() {
+          const key = document.getElementById('eflm-analyte').value;
+          if (!key || !EFLM_DB[key]?.ref) return;
+          const ref = EFLM_DB[key].ref;
+          const type = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+          const val = type === 'lower' ? ref.lo : (ref.cutoff || ref.hi);
+          const loVal = ref.lo;
+          if (type === 'both') {
+            const xHi = document.getElementById('thresholdX'); if(xHi) xHi.value = ref.hi || ref.cutoff || '';
+            const yHi = document.getElementById('thresholdY'); if(yHi) yHi.value = ref.hi || ref.cutoff || '';
+            const xLo = document.getElementById('thresholdXLo'); if(xLo) xLo.value = ref.lo || '';
+            const yLo = document.getElementById('thresholdYLo'); if(yLo) yLo.value = ref.lo || '';
+          } else {
+            const x = document.getElementById('thresholdX'); if(x) x.value = val || '';
+            const y = document.getElementById('thresholdY'); if(y) y.value = val || '';
+          }
+        }
+
+        function applyEFLMSpecs() {
+          const key  = document.getElementById('eflm-analyte').value;
+          const tier = document.getElementById('eflm-tier').value;
+          if (!key || !EFLM_DB[key]) return;
+          const t = calcEFLMTiers(EFLM_DB[key].cvi, EFLM_DB[key].cvg)[tier];
+          document.getElementById('teaPercentage').value = t.tea;
+          document.getElementById('maxBias').value = t.bias;
+          document.getElementById('relativeBlandAltman').checked = true;
+        }
+
+        function generateSampleData() {
+            const n       = Math.max(5, parseInt(document.getElementById('gen-n').value) || 30);
+            const mu      = parseFloat(document.getElementById('gen-mean').value) || 10;
+            const biasPct = (parseFloat(document.getElementById('gen-bias-pct').value) || 0) / 100;
+            const tePct   = (parseFloat(document.getElementById('gen-te-pct').value)   || 10) / 100;
+            const golden  = document.getElementById('gen-golden-std').checked;
+
+            const biasAbs = mu * biasPct;
+            const sdRandom = Math.max(0, (tePct * mu - Math.abs(biasAbs))) / 1.65;
+
+            _genData = [];
+            for (let i = 0; i < n; i++) {
+                // True sample value — moderate biological spread
+                const truVal = Math.max(0.001, mu * (1 + randn() * 0.15));
+                if (golden) {
+                    // Method 1 = gold standard (no random error)
+                    const m1 = truVal;
+                    const m2 = Math.max(0.001, truVal - biasAbs + randn() * sdRandom);
+                    _genData.push({ method1: parseFloat(m1.toFixed(4)), method2: parseFloat(m2.toFixed(4)) });
+                } else {
+                    // Both methods have error — split SD equally
+                    const m1 = Math.max(0.001, truVal + randn() * (sdRandom / Math.sqrt(2)));
+                    const m2 = Math.max(0.001, truVal - biasAbs + randn() * (sdRandom / Math.sqrt(2)));
+                    _genData.push({ method1: parseFloat(m1.toFixed(4)), method2: parseFloat(m2.toFixed(4)) });
+                }
+            }
+            const meanM1 = _genData.reduce((s,d)=>s+d.method1,0)/n;
+            const meanM2 = _genData.reduce((s,d)=>s+d.method2,0)/n;
+            document.getElementById('gen-preview').textContent =
+                `${n} pairs generated. Mean M1: ${meanM1.toFixed(3)}, Mean M2: ${meanM2.toFixed(3)}, Observed bias: ${(meanM2-meanM1).toFixed(3)}. Click "Use in analysis" to load.`;
+        }
+
+        function useSampleData() {
+            if (!_genData || !_genData.length) { generateSampleData(); }
+            const n = _genData.length;
+            document.getElementById('numPairs').value = n;
+            generateSpreadsheet();
+            _genData.forEach((d, i) => {
+                const m1 = document.getElementById(`m1_${i}`);
+                const m2 = document.getElementById(`m2_${i}`);
+                if (m1) m1.value = d.method1;
+                if (m2) m2.value = d.method2;
+            });
+            // Ensure manual input is visible
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.toggle-btn')[0].classList.add('active');
+            document.getElementById('manualInput').classList.remove('hidden');
+            document.getElementById('pasteInput').classList.add('hidden');
+            document.getElementById('gen-preview').textContent = `${n} pairs loaded into the table.`;
+        }
+
+        function renderCVDifferences(stats, data) {
+            const diffs  = stats.differences;
+            const sdDiff = stats.sd;
+            const n      = stats.n;
+
+            // Grand mean of all individual measurements (both methods)
+            const allVals   = data.flatMap(d => [d.method1, d.method2]);
+            const grandMean = allVals.reduce((s, v) => s + v, 0) / allVals.length;
+
+            // CV on differences: SD_d / x̄ × 100
+            const cvDiff = (grandMean !== 0 && isFinite(grandMean))
+                ? (sdDiff / Math.abs(grandMean)) * 100 : NaN;
+
+            // CV within (√2 correction): SD_d / (√2 × x̄) × 100
+            // Used when pairs are duplicates of the same sample
+            const sdWithin  = sdDiff / Math.sqrt(2);
+            const cvWithin  = (grandMean !== 0 && isFinite(grandMean))
+                ? (sdWithin / Math.abs(grandMean)) * 100 : NaN;
+
+            const f = (v, d=3) => (v === null || !isFinite(v)) ? '—' : v.toFixed(d);
+            const suffix = document.getElementById('relativeBlandAltman').checked ? ' %' : '';
+
+            document.getElementById('cvDiffDisplay').innerHTML = `
+              <div class="collapsible">
+                <div class="coll-header" onclick="toggleSection('cvdiff')">
+                  <h3>CV on Differences</h3>
+                  <span class="coll-toggle" id="cvdiff-toggle">▼</span>
+                </div>
+                <div class="coll-body" id="cvdiff-content">
+                  <p style="font-size:13px;color:#374151;line-height:1.6;margin-bottom:12px;">
+                    CV on differences measures repeatability or agreement between paired measurements,
+                    independent of population variability. Use when each pair represents duplicate measurements of the same sample.
+                  </p>
+                  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
+                    <div class="kpi">
+                      <div class="label">Grand mean (x̄)</div>
+                      <div class="value">${f(grandMean, 4)}</div>
+                    </div>
+                    <div class="kpi">
+                      <div class="label">SD of differences (SD<sub>d</sub>)</div>
+                      <div class="value">${f(sdDiff, 4)}${suffix}</div>
+                    </div>
+                    <div class="kpi" style="background:#eff6ff;border-color:#bfdbfe;">
+                      <div class="label">CV on differences</div>
+                      <div class="value" style="color:#1e40af;">${f(cvDiff, 2)}%</div>
+                    </div>
+                    <div class="kpi" style="background:#f0fdf4;border-color:#86efac;">
+                      <div class="label">CV<sub>within</sub> (√2 correction)</div>
+                      <div class="value" style="color:#15803d;">${f(cvWithin, 2)}%</div>
+                    </div>
+                  </div>
+                  <div class="alert info" style="font-size:12px;line-height:1.7;">
+                    <strong>CV = SD<sub>d</sub> / x̄ × 100%</strong><br>
+                    Uses the SD of paired differences directly. Answers: how variable are the differences between the two methods relative to the measurement magnitude?<br><br>
+                    <strong>CV<sub>within</sub> = (SD<sub>d</sub> / √2) / x̄ × 100%</strong><br>
+                    Applies the √2 correction to estimate within-subject (within-method) SD from duplicate pairs.
+                    This is because Var(d) = Var(x₁ − x₂) = 2σ², so σ = SD<sub>d</sub> / √2.
+                    Use this when each pair consists of two replicates of the same sample measured by the same method (CLSI EP5/EP15 duplicate design).
+                  </div>
+                </div>
+              </div>`;
+        }
+
+        function generateAnalysis() {
+            const data = getData();
+            clearInputError();
+            if (data.length < 2) { showInputError('Please enter at least 2 valid measurement pairs. Fill in values in the table above.'); return; }
+            
+            currentData = data;
+            const useRelative = document.getElementById('relativeBlandAltman').checked;
+            const designation = document.getElementById('methodDesignation').value;
+            const newMethod = document.getElementById('newMethodSelection').value;
+            
+            const stats = calculateStats(data, useRelative, designation, newMethod);
+            currentStats = stats;
+
+            // Build outlier state from differences (fresh run resets include flags)
+            buildRowState(stats.differences);
+
+            const ttest = pairedTTestFromDifferences(currentStats.differences);
+            renderTTest(ttest);
+            updateStatsDisplay(stats);
+            renderCVDifferences(stats, data);
+            updateNormalityStats(stats);
+
+            const regressionStats = updateRegressionStats(data);
+            generateXYPlot(data, regressionStats);
+            generateInterpretation(stats, data, regressionStats);
+            generateBlandAltmanPlot(data, stats);
+            generateQQPlot(stats.differences);
+            generateHistogram(stats.differences);
+            renderDataTable();
+
+            // switch to analysis tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('analysisTab').classList.add('active');
+        }
+
+        function exportToExcel() {
+            if (!currentData || !currentStats) { showInputError('Please generate an analysis first before exporting.'); return; }
+
+            try {
+                const wb = XLSX.utils.book_new();
+                const method1Name = (document.getElementById('method1Name').value || 'Method 1').replace(/[^\w\s\-\.]/g, '');
+                const method2Name = (document.getElementById('method2Name').value || 'Method 2').replace(/[^\w\s\-\.]/g, '');
+                const useRelative = document.getElementById('relativeBlandAltman').checked;
+                const suffix = useRelative ? ' (%)' : '';
+                const designation = document.getElementById('methodDesignation').value;
+                const regressionMethod = document.getElementById('regressionMethod').value;
+
+                // Helper: safely round a number for Excel cells
+                function safeNum(v, d) {
+                    if (v === null || v === undefined || !isFinite(v)) return '';
+                    return parseFloat(v.toFixed(d));
+                }
+
+                // ---- SHEET 1: Raw Data ----
+                const rawHeaders = ['Pair', method1Name, method2Name, 'X-Value', 'Difference', 'Relative Diff (%)'];
+                const rawRows = currentData.map((d, i) => {
+                    const xVal = currentStats.xValues[i];
+                    const diff = currentStats.differences[i];
+                    const relDiff = xVal !== 0 ? ((d.method1 - d.method2) / xVal) * 100 : 0;
+                    const incl = (rowState[i] && !rowState[i].include) ? 'excluded' : 'included';
+                    return [i + 1, safeNum(d.method1, 6), safeNum(d.method2, 6), safeNum(xVal, 6), safeNum(diff, 6), safeNum(relDiff, 4)];
+                });
+                const wsRaw = XLSX.utils.aoa_to_sheet([rawHeaders, ...rawRows]);
+                wsRaw['!cols'] = rawHeaders.map(() => ({ wch: 14 }));
+                XLSX.utils.book_append_sheet(wb, wsRaw, 'Raw Data');
+
+                // ---- SHEET 2: Statistics ----
+                const statsRows = [
+                    ['Parameter', 'Value'],
+                    ['Sample Size', currentStats.n],
+                    ['Mean Bias' + suffix, safeNum(currentStats.meanDiff, 6)],
+                    ['Standard Deviation' + suffix, safeNum(currentStats.sd, 6)],
+                    ['Upper LoA (Z=' + currentStats.zValue + ')' + suffix, safeNum(currentStats.loa_upper, 6)],
+                    ['Lower LoA (Z=' + currentStats.zValue + ')' + suffix, safeNum(currentStats.loa_lower, 6)],
+                    ['Calculated TE (Bias + ' + currentStats.zValueTE + ' x SD)' + suffix, safeNum(currentStats.te_calculated, 6)],
+                    ['Total Allowable Error (TAE)' + suffix, safeNum(currentStats.teaPercentage, 6)],
+                    ['Measurements within TAE (%)', safeNum(currentStats.te_percentage, 2)],
+                    ['Maximum Acceptable Bias' + suffix, safeNum(currentStats.maxBias, 6)],
+                    ['', ''],
+                    ['Z-Value for LoA', safeNum(currentStats.zValue, 4)],
+                    ['Z-Value for TE', safeNum(currentStats.zValueTE, 4)],
+                    ['Use Relative Differences', useRelative ? 'Yes' : 'No']
+                ];
+                const wsStats = XLSX.utils.aoa_to_sheet(statsRows);
+                wsStats['!cols'] = [{ wch: 38 }, { wch: 18 }];
+                XLSX.utils.book_append_sheet(wb, wsStats, 'Statistics');
+
+                // ---- SHEET 3: Bland-Altman Data ----
+                const baHeaders = ['Pair', 'X-Value', 'Difference', 'Mean Bias', 'Upper LoA', 'Lower LoA', 'Upper TAE', 'Lower TAE', 'Upper TE', 'Lower TE'];
+                const baRows = currentData.map((d, i) => [
+                    i + 1,
+                    safeNum(currentStats.xValues[i], 6),
+                    safeNum(currentStats.differences[i], 6),
+                    safeNum(currentStats.meanDiff, 6),
+                    safeNum(currentStats.loa_upper, 6),
+                    safeNum(currentStats.loa_lower, 6),
+                    safeNum(currentStats.teaPercentage, 6),
+                    safeNum(-currentStats.teaPercentage, 6),
+                    safeNum(currentStats.te_calculated, 6),
+                    safeNum(-currentStats.te_calculated, 6)
+                ]);
+                const wsBa = XLSX.utils.aoa_to_sheet([baHeaders, ...baRows]);
+                wsBa['!cols'] = baHeaders.map(() => ({ wch: 13 }));
+                XLSX.utils.book_append_sheet(wb, wsBa, 'Bland-Altman Data');
+
+                // ---- SHEET 4: Regression ----
+                const regData = performRegression(currentData, regressionMethod, parseFloat(document.getElementById('varianceRatio').value));
+                const rSq = calculateRSquared(currentData, regData);
+                const spRho = calculateSpearmanCorrelation(currentData);
+                let xArr, yArr;
+                if (designation === 'method2') { xArr = currentData.map(d => d.method2); yArr = currentData.map(d => d.method1); }
+                else { xArr = currentData.map(d => d.method1); yArr = currentData.map(d => d.method2); }
+                const xLbl = designation === 'method2' ? method2Name + ' X' : method1Name + ' X';
+                const yLbl = designation === 'method2' ? method1Name + ' Y' : method2Name + ' Y';
+                const regHeaderRow = ['Pair', xLbl, yLbl, 'Predicted Y', 'Residual'];
+                const regDataRows = currentData.map((d, i) => {
+                    const pred = regData.slope * xArr[i] + regData.intercept;
+                    return [i + 1, safeNum(xArr[i], 6), safeNum(yArr[i], 6), safeNum(pred, 6), safeNum(yArr[i] - pred, 6)];
+                });
+                const regSummary = [
+                    ['Regression Analysis', ''],
+                    ['Method', regressionMethod === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression'],
+                    ['Slope', safeNum(regData.slope, 6)],
+                    ['Intercept', safeNum(regData.intercept, 6)],
+                    ['R-squared', safeNum(rSq, 6)],
+                    ['Spearman Correlation', safeNum(spRho, 6)],
+                    ['', ''],
+                    regHeaderRow,
+                    ...regDataRows
+                ];
+                const wsReg = XLSX.utils.aoa_to_sheet(regSummary);
+                wsReg['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+                XLSX.utils.book_append_sheet(wb, wsReg, 'Regression');
+
+                // ---- SHEET 5: Normality ----
+                const sw = calculateShapiroWilk(currentStats.differences);
+                const diffs = currentStats.differences;
+                const nBins = Math.ceil(Math.sqrt(diffs.length));
+                const dMin = Math.min.apply(null, diffs), dMax = Math.max.apply(null, diffs);
+                const bw = (dMax - dMin) / nBins || 1;
+                const bins = Array(nBins).fill(0);
+                diffs.forEach(function(d) { var idx = Math.min(Math.floor((d - dMin) / bw), nBins - 1); bins[idx]++; });
+                const normRows = [
+                    ['Normality Analysis', ''],
+                    ['Shapiro-Wilk W', safeNum(sw.W, 6)],
+                    ['Shapiro-Wilk p-value', safeNum(sw.pValue, 6)],
+                    ['Interpretation', sw.pValue > 0.05 ? 'Normally distributed' : 'Non-normality detected'],
+                    ['', ''],
+                    ['Bin Center', 'Frequency']
+                ];
+                for (var bi = 0; bi < nBins; bi++) {
+                    normRows.push([safeNum(dMin + (bi + 0.5) * bw, 4), bins[bi]]);
+                }
+                const wsNorm = XLSX.utils.aoa_to_sheet(normRows);
+                wsNorm['!cols'] = [{ wch: 20 }, { wch: 15 }];
+                XLSX.utils.book_append_sheet(wb, wsNorm, 'Normality');
+
+                // Write file
+                const ts = new Date().toISOString().slice(0, 10);
+                XLSX.writeFile(wb, 'Bland_Altman_' + ts + '.xlsx');
+
+            } catch (err) {
+                console.error('Excel export error:', err);
+                showInputError('Excel export failed: ' + err.message);
+            }
+        }
+
+        async function exportToPDF() {
+            if (!currentData || !currentStats) { showInputError('Please generate an analysis first before exporting.'); return; }
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'pdfLoadingMessage';
+            loadingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:10000;text-align:center;';
+            loadingDiv.innerHTML = '<h3>Generating PDF…</h3><p>Please wait.</p>';
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 15, contentWidth = pageWidth - 2 * margin;
+                let yPosition = margin;
+                
+                const method1Name = document.getElementById('method1Name').value || 'Method 1';
+                const method2Name = document.getElementById('method2Name').value || 'Method 2';
+                const timestamp = new Date().toLocaleString();
+                const useRelative = document.getElementById('relativeBlandAltman').checked;
+                const suffix = useRelative ? '%' : '';
+                const pdfTeaDec = decimalCount(currentStats.teaRaw);
+                const pdfMaxBiasDec = decimalCount(currentStats.maxBiasRaw);
+                const showLoAPdf = document.getElementById('showLoA').checked;
+                
+                pdf.setFontSize(24); pdf.setFont(undefined, 'bold');
+                pdf.text('Bland-Altman Analysis Report', pageWidth / 2, yPosition + 20, { align: 'center' });
+                pdf.setFontSize(14); pdf.setFont(undefined, 'normal');
+                yPosition += 35;
+                pdf.text(`${method1Name} vs ${method2Name}`, pageWidth / 2, yPosition, { align: 'center' });
+                pdf.setFontSize(10); yPosition += 10;
+                pdf.text(`Generated: ${timestamp}`, pageWidth / 2, yPosition, { align: 'center' });
+                
+                yPosition += 20;
+                pdf.setFontSize(16); pdf.setFont(undefined, 'bold');
+                pdf.text('Statistical Summary', margin, yPosition);
+                yPosition += 10; pdf.setFontSize(10); pdf.setFont(undefined, 'normal');
+                
+                const statsText = [
+                    `Sample Size: ${currentStats.n}`,
+                    `Mean Bias: ${currentStats.meanDiff.toFixed(4)}${suffix}`,
+                    `Standard Deviation: ${currentStats.sd.toFixed(4)}${suffix}`,
+                    `Calculated TE (|Bias|+${currentStats.zValueTE}SD): ${currentStats.te_calculated.toFixed(4)}${suffix}`,
+                    `Total Allowable Error (TAE): ±${currentStats.teaPercentage.toFixed(pdfTeaDec)}${suffix}`,
+                    `Measurements within TAE: ${currentStats.te_percentage.toFixed(1)}%`,
+                    `Maximum Acceptable Bias: ±${currentStats.maxBias.toFixed(pdfMaxBiasDec)}${suffix}`
+                ];
+                if (showLoAPdf) {
+                    statsText.push(`Upper LoA (Z=${currentStats.zValue}): ${currentStats.loa_upper.toFixed(4)}${suffix}`);
+                    statsText.push(`Lower LoA (Z=${currentStats.zValue}): ${currentStats.loa_lower.toFixed(4)}${suffix}`);
+                }
+                statsText.forEach(text => { pdf.text(text, margin, yPosition); yPosition += 6; });
+                
+                // Bland-Altman chart
+                pdf.addPage(); yPosition = margin;
+                pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
+                pdf.text('Bland-Altman Plot', margin, yPosition); yPosition += 10;
+                const baCanvas = document.getElementById('blandAltmanChart');
+                if (baCanvas) {
+                    const baImgData = baCanvas.toDataURL('image/png');
+                    const imgHeight = contentWidth * 0.6;
+                    pdf.addImage(baImgData, 'PNG', margin, yPosition, contentWidth, imgHeight);
+                    yPosition += imgHeight + 10;
+                }
+                
+                // XY chart
+                pdf.addPage(); yPosition = margin;
+                pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
+                pdf.text('XY Plot - Method Comparison', margin, yPosition); yPosition += 10;
+                const xyCanvas = document.getElementById('xyPlotChart');
+                if (xyCanvas) {
+                    const xyImgData = xyCanvas.toDataURL('image/png');
+                    const imgHeight = contentWidth * 0.6;
+                    pdf.addImage(xyImgData, 'PNG', margin, yPosition, contentWidth, imgHeight);
+                    yPosition += imgHeight + 10;
+                }
+                
+                // Regression stats
+                yPosition += 5;
+                if (yPosition > pageHeight - 40) { pdf.addPage(); yPosition = margin; }
+                pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
+                pdf.text('Regression Analysis', margin, yPosition); yPosition += 8;
+                pdf.setFontSize(10); pdf.setFont(undefined, 'normal');
+                const regressionMethod = document.getElementById('regressionMethod').value;
+                const regressionData = performRegression(currentData, regressionMethod, parseFloat(document.getElementById('varianceRatio').value));
+                const rSquared = calculateRSquared(currentData, regressionData);
+                const spearmanRho = calculateSpearmanCorrelation(currentData);
+                [`Method: ${regressionMethod === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression'}`, `Equation: y = ${regressionData.slope.toFixed(6)}x + ${regressionData.intercept.toFixed(6)}`, `R²: ${rSquared.toFixed(6)}`, `Spearman Correlation (ρ): ${spearmanRho.toFixed(6)}`].forEach(text => { pdf.text(text, margin, yPosition); yPosition += 6; });
+                
+                // Data table
+                pdf.addPage(); yPosition = margin;
+                pdf.setFontSize(14); pdf.setFont(undefined, 'bold');
+                pdf.text('Measurement Data (Sample)', margin, yPosition); yPosition += 10;
+                pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                const headers = ['Pair', method1Name, method2Name, 'Difference'];
+                const colWidths = [15, 40, 40, 40];
+                let xPos = margin;
+                pdf.setFont(undefined, 'bold');
+                headers.forEach((h, i) => { pdf.text(h, xPos, yPosition); xPos += colWidths[i]; });
+                yPosition += 5; pdf.setFont(undefined, 'normal');
+                const maxRows = Math.min(30, currentData.length);
+                for (let i = 0; i < maxRows; i++) {
+                    xPos = margin;
+                    [String(i + 1), currentData[i].method1.toFixed(3), currentData[i].method2.toFixed(3), currentStats.differences[i].toFixed(3)].forEach((cell, j) => { pdf.text(cell, xPos, yPosition); xPos += colWidths[j]; });
+                    yPosition += 5;
+                    if (yPosition > pageHeight - 20) break;
+                }
+                if (currentData.length > maxRows) { yPosition += 5; pdf.setFont(undefined, 'italic'); pdf.text(`... and ${currentData.length - maxRows} more data points`, margin, yPosition); }
+                
+                const pageCount = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i); pdf.setFontSize(8); pdf.setFont(undefined, 'italic');
+                    pdf.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                    pdf.text('Generated by Method Comparison Analysis Tool', pageWidth / 2, pageHeight - 6, { align: 'center' });
+                }
+                
+                pdf.save(`Bland_Altman_Analysis_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`);
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showInputError('Error generating PDF. Please try again.');
+            } finally {
+                const loadingMsg = document.getElementById('pdfLoadingMessage');
+                if (loadingMsg) loadingMsg.remove();
+            }
+        }
+
+        // Initialize spreadsheet on load
+        window.addEventListener('load', function() { generateSpreadsheet(); });
+</script>
+</body>
+</html>

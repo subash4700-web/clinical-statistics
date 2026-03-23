@@ -1,0 +1,147 @@
+<h2>Potentiometry — Voltage to Concentration</h2>
+
+<p>
+Ion-selective electrodes (ISEs) measure the concentration of specific ions by detecting
+the voltage (potential) that develops across a selective membrane. This is the same
+principle as a pH electrode, extended to Na⁺, K⁺, Ca²⁺, Cl⁻, and other ions.
+ISEs are used in blood gas analysers (e.g. ABL900) to measure electrolytes in whole blood.
+</p>
+
+<hr>
+
+<h3>The Nernst Equation</h3>
+
+<p>The Nernst equation relates electrode potential to ion concentration:</p>
+
+<p style="font-weight:600; font-size:15px; font-family:monospace;">E = E₀ + S · log₁₀(c)</p>
+
+<ul>
+  <li><strong>E</strong> — measured electrode potential (mV) for the sample</li>
+  <li><strong>E₀</strong> — intercept potential (mV); the electrode's zero-point, determined by calibration</li>
+  <li><strong>S</strong> — Nernst slope (mV per decade); how much E changes per 10× change in concentration</li>
+  <li><strong>c</strong> — ion concentration (mmol/L)</li>
+</ul>
+
+<p>Rearranged to find concentration:</p>
+
+<p style="font-weight:600; font-family:monospace;">c = 10<sup>(E − E₀) / S</sup></p>
+
+<hr>
+
+<h3>The Nernst Slope</h3>
+
+<p>The theoretical slope depends on the ion's charge (z) and temperature (T in Kelvin):</p>
+
+<p style="font-weight:600; font-family:monospace;">S = (2.303 · R · T) / (z · F)</p>
+
+<p>where R = 8.314 J·mol⁻¹·K⁻¹ and F = 96 485 C·mol⁻¹.</p>
+
+<p><strong>At 37°C (body temperature):</strong></p>
+<ul>
+  <li>Na⁺, K⁺, Li⁺ (z = +1): S = +61.54 mV/decade</li>
+  <li>Ca²⁺ (z = +2): S = +30.77 mV/decade — half as sensitive as monovalent ions</li>
+  <li>Cl⁻ (z = −1): S = −61.54 mV/decade — voltage falls as concentration rises</li>
+</ul>
+
+<p>
+The slope changes linearly with absolute temperature. This is why blood gas analysers
+thermostatically control the measuring cell at 37°C — even a few degrees of drift would
+cause systematic error in the reported concentration.
+</p>
+
+<hr>
+
+<h3>Two-Point Calibration</h3>
+
+<p>
+E₀ cannot be predicted from theory — it depends on the specific electrode, its membrane
+condition, and its history. Two-point calibration establishes E₀ and the real (measured)
+slope for the electrode using two standards with known concentrations:
+</p>
+
+<p style="font-weight:600; font-family:monospace;">
+S<sub>measured</sub> = (E₂ − E₁) / (log₁₀(c₂) − log₁₀(c₁))<br>
+E₀ = E₁ − S<sub>measured</sub> · log₁₀(c₁)
+</p>
+
+<p>
+<strong>Electrode efficiency</strong> compares the measured slope to the theoretical Nernst slope:
+</p>
+
+<p style="font-weight:600; font-family:monospace;">Efficiency = |S<sub>measured</sub>| / |S<sub>theoretical</sub>| × 100%</p>
+
+<ul>
+  <li><strong>≥ 95%</strong> — acceptable; electrode in good condition</li>
+  <li><strong>90–95%</strong> — reduced precision; consider reconditioning</li>
+  <li><strong>&lt; 90%</strong> — unreliable results; electrode reconditioning or replacement required</li>
+</ul>
+
+<hr>
+
+<h3>Activity vs. Concentration</h3>
+
+<p>
+Strictly, the Nernst equation relates potential to ion <em>activity</em>, not concentration.
+Activity = γ × c, where γ is the activity coefficient (affected by ionic strength, pH, and protein binding).
+</p>
+
+<p>
+In clinical practice, γ is assumed constant and is absorbed into E₀ during calibration with
+standards of controlled ionic strength. This means ISE results are valid when the sample
+matrix resembles the calibrators — which is true for normal plasma/serum but can be affected by:
+</p>
+
+<ul>
+  <li>Severe hyperlipidaemia or hyperproteinaemia (alters ionic strength)</li>
+  <li>Changes in pH (affects Ca²⁺ ionisation and activity)</li>
+  <li>Drugs that bind the ion of interest</li>
+</ul>
+
+<hr>
+
+<h3>Clinical Reference Intervals (adult)</h3>
+
+<table border="1" cellpadding="6" cellspacing="0" style="font-size:13px;">
+  <tr><th>Ion</th><th>Reference interval</th><th>Clinical significance</th></tr>
+  <tr><td>Na⁺</td><td>136–145 mmol/L</td><td>Hypo-/hypernatraemia; osmolality regulation</td></tr>
+  <tr><td>K⁺</td><td>3.5–5.0 mmol/L</td><td>Cardiac rhythm; renal function</td></tr>
+  <tr><td>Ca²⁺ (ionized)</td><td>1.15–1.35 mmol/L</td><td>Hypocalcaemia in ICU; parathyroid function</td></tr>
+  <tr><td>Cl⁻</td><td>98–106 mmol/L</td><td>Acid-base balance; anion gap calculation</td></tr>
+  <tr><td>Li⁺</td><td>0.6–1.2 mmol/L (therapeutic)</td><td>Lithium therapy monitoring</td></tr>
+</table>
+
+<hr>
+
+<h3>The ABL900 and Clinical ISE Analysers</h3>
+
+<p>
+The ABL900 (Radiometer) is an integrated blood gas and electrolyte analyser. It uses ISEs for
+Na⁺, K⁺, ionised Ca²⁺, and Cl⁻ alongside a pH glass electrode (also an ISE for H⁺) and
+amperometric sensors for pO₂ and pCO₂. The system performs automatic two-point calibration
+at set intervals and checks electrode efficiency before each measurement.
+</p>
+
+<p>
+Results are reported in seconds from a whole-blood sample — which is only possible because
+the ISE principle requires no sample preparation: the electrode responds directly to the
+free ion activity in the sample.
+</p>
+
+<hr>
+
+<h3>Accuracy and Limitations</h3>
+
+<ul>
+  <li>ISEs measure free (ionised) ion activity. Protein-bound or complexed ions are not detected.</li>
+  <li>Pseudo-hyponatraemia can occur with severe hyperlipidaemia when using flame photometry or indirect ISE, but direct ISE (as in ABL900) is unaffected.</li>
+  <li>Ionised calcium is pH-dependent: alkalosis decreases free Ca²⁺ (more protein binding). ABL900 corrects to pH 7.40 if requested.</li>
+  <li>Electrode fouling by proteins or blood cells between calibrations can introduce drift. Regular maintenance cycles are essential.</li>
+  <li>Temperature deviating from 37°C during measurement changes the slope and will give incorrect results.</li>
+</ul>
+
+<hr>
+
+<p style="font-size:13px; color:#6B7280;">
+For educational and research use. Always verify results against institutional SOPs and
+current reference intervals for your analyser and patient population.
+</p>

@@ -4,49 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>EP05 Precision Study</title>
+  <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    :root{
-      --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;padding:20px;}
-    .container{max-width:1060px;margin:0 auto;}
-    h1{font-size:22px;margin-bottom:4px;}
-    .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px;}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;}
-    .section-title{font-weight:700;font-size:14px;margin-bottom:10px;}
-    .note{color:var(--muted);font-size:12px;margin-top:5px;}
-    .field-label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:10px 0 4px;}
-    select,input[type="number"],input[type="text"]{
-      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
-      background:#fff;font-size:13px;outline:none;
-    }
-    select:focus,input:focus{border-color:var(--accent);}
-    button{border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;}
-    .btn-primary{background:var(--accent);color:#fff;}
-    .btn-secondary{background:#111827;color:#fff;}
-    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
-    .btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;}
-    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
-    .kpi{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
-    .kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px;}
-    .kpi-value{font-size:19px;font-weight:900;font-family:ui-monospace,monospace;}
-    .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
-    .verdict{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:14px;}
-    .verdict.pass{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
-    .verdict.fail{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
-    .section-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;}
-    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
-    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
-    th{background:#f9fafb;font-weight:800;color:#374151;}
     td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
-    tr:last-child td{border-bottom:none;}
-    .error-msg{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
     .wg-badge{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin:1px 2px;white-space:nowrap;letter-spacing:.02em;}
     .wg-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
     .wg-reject{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;}
@@ -56,10 +20,6 @@
     .wg-panel.ok{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
     .wg-rule-row{display:flex;align-items:baseline;gap:6px;margin-top:4px;font-size:12px;flex-wrap:wrap;}
 
-    /* Tabs */
-    .tabs{display:flex;gap:8px;margin-bottom:16px;}
-    .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
-    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
     .level-tabs{display:none;gap:8px;margin-bottom:12px;}
     .level-tabs.visible{display:flex;}
 
@@ -169,6 +129,17 @@
           </div>
 
           <div id="level-configs" style="margin-top:10px;"></div>
+        </div>
+
+        <!-- EFLM analyte selector -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable imprecision from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <label class="field-label">Analyte</label>
+          <select id="ep05-eflm-analyte" onchange="ep05OnAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="ep05-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
         </div>
 
         <div class="card">
@@ -445,6 +416,9 @@ function buildLevelConfigs() {
     html += '</div>';
   }
   container.innerHTML = html;
+
+  // Re-apply EFLM allowable CV if an analyte is still selected
+  if (typeof ep05ApplyAllowCV === 'function') ep05ApplyAllowCV();
 }
 
 function buildDataTable(lvl) {
@@ -724,6 +698,44 @@ function computeEP05(runData, reps) {
 // ─────────────────────────────────────────────
 // Main calculate function
 // ─────────────────────────────────────────────
+var _levelsData = []; // module-scope for export
+
+function _findEPOutliers(lvl, runData, stats, d) {
+  var outliers = [];
+  var totalRunIdx = 0, incRunIdx = 0;
+  for (var day = 1; day <= d.days; day++) {
+    for (var run = 1; run <= d.runs; run++) {
+      var row = runData[totalRunIdx];
+      if (row && row.complete) {
+        var rm = stats.runMeans[incRunIdx];
+        for (var col = 0; col < d.reps; col++) {
+          var v = row.reps[col];
+          if (v !== null && stats.Sw > 0 && Math.abs(v - rm) > 4 * stats.Sw) {
+            outliers.push({
+              cellId: 'ep-d' + lvl + '-r' + totalRunIdx + '-c' + col,
+              value: v, runMean: rm,
+              nSw: (Math.abs(v - rm) / stats.Sw).toFixed(1),
+              day: row.day, run: row.run, col: col + 1
+            });
+          }
+        }
+        incRunIdx++;
+      }
+      totalRunIdx++;
+    }
+  }
+  return outliers;
+}
+
+function clearEPOutliers(lvl) {
+  if (!_levelsData[lvl]) return;
+  _levelsData[lvl].stats.outlierCells.forEach(function(o) {
+    var el = document.getElementById(o.cellId);
+    if (el) el.value = '';
+  });
+  calculateEP();
+}
+
 function calculateEP() {
   showEPError('');
 
@@ -731,7 +743,7 @@ function calculateEP() {
   Object.keys(_epCharts).forEach(function(id) { destroyChart(id); });
 
   var d = getDesign();
-  var levelsData = [];
+  _levelsData = [];
 
   for (var lvl = 0; lvl < d.levels; lvl++) {
     var runData = readLevelData(lvl);
@@ -741,20 +753,32 @@ function calculateEP() {
       showEPError('Level ' + (lvl + 1) + ': At least 2 complete runs are required for calculations.');
       return;
     }
-    levelsData.push({ stats: stats, cfg: cfg, runData: runData });
+    stats.outlierCells = _findEPOutliers(lvl, runData, stats, d);
+    _levelsData.push({ stats: stats, cfg: cfg, runData: runData });
   }
 
   // Render results
   var html = '';
   for (var lvl = 0; lvl < d.levels; lvl++) {
-    html += renderLevelResults(levelsData[lvl].stats, levelsData[lvl].cfg, lvl, d.levels);
+    html += renderLevelResults(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl, d.levels);
   }
   document.getElementById('ep-results').innerHTML = html;
 
   // Build charts after DOM update
   for (var lvl = 0; lvl < d.levels; lvl++) {
-    buildLJChart(levelsData[lvl].stats, levelsData[lvl].cfg, lvl);
+    buildLJChart(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl);
   }
+
+  // Highlight outlier cells in data grid
+  document.querySelectorAll('.data-table-wrap input[type="number"]').forEach(function(el) {
+    el.style.borderColor = ''; el.style.background = '';
+  });
+  _levelsData.forEach(function(ld) {
+    ld.stats.outlierCells.forEach(function(o) {
+      var el = document.getElementById(o.cellId);
+      if (el) { el.style.borderColor = '#ef4444'; el.style.background = '#fef2f2'; }
+    });
+  });
 
   // Switch to results tab
   document.querySelector('[data-tab="tab-results"]').click();
@@ -798,6 +822,23 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     html += ' — used for Westgard evaluation and chart lines.</div>';
   }
 
+  // Outlier warning
+  if (stats.outlierCells && stats.outlierCells.length > 0) {
+    html += '<div style="border-radius:10px;padding:10px 14px;border:1px solid #fca5a5;background:#fef2f2;margin-bottom:12px;">';
+    html += '<div style="font-size:12px;font-weight:800;color:#b91c1c;margin-bottom:6px;">&#9888; ' + stats.outlierCells.length + ' potential outlier' + (stats.outlierCells.length > 1 ? 's' : '') + ' detected (> 4\xd7Sw from run mean)</div>';
+    html += '<div style="font-size:12px;color:#7f1d1d;margin-bottom:8px;">Values are highlighted in the data grid.</div>';
+    html += '<table style="font-size:12px;margin-bottom:8px;"><thead><tr><th>Day</th><th>Run</th><th>Rep</th><th class="num">Value</th><th class="num">Run mean</th><th class="num">Deviation</th></tr></thead><tbody>';
+    stats.outlierCells.forEach(function(o) {
+      html += '<tr><td>' + o.day + '</td><td>' + o.run + '</td><td>' + o.col + '</td>';
+      html += '<td class="num" style="color:#b91c1c;font-weight:700;">' + fmt(o.value, 4) + '</td>';
+      html += '<td class="num">' + fmt(o.runMean, 4) + '</td>';
+      html += '<td class="num" style="color:#b91c1c;">' + o.nSw + '\xd7Sw</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<button onclick="clearEPOutliers(' + lvl + ')" style="font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid #fca5a5;background:#fff;color:#b91c1c;font-weight:700;cursor:pointer;">Clear outlier values &amp; recalculate</button>';
+    html += '</div>';
+  }
+
   // KPI grid
   html += '<div class="kpi-grid">';
   html += kpi('Grand Mean', fmt(stats.grandMean, 4), unit);
@@ -812,6 +853,15 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     var vClass = pass ? 'pass' : 'fail';
     var vIcon  = pass ? '&#10003; PASS' : '&#10007; FAIL';
     html += '<div class="verdict ' + vClass + '">' + vIcon + ' &mdash; CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% is ' + (pass ? 'within' : 'above') + ' allowable ' + fmt(allowableCV, 1) + '%</div>';
+    // Show EFLM source attribution if allowable CV was set from EFLM database
+    if (ep05EFLMKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[ep05EFLMKey]) {
+      var eflmA = EFLM_DB[ep05EFLMKey];
+      var tierLabel = ep05EFLMTier.charAt(0).toUpperCase() + ep05EFLMTier.slice(1);
+      html += '<div style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px;">';
+      html += 'Allowable CV from EFLM biological variation database &mdash; ' + escHtml(eflmA.name) + ', ' + tierLabel + ' tier';
+      html += ' (CV<sub>I</sub> = ' + eflmA.cvi + '%, CV<sub>G</sub> = ' + eflmA.cvg + '%)';
+      html += '</div>';
+    }
   }
 
   // EP15 verification verdict
@@ -1103,7 +1153,10 @@ function summaryText(stats, cfg, wgVio, usingFixed, ctrlMu, ctrlS, hasAllowCV, p
   lines.push('  95% CI (CVt):      [' + fmt(stats.ciCVtLo, 2) + '%, ' + fmt(stats.ciCVtHi, 2) + '%]');
   lines.push('');
   if (hasAllowCV) {
-    lines.push('Allowable CV%:     ' + fmt(allowableCV, 1) + '%');
+    var eflmSrc = (ep05EFLMKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[ep05EFLMKey])
+      ? ' [EFLM ' + ep05EFLMTier + ': ' + EFLM_DB[ep05EFLMKey].name + ']'
+      : '';
+    lines.push('Allowable CV%:     ' + fmt(allowableCV, 1) + '%' + eflmSrc);
     lines.push('Result:            ' + (pass ? 'PASS' : 'FAIL') + ' (CVt ' + fmt(stats.CVt, 2) + '% ' + (pass ? '<=' : '>') + ' ' + fmt(allowableCV, 1) + '%)');
     lines.push('');
   }
@@ -1201,10 +1254,155 @@ function generateEPData() {
 // ─────────────────────────────────────────────
 // Init on page load
 // ─────────────────────────────────────────────
+// ── EFLM integration ──
+var ep05EFLMKey  = '';
+var ep05EFLMTier = 'desirable';
+
+(function buildEFLMDropdown() {
+  var sel = document.getElementById('ep05-eflm-analyte');
+  if (!sel || typeof EFLM_DB === 'undefined') return;
+  Object.entries(EFLM_DB)
+    .sort(function(a, b) { return a[1].name.localeCompare(b[1].name); })
+    .forEach(function(entry) {
+      var opt = document.createElement('option');
+      opt.value = entry[0];
+      opt.textContent = entry[1].name + ' (' + entry[1].unit + ')';
+      sel.appendChild(opt);
+    });
+})();
+
+function ep05OnAnalyteChange() {
+  ep05EFLMKey = document.getElementById('ep05-eflm-analyte').value;
+  if (!ep05EFLMKey) {
+    ep05ClearAllowCV();
+    document.getElementById('ep05-eflm-tier-cards').style.display = 'none';
+    return;
+  }
+  ep05RenderTierCards();
+  ep05ApplyAllowCV();
+}
+
+function ep05RenderTierCards() {
+  var wrap = document.getElementById('ep05-eflm-tier-cards');
+  if (!ep05EFLMKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[ep05EFLMKey]) {
+    wrap.style.display = 'none';
+    return;
+  }
+  var a      = EFLM_DB[ep05EFLMKey];
+  var tiers  = calcEFLMTiers(a.cvi, a.cvg);
+  var colors = { optimal:'#059669', desirable:'#2563eb', minimum:'#d97706' };
+  var bgs    = { optimal:'#ecfdf5', desirable:'#eff6ff', minimum:'#fffbeb' };
+  var bords  = { optimal:'#6ee7b7', desirable:'#bfdbfe', minimum:'#fde68a' };
+
+  wrap.style.display = 'block';
+  wrap.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+    '<strong>' + escHtml(a.name) + '</strong> &nbsp;·&nbsp; ' + escHtml(a.unit) +
+    ' &nbsp;·&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;·&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    ['optimal','desirable','minimum'].map(function(tr) {
+      var active = tr === ep05EFLMTier;
+      return '<div onclick="ep05SelectTier(\'' + tr + '\')" style="cursor:pointer;flex:1;min-width:100px;' +
+        'background:' + (active ? bgs[tr] : '#fff') + ';' +
+        'border:2px solid ' + (active ? bords[tr] : '#e5e7eb') + ';' +
+        'border-radius:10px;padding:10px 12px;transition:all .12s;' +
+        (active ? 'box-shadow:0 0 0 3px ' + bords[tr] + '80;' : '') + '">' +
+        '<div style="font-weight:700;font-size:11px;text-transform:uppercase;color:' + colors[tr] + ';margin-bottom:5px;">' + tr + '</div>' +
+        '<div style="font-size:12px;line-height:1.8;">Allowable CV ≤ <strong>' + tiers[tr].cv + '%</strong></div>' +
+        (active ? '<div style="font-size:10px;color:' + colors[tr] + ';margin-top:4px;font-weight:700;">&#10003; Applied</div>' : '') +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
+function ep05SelectTier(tier) {
+  ep05EFLMTier = tier;
+  ep05RenderTierCards();
+  ep05ApplyAllowCV();
+}
+
+function ep05ApplyAllowCV() {
+  if (!ep05EFLMKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[ep05EFLMKey]) return;
+  var t   = calcEFLMTiers(EFLM_DB[ep05EFLMKey].cvi, EFLM_DB[ep05EFLMKey].cvg)[ep05EFLMTier];
+  var d   = getDesign();
+  for (var li = 0; li < d.levels; li++) {
+    var inp = document.getElementById('lc-allowcv-' + li);
+    if (inp) { inp.value = t.cv; inp.dataset.eflmFilled = '1'; }
+  }
+}
+
+function ep05ClearAllowCV() {
+  var d = getDesign();
+  for (var li = 0; li < d.levels; li++) {
+    var inp = document.getElementById('lc-allowcv-' + li);
+    if (inp && inp.dataset.eflmFilled) { inp.value = ''; delete inp.dataset.eflmFilled; }
+  }
+}
+
+// Keep ep05UpdateEFLM as a no-op for any lingering references
+function ep05UpdateEFLM() {}
+
 (function init() {
   buildLevelConfigs();
   buildAllTables();
 })();
+
+window.exportToExcel = function() {
+  if (!_levelsData || _levelsData.length === 0) { alert('Run analysis first.'); return; }
+  var wb = XLSX.utils.book_new();
+
+  // Summary sheet
+  var summaryRows = [
+    ['EP05/EP15 Precision Analysis'],
+    ['Generated: ' + new Date().toLocaleString()],
+    [],
+    ['Level', 'Label', 'Mean', 'Unit', 'Runs (n)', 'Reps', 'CVw % (Repeatability)', 'CVb % (Between-run)', 'CVt % (Reproducibility)', 'CVt 95% CI Lower', 'CVt 95% CI Upper', 'Allowable CV%', 'Verdict']
+  ];
+
+  _levelsData.forEach(function(ld, idx) {
+    var s = ld.stats, c = ld.cfg;
+    var allowCV = parseFloat(c.allowCV);
+    var verdict = (!isNaN(allowCV) && allowCV > 0) ? (s.CVt <= allowCV ? 'PASS' : 'FAIL') : '';
+    summaryRows.push([
+      idx + 1,
+      c.label || ('Level ' + (idx + 1)),
+      s.grandMean ? s.grandMean.toFixed(4) : '',
+      c.unit || '',
+      s.n || '',
+      s.m || '',
+      s.CVw ? s.CVw.toFixed(3) : '',
+      s.CVb ? s.CVb.toFixed(3) : '',
+      s.CVt ? s.CVt.toFixed(3) : '',
+      s.ciCVtLo ? s.ciCVtLo.toFixed(3) : '',
+      s.ciCVtHi ? s.ciCVtHi.toFixed(3) : '',
+      !isNaN(allowCV) && allowCV > 0 ? allowCV : '',
+      verdict
+    ]);
+  });
+
+  var summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
+  summaryWs['!cols'] = [{wch:8},{wch:16},{wch:10},{wch:8},{wch:10},{wch:6},{wch:22},{wch:22},{wch:24},{wch:18},{wch:18},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+  // Raw data sheet per level
+  _levelsData.forEach(function(ld, idx) {
+    var rows = [['Day', 'Run', 'Rep 1', 'Rep 2', 'Run Mean', 'Within-run Diff']];
+    (ld.runData || []).forEach(function(run) {
+      rows.push([
+        run.day || '', run.run || '',
+        run.vals && run.vals[0] != null ? run.vals[0] : '',
+        run.vals && run.vals[1] != null ? run.vals[1] : '',
+        run.mean != null ? run.mean.toFixed(4) : '',
+        run.diff != null ? run.diff.toFixed(4) : ''
+      ]);
+    });
+    var sheetName = ('Level ' + (idx + 1) + ' Data').slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), sheetName);
+  });
+
+  XLSX.writeFile(wb, 'EP05_Precision_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+};
 </script>
 </body>
 </html>

@@ -1,0 +1,71 @@
+<h2>Dance of the P-values</h2>
+
+<p>
+  This simulation tool illustrates one of the most misunderstood concepts in statistics:
+  <strong>p-values and confidence intervals vary from experiment to experiment, even when the true effect never changes.</strong>
+</p>
+
+<h3>Purpose</h3>
+<p>
+  By repeatedly sampling from a fixed population with known parameters, you can directly observe how much
+  sampling variability affects the outcome of a single experiment. The "dance" refers to how CIs and
+  p-values jump around while the true effect remains constant in the background.
+</p>
+
+<h3>When to use this tool</h3>
+<ul>
+  <li>Understanding why a single significant p-value is not proof of an effect</li>
+  <li>Seeing how sample size affects the proportion of significant results (power)</li>
+  <li>Visualising the difference between statistical and clinical significance</li>
+  <li>Teaching frequentist inference: what a 95% CI actually means</li>
+</ul>
+
+<h3>Key concepts</h3>
+
+<h4>What a p-value is</h4>
+<p>
+  The p-value is the probability of obtaining a result at least as extreme as the observed one,
+  <em>assuming the null hypothesis is true</em>. It is not the probability that H₀ is true,
+  and it does not measure the size or importance of an effect.
+</p>
+
+<h4>What a confidence interval is</h4>
+<p>
+  A 95% CI is a procedure: if you repeat the experiment many times and compute a CI each time,
+  95% of those intervals will contain the true parameter. It does <em>not</em> mean there is
+  a 95% probability that the true value lies in <em>this specific</em> interval.
+</p>
+<p>
+  The forest plot in this tool makes this concrete — you can watch individual intervals miss the
+  true mean, and count how often this happens.
+</p>
+
+<h4>Power</h4>
+<p>
+  Power = P(significant result | H₀ false) = the long-run fraction of experiments that correctly
+  detect a real effect. After enough repetitions, the proportion of p &lt; α runs estimates the power
+  of the study design you have set up.
+</p>
+
+<h4>Cohen's δ (effect size)</h4>
+<p>
+  δ = (μ₁ − μ₂) / σ — the standardised difference between the two true means.
+  Unlike a p-value, it does not change with sample size. Small: 0.2, Medium: 0.5, Large: 0.8 (Cohen 1988).
+</p>
+
+<h3>What to observe</h3>
+<ul>
+  <li><strong>Under H₀ (δ = 0):</strong> p-values are uniformly distributed on (0, 1); roughly 5% fall below 0.05 by chance alone — these are false positives (Type I errors).</li>
+  <li><strong>Under H₁ (δ ≠ 0):</strong> p-values pile up near 0; the fraction below α estimates power. The larger the effect or the bigger the sample, the tighter this pile.</li>
+  <li><strong>Small n:</strong> Wide CIs, low power — many experiments miss the effect even though it is real.</li>
+  <li><strong>Large n, tiny δ:</strong> Nearly every experiment is significant, but the effect may be too small to matter clinically.</li>
+</ul>
+
+<h3>Accuracy &amp; limitations</h3>
+<div style="margin-top:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.6;">
+  <strong>Accuracy &amp; limitations:</strong>
+  Simulations assume normally distributed data and use a two-sample (or one-sample) t-test.
+  Estimated power from the simulation converges to the true analytical power as the number of experiments increases.
+  The simulation is not a replacement for prospective power calculations — it is a visualisation tool.
+  Real studies have one sample, not the luxury of repeated draws from a known population.
+</div>

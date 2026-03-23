@@ -361,9 +361,15 @@ function renderResults(res){
         `;
       }
       
+      vizHTML += `
+        <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Boxplots show the actual observed data — they are exact representations of your sample, not assumptions. The normal approximation for the z-score (shown when using the large-sample method) is reliable for n₁ + n₂ ≥ 20 and becomes less accurate with very small groups or many tied ranks. For small samples the exact permutation p-value is used instead, and no sampling distribution is displayed. Mann-Whitney tests whether one group tends to have larger values (stochastic dominance) — it does <em>not</em> test for equal means or equal distributions.
+        </div>
+      `;
+
       vizCard.innerHTML = vizHTML;
       resultsDiv.appendChild(vizCard);
-      
+
       renderBoxplotViz(res.g1, res.g2);
       if(exactP === null){
         renderNormalViz(z, significant, alpha, tail);
@@ -694,10 +700,12 @@ function refreshGeneratedGroup(groupNum){
 }
 
 function useGeneratedData(groupNum){
-  const generated = el(`generatedOutput${groupNum}`).value;
+  const generated = el(`generatedOutput${groupNum}`)?.value;
   if(!generated) return;
   el(`g${groupNum}`).value = generated;
   el('inputError').style.display = 'none';
+  // Only auto-run when both groups have data
+  if(el('g1').value.trim() && el('g2').value.trim()) runMannWhitney();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{

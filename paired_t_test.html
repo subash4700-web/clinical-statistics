@@ -11,118 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
-    :root{
-      --bg:#f4f6f8;
-      --card:#ffffff;
-      --ink:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --accent:#1976d2;
-      --warn:#b45309;
-      --bad:#c62828;
-      --good:#2e7d32;
-    }
-    body{ background:var(--bg); color:var(--ink); }
-    .container{ max-width:1100px; }
-    .subtitle{ color:var(--muted); }
-
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media (max-width: 900px){ .grid-2{ grid-template-columns:1fr; } }
-
-    textarea{
-      width:100%;
-      min-height:160px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 13px;
-      padding:10px;
-      border:1px solid var(--line);
-      border-radius:10px;
-      box-sizing:border-box;
-      background:#fff;
-    }
-    select, input[type="number"]{
-      width:100%;
-      padding:8px 10px;
-      border:1px solid var(--line);
-      border-radius:10px;
-      box-sizing:border-box;
-      background:#fff;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-    }
-    .section-title{
-      font-weight:700;
-      margin:0 0 8px 0;
-      font-size: 14px;
-    }
-    .note{ color:var(--muted); font-size: 12.5px; margin-top:6px; }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size:12.5px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color: var(--muted);
-    }
-    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-    button{
-      border:none;
-      border-radius:10px;
-      padding:10px 14px;
-      font-weight:700;
-      cursor:pointer;
-      transition: transform .05s ease, opacity .15s ease;
-    }
-    button:active{ transform: translateY(1px); }
-    .btn-primary{ background:var(--accent); color:#fff; }
-    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
-    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
-    .btn-danger{ background:#b91c1c; color:#fff; }
-
-    .tabs{ display:flex; gap:10px; margin: 12px 0 14px; }
-    .tab{
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      cursor:pointer;
-      font-weight:700;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
-    .tab-content{ display:none; }
-    .tab-content.active{ display:block; }
-
-    .alert{
-      border-radius:12px;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size: 13px;
-      line-height:1.4;
-    }
-    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color: #7c2d12; }
-    .alert.bad{ border-color:#ef444455; background:#fef2f2; color: #7f1d1d; }
-    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color: #14532d; }
-
-    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
-    table{ width:100%; border-collapse:collapse; font-size: 13px; background:#fff; }
-    th, td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
-    th{ background:#f9fafb; font-weight:800; color:#374151; }
-    td.num, th.num{ text-align:right; font-family: ui-monospace, monospace; }
     tr.outlier td{ background:#fff7ed; }
-    .small{ font-size:12px; color:var(--muted); }
     .mono{ font-family: ui-monospace, monospace; }
     .copybox{
       display:flex; gap:10px; align-items:flex-start;
@@ -134,32 +26,6 @@
       font-size: 12.5px; line-height:1.5;
       flex:1;
     }
-
-    canvas{ max-width:100%; }
-    .viz-wrap{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:#fff;
-    }
-
-    .assump-grid{
-      display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;
-    }
-    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
-    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
-    .assump-item input{ margin-top:2px; }
-    .kpi-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr; } }
-    .kpi{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px;
-      background:#fff;
-    }
-    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
-    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
-    
   </style>
 </head>
 
@@ -171,7 +37,7 @@
   <p class="subtitle" style="margin-top:0;">Compare two dependent measurements on the same subjects (analysis on differences).</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data & presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="results">Results</div>
   </div>
 
@@ -180,47 +46,48 @@
 
     <div class="grid-2">
 
-      <div class="card">
-        <div class="section-title">Study context</div>
+      <details class="assumptions-panel">
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" id="chkPaired" checked />
+              <span>
+                <strong>Data are paired</strong><br />
+                <span class="small">Before/after, repeated measures, matched pairs</span>
+              </span>
+            </label>
 
-        <div class="assump-grid">
-          <label class="assump-item">
-            <input type="checkbox" id="chkPaired" checked />
-            <span>
-              <strong>Data are paired</strong><br />
-              <span class="small">Before/after, repeated measures, matched pairs</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkContinuous" checked />
+              <span>
+                <strong>Outcome is continuous</strong><br />
+                <span class="small">Numeric measurements (not categories)</span>
+              </span>
+            </label>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkContinuous" checked />
-            <span>
-              <strong>Outcome is continuous</strong><br />
-              <span class="small">Numeric measurements (not categories)</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkIndepPairs" checked />
+              <span>
+                <strong>Pairs are independent</strong><br />
+                <span class="small">Each subject/pair is independent of other subjects</span>
+              </span>
+            </label>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkIndepPairs" checked />
-            <span>
-              <strong>Pairs are independent</strong><br />
-              <span class="small">Each subject/pair is independent of other subjects</span>
-            </span>
-          </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkOkCheck" checked />
+              <span>
+                <strong>Run assumption checks</strong><br />
+                <span class="small">Normality (differences) + extreme outliers</span>
+              </span>
+            </label>
+          </div>
 
-          <label class="assump-item">
-            <input type="checkbox" id="chkOkCheck" checked />
-            <span>
-              <strong>Run assumption checks</strong><br />
-              <span class="small">Normality (differences) + extreme outliers</span>
-            </span>
-          </label>
+          <div style="margin-top:10px;">
+            <span class="pill">Tip: Paired t-test assumes normality of the <strong>differences</strong>, not the raw columns.</span>
+          </div>
         </div>
-
-        <div style="margin-top:10px;">
-          <span class="pill">Tip: Paired t-test assumes normality of the <strong>differences</strong>, not the raw columns.</span>
-        </div>
-      </div>
+      </details>
 
       <div class="card">
         <div class="section-title">Test settings</div>
@@ -470,6 +337,9 @@
         <canvas id="tVizCanvas" height="270"></canvas>
       </div>
       <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The red curve shows the theoretical sampling distribution of the mean difference d̄. It assumes the within-pair differences are approximately normally distributed — or that n ≥ 30 (CLT). With small n and non-normal differences, the curve is approximate. Check the assumption section below; if normality is violated, prefer the Wilcoxon signed-rank test.
+      </div>
     </div>
 
     <details class="card" style="margin-top:16px;">

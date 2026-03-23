@@ -1,0 +1,125 @@
+<h2>ROC &amp; Diagnostic Performance</h2>
+
+<p>
+  This tool evaluates the diagnostic accuracy of a test or biomarker using the ROC curve.
+  For a <strong>single analyte</strong>, no regression is involved — patients are ranked by their raw
+  analyte value and the ROC curve is computed directly.
+  When <strong>multiple analytes</strong> are entered, the tool fits a logistic regression model to combine
+  them into a single predicted probability, which is then evaluated on its own ROC curve alongside each
+  individual analyte.
+</p>
+
+<h3>When to use this tool</h3>
+<ul>
+  <li>Evaluating a new biomarker's diagnostic accuracy (sensitivity, specificity, AUC)</li>
+  <li>Choosing a decision threshold for a clinical test</li>
+  <li>Comparing the discriminatory performance of two or more analytes</li>
+  <li>Combining multiple analytes to improve diagnostic accuracy beyond any single marker</li>
+</ul>
+
+<h3>ROC Curve</h3>
+<p>
+  The Receiver Operating Characteristic curve plots <strong>sensitivity (TPR)</strong> on the y-axis against
+  <strong>1 − specificity (FPR)</strong> on the x-axis at every possible decision threshold.
+  Each point on the curve represents one threshold — moving along the curve trades sensitivity for specificity.
+</p>
+<ul>
+  <li><strong>AUC = 0.50</strong> — the diagonal: coin-flip test, no diagnostic value</li>
+  <li><strong>AUC = 0.70–0.80</strong> — fair discrimination</li>
+  <li><strong>AUC = 0.80–0.90</strong> — good discrimination</li>
+  <li><strong>AUC ≥ 0.90</strong> — excellent discrimination</li>
+  <li><strong>AUC = 1.00</strong> — perfect discrimination (rare in real data)</li>
+</ul>
+<p>
+  AUC has an intuitive probabilistic interpretation: it equals the probability that a randomly chosen
+  positive case scores higher than a randomly chosen negative case.
+</p>
+
+<h3>Cut-off selection</h3>
+
+<h4>Youden index (J)</h4>
+<p>
+  J = Sensitivity + Specificity − 1. The Youden cut-off maximises J, giving the best balance between
+  sensitivity and specificity. It is the standard starting point but is not always the right clinical choice.
+</p>
+
+<h4>Clinical trade-off</h4>
+<p>
+  The appropriate cut-off depends on the relative cost of false negatives vs false positives:
+</p>
+<ul>
+  <li><strong>Screening test (rule out):</strong> minimise false negatives → choose a low threshold → high sensitivity, lower specificity. Example: D-dimer for DVT rule-out.</li>
+  <li><strong>Confirmatory test (rule in):</strong> minimise false positives → choose a high threshold → high specificity, lower sensitivity. Example: troponin at a high percentile for AMI confirmation.</li>
+</ul>
+
+<h3>Performance metrics</h3>
+
+<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;">
+  <tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
+    <th style="padding:7px 10px;">Metric</th>
+    <th style="padding:7px 10px;">Formula</th>
+    <th style="padding:7px 10px;">Interpretation</th>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>Sensitivity</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">TP / (TP + FN)</td>
+    <td style="padding:7px 10px;">Proportion of disease cases correctly detected</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>Specificity</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">TN / (TN + FP)</td>
+    <td style="padding:7px 10px;">Proportion of non-disease cases correctly excluded</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>PPV</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">TP / (TP + FP)</td>
+    <td style="padding:7px 10px;">Probability that a positive result is a true case — depends on prevalence</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>NPV</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">TN / (TN + FN)</td>
+    <td style="padding:7px 10px;">Probability that a negative result truly excludes disease — depends on prevalence</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>LR+</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">Sens / (1 − Spec)</td>
+    <td style="padding:7px 10px;">How much a positive result increases the odds of disease. LR+ ≥ 10 = strong</td>
+  </tr>
+  <tr>
+    <td style="padding:7px 10px;"><strong>LR−</strong></td>
+    <td style="padding:7px 10px; font-family:monospace;">(1 − Sens) / Spec</td>
+    <td style="padding:7px 10px;">How much a negative result reduces the odds of disease. LR− ≤ 0.1 = strong</td>
+  </tr>
+</table>
+
+<h3>Logistic regression — combining analytes</h3>
+<p>
+  When multiple analyte columns are present, the tool fits a logistic regression model:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  log(p / 1−p) = β₀ + β₁x₁ + β₂x₂ + … + βₙxₙ
+</p>
+<p>
+  Each analyte is standardised before fitting to ensure numerical stability. The model outputs
+  a predicted probability (0–1) for each patient, which is then used to build the combined ROC curve.
+  The combined AUC is typically higher than any individual analyte because the model exploits
+  partially independent information from each predictor.
+</p>
+
+<h3>Confidence interval on AUC</h3>
+<p>
+  AUC 95% CIs are computed by <strong>non-parametric bootstrap</strong> (600 resamples).
+  Overlapping CIs between two analytes suggest their AUC difference may not be statistically significant.
+  For formal comparison, DeLong's test (not implemented here) should be used.
+</p>
+
+<h3>Accuracy &amp; limitations</h3>
+<div style="margin-top:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.6;">
+  <strong>Accuracy &amp; limitations:</strong>
+  The logistic regression model is fit by gradient descent without regularisation — it may overfit
+  with very small sample sizes (rule of thumb: ≥ 10 events per predictor). AUC estimated on the same
+  data used to fit the model is optimistically biased; for valid model evaluation use a held-out test
+  set or cross-validation. PPV and NPV depend heavily on prevalence — values shown here reflect the
+  prevalence in the data you entered, which may not match your clinical population.
+  This tool is intended for education and exploratory analysis, not regulatory submissions.
+</div>

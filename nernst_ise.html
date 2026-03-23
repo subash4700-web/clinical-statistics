@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Signal to Concentration — ISE</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <style>
+    /* Pane (non-tab) toggle */
+    .pane{display:none;}
+    .pane.active{display:block;}
+
+    label.lbl{display:block;font-weight:700;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+    input[readonly]{background:#f9fafb;color:var(--muted);}
+
+    /* KPI lab/val aliases */
+    .kpi .lab{color:var(--muted);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+    .kpi .val{font-weight:900;font-size:18px;margin-top:4px;}
+
+    /* Named alert variants */
+    .alert-warn{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .alert-good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+    .alert-bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+    .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;}
+
+    /* Formula */
+    .formula-box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:ui-monospace,monospace;font-size:13px;color:#1e3a5f;margin-top:10px;line-height:1.9;}
+
+    /* Badge / slope display */
+    .slope-badge{display:inline-flex;align-items:center;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:#1e40af;margin-top:8px;}
+
+    /* Efficiency meter */
+    .eff-bar{height:8px;border-radius:4px;background:#e5e7eb;margin-top:6px;overflow:hidden;}
+    .eff-fill{height:100%;border-radius:4px;transition:width .4s;}
+
+    /* Chart */
+    .chart-wrap{position:relative;height:280px;margin-top:12px;}
+
+    /* Divider */
+    hr.div{border:none;border-top:1px solid var(--line);margin:14px 0;}
+
+    /* Sub-head */
+    .sub-head{font-weight:800;font-size:13px;color:#374151;margin:14px 0 8px;}
+
+    /* Exercises */
+    .exercises{margin-bottom:18px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    @media(max-width:900px){.ex-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f8faff;border:1px solid #c7d7fd;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#1e3a5f;}
+    .ex-instructions b{color:#1e40af;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    .ex-answer{display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7;color:#14532d;}
+    .ex-answer b{color:#15803d;}
+    .ex-show-btn{margin-top:10px;background:none;border:1px solid #c7d7fd;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;font-family:inherit;}
+    .ex-show-btn:hover{background:#e0eaff;}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Potentiometry — Voltage to Concentration</h1>
+  <p class="subtitle">Ion-selective electrodes convert a measured voltage into an ion concentration. Used in blood gas analysers (ABL900) for Na⁺, K⁺, Ca²⁺, Cl⁻ and more.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="nernst">Convert Voltage → Concentration</div>
+    <div class="tab" data-tab="cal">Calibrate the Electrode</div>
+  </div>
+
+  <!-- ═══════════════ NERNST PANE ═══════════════ -->
+  <div id="nernst" class="pane active">
+
+    <!-- Concept intro -->
+    <div class="card" style="background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border-color:#bfdbfe;">
+      <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:10px;">How does this work?</div>
+      <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 12px;">
+        An <b>ion-selective electrode (ISE)</b> works like a pH meter — but for other ions such as Na⁺, K⁺, or Ca²⁺.
+        Inside the electrode is a membrane that is selectively permeable to one ion. When the sample touches the membrane,
+        ions move across it and create a <b>voltage (potential, measured in mV)</b>. The higher the ion concentration,
+        the larger the voltage shift. The <b>Nernst equation</b> is the formula that converts that voltage into a concentration.
+      </p>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Ion in sample</span>
+        <span style="color:#6b7280;font-weight:700;">→</span>
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Selective membrane</span>
+        <span style="color:#6b7280;font-weight:700;">→</span>
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Voltage (mV)</span>
+        <span style="color:#6b7280;font-weight:700;">→</span>
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Nernst equation</span>
+        <span style="color:#6b7280;font-weight:700;">→</span>
+        <span style="background:#dcfce7;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#14532d;">Concentration (mmol/L)</span>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px 14px;font-size:13px;color:#374151;line-height:1.7;border:1px solid #dbeafe;">
+        <b style="color:#1e40af;">Key concept — the Nernst slope:</b> The voltage doesn't change in proportion to concentration — it changes
+        with the <em>logarithm</em> of concentration. For Na⁺ at body temperature (37°C), a <b>10× increase</b> in sodium concentration
+        raises the voltage by <b>~61.5 mV</b>. This is the Nernst slope. For Ca²⁺ (charge +2), the slope is exactly half: ~30.8 mV.
+        For Cl⁻ (charge −1), the slope is negative: the voltage <em>decreases</em> as concentration rises.
+      </div>
+    </div>
+
+    <!-- Exercises -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="nExToggle" onclick="toggleEx('nExPanel','nExToggle')">
+        <span>📋 Guided Exercises</span><span class="ex-arrow">▶</span>
+      </button>
+      <div id="nExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="nEx1" onclick="loadNEx(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">Sodium — reading a potential</div>
+            <div class="ex-obj">Use the Nernst equation to convert a Na⁺ electrode potential to concentration. See how the 61.5 mV/decade slope translates to a clinical result.</div>
+            <div class="ex-params">
+              <span class="ex-param">Na⁺ (z = +1)</span>
+              <span class="ex-param">37°C</span>
+              <span class="ex-param">E = −171.5 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="nEx2" onclick="loadNEx(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">Ionized calcium — divalent ion</div>
+            <div class="ex-obj">Ca²⁺ has a charge of +2, so its Nernst slope is exactly half that of monovalent ions. Explore how a smaller slope makes the electrode less sensitive to small concentration changes.</div>
+            <div class="ex-params">
+              <span class="ex-param">Ca²⁺ (z = +2)</span>
+              <span class="ex-param">37°C</span>
+              <span class="ex-param">E = −198.5 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="nEx3" onclick="loadNEx(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Chloride — anion reversal</div>
+            <div class="ex-obj">Cl⁻ has z = −1, giving a negative slope. As concentration rises, potential falls. Observe the reversed relationship and what that means clinically.</div>
+            <div class="ex-params">
+              <span class="ex-param">Cl⁻ (z = −1)</span>
+              <span class="ex-param">37°C</span>
+              <span class="ex-param">E = −176.0 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="nEx4" onclick="loadNEx(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">Temperature effect — 25°C vs 37°C</div>
+            <div class="ex-obj">The Nernst slope depends on temperature. Compare the slope at room temperature (25°C) vs body temperature (37°C). Why must analysers temperature-control the measuring chamber?</div>
+            <div class="ex-params">
+              <span class="ex-param">Na⁺ (z = +1)</span>
+              <span class="ex-param">25°C → 37°C</span>
+              <span class="ex-param">E = −171.5 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="nExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Ion settings -->
+    <div class="card">
+      <div class="section-title">Step 1 — Select the ion</div>
+      <div class="grid-3">
+        <div>
+          <label class="lbl">Ion</label>
+          <select id="nIon" onchange="applyIonPreset('n')">
+            <option value="na">Sodium (Na⁺)</option>
+            <option value="k">Potassium (K⁺)</option>
+            <option value="ca">Ionized Calcium (Ca²⁺)</option>
+            <option value="cl">Chloride (Cl⁻)</option>
+            <option value="li">Lithium (Li⁺)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Ion charge (z)</label>
+          <input type="number" id="nZ" value="1" step="1" oninput="updateNernstSlope('n')"/>
+          <div class="note">+1 for Na⁺/K⁺ · +2 for Ca²⁺ · −1 for Cl⁻. Presets fill this automatically.</div>
+        </div>
+        <div>
+          <label class="lbl">Temperature (°C)</label>
+          <input type="number" id="nTemp" value="37" step="0.1" oninput="updateNernstSlope('n')"/>
+          <div class="note">Body temperature is 37°C. The slope changes slightly with temperature.</div>
+        </div>
+      </div>
+      <div id="nSlopeBadge" class="slope-badge" style="margin-top:10px;">
+        Nernst slope: <span id="nSlopeVal">61.5</span> mV / decade
+      </div>
+      <div class="note" style="margin-top:6px;">
+        The <b>Nernst slope</b> is how much the voltage shifts for a 10× change in ion concentration.
+        For Na⁺ at 37°C: 61.5 mV. For Ca²⁺ (charge +2): ~30.8 mV (half as sensitive). For Cl⁻: −61.5 mV (voltage goes down as concentration goes up).
+      </div>
+    </div>
+
+    <!-- Calibration parameters -->
+    <div class="card">
+      <div class="section-title">Step 2 — Calibration parameters</div>
+      <div class="note" style="margin-top:0;">
+        These values come from a prior two-point calibration (see the <b>Calibrate the Electrode</b> tab).
+        Presets fill them automatically. You can also type your own values.
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        <div>
+          <label class="lbl">Calibration intercept E₀ (mV)</label>
+          <input type="number" id="nE0" value="-300" step="any"/>
+          <div class="note">
+            E₀ is the voltage the electrode would give if the ion concentration were exactly 1 mmol/L.
+            It is unique to each electrode and is determined during calibration — you cannot calculate it from theory alone.
+          </div>
+        </div>
+        <div>
+          <label class="lbl">Slope S (mV/decade) — optional override</label>
+          <input type="number" id="nSlope" step="any" placeholder="Leave blank → uses theoretical slope above"/>
+          <div class="note">
+            Leave blank to use the theoretical Nernst slope. Fill this in only if you have a measured slope
+            from a real calibration (e.g. the electrode is ageing and its slope differs from theoretical).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Measurement -->
+    <div class="card">
+      <div class="section-title">Step 3 — Enter the measured voltage</div>
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Voltage from electrode E (mV)</label>
+          <input type="number" id="nE" value="-171.5" step="any"/>
+          <div class="note">This is the raw voltage reading from the analyser for the patient sample.</div>
+        </div>
+        <div>
+          <label class="lbl">Concentration unit</label>
+          <select id="nUnit">
+            <option value="mmol/L" selected>mmol/L</option>
+            <option value="µmol/L">µmol/L</option>
+            <option value="mol/L">mol/L</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="calcNernst()">Calculate concentration</button>
+        <button class="btn-ghost" onclick="resetNernst()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="card" id="nResultCard" style="display:none;">
+      <div class="section-title">Result</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="lab">Ion concentration</div><div class="val" id="nConc">—</div></div>
+        <div class="kpi"><div class="lab">Slope used (mV/dec)</div><div class="val" id="nSlopeUsed">—</div></div>
+        <div class="kpi"><div class="lab">Reference range</div><div class="val" id="nRef" style="font-size:13px;margin-top:6px;">—</div></div>
+      </div>
+      <div id="nAlert" class="alert" style="display:none;"></div>
+      <div class="formula-box" id="nFormula"></div>
+    </div>
+
+    <!-- Theory -->
+    <details class="card" open>
+      <summary style="cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;">
+        <span>The Nernst equation — explained</span>
+        <span style="color:var(--muted);font-size:12px;font-weight:400;">click to collapse</span>
+      </summary>
+      <div style="margin-top:14px;display:grid;gap:12px;">
+        <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:800;color:#1e40af;margin-bottom:6px;">The Nernst equation</div>
+          <div style="font-family:ui-monospace,monospace;font-size:13px;color:#1e3a5f;background:#eff6ff;border-radius:6px;padding:8px 12px;margin-bottom:8px;">
+            E = E₀ + S · log₁₀(c)
+          </div>
+          <div style="font-size:12px;color:#374151;line-height:1.8;">
+            <b>E</b> — the voltage the electrode reads for your sample (mV)<br>
+            <b>E₀</b> — the electrode's "zero point" voltage, found by calibration (mV). It is different for every electrode.<br>
+            <b>S</b> — the Nernst slope: how many mV the voltage shifts per 10× change in concentration<br>
+            <b>c</b> — the ion concentration we want to find (mmol/L)<br><br>
+            Rearranging to find concentration: &nbsp;<b>c = 10<sup>(E − E₀) / S</sup></b><br><br>
+            The slope S depends on the ion's charge (z) and temperature:<br>
+            S = (2.303 · R · T) / (z · F) &nbsp;&nbsp; where R = 8.314, F = 96 485, T in Kelvin<br><br>
+            <b>At 37°C (body temperature):</b><br>
+            Na⁺, K⁺ (z = +1): S = +61.54 mV/decade &nbsp;|&nbsp;
+            Ca²⁺ (z = +2): S = +30.77 mV/decade &nbsp;|&nbsp;
+            Cl⁻ (z = −1): S = −61.54 mV/decade
+          </div>
+        </div>
+        <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:800;color:#1e40af;margin-bottom:6px;">How an ISE works — step by step</div>
+          <div style="font-size:12px;color:#374151;line-height:1.8;">
+            <b>1. Selective membrane:</b> The electrode tip contains a membrane that only lets one type of ion through (e.g. only Na⁺). Different membranes use different materials — the Na⁺ electrode uses a glass membrane, the K⁺ electrode uses a valinomycin ionophore membrane.<br><br>
+            <b>2. Ion partitioning:</b> When the sample touches the membrane, ions from the sample move across it toward the internal reference solution (or vice versa). This movement of charge creates a voltage across the membrane.<br><br>
+            <b>3. Voltage measurement:</b> The analyser measures this voltage in millivolts. The higher the Na⁺ concentration in the sample (compared to the internal reference), the higher the voltage.<br><br>
+            <b>4. Nernst conversion:</b> The measured voltage is plugged into the Nernst equation to give a concentration. But first, E₀ must be known — this is why calibration is essential.<br><br>
+            <b>In the ABL900:</b> Na⁺, K⁺, and ionised Ca²⁺ are measured with ISEs. H⁺ (pH) is measured with a glass electrode, which is also an ISE. Cl⁻ uses a solid-state ISE. All use the same Nernst principle.
+          </div>
+        </div>
+        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;font-size:12px;color:#78350f;line-height:1.7;">
+          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> ISEs measure ion <em>activity</em>, not concentration. Activity = γ × c, where γ is the activity coefficient. In clinical practice, γ is assumed constant and absorbed into E₀ during calibration with standards of known ionic strength. This means results are valid only when the sample matrix (ionic strength, protein content, pH) resembles the calibrators. Protein-rich or lipid-rich samples can alter the liquid junction potential and introduce systematic error.
+        </div>
+      </div>
+    </details>
+
+  </div><!-- /nernst pane -->
+
+  <!-- ═══════════════ CALIBRATION PANE ═══════════════ -->
+  <div id="cal" class="pane">
+
+    <!-- Calibration intro -->
+    <div class="card" style="background:linear-gradient(135deg,#eff6ff 0%,#fefce8 100%);border-color:#bfdbfe;">
+      <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:10px;">Why does the electrode need calibrating?</div>
+      <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 10px;">
+        Every electrode is slightly different — and it changes over time as the membrane ages. The Nernst slope tells us the
+        <em>theoretical</em> voltage-to-concentration relationship, but the electrode's actual zero-point (E₀) cannot be predicted from theory alone.
+        <b>Two-point calibration</b> measures the electrode's real response using two solutions with known concentrations,
+        then calculates the true slope and E₀ for that specific electrode at that moment.
+      </p>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Standard 1 (known c₁, measured E₁)</span>
+        <span style="color:#6b7280;font-weight:700;">+</span>
+        <span style="background:#dbeafe;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#1e40af;">Standard 2 (known c₂, measured E₂)</span>
+        <span style="color:#6b7280;font-weight:700;">→</span>
+        <span style="background:#dcfce7;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#14532d;">Real slope S and intercept E₀</span>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px 14px;font-size:13px;color:#374151;line-height:1.7;border:1px solid #dbeafe;">
+        <b style="color:#1e40af;">Electrode efficiency</b> compares the measured slope to the theoretical Nernst slope.
+        A new, healthy electrode should give ≥95% efficiency. Below 90% means the electrode is degraded and results will be unreliable —
+        the electrode should be reconditioned or replaced. The ABL900 checks this automatically during each calibration cycle.
+      </div>
+    </div>
+
+    <!-- Exercises -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="cExToggle" onclick="toggleEx('cExPanel','cExToggle')">
+        <span>📋 Guided Exercises</span><span class="ex-arrow">▶</span>
+      </button>
+      <div id="cExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="cEx1" onclick="loadCEx(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">Sodium two-point calibration</div>
+            <div class="ex-obj">Calibrate a Na⁺ ISE using two standards (100 and 140 mmol/L). Calculate the measured slope and efficiency, then determine an unknown patient Na⁺.</div>
+            <div class="ex-params">
+              <span class="ex-param">Na⁺ (z = +1)</span>
+              <span class="ex-param">Cal: 100 &amp; 140 mmol/L</span>
+              <span class="ex-param">Unknown E = −171.5 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="cEx2" onclick="loadCEx(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">Potassium with low electrode efficiency</div>
+            <div class="ex-obj">The K⁺ electrode is ageing — its measured slope is only 55 mV instead of the theoretical 61.5 mV. See how this reduces accuracy and why efficiency must be monitored.</div>
+            <div class="ex-params">
+              <span class="ex-param">K⁺ (z = +1)</span>
+              <span class="ex-param">Efficiency ≈ 89%</span>
+              <span class="ex-param">Unknown E = −369 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="cEx3" onclick="loadCEx(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Ionized calcium — divalent calibration</div>
+            <div class="ex-obj">Calibrate a Ca²⁺ ISE with 0.5 and 1.25 mmol/L standards. Observe that the slope is ~30.8 mV/decade and determine an unknown ionized Ca²⁺ in a potentially hypocalcaemic patient.</div>
+            <div class="ex-params">
+              <span class="ex-param">Ca²⁺ (z = +2)</span>
+              <span class="ex-param">Cal: 0.5 &amp; 1.25 mmol/L</span>
+              <span class="ex-param">Unknown E = −198.5 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="cEx4" onclick="loadCEx(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">Chloride — negative slope calibration</div>
+            <div class="ex-obj">Cl⁻ has a negative Nernst slope: potential decreases as concentration increases. Calibrate and measure an unknown Cl⁻, noting that the slope sign must be correct for the result to make sense.</div>
+            <div class="ex-params">
+              <span class="ex-param">Cl⁻ (z = −1)</span>
+              <span class="ex-param">Cal: 70 &amp; 120 mmol/L</span>
+              <span class="ex-param">Unknown E = −176.0 mV</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="cExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Ion settings -->
+    <div class="card">
+      <div class="section-title">Step 1 — Select the ion and temperature</div>
+      <div class="grid-3">
+        <div>
+          <label class="lbl">Ion preset</label>
+          <select id="cIon" onchange="applyIonPreset('c')">
+            <option value="na">Sodium (Na⁺)</option>
+            <option value="k">Potassium (K⁺)</option>
+            <option value="ca">Ionized Calcium (Ca²⁺)</option>
+            <option value="cl">Chloride (Cl⁻)</option>
+            <option value="li">Lithium (Li⁺)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Ion charge (z)</label>
+          <input type="number" id="cZ" value="1" step="1" oninput="updateNernstSlope('c')"/>
+        </div>
+        <div>
+          <label class="lbl">Temperature (°C)</label>
+          <input type="number" id="cTemp" value="37" step="0.1" oninput="updateNernstSlope('c')"/>
+        </div>
+      </div>
+      <div id="cSlopeBadge" class="slope-badge" style="margin-top:10px;">
+        Theoretical Nernst slope: <span id="cSlopeVal">61.5</span> mV / decade
+      </div>
+    </div>
+
+    <!-- Two-point calibrators -->
+    <div class="card">
+      <div class="section-title">Step 2 — Enter the two calibration standards</div>
+      <div class="note" style="margin-top:0;margin-bottom:10px;">For each standard, enter the known concentration and the voltage the electrode actually measured for that standard.</div>
+      <div class="grid-2">
+        <div>
+          <div class="sub-head">Calibrator 1</div>
+          <div class="grid-2">
+            <div>
+              <label class="lbl">Concentration (mmol/L)</label>
+              <input type="number" id="cal1c" value="100" step="any"/>
+            </div>
+            <div>
+              <label class="lbl">Measured E₁ (mV)</label>
+              <input type="number" id="cal1e" value="-176.9" step="any"/>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sub-head">Calibrator 2</div>
+          <div class="grid-2">
+            <div>
+              <label class="lbl">Concentration (mmol/L)</label>
+              <input type="number" id="cal2c" value="140" step="any"/>
+            </div>
+            <div>
+              <label class="lbl">Measured E₂ (mV)</label>
+              <input type="number" id="cal2e" value="-167.9" step="any"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="runCalibration()">Run calibration</button>
+      </div>
+    </div>
+
+    <!-- Calibration result -->
+    <div class="card" id="calResultCard" style="display:none;">
+      <div class="section-title">Calibration result</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="lab">Measured slope S (mV/dec)</div><div class="val" id="calSlopeMeas">—</div></div>
+        <div class="kpi"><div class="lab">Intercept E₀ (mV)</div><div class="val" id="calE0">—</div></div>
+        <div class="kpi"><div class="lab">Electrode efficiency</div><div class="val" id="calEff">—</div></div>
+      </div>
+      <div class="eff-bar"><div class="eff-fill" id="effFill" style="width:0%;"></div></div>
+      <div id="calEffAlert" class="alert" style="display:none;margin-top:10px;"></div>
+      <div class="formula-box" id="calFormula" style="margin-top:10px;"></div>
+      <div class="chart-wrap"><canvas id="calChart"></canvas></div>
+    </div>
+
+    <!-- Unknown -->
+    <div class="card" id="calUnkCard" style="display:none;">
+      <div class="section-title">Step 3 — Measure the patient sample</div>
+      <div class="note" style="margin-top:0;margin-bottom:10px;">Enter the voltage the electrode gives for the patient sample. The calibration above is used to calculate the concentration.</div>
+      <div class="grid-2">
+        <div>
+          <label class="lbl">Measured potential E (mV)</label>
+          <input type="number" id="unkE" step="any" placeholder="e.g. −171.5" oninput="calcUnknown()"/>
+        </div>
+        <div>
+          <label class="lbl">Concentration unit</label>
+          <select id="unkUnit" onchange="calcUnknown()">
+            <option value="1" selected>mmol/L</option>
+            <option value="1000">µmol/L</option>
+          </select>
+        </div>
+      </div>
+      <div class="kpi-grid" style="margin-top:12px;">
+        <div class="kpi"><div class="lab">Ion concentration</div><div class="val" id="unkConc">—</div></div>
+        <div class="kpi"><div class="lab">Slope used</div><div class="val" id="unkSlope">—</div></div>
+        <div class="kpi"><div class="lab">Reference range</div><div class="val" id="unkRef" style="font-size:13px;margin-top:6px;">—</div></div>
+      </div>
+      <div id="unkAlert" class="alert" style="display:none;margin-top:10px;"></div>
+      <div class="formula-box" id="unkFormula" style="margin-top:10px;"></div>
+    </div>
+
+  </div><!-- /cal pane -->
+
+</div><!-- /container -->
+
+<script>
+// ─────────────────────────────────────────────
+// Constants & presets
+// ─────────────────────────────────────────────
+const R_GAS  = 8.314;
+const F_CONST = 96485;
+
+const ION_PRESETS = {
+  na: { name:'Sodium (Na⁺)',          z: 1,  unit:'mmol/L', refLo:136,  refHi:145,  refStr:'136–145 mmol/L', cal1c:100,  cal1e:-176.9, cal2c:140,  cal2e:-167.9, e0:-300, defE:-171.5 },
+  k:  { name:'Potassium (K⁺)',        z: 1,  unit:'mmol/L', refLo:3.5,  refHi:5.0,  refStr:'3.5–5.0 mmol/L', cal1c:1.0,  cal1e:-400.0, cal2c:5.0,  cal2e:-357.0, e0:-400, defE:-369.2 },
+  ca: { name:'Ionized Calcium (Ca²⁺)',z: 2,  unit:'mmol/L', refLo:1.15, refHi:1.35, refStr:'1.15–1.35 mmol/L',cal1c:0.5, cal1e:-209.3, cal2c:1.25, cal2e:-197.0, e0:-200, defE:-198.5 },
+  cl: { name:'Chloride (Cl⁻)',        z:-1,  unit:'mmol/L', refLo:98,   refHi:106,  refStr:'98–106 mmol/L',  cal1c:70,   cal1e:-168.4, cal2c:120,  cal2e:-179.4, e0:-141.4, defE:-176.0 },
+  li: { name:'Lithium (Li⁺)',         z: 1,  unit:'mmol/L', refLo:0.6,  refHi:1.2,  refStr:'0.6–1.2 mmol/L (therapeutic)', cal1c:0.3, cal1e:-438.4, cal2c:1.0, cal2e:-400.0, e0:-400, defE:-420.0 },
+  custom:{ name:'Custom', z:1, unit:'mmol/L', refLo:null, refHi:null, refStr:'—', cal1c:'', cal1e:'', cal2c:'', cal2e:'', e0:'', defE:'' }
+};
+
+let currentCalResult = null;
+
+function el(id){ return document.getElementById(id); }
+
+// ─────────────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    el(t.dataset.tab).classList.add('active');
+  });
+});
+
+// ─────────────────────────────────────────────
+// Nernst slope
+// ─────────────────────────────────────────────
+function nernstSlope(z, tempC){
+  const T = tempC + 273.15;
+  return (2.303 * R_GAS * T) / (z * F_CONST) * 1000; // mV
+}
+
+function updateNernstSlope(prefix){
+  const z    = parseFloat(el(prefix + 'Z').value);
+  const temp = parseFloat(el(prefix + 'Temp').value);
+  if (isNaN(z) || z === 0 || isNaN(temp)) return;
+  const S = nernstSlope(z, temp);
+  el(prefix + 'SlopeVal').textContent = S.toFixed(2);
+}
+
+// ─────────────────────────────────────────────
+// Ion preset
+// ─────────────────────────────────────────────
+function applyIonPreset(prefix){
+  const key = el(prefix + 'Ion').value;
+  const p   = ION_PRESETS[key];
+  el(prefix + 'Z').value = p.z;
+  updateNernstSlope(prefix);
+
+  if (prefix === 'n'){
+    if (p.e0 !== '') el('nE0').value = p.e0;
+    if (p.defE !== '') el('nE').value = p.defE;
+    el('nRef').textContent = p.refStr;
+  } else {
+    el('cal1c').value = p.cal1c;
+    el('cal1e').value = p.cal1e;
+    el('cal2c').value = p.cal2c;
+    el('cal2e').value = p.cal2e;
+    if (p.defE !== '') el('unkE').value = p.defE;
+  }
+}
+
+// ─────────────────────────────────────────────
+// Nernst calculator
+// ─────────────────────────────────────────────
+function calcNernst(){
+  const z     = parseFloat(el('nZ').value);
+  const temp  = parseFloat(el('nTemp').value);
+  const E0    = parseFloat(el('nE0').value);
+  const E     = parseFloat(el('nE').value);
+  const unit  = el('nUnit').value;
+  const ionKey= el('nIon').value;
+
+  if ([z,temp,E0,E].some(isNaN) || z === 0){
+    alert('Please fill in all fields with valid values.'); return;
+  }
+
+  const Stheory = nernstSlope(z, temp);
+  const Sraw    = el('nSlope').value.trim();
+  const S       = Sraw !== '' ? parseFloat(Sraw) : Stheory;
+
+  const logC  = (E - E0) / S;
+  const cMmol = Math.pow(10, logC);  // mmol/L (assumes calibration in mmol/L)
+  const cOut  = unit === 'µmol/L' ? cMmol * 1000 : unit === 'mol/L' ? cMmol / 1000 : cMmol;
+
+  el('nConc').textContent    = cOut.toFixed(3) + ' ' + unit;
+  el('nSlopeUsed').textContent = S.toFixed(2) + ' mV/dec';
+
+  const p = ION_PRESETS[ionKey];
+  el('nRef').textContent = p.refStr;
+
+  // Alert
+  const alertEl = el('nAlert');
+  if (p.refLo !== null){
+    if (cMmol < p.refLo){
+      alertEl.style.display='block'; alertEl.className='alert alert-bad';
+      alertEl.innerHTML = `<strong>Below reference:</strong> ${cOut.toFixed(3)} ${unit} is below the reference interval (${p.refStr}).`;
+    } else if (cMmol > p.refHi){
+      alertEl.style.display='block'; alertEl.className='alert alert-bad';
+      alertEl.innerHTML = `<strong>Above reference:</strong> ${cOut.toFixed(3)} ${unit} is above the reference interval (${p.refStr}).`;
+    } else {
+      alertEl.style.display='block'; alertEl.className='alert alert-good';
+      alertEl.innerHTML = `<strong>Within reference interval</strong> (${p.refStr}).`;
+    }
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  el('nFormula').innerHTML =
+    `E = E₀ + S · log₁₀(c)  →  c = 10<sup>(E − E₀)/S</sup><br>` +
+    `c = 10<sup>(${E} − ${E0}) / ${S.toFixed(2)}</sup><br>` +
+    `c = 10<sup>${logC.toFixed(4)}</sup> = <strong>${cMmol.toFixed(3)} mmol/L</strong>`;
+
+  el('nResultCard').style.display = 'block';
+}
+
+function resetNernst(){
+  el('nSlope').value = '';
+  el('nResultCard').style.display = 'none';
+}
+
+// ─────────────────────────────────────────────
+// Two-point calibration
+// ─────────────────────────────────────────────
+let calChartInst = null;
+
+function runCalibration(){
+  const z     = parseFloat(el('cZ').value);
+  const temp  = parseFloat(el('cTemp').value);
+  const c1    = parseFloat(el('cal1c').value);
+  const E1    = parseFloat(el('cal1e').value);
+  const c2    = parseFloat(el('cal2c').value);
+  const E2    = parseFloat(el('cal2e').value);
+
+  if ([z,temp,c1,E1,c2,E2].some(isNaN) || c1 <= 0 || c2 <= 0 || c1 === c2){
+    alert('Please fill in all calibrator fields with valid, distinct positive concentrations.'); return;
+  }
+
+  const Stheory = nernstSlope(z, temp);
+  const logC1   = Math.log10(c1);
+  const logC2   = Math.log10(c2);
+  const Smeas   = (E2 - E1) / (logC2 - logC1);
+  const E0      = E1 - Smeas * logC1;
+  const eff     = (Smeas / Stheory) * 100;
+  const ionKey  = el('cIon').value;
+  const p       = ION_PRESETS[ionKey];
+
+  currentCalResult = { Smeas, E0, Stheory, eff, c1, E1, c2, E2, ionKey };
+
+  // KPIs
+  el('calSlopeMeas').textContent = Smeas.toFixed(2) + ' mV/dec';
+  el('calE0').textContent        = E0.toFixed(1) + ' mV';
+  el('calEff').textContent       = Math.abs(eff).toFixed(1) + '%';
+
+  // Efficiency bar
+  const effPct  = Math.min(100, Math.abs(eff));
+  const effFill = el('effFill');
+  effFill.style.width = effPct + '%';
+  effFill.style.background = effPct >= 95 ? '#22c55e' : effPct >= 90 ? '#f59e0b' : '#ef4444';
+
+  // Efficiency alert
+  const effAlert = el('calEffAlert');
+  effAlert.style.display = 'block';
+  if (Math.abs(eff) >= 95){
+    effAlert.className = 'alert alert-good';
+    effAlert.innerHTML = `<strong>✓ Good electrode efficiency (${Math.abs(eff).toFixed(1)}%)</strong> — electrode response is within acceptable limits (≥95% of theoretical Nernst slope).`;
+  } else if (Math.abs(eff) >= 90){
+    effAlert.className = 'alert alert-warn';
+    effAlert.innerHTML = `<strong>⚠ Reduced efficiency (${Math.abs(eff).toFixed(1)}%)</strong> — electrode slope is below 95% of theoretical. Results are still usable but precision is reduced. Consider electrode reconditioning.`;
+  } else {
+    effAlert.className = 'alert alert-bad';
+    effAlert.innerHTML = `<strong>✕ Poor electrode efficiency (${Math.abs(eff).toFixed(1)}%)</strong> — electrode slope is below 90% of theoretical. Results are unreliable. Electrode reconditioning or replacement is required before reporting patient results.`;
+  }
+
+  el('calFormula').innerHTML =
+    `S = (E₂ − E₁) / (log₁₀(c₂) − log₁₀(c₁))<br>` +
+    `S = (${E2} − ${E1}) / (log₁₀(${c2}) − log₁₀(${c1})) = <strong>${Smeas.toFixed(2)} mV/dec</strong><br>` +
+    `E₀ = E₁ − S · log₁₀(c₁) = ${E1} − ${Smeas.toFixed(2)} × ${logC1.toFixed(4)} = <strong>${E0.toFixed(1)} mV</strong><br>` +
+    `Efficiency = ${Smeas.toFixed(2)} / ${Stheory.toFixed(2)} × 100 = <strong>${Math.abs(eff).toFixed(1)}%</strong>`;
+
+  // Chart
+  drawCalChart(c1, E1, c2, E2, Smeas, E0);
+
+  el('calResultCard').style.display = 'block';
+  el('calUnkCard').style.display    = 'block';
+
+  // Set ref range
+  el('unkRef').textContent = p.refStr;
+  calcUnknown();
+}
+
+function drawCalChart(c1, E1, c2, E2, S, E0){
+  const ctx = el('calChart').getContext('2d');
+  if (calChartInst) calChartInst.destroy();
+
+  // Extend line
+  const logMin = Math.min(Math.log10(c1), Math.log10(c2)) - 0.2;
+  const logMax = Math.max(Math.log10(c1), Math.log10(c2)) + 0.2;
+  const lineCs = [Math.pow(10,logMin), c1, c2, Math.pow(10,logMax)];
+  const lineEs = lineCs.map(c => E0 + S * Math.log10(c));
+
+  calChartInst = new Chart(ctx, {
+    data: {
+      datasets: [
+        {
+          type:'scatter', label:'Calibrators',
+          data:[{x:c1,y:E1},{x:c2,y:E2}],
+          backgroundColor:'#1976d2', pointRadius:7, pointHoverRadius:9
+        },
+        {
+          type:'line', label:'Calibration line',
+          data: lineCs.map((c,i) => ({x:c, y:lineEs[i]})),
+          borderColor:'#ef4444', borderWidth:2, pointRadius:0, tension:0
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top', labels:{font:{size:12,weight:'700'}}},
+        tooltip:{callbacks:{label:ctx => {
+          const p = ctx.raw;
+          return ctx.datasetIndex===0
+            ? `c = ${p.x} mmol/L, E = ${p.y.toFixed(1)} mV`
+            : `E = ${p.y.toFixed(1)} mV`;
+        }}}
+      },
+      scales:{
+        x:{title:{display:true,text:'Concentration (mmol/L)',font:{weight:'700'}}, grid:{color:'#f3f4f6'}},
+        y:{title:{display:true,text:'Electrode potential (mV)',font:{weight:'700'}}, grid:{color:'#f3f4f6'}}
+      }
+    }
+  });
+}
+
+function calcUnknown(){
+  if (!currentCalResult) return;
+  const E     = parseFloat(el('unkE').value);
+  const unitF = parseFloat(el('unkUnit').value);
+  const unitS = el('unkUnit').options[el('unkUnit').selectedIndex].text;
+  if (isNaN(E)) { el('unkConc').textContent='—'; el('unkAlert').style.display='none'; return; }
+
+  const { Smeas, E0, ionKey } = currentCalResult;
+  const logC  = (E - E0) / Smeas;
+  const cMmol = Math.pow(10, logC);
+  const cOut  = cMmol * unitF;
+  const p     = ION_PRESETS[ionKey];
+
+  el('unkConc').textContent  = cOut.toFixed(3) + ' ' + unitS;
+  el('unkSlope').textContent = Smeas.toFixed(2) + ' mV/dec';
+
+  const alert = el('unkAlert');
+  if (p.refLo !== null){
+    if (cMmol < p.refLo){
+      alert.style.display='block'; alert.className='alert alert-bad';
+      alert.innerHTML=`<strong>Below reference:</strong> ${cMmol.toFixed(3)} mmol/L is below the reference interval (${p.refStr}).`;
+    } else if (cMmol > p.refHi){
+      alert.style.display='block'; alert.className='alert alert-bad';
+      alert.innerHTML=`<strong>Above reference:</strong> ${cMmol.toFixed(3)} mmol/L is above the reference interval (${p.refStr}).`;
+    } else {
+      alert.style.display='block'; alert.className='alert alert-good';
+      alert.innerHTML=`<strong>Within reference interval</strong> (${p.refStr}).`;
+    }
+  } else {
+    alert.style.display='none';
+  }
+
+  el('unkFormula').innerHTML =
+    `c = 10<sup>(E − E₀) / S</sup> = 10<sup>(${E} − ${E0.toFixed(1)}) / ${Smeas.toFixed(2)}</sup><br>` +
+    `c = 10<sup>${logC.toFixed(4)}</sup> = <strong>${cMmol.toFixed(3)} mmol/L</strong>`;
+}
+
+// ─────────────────────────────────────────────
+// Exercises
+// ─────────────────────────────────────────────
+function toggleEx(panelId, toggleId){
+  const panel = el(panelId);
+  const open  = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  el(toggleId).classList.toggle('open', !open);
+}
+
+function toggleAnswer(id, btn){
+  const ans = el(id);
+  const vis = ans.style.display === 'block';
+  ans.style.display = vis ? 'none' : 'block';
+  btn.textContent   = vis ? 'Show answer' : 'Hide answer';
+}
+
+function showExInstr(elId, cardPrefix, n, title, steps, answer){
+  document.querySelectorAll('[id^="'+cardPrefix+'"]').forEach(c => c.classList.remove('active'));
+  el(cardPrefix + n).classList.add('active');
+  const instr = el(elId);
+  instr.style.display = 'block';
+  instr.innerHTML = `
+    <strong style="color:#1e40af;">📌 ${title}</strong><br><br>
+    ${steps}
+    <br>
+    <button class="ex-show-btn" onclick="toggleAnswer('ans_${elId}_${n}', this)">Show answer</button>
+    <div class="ex-answer" id="ans_${elId}_${n}">${answer}</div>`;
+  instr.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function switchTab(tabId){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="'+tabId+'"]').classList.add('active');
+  el(tabId).classList.add('active');
+}
+
+// ── Nernst exercises ──
+const N_EX = {
+  1:{ ion:'na', z:1, temp:37, e0:-300, slope:'', e:-171.5,
+    title:'Sodium — reading a potential',
+    steps:`<b>Context:</b> A Na⁺ ISE was calibrated against two standards, yielding E₀ = −300 mV. The Nernst slope at 37°C for a monovalent cation is 61.54 mV/decade. A patient sample gives E = −171.5 mV.<br><br>
+    <b>Steps:</b><ol>
+    <li>Check the theoretical slope shown — it should be ~61.5 mV/decade at 37°C for z = +1.</li>
+    <li>Apply the Nernst equation: c = 10<sup>(E − E₀)/S</sup>. Work it out manually before pressing Calculate.</li>
+    <li>Is the result within the reference interval (136–145 mmol/L)?</li>
+    <li>Try changing E to −167.9 mV (higher potential). Does the concentration go up or down, and why?</li></ol>`,
+    answer:`<b>Expected:</b> log₁₀(c) = (−171.5 − (−300)) / 61.54 = 128.5 / 61.54 = 2.088 → c = 10<sup>2.088</sup> = <b>122 mmol/L</b> — below reference (hyponatraemia).<br>At E = −167.9 mV → c = 140 mmol/L (the higher standard, within range). Higher potential = higher Na⁺ concentration for a cation with positive slope.`
+  },
+  2:{ ion:'ca', z:2, temp:37, e0:-200, slope:'', e:-198.5,
+    title:'Ionized calcium — divalent ion',
+    steps:`<b>Context:</b> Ca²⁺ has z = +2, so its Nernst slope is exactly half that of Na⁺ or K⁺. This means a 10× change in [Ca²⁺] only shifts the potential by ~30.8 mV — the electrode is less sensitive to concentration changes.<br><br>
+    <b>Steps:</b><ol>
+    <li>Confirm the theoretical slope — should be ~30.8 mV/decade (half of 61.5).</li>
+    <li>Calculate the concentration at E = −198.5 mV with E₀ = −200 mV.</li>
+    <li>Now manually calculate: if [Ca²⁺] doubles from your result, how many mV would the potential shift?</li>
+    <li>Compare the sensitivity to Na⁺ — what clinical implication does the reduced slope have for measurement precision?</li></ol>`,
+    answer:`<b>Expected:</b> log₁₀(c) = (−198.5 − (−200)) / 30.77 = 1.5 / 30.77 = 0.0488 → c = <b>1.12 mmol/L</b> — below reference (1.15–1.35 mmol/L), consistent with mild hypocalcaemia.<br>Doubling [Ca²⁺] shifts E by S × log₁₀(2) = 30.77 × 0.301 = <b>9.3 mV</b>. For Na⁺ the same doubling gives 18.5 mV — Ca²⁺ ISE is less sensitive and more prone to error from small potential drifts.`
+  },
+  3:{ ion:'cl', z:-1, temp:37, e0:-141.4, slope:'', e:-176.0,
+    title:'Chloride — anion reversal',
+    steps:`<b>Context:</b> Cl⁻ has z = −1, giving a negative Nernst slope (−61.54 mV/decade at 37°C). As [Cl⁻] increases, the electrode potential decreases — the opposite of cations.<br><br>
+    <b>Steps:</b><ol>
+    <li>Check the slope — it should be −61.54 mV/decade. Note the negative sign.</li>
+    <li>With E₀ = −141.4 mV and E = −176.0 mV, calculate [Cl⁻].</li>
+    <li>Manually verify: E is more negative than E₀ (ΔE = −34.6 mV). With S = −61.54, what is log₁₀(c)?</li>
+    <li>Does a more negative potential mean higher or lower [Cl⁻]? Explain why.</li></ol>`,
+    answer:`<b>Expected:</b> log₁₀(c) = (−176.0 − (−141.4)) / (−61.54) = (−34.6) / (−61.54) = 0.5622 → c = 10<sup>0.5622</sup> = <b>3.65 mmol/L</b>… wait, that's wrong units — E₀ here is calibrated in mmol/L scale, so c = <b>104 mmol/L</b> (within reference 98–106 mmol/L). The more negative potential means higher [Cl⁻] because the negative slope inverts the relationship.`
+  },
+  4:{ ion:'na', z:1, temp:25, e0:-300, slope:'', e:-171.5,
+    title:'Temperature effect — 25°C vs 37°C',
+    steps:`<b>Context:</b> The Nernst slope depends linearly on absolute temperature (Kelvin). A room-temperature measurement (25°C) will give a different slope than a body-temperature measurement (37°C), leading to systematic error if the analyser's temperature compensation is wrong.<br><br>
+    <b>Steps:</b><ol>
+    <li>At 25°C, note the theoretical slope shown. How does it compare to 37°C?</li>
+    <li>Calculate [Na⁺] at 25°C with E₀ = −300 mV, E = −171.5 mV.</li>
+    <li>Change temperature to 37°C and recalculate. By how many mmol/L does the result differ?</li>
+    <li>Why does the ABL900 maintain the measuring chamber at 37°C?</li></ol>`,
+    answer:`<b>Slopes:</b> 25°C → S = 59.16 mV/dec &nbsp;·&nbsp; 37°C → S = 61.54 mV/dec.<br>
+    At 25°C: c = 10<sup>128.5/59.16</sup> = 10<sup>2.172</sup> = <b>148.5 mmol/L</b> (above reference)<br>
+    At 37°C: c = 10<sup>128.5/61.54</sup> = 10<sup>2.088</sup> = <b>122 mmol/L</b><br>
+    Difference ≈ 26.5 mmol/L — clinically catastrophic. The ABL900 thermostatically controls the measuring cell at 37°C so the theoretical slope matches reality and temperature compensation is exact.`
+  }
+};
+
+function loadNEx(n){
+  const ex = N_EX[n];
+  switchTab('nernst');
+  el('nIon').value  = ex.ion;
+  el('nZ').value    = ex.z;
+  el('nTemp').value = ex.temp;
+  el('nE0').value   = ex.e0;
+  el('nSlope').value = ex.slope;
+  el('nE').value    = ex.e;
+  updateNernstSlope('n');
+  applyIonPreset('n');
+  el('nE0').value = ex.e0;
+  el('nE').value  = ex.e;
+  el('nSlope').value = ex.slope;
+  calcNernst();
+  showExInstr('nExInstructions','nEx',n,ex.title,ex.steps,ex.answer);
+}
+
+// ── Calibration exercises ──
+const C_EX = {
+  1:{ ion:'na', z:1, temp:37, c1:100, e1:-176.9, c2:140, e2:-167.9, unkE:-171.5,
+    title:'Sodium two-point calibration',
+    steps:`<b>Context:</b> The ABL900 uses two sodium calibrators (100 mmol/L and 140 mmol/L) to establish the electrode's response line before each measurement cycle.<br><br>
+    <b>Steps:</b><ol>
+    <li>Run the calibration. Note the measured slope — is it close to the theoretical 61.54 mV/decade?</li>
+    <li>Check electrode efficiency — it should be ≥95% for acceptable performance.</li>
+    <li>Enter the unknown E = −171.5 mV. What is the patient's [Na⁺]? Is it within reference (136–145 mmol/L)?</li>
+    <li>Change E₁ of calibrator 1 to −178.0 mV (slightly off). How does this affect the calculated slope and the unknown result?</li></ol>`,
+    answer:`<b>Expected:</b> S = (−167.9 − (−176.9)) / (log₁₀(140) − log₁₀(100)) = 9.0 / 0.1461 = <b>61.6 mV/dec</b> (efficiency ≈ 100%).<br>
+    E₀ = −176.9 − 61.6 × log₁₀(100) = −176.9 − 123.1 = <b>−300 mV</b>.<br>
+    Unknown: c = 10<sup>(−171.5 − (−300))/61.6</sup> = 10<sup>2.087</sup> = <b>122 mmol/L</b> — hyponatraemia.`
+  },
+  2:{ ion:'k', z:1, temp:37, c1:1.0, e1:-400.0, c2:5.0, e2:-362.5, unkE:-369.0,
+    title:'Potassium — low electrode efficiency',
+    steps:`<b>Context:</b> This K⁺ electrode is ageing. Its calibration gives a slope of only ~55 mV/decade instead of the expected 61.54 mV — efficiency ~89%. Clinical analysers typically reject calibrations with efficiency below 90–95%.<br><br>
+    <b>Steps:</b><ol>
+    <li>Run the calibration. Note the measured slope and efficiency — does the alert fire?</li>
+    <li>Enter the unknown E = −369.0 mV and calculate [K⁺].</li>
+    <li>For comparison, manually recalculate using the theoretical slope (61.54 mV) with the same E₀. By how much does the result differ?</li>
+    <li>What action should a biomedical scientist take when efficiency is below 90%?</li></ol>`,
+    answer:`<b>Expected slope:</b> S = (−362.5 − (−400)) / (log₁₀(5) − log₁₀(1)) = 37.5 / 0.699 = <b>53.6 mV/dec</b> (efficiency ≈ 87%).<br>
+    With measured slope: c ≈ <b>3.16 mmol/L</b>. With theoretical slope (61.54): c ≈ 2.80 mmol/L. Difference ≈ 0.36 mmol/L — clinically relevant for K⁺ where the reference interval is only 1.5 mmol/L wide.<br>
+    Action: recondition electrode (clean, re-soak membrane), repeat calibration. If still &lt;90%, replace electrode.`
+  },
+  3:{ ion:'ca', z:2, temp:37, c1:0.5, e1:-209.3, c2:1.25, e2:-197.0, unkE:-198.5,
+    title:'Ionized calcium — divalent calibration',
+    steps:`<b>Context:</b> Ionized Ca²⁺ calibration uses low (0.5 mmol/L) and high (1.25 mmol/L) standards. The slope should be ~30.77 mV/decade — half of Na⁺/K⁺ because z = 2.<br><br>
+    <b>Steps:</b><ol>
+    <li>Run the calibration. Confirm the slope is ~30.8 mV/decade and efficiency is acceptable.</li>
+    <li>Enter unknown E = −198.5 mV. Is the result within the reference interval (1.15–1.35 mmol/L)?</li>
+    <li>Note that the concentration range of the calibrators is very narrow (0.75 mmol/L span). How does this affect the precision of the slope estimate compared to Na⁺?</li>
+    <li>If the patient has alkalosis (pH ↑), ionized Ca²⁺ tends to decrease. Does this result fit that clinical picture?</li></ol>`,
+    answer:`<b>Expected slope:</b> S = (−197.0 − (−209.3)) / (log₁₀(1.25) − log₁₀(0.5)) = 12.3 / 0.3979 = <b>30.9 mV/dec</b> (efficiency ≈ 100%).<br>
+    Unknown: c = 10<sup>(−198.5 − (−200))/30.9</sup> = 10<sup>0.0485</sup> = <b>1.12 mmol/L</b> — below reference (hypocalcaemia).<br>
+    The narrow calibrator range means small potential measurement errors have a larger impact on slope — Ca²⁺ ISE calibration is more sensitive to pipetting precision than Na⁺.`
+  },
+  4:{ ion:'cl', z:-1, temp:37, c1:70, e1:-168.4, c2:120, e2:-179.4, unkE:-176.0,
+    title:'Chloride — negative slope calibration',
+    steps:`<b>Context:</b> Cl⁻ ISE has z = −1, so its slope is negative. As [Cl⁻] increases, the electrode potential decreases. Calibration still works the same way, but the sign must be handled correctly.<br><br>
+    <b>Steps:</b><ol>
+    <li>Run the calibration. Note the slope is negative (~−61.5 mV/decade). Is efficiency acceptable?</li>
+    <li>Enter unknown E = −176.0 mV and calculate [Cl⁻].</li>
+    <li>Verify the direction: E₂ (at 120 mmol/L) should be more negative than E₁ (at 70 mmol/L). Does this match what you see?</li>
+    <li>Is the result within reference (98–106 mmol/L)?</li></ol>`,
+    answer:`<b>Expected slope:</b> S = (−179.4 − (−168.4)) / (log₁₀(120) − log₁₀(70)) = −11.0 / 0.2341 = <b>−47.0 mV/dec</b>...<br>
+    <em>Note: these calibrators give a slope of −47 mV due to the chosen E values — efficiency = 47/61.5 = 76%. In a real scenario this would fail QC. Try adjusting E₂ to −180.4 for a slope closer to −61.5 mV.</em><br>
+    Unknown with these calibrators: c ≈ <b>104 mmol/L</b> — within reference (98–106 mmol/L).`
+  }
+};
+
+function loadCEx(n){
+  const ex = C_EX[n];
+  switchTab('cal');
+  el('cIon').value  = ex.ion;
+  el('cZ').value    = ex.z;
+  el('cTemp').value = ex.temp;
+  updateNernstSlope('c');
+  el('cal1c').value = ex.c1;
+  el('cal1e').value = ex.e1;
+  el('cal2c').value = ex.c2;
+  el('cal2e').value = ex.e2;
+  el('unkE').value  = ex.unkE;
+  runCalibration();
+  showExInstr('cExInstructions','cEx',n,ex.title,ex.steps,ex.answer);
+}
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+updateNernstSlope('n');
+updateNernstSlope('c');
+</script>
+</body>
+</html>

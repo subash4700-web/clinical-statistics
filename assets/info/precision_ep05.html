@@ -1,0 +1,106 @@
+<h2>EP05 / EP15 Precision — Method Validation</h2>
+
+<p>
+  This tool implements the <strong>CLSI EP05-A3</strong> and <strong>EP15-A3</strong> protocols for
+  formal precision verification during method validation. It is distinct from the Quick Precision /
+  QC tool: EP05 uses a structured multi-day, multi-run design and yields regulatory-grade repeatability
+  and reproducibility estimates.
+</p>
+
+<h3>When to use this tool</h3>
+<ul>
+  <li>New analyser or method release into clinical service</li>
+  <li>Reagent lot verification against manufacturer's claimed precision</li>
+  <li>Annual or post-maintenance precision requalification</li>
+  <li>Comparing your laboratory's performance against EFLM biological variation goals</li>
+</ul>
+
+<h3>EP05-A3 study design</h3>
+<p>
+  The full EP05 protocol requires <strong>20 days × 2 runs/day × 2 replicates/run</strong> per material level.
+  EP15 is a shorter verification study (5 days × 2 runs × 3 replicates) designed to confirm that a method
+  performs within the manufacturer's claimed CV — not to establish a new CV from scratch.
+</p>
+<p>
+  Use at least <strong>2 concentration levels</strong> covering the clinically relevant measuring range.
+  Each level is analysed independently — precision typically varies across the range.
+</p>
+
+<h3>Precision components</h3>
+
+<table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;">
+  <tr style="background:#f9fafb; border-bottom:2px solid #e5e7eb;">
+    <th style="padding:7px 10px; text-align:left;">Component</th>
+    <th style="padding:7px 10px; text-align:left;">Also called</th>
+    <th style="padding:7px 10px; text-align:left;">Captures</th>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>Repeatability (Sr)</strong></td>
+    <td style="padding:7px 10px;">Within-run, within-day</td>
+    <td style="padding:7px 10px;">Short-term random variation within a single run</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>Between-run SD</strong></td>
+    <td style="padding:7px 10px;">Run-to-run</td>
+    <td style="padding:7px 10px;">Calibration drift, run-specific reagent effects</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e5e7eb;">
+    <td style="padding:7px 10px;"><strong>Between-day SD</strong></td>
+    <td style="padding:7px 10px;">Day-to-day</td>
+    <td style="padding:7px 10px;">Reagent lots, temperature, operator effects over time</td>
+  </tr>
+  <tr>
+    <td style="padding:7px 10px;"><strong>Reproducibility (Sᵣ)</strong></td>
+    <td style="padding:7px 10px;">Total, within-laboratory</td>
+    <td style="padding:7px 10px;">All sources combined — the CV that matters for QC planning</td>
+  </tr>
+</table>
+
+<h3>Variance components (ANOVA model)</h3>
+<p>
+  The nested ANOVA partitions total variance into its components:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  S²total = S²repeatability + S²between-run + S²between-day
+</p>
+<p>
+  If a variance component estimate is negative (a known artefact of the method), it is set to zero.
+  All CVs are reported as % of the mean at that level.
+</p>
+
+<h3>EFLM biological variation goals</h3>
+<p>
+  The tool integrates the EFLM Biological Variation Database. Selecting an analyte and tier
+  auto-fills the <em>allowable imprecision</em> input based on:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  Allowable CV ≤ f × 0.5 × CVᵢ
+</p>
+<p>
+  Where CVᵢ is within-subject biological variation and f = 0.25 (Optimal), 0.50 (Desirable), 0.75 (Minimum).
+  The PASS / FAIL verdict compares your reproducibility CV against this goal.
+</p>
+
+<h3>EP15 verification</h3>
+<p>
+  EP15 tests whether your observed precision is <em>consistent with</em> the manufacturer's claim at 95% confidence.
+  The tool computes a one-sided chi-squared test:
+</p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px;">
+  χ² = (n − 1) × S²observed / S²claimed
+</p>
+<p>
+  PASS if χ² ≤ χ²(0.95, df). FAIL means the observed CV exceeds the claim at the 5% significance level.
+</p>
+
+<h3>Accuracy &amp; limitations</h3>
+<div style="margin-top:6px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.6;">
+  <strong>Accuracy &amp; limitations:</strong>
+  Results are only valid if the study design is followed correctly — any deviation from the EP05 schedule
+  (e.g., fewer days, fewer runs) reduces the reliability of variance component estimates.
+  CV estimates have wide uncertainty at small sample sizes; the 95% CI on CV should be reported.
+  EFLM goals are derived from published biological variation data and are updated periodically —
+  verify against the current EFLM database for regulatory submissions.
+  This tool is intended for planning, verification, and education; always follow your laboratory's
+  accreditation requirements for formal validation documentation.
+</div>

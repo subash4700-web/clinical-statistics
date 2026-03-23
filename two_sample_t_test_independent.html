@@ -8,77 +8,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
-    :root{
-      --bg:#f4f6f8; --card:#ffffff; --ink:#111827; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
-    }
-    body{ background:var(--bg); color:var(--ink); }
-    .container{ max-width:1100px; }
-    .subtitle{ color:var(--muted); }
-
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media(max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
-
-    textarea{
-      width:100%; min-height:160px;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-      font-size:13px; padding:10px; border:1px solid var(--line);
-      border-radius:10px; box-sizing:border-box; background:#fff;
-    }
-    select, input[type="number"]{
-      width:100%; padding:8px 10px; border:1px solid var(--line);
-      border-radius:10px; box-sizing:border-box; background:#fff;
-    }
-
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
-    .section-title{ font-weight:700; margin:0 0 8px 0; font-size:14px; }
-    .note{ color:var(--muted); font-size:12.5px; margin-top:6px; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--muted); }
-    .btn-row{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-    button{ border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; transition:transform .05s ease,opacity .15s ease; }
-    button:active{ transform:translateY(1px); }
-    .btn-primary  { background:var(--accent); color:#fff; }
-    .btn-secondary{ background:#111827; color:#fff; opacity:.9; }
-    .btn-ghost    { background:#fff; color:var(--ink); border:1px solid var(--line); }
-    .btn-danger   { background:#b91c1c; color:#fff; }
-
-    .tabs{ display:flex; gap:10px; margin:12px 0 14px; }
-    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; color:var(--muted); font-size:13px; }
-    .tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
-    .tab-content{ display:none; }
-    .tab-content.active{ display:block; }
-
-    .alert{ border-radius:12px; padding:10px 12px; border:1px solid var(--line); background:#fff; font-size:13px; line-height:1.4; }
-    .alert.warn{ border-color:#f59e0b55; background:#fffbeb; color:#7c2d12; }
-    .alert.bad { border-color:#ef444455; background:#fef2f2; color:#7f1d1d; }
-    .alert.good{ border-color:#22c55e55; background:#ecfdf5; color:#14532d; }
-
-    .table-wrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
-    table{ width:100%; border-collapse:collapse; font-size:13px; background:#fff; }
-    th,td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
-    th{ background:#f9fafb; font-weight:800; color:#374151; }
-    td.num,th.num{ text-align:right; font-family:ui-monospace,monospace; }
-    .small{ font-size:12px; color:var(--muted); }
     .mono{ font-family:ui-monospace,monospace; }
-
     .copybox{ display:flex; gap:10px; align-items:flex-start; border:1px dashed var(--line); padding:10px; border-radius:12px; background:#fff; }
     .copybox pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.5; flex:1; }
-
-    canvas{ max-width:100%; }
-    .viz-wrap{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
-
-    .assump-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
-    @media(max-width:900px){ .assump-grid{ grid-template-columns:1fr; } }
-    .assump-item{ display:flex; gap:10px; align-items:flex-start; }
-    .assump-item input{ margin-top:2px; }
-
-    .kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    @media(max-width:900px){ .kpi-grid{ grid-template-columns:1fr; } }
-    .kpi{ border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff; }
-    .kpi .label{ color:var(--muted); font-size:12px; font-weight:700; }
-    .kpi .value{ font-size:16px; font-weight:900; margin-top:4px; }
   </style>
 </head>
 <body>
@@ -88,7 +23,7 @@
   <p class="subtitle" style="margin-top:0;">Compare means between two independent groups.</p>
 
   <div class="tabs">
-    <div class="tab active" data-tab="input">Data &amp; presumptions</div>
+    <div class="tab active" data-tab="input">Data &amp; Assumptions</div>
     <div class="tab" data-tab="results">Results</div>
   </div>
 
@@ -98,42 +33,44 @@
     <div class="grid-2">
 
       <!-- Study context / assumptions -->
-      <div class="card">
-        <div class="section-title">Study context</div>
-        <div class="assump-grid">
-          <label class="assump-item">
-            <input type="checkbox" id="chkIndep" checked />
-            <span>
-              <strong>Groups are independent</strong><br>
-              <span class="small">Different subjects in each group</span>
-            </span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkContinuous" checked />
-            <span>
-              <strong>Outcome is continuous</strong><br>
-              <span class="small">Numeric measurements (not categories)</span>
-            </span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkNoOverlap" checked />
-            <span>
-              <strong>Groups do not overlap</strong><br>
-              <span class="small">No paired or matched observations</span>
-            </span>
-          </label>
-          <label class="assump-item">
-            <input type="checkbox" id="chkOkCheck" checked />
-            <span>
-              <strong>Run assumption checks</strong><br>
-              <span class="small">Normality + outliers (per group)</span>
-            </span>
-          </label>
+      <details class="assumptions-panel">
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" id="chkIndep" checked />
+              <span>
+                <strong>Groups are independent</strong><br>
+                <span class="small">Different subjects in each group</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkContinuous" checked />
+              <span>
+                <strong>Outcome is continuous</strong><br>
+                <span class="small">Numeric measurements (not categories)</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkNoOverlap" checked />
+              <span>
+                <strong>Groups do not overlap</strong><br>
+                <span class="small">No paired or matched observations</span>
+              </span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" id="chkOkCheck" checked />
+              <span>
+                <strong>Run assumption checks</strong><br>
+                <span class="small">Normality + outliers (per group)</span>
+              </span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Tip: If subjects are matched or measured twice, use the Paired t-test instead.</span>
+          </div>
         </div>
-        <div style="margin-top:10px;">
-          <span class="pill">Tip: If subjects are matched or measured twice, use the Paired t-test instead.</span>
-        </div>
-      </div>
+      </details>
 
       <!-- Test settings -->
       <div class="card">
@@ -372,6 +309,9 @@
         <canvas id="tVizCanvas" height="270"></canvas>
       </div>
       <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The red curve is the theoretical sampling distribution of the mean difference Δ̄, requiring approximately normal group data or adequate n (CLT). The gray reference curve uses pooled SD, which assumes equal group variances — if Levene's test flags unequal variances, Welch's correction is applied to the test statistic but the visualization still uses pooled SD. With small, non-normal samples, prefer the Mann-Whitney U test.
+      </div>
     </div>
 
     <!-- Export -->
@@ -1033,6 +973,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ["genMean1","genSD1"].forEach(id => el(id).addEventListener("input", ()=>refreshGeneratedGroup(1)));
   el("useGeneratedBtn1").addEventListener("click", () => {
     el("group1").value = el("generatedOutput1").value;
+    run();
   });
 
   // generate/transfer events for group 2
@@ -1041,6 +982,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   ["genMean2","genSD2"].forEach(id => el(id).addEventListener("input", ()=>refreshGeneratedGroup(2)));
   el("useGeneratedBtn2").addEventListener("click", () => {
     el("group2").value = el("generatedOutput2").value;
+    run();
   });
 
   el("showViz").addEventListener("change",()=>{ if(state.res) recomputeAndRender(); });

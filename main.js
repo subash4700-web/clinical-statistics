@@ -8,9 +8,11 @@ function _requireElectron() {
   finally { Module._resolveFilename = orig; }
 }
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = _requireElectron();
-const fs   = require("fs");
-const path = require("path");
-const https = require("https");
+const fs     = require("fs");
+const path   = require("path");
+const https  = require("https");
+const os     = require("os");
+const crypto = require("crypto");
 
 // ─── LICENSE CONFIGURATION ────────────────────────────────────────────────────
 const KEYGEN_ACCOUNT_ID      = "426a7e2d-e63c-4638-be4e-8a5df6910c1d";
@@ -72,6 +74,41 @@ function validateKeyOnline(licenseKey) {
     req.write(body);
     req.end();
   });
+}
+
+// ─── MACHINE ACTIVATION ───────────────────────────────────────────────────────
+function activateMachine(licenseKey, licenseId) {
+  const fingerprint = crypto.createHash("sha256")
+    .update(`${os.hostname()}-${os.platform()}-${os.arch()}`)
+    .digest("hex").substring(0, 40);
+
+  const body = JSON.stringify({
+    data: {
+      type: "machines",
+      attributes: { fingerprint, name: os.hostname(), platform: os.platform() },
+      relationships: { license: { data: { type: "licenses", id: licenseId } } }
+    }
+  });
+
+  const options = {
+    hostname: "api.keygen.sh",
+    path: `/v1/accounts/${KEYGEN_ACCOUNT_ID}/machines`,
+    method: "POST",
+    headers: {
+      "Content-Type":   "application/vnd.api+json",
+      "Accept":         "application/vnd.api+json",
+      "Authorization":  `License ${licenseKey}`,
+      "Content-Length": Buffer.byteLength(body),
+    },
+    timeout: 10000,
+  };
+
+  // Fire-and-forget — never blocks or breaks the activation flow
+  const req = https.request(options, (res) => { res.resume(); });
+  req.on("error",   () => {});
+  req.on("timeout", () => { req.destroy(); });
+  req.write(body);
+  req.end();
 }
 
 // ─── LICENSE CHECK FLOW ───────────────────────────────────────────────────────
@@ -173,10 +210,14 @@ ipcMain.handle("license:validate", async (event, key) => {
     const detail = result.meta?.detail || "";
 
     if (valid) {
-      const policyId = result.data?.relationships?.policy?.data?.id || "";
-      const planType = policyId.startsWith("496afd51") ? "institution" : "user";
-      const domain   = result.data?.attributes?.metadata?.domain || null;
+      const policyId  = result.data?.relationships?.policy?.data?.id || "";
+      const planType  = policyId.startsWith("496afd51") ? "institution" : "user";
+      const domain    = result.data?.attributes?.metadata?.domain || null;
+      const licenseId = result.data?.id || "";
       writeLicenseCache({ key: trimmed, status: "valid", lastChecked: Date.now(), expiry, planType, domain });
+
+      // Register machine with Keygen so the dashboard shows activation
+      if (licenseId) activateMachine(trimmed, licenseId);
 
       // Open main app and close license window
       createWindow();

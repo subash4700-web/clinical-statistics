@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PCR-RFLP Learning Exercise: HFE C282Y</title>
+<link rel="stylesheet" href="assets/css/components.css">
+<style>
+:root{
+  --green:#166534;--red:#991b1b;--orange:#92400e;
+  --purple:#6d28d9;--teal:#0f766e;
+}
+.page{max-width:1100px;margin:0 auto;padding:20px 16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-right:6px;margin-bottom:4px}
+.badge-red{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
+.badge-blue{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.badge-green{background:#f0fdf4;color:#166534;border:1px solid #86efac}
+.badge-purple{background:#f5f3ff;color:#6d28d9;border:1px solid #c4b5fd}
+.badge-orange{background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:700px){.row2,.row3{grid-template-columns:1fr}}
+/* Primer display */
+.primer-box{font-family:ui-monospace,monospace;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:#f8fafc;line-height:1.8}
+.fwd{color:#1d4ed8;font-weight:700}
+.rev{color:#6d28d9;font-weight:700}
+.snp-wt{background:#bbf7d0;color:#14532d;font-weight:800;border-radius:3px;padding:0 2px}
+.snp-mut{background:#fecaca;color:#7f1d1d;font-weight:800;border-radius:3px;padding:0 2px}
+.rflp-site{background:#fef08a;color:#713f12;font-weight:800;border-radius:3px;padding:0 2px;text-decoration:underline;text-decoration-color:#ca8a04}
+/* Mechanism */
+.seq-block{font-family:ui-monospace,monospace;font-size:13px;line-height:2;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.seq-label{font-size:11px;color:var(--muted);font-weight:700;margin-right:8px;display:inline-block;width:70px}
+/* Gel */
+.gel-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.gel-controls{min-width:180px}
+.genotype-btn{display:block;width:100%;margin-bottom:8px;padding:10px 12px;border:2px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;text-align:left;font-size:13px;font-weight:600;transition:all .15s}
+.genotype-btn:hover{border-color:#93c5fd;background:#eff6ff}
+.genotype-btn.active{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+.genotype-btn .gt-label{font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:2px}
+canvas{border-radius:10px;display:block}
+.gel-legend{font-size:12px;margin-top:10px}
+.gel-legend .leg-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.leg-dot{width:12px;height:4px;border-radius:2px;background:#00ff88;opacity:.85}
+/* Info table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:#f9fafb;font-size:12px;color:#374151;font-weight:700}
+tr:last-child td{border-bottom:none}
+/* Key points */
+.kp{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.kp-num{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.kp-text{font-size:13px;line-height:1.5}
+/* Step arrows */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:16px;flex-wrap:wrap}
+.step{background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#334155}
+.arrow{color:#94a3b8;font-size:18px;margin:0 6px}
+/* Section header */
+.sec-head{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="card" style="background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 100%);border:none;color:#fff">
+    <div style="margin-bottom:8px">
+      <span class="badge" style="background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)">PCR-RFLP Learning Exercise</span>
+      <span class="badge" style="background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)">Molecular Diagnostics</span>
+    </div>
+    <h1 style="color:#fff;font-size:22px">HFE C282Y — rs1800562</h1>
+    <p style="color:#bfdbfe;margin:4px 0 0;font-size:13px">Hereditary Haemochromatosis · RsaI restriction fragment length polymorphism</p>
+  </div>
+
+  <!-- Clinical Context -->
+  <div class="card">
+    <div class="sec-head">Clinical Context</div>
+    <div class="row2">
+      <div>
+        <h3>Hereditary Haemochromatosis (HH)</h3>
+        <p style="font-size:13px;color:#374151;line-height:1.6;margin:0">Autosomal recessive disorder of iron metabolism. Excess iron accumulates in liver, heart, and pancreas. The <strong>HFE C282Y mutation</strong> (p.Cys282Tyr) accounts for ~85% of cases in Northern European populations.</p>
+      </div>
+      <div>
+        <table>
+          <tr><th>Parameter</th><th>Value</th></tr>
+          <tr><td>Gene</td><td>HFE (chr6p22.2)</td></tr>
+          <tr><td>Variant</td><td>c.845G&gt;A</td></tr>
+          <tr><td>Protein change</td><td>p.Cys282Tyr</td></tr>
+          <tr><td>dbSNP</td><td>rs1800562</td></tr>
+          <tr><td>Inheritance</td><td>Autosomal recessive</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assay Setup -->
+  <div class="card">
+    <div class="sec-head">PCR Assay Setup</div>
+    <div class="row3" style="margin-bottom:14px">
+      <div>
+        <div class="sec-head">Forward Primer</div>
+        <div class="primer-box"><span class="fwd">5'–gccaaggagttcgaacctaa–3'</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">20-mer · Tm 45.2°C · 50% GC · pos. 1897–1916</div>
+      </div>
+      <div>
+        <div class="sec-head">Reverse Primer</div>
+        <div class="primer-box"><span class="rev">5'–tcatcagtcacataccccag–3'</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">20-mer · Tm 44.1°C · 50% GC · pos. 2043–2062</div>
+      </div>
+      <div>
+        <div class="sec-head">Restriction Enzyme</div>
+        <div class="primer-box" style="font-size:14px">
+          <strong>RsaI</strong><br>
+          <span style="color:#059669;letter-spacing:2px">GT↓AC</span><br>
+          <span style="color:var(--muted);font-size:11px">Blunt-end cutter</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;color:#14532d">
+      <strong>Amplicon:</strong> 166 bp &nbsp;·&nbsp; <strong>Digestion time:</strong> 37°C, 2–4 h &nbsp;·&nbsp; <strong>Gel:</strong> 3% agarose, 80V, 45 min
+    </div>
+  </div>
+
+  <!-- Mechanism -->
+  <div class="card">
+    <div class="sec-head">Molecular Mechanism</div>
+    <h3>How does C282Y affect RsaI digestion?</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.6;margin:0 0 12px">The c.845G&gt;A substitution changes the <strong>codon 282 from TGC (Cys) to TAC (Tyr)</strong>. This single nucleotide change, combined with the flanking sequence, <strong>creates a new RsaI recognition site (GT↓AC)</strong> that is absent in the wild-type allele.</p>
+
+    <div class="seq-block">
+      <div><span class="seq-label">Wild-type:</span> …GTG<span class="snp-wt">G</span>CTA… &nbsp;<span style="font-size:11px;color:#6b7280">← G at c.845 → <strong>GTGC</strong> — NOT an RsaI site</span></div>
+      <div><span class="seq-label">C282Y:</span> …GTG<span class="snp-mut">A</span>CTA… &nbsp;<span style="font-size:11px;color:#6b7280">← A at c.845 → <span class="rflp-site">GTAC</span> — RsaI site created ✓</span></div>
+      <div style="margin-top:6px;font-size:11px;color:#6b7280">RsaI cuts between GT and AC: &nbsp;…GT<strong>↓</strong>AC…</div>
+    </div>
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <div class="sec-head">Wild-type allele (+)</div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;font-size:13px">
+          <strong>1 constitutive RsaI site</strong> (always present)<br>
+          <span style="color:var(--muted);font-size:12px">→ 1 cut → 2 fragments: <strong>90 bp + 76 bp</strong></span>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head">C282Y allele (m)</div>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:13px">
+          <strong>1 constitutive + 1 C282Y-specific site</strong><br>
+          <span style="color:var(--muted);font-size:12px">→ 2 cuts → 3 fragments: <strong>76 bp + 61 bp + 29 bp</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Gel -->
+  <div class="card">
+    <div class="sec-head">Interactive Gel Simulation</div>
+    <h3>Select a genotype to see the expected band pattern</h3>
+    <div class="gel-wrap">
+      <div class="gel-controls">
+        <div class="sec-head" style="margin-bottom:6px">Genotype</div>
+        <button class="genotype-btn active" onclick="selectGT('wt',this)">
+          +/+ &nbsp;<span class="badge badge-green">Wild-type</span>
+          <span class="gt-label">Homozygous normal</span>
+        </button>
+        <button class="genotype-btn" onclick="selectGT('hz',this)">
+          +/C282Y &nbsp;<span class="badge badge-orange">Heterozygous</span>
+          <span class="gt-label">Carrier — no disease</span>
+        </button>
+        <button class="genotype-btn" onclick="selectGT('mut',this)">
+          C282Y/C282Y &nbsp;<span class="badge badge-red">Homozygous mutant</span>
+          <span class="gt-label">High risk of HH</span>
+        </button>
+
+        <div style="margin-top:16px" id="gt-info"></div>
+      </div>
+
+      <div>
+        <canvas id="gelCanvas" width="420" height="320"></canvas>
+        <div class="gel-legend">
+          <div class="leg-row"><div class="leg-dot"></div><span>Fluorescent band (EtBr / SYBR)</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Lane 1: 50 bp ladder &nbsp;|&nbsp; Lane 2: Patient sample</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expected Results Table -->
+  <div class="card">
+    <div class="sec-head">Expected Results Summary</div>
+    <table>
+      <tr>
+        <th>Genotype</th>
+        <th>RsaI Cuts</th>
+        <th>Bands on Gel</th>
+        <th>Interpretation</th>
+      </tr>
+      <tr>
+        <td><strong>+/+</strong></td>
+        <td>1 cut</td>
+        <td><span class="badge badge-green">90 bp</span><span class="badge badge-green">76 bp</span></td>
+        <td>Wild-type — no C282Y mutation</td>
+      </tr>
+      <tr>
+        <td><strong>+/C282Y</strong></td>
+        <td>1 + 2 cuts (mixed)</td>
+        <td><span class="badge badge-green">90 bp</span><span class="badge badge-orange">76 bp ×2</span><span class="badge badge-orange">61 bp</span><span class="badge badge-orange">29 bp</span></td>
+        <td>Heterozygous carrier — one normal, one mutant allele</td>
+      </tr>
+      <tr>
+        <td><strong>C282Y/C282Y</strong></td>
+        <td>2 cuts</td>
+        <td><span class="badge badge-red">76 bp</span><span class="badge badge-red">61 bp</span><span class="badge badge-red">29 bp</span></td>
+        <td>Homozygous mutant — highest risk for haemochromatosis</td>
+      </tr>
+    </table>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">* 29 bp fragment may be faint or absent on standard agarose gel — use 3–4% gel for small fragments. Interpret with caution if 29 bp is not visible.</div>
+  </div>
+
+  <!-- Key Learning Points -->
+  <div class="card">
+    <div class="sec-head">Key Learning Points</div>
+    <div class="kp">
+      <div class="kp-num">1</div>
+      <div class="kp-text"><strong>PCR-RFLP principle:</strong> A restriction enzyme is used to distinguish alleles based on the presence or absence of its recognition sequence at the polymorphic site.</div>
+    </div>
+    <div class="kp">
+      <div class="kp-num">2</div>
+      <div class="kp-text"><strong>Constitutive site:</strong> The amplicon contains one RsaI site in ALL alleles (digestion control). This confirms the enzyme worked — if you see uncut 166 bp, digestion has failed.</div>
+    </div>
+    <div class="kp">
+      <div class="kp-num">3</div>
+      <div class="kp-text"><strong>C282Y creates a site:</strong> The c.845G&gt;A change converts GTGC to GTAC, introducing a new RsaI recognition site. The mutant allele is therefore cut <em>twice</em>.</div>
+    </div>
+    <div class="kp">
+      <div class="kp-num">4</div>
+      <div class="kp-text"><strong>Heterozygous pattern:</strong> The 76 bp band appears with greater intensity in heterozygotes — it is produced by BOTH alleles (one from each), so it contains twice the amount of DNA.</div>
+    </div>
+    <div class="kp">
+      <div class="kp-num">5</div>
+      <div class="kp-text"><strong>Clinical note:</strong> C282Y homozygosity has ~80% penetrance for elevated iron markers but only ~10–33% penetrance for clinical haemochromatosis. Genotype alone does not confirm disease.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Gel rendering ───────────────────────────────────────────────────────────
+const AMPLICON = 166;
+
+// Fragment definitions
+const GT = {
+  wt:  [{bp:90,from:'constitutive'},{bp:76,from:'constitutive'}],
+  mut: [{bp:76,from:'constitutive'},{bp:61,from:'c282y'},{bp:29,from:'c282y'}],
+  hz:  [{bp:90,from:'constitutive',allele:'wt'},{bp:76,from:'both',double:true},{bp:61,from:'c282y',allele:'mut'},{bp:29,from:'c282y',allele:'mut'}]
+};
+
+const LADDER = [150,100,50];
+
+const INFO = {
+  wt: {
+    label: 'Wild-type (+/+)',
+    desc: 'One RsaI cut (constitutive site only). Two bands: <strong>90 bp + 76 bp</strong>. C282Y mutation absent.',
+    color: '#15803d'
+  },
+  hz: {
+    label: 'Heterozygous (+/C282Y)',
+    desc: 'Mixed pattern. The <strong>76 bp band is brighter</strong> (from both alleles). Bands: 90 + 76 + 61 + 29 bp.',
+    color: '#c2410c'
+  },
+  mut: {
+    label: 'Homozygous C282Y/C282Y',
+    desc: 'Two RsaI cuts per allele. Three bands: <strong>76 bp + 61 bp + 29 bp</strong>. No 90 bp band.',
+    color: '#b91c1c'
+  }
+};
+
+// Map bp → gel Y position (log-linear migration)
+// Canvas: y=30 is near wells, y=290 is bottom
+function bpToY(bp, maxBP = 160, canvas_h = 320) {
+  const top = 45, bot = 285;
+  // log scale: larger fragments near top
+  const logMax = Math.log(maxBP + 10);
+  const logMin = Math.log(18);
+  const logBP  = Math.log(bp);
+  const frac = 1 - (logBP - logMin) / (logMax - logMin);
+  return top + frac * (bot - top);
+}
+
+function bandColor(frag, gt) {
+  if (gt === 'wt') return '#22c55e';
+  if (gt === 'mut') return '#ef4444';
+  // hz
+  if (frag.double) return '#f59e0b';
+  if (frag.allele === 'wt') return '#22c55e';
+  return '#f87171';
+}
+
+function drawGel(gt) {
+  const canvas = document.getElementById('gelCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Well positions
+  const laneW = 80;
+  const ladderX = 80;
+  const sampleX = 260;
+  const wellH = 16;
+
+  // Draw gel texture
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(20, 30, W - 40, H - 50);
+
+  // Labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('50 bp ladder', ladderX, 22);
+  ctx.fillText('Patient', sampleX, 22);
+
+  // Wells
+  ctx.fillStyle = '#0f172a';
+  [ladderX, sampleX].forEach(x => {
+    ctx.beginPath();
+    ctx.roundRect(x - 20, 30, 40, wellH, 3);
+    ctx.fill();
+  });
+
+  // --- Ladder bands ---
+  LADDER.forEach(bp => {
+    const y = bpToY(bp);
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    // Glow
+    const grad = ctx.createLinearGradient(ladderX - 20, y, ladderX + 20, y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, '#60efff');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(ladderX - 22, y - 2, 44, 4);
+    ctx.restore();
+
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px ui-monospace,monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(bp + ' bp', ladderX + 24, y + 3);
+  });
+
+  // --- Sample bands ---
+  const frags = GT[gt];
+  const usedY = {}; // track overlapping bands
+
+  frags.forEach(frag => {
+    const y = Math.round(bpToY(frag.bp));
+    const isDouble = frag.double || false;
+    const alpha = isDouble ? 1.0 : 0.85;
+    const bandH = isDouble ? 6 : 4;
+    const color = bandColor(frag, gt);
+
+    // Glow effect
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.35;
+    const glow = ctx.createRadialGradient(sampleX, y, 0, sampleX, y, 30);
+    glow.addColorStop(0, color);
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(sampleX - 30, y - 15, 60, 30);
+    ctx.restore();
+
+    // Band
+    const grad = ctx.createLinearGradient(sampleX - 22, y, sampleX + 22, y);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.2, color);
+    grad.addColorStop(0.5, '#ffffff');
+    grad.addColorStop(0.8, color);
+    grad.addColorStop(1, 'transparent');
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = grad;
+    ctx.fillRect(sampleX - 24, y - Math.floor(bandH/2), 48, bandH);
+    ctx.restore();
+
+    // Size label
+    ctx.fillStyle = color;
+    ctx.font = (isDouble ? 'bold ' : '') + '11px ui-monospace,monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(frag.bp + (isDouble ? ' ×2' : '') + ' bp', sampleX - 27, y + 4);
+  });
+
+  // Bottom ruler
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(20, H - 22, W - 40, 1);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '10px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('← direction of migration', W / 2, H - 8);
+}
+
+function selectGT(gt, btn) {
+  document.querySelectorAll('.genotype-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawGel(gt);
+
+  const info = INFO[gt];
+  document.getElementById('gt-info').innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px">
+      <div style="font-weight:700;color:${info.color};margin-bottom:4px">${info.label}</div>
+      <div style="color:#374151;line-height:1.6">${info.desc}</div>
+    </div>`;
+}
+
+// Initial draw
+window.addEventListener('load', () => {
+  drawGel('wt');
+  const btn = document.querySelector('.genotype-btn.active');
+  if (btn) {
+    const info = INFO['wt'];
+    document.getElementById('gt-info').innerHTML = `
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px">
+        <div style="font-weight:700;color:${info.color};margin-bottom:4px">${info.label}</div>
+        <div style="color:#374151;line-height:1.6">${info.desc}</div>
+      </div>`;
+  }
+});
+</script>
+</body>
+</html>

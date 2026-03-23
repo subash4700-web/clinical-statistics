@@ -4,78 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bias / Trueness</title>
+  <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    :root{
-      --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#1976d2; --warn:#b45309; --bad:#c62828; --good:#2e7d32;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,sans-serif;padding:20px;}
-    .container{max-width:1000px;margin:0 auto;}
-    h1{font-size:22px;margin-bottom:4px;}
-    .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px;}
-
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;}
-    .section-title{font-weight:700;font-size:14px;margin-bottom:10px;}
-    .note{color:var(--muted);font-size:12px;margin-top:5px;}
-    .field-label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:10px 0 4px;}
-
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-    @media(max-width:700px){.grid-2{grid-template-columns:1fr;}}
-
-    select,input[type="number"],input[type="text"]{
-      width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;
-      background:#fff;font-size:13px;outline:none;
-    }
-    select:focus,input:focus{border-color:var(--accent);}
-    textarea{
-      width:100%;min-height:200px;padding:10px;border:1px solid var(--line);border-radius:10px;
-      font-family:ui-monospace,monospace;font-size:13px;background:#fff;resize:vertical;outline:none;
-    }
-    textarea:focus{border-color:var(--accent);}
-
-    .tabs{display:flex;gap:8px;margin-bottom:16px;}
-    .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted);font-size:13px;}
-    .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
-
-    button{border:none;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;}
-    .btn-primary{background:var(--accent);color:#fff;}
-    .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
-    .btn-secondary{background:#111827;color:#fff;}
-    .btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap;}
-
-    .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
-    .kpi{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
-    .kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px;}
-    .kpi-value{font-size:19px;font-weight:900;font-family:ui-monospace,monospace;}
-    .kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
-
-    .verdict{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:14px;}
-    .verdict.pass{background:#f0fdf4;border:1px solid #86efac;color:#15803d;}
-    .verdict.fail{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;}
-    .verdict.warn{background:#fffbeb;border:1px solid #fde68a;color:#b45309;}
-
-    .section-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;}
-
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;}
-    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
-    th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;}
-    th{background:#f9fafb;font-weight:800;color:#374151;}
     td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
-    tr:last-child td{border-bottom:none;}
 
-    .error-msg{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;}
     .example-box{background:#f9fafb;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.8;}
 
     .sig-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#f9fafb;margin-bottom:14px;font-size:13px;flex-wrap:wrap;}
     .sig-label{font-weight:700;min-width:120px;}
     .sig-val{font-family:ui-monospace,monospace;font-weight:700;}
-    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
     .badge-sig{background:#fef2f2;color:#b91c1c;}
     .badge-ns{background:#f0fdf4;color:#15803d;}
   </style>
@@ -122,6 +63,17 @@
           <p class="note">Absolute value — e.g. enter 5 for ±5%. If blank, no pass/fail assessment.</p>
         </div>
 
+        <!-- EFLM card -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable bias from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <label class="field-label">Analyte</label>
+          <select id="bias-eflm-analyte" onchange="biasEFLMAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="bias-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+        </div>
+
         <div class="card">
           <div class="section-title" id="hint-title">Format — Single Reference</div>
           <p class="note" id="hint-body">One measured value per line. The reference value is entered above.</p>
@@ -151,8 +103,11 @@
               <span style="font-size:13px;color:var(--muted);">%</span>
             </div>
 
-            <label class="field-label">Imprecision (SD)</label>
-            <input type="number" id="gen-sd" value="0.08" min="0" step="any">
+            <label class="field-label">Imprecision (CV%)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" id="gen-sd" value="1.5" min="0" step="0.1" style="flex:1;">
+              <span style="font-size:13px;color:var(--muted);">%</span>
+            </div>
 
             <label class="field-label">n per level</label>
             <input type="number" id="gen-n" value="10" min="2" step="1">
@@ -218,8 +173,9 @@ function generateBiasData(){
 
   allRefs.forEach(r=>{
     const trueMean = r * (1 + biasPct/100);
+    const sdAbs    = r * sdVal / 100;   // CV% → absolute SD scaled to this reference level
     for(let i=0;i<n;i++){
-      const measured = jStat.normal.sample(trueMean, sdVal);
+      const measured = jStat.normal.sample(trueMean, sdAbs);
       if(multiMode) lines.push(`${measured.toFixed(4)}, ${r.toFixed(4)}`);
       else          lines.push(measured.toFixed(4));
     }
@@ -244,6 +200,7 @@ function useBiasData(){
     updateHints();
   }
   previewParse();
+  calculate();
 }
 
 function updateHints(){
@@ -325,16 +282,27 @@ function sd(arr){
 function fmt(n,d=3){return (n===null||n===undefined||isNaN(n))?'—':Number(n).toFixed(d);}
 
 let lastChart=null;
+let _biasRows=[];
+
+function _biasToggle(idx){
+  _biasRows[idx].include=!_biasRows[idx].include;
+  const inc=_biasRows.filter(r=>r.include);
+  if(inc.length>=2) _doCalculateBias(inc.map(r=>r.pair));
+}
+
+function _iqrOutliers(arr){
+  const s=[...arr].sort((a,b)=>a-b);
+  const q1=s[Math.floor(s.length*0.25)];
+  const q3=s[Math.floor(s.length*0.75)];
+  const iqr=q3-q1;
+  return arr.map(v=>iqr>0&&(v<q1-1.5*iqr||v>q3+1.5*iqr));
+}
 
 function calculate(){
   showError('');
-  if(lastChart){lastChart.destroy();lastChart=null;}
   const mode=document.getElementById('sel-mode').value;
   const raw=document.getElementById('txt-data').value;
   if(!raw.trim()){showError('Please enter data.');return;}
-  const analyte=document.getElementById('inp-analyte').value.trim()||'Sample';
-  const unit=document.getElementById('inp-unit').value.trim();
-  const allowable=parseFloat(document.getElementById('inp-allowable').value);
 
   let pairs=[];
   if(mode==='single'){
@@ -345,6 +313,18 @@ function calculate(){
     pairs=parsePairs(raw);
   }
   if(pairs.length<2){showError('At least 2 valid data points required.');return;}
+
+  _biasRows=pairs.map(p=>({pair:p,include:true}));
+  _doCalculateBias(pairs);
+}
+
+function _doCalculateBias(pairs){
+  if(lastChart){lastChart.destroy();lastChart=null;}
+  const analyte=document.getElementById('inp-analyte').value.trim()||'Sample';
+  const unit=document.getElementById('inp-unit').value.trim();
+  const allowable=parseFloat(document.getElementById('inp-allowable').value);
+
+  const nExcl=_biasRows.filter(r=>!r.include).length;
 
   // Per-sample bias
   const biases=pairs.map(p=>({
@@ -371,14 +351,21 @@ function calculate(){
   const hasLimit=!isNaN(allowable)&&allowable>0;
   const pass=hasLimit?Math.abs(meanBias)<=allowable:null;
 
-  // Mean absolute % bias
-  const meanAbsPct=mean(pctArr.map(Math.abs));
+  // IQR outlier flags on % bias
+  const iqrFlags=_iqrOutliers(pctArr);
+  const nFlagged=iqrFlags.filter(Boolean).length;
 
-  let html=kpiGrid([
+  let html='';
+  if(nExcl>0){
+    html+=`<div style="border-radius:10px;padding:8px 12px;border:1px solid #fbbf24;background:#fffbeb;color:#92400e;font-size:13px;margin-bottom:10px;">
+      Analysis based on <strong>${n}</strong> of <strong>${_biasRows.length}</strong> samples — ${nExcl} excluded.</div>`;
+  }
+
+  html+=kpiGrid([
     {label:'n',                 value:n,                    sub:'samples'},
-    {label:'Mean Bias',         value:fmt(meanBias,2)+'%',  sub:`95% CI [${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`},
+    {label:'Mean Bias',         value:fmt(meanBias,2)+'%',  sub:'systematic % bias'},
+    {label:'95% CI of Mean Bias', value:`[${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`, sub:'where true bias likely lies'},
     {label:'SD of Bias',        value:fmt(sdBias,2)+'%',    sub:'variability of bias'},
-    {label:'Mean |Bias|',       value:fmt(meanAbsPct,2)+'%',sub:'mean absolute % bias'},
     {label:'t-statistic',       value:fmt(t,3),             sub:`df=${df}, p=${pVal<0.001?'<0.001':fmt(pVal,3)}`},
     {label:'Systematic Bias',   value:sig?'Significant':'Not significant', sub:'one-sample t-test vs 0'},
   ]);
@@ -397,26 +384,50 @@ function calculate(){
   html+=`<div class="section-header">Individual % Bias (per sample)</div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="bias-chart"></canvas></div>`;
 
-  // Per-sample table
-  html+=`<div class="section-header">Per-Sample Results</div>`;
+  // Per-sample table — build index mapping included _biasRows → pctArr position
+  const incIdx=[];
+  _biasRows.forEach((r,i)=>{if(r.include)incIdx.push(i);});
+
+  html+=`<div class="section-header">Per-Sample Results${nFlagged>0?` <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-left:6px;">${nFlagged} IQR outlier${nFlagged>1?'s':''}</span>`:''}
+    <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:8px;">Uncheck to exclude from analysis</span></div>`;
   html+=`<div class="table-wrap"><table><thead><tr>
-    <th>#</th>
+    <th></th><th>#</th>
     <th class="num">Measured</th>
     <th class="num">Reference</th>
     <th class="num">Abs. Bias</th>
     <th class="num">% Bias</th>
     <th>Flag</th>
   </tr></thead><tbody>`;
-  biases.forEach((b,i)=>{
-    const flag=hasLimit&&Math.abs(b.pctBias)>allowable;
-    html+=`<tr>
-      <td>${i+1}</td>
+
+  let pctIdx=0;
+  _biasRows.forEach((row,ri)=>{
+    const excl=!row.include;
+    if(excl){
+      const p=row.pair;
+      const ab=p.measured-p.reference;
+      const pb=p.reference!==0?(p.measured-p.reference)/p.reference*100:NaN;
+      html+=`<tr style="opacity:.4;">
+        <td><input type="checkbox" onchange="_biasToggle(${ri})"></td>
+        <td>${ri+1}</td><td class="num">${fmt(p.measured,4)}</td>
+        <td class="num">${fmt(p.reference,4)}</td>
+        <td class="num">${fmt(ab,4)}</td>
+        <td class="num">${fmt(pb,2)}%</td><td></td></tr>`;
+      return;
+    }
+    const b=biases[pctIdx];
+    const iqrOut=iqrFlags[pctIdx];
+    const limitFlag=hasLimit&&Math.abs(b.pctBias)>allowable;
+    const rowBg=iqrOut?'background:#fef2f2;':'';
+    html+=`<tr style="${rowBg}">
+      <td><input type="checkbox" checked onchange="_biasToggle(${ri})"></td>
+      <td>${ri+1}</td>
       <td class="num">${fmt(b.measured,4)}</td>
       <td class="num">${fmt(b.reference,4)}</td>
       <td class="num">${fmt(b.absBias,4)}</td>
-      <td class="num" style="color:${Math.abs(b.pctBias)>(hasLimit?allowable:Infinity)?'var(--bad)':'inherit'};font-weight:${flag?'700':'400'};">${fmt(b.pctBias,2)}%</td>
-      <td>${flag?'<span style="color:var(--bad);font-weight:700;">⚠ Exceeds limit</span>':''}</td>
+      <td class="num" style="color:${limitFlag?'var(--bad)':'inherit'};font-weight:${limitFlag||iqrOut?'700':'400'};">${fmt(b.pctBias,2)}%</td>
+      <td>${limitFlag?'<span style="color:var(--bad);font-weight:700;">⚠ Exceeds limit</span>':''}${iqrOut?'<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-left:2px;">IQR outlier</span>':''}</td>
     </tr>`;
+    pctIdx++;
   });
   html+=`</tbody></table></div>`;
 
@@ -424,8 +435,9 @@ function calculate(){
 
   // Draw chart
   const labels=biases.map((_,i)=>i+1);
-  const barColors=biases.map(b=>
+  const barColors=biases.map((b,i)=>
     hasLimit&&Math.abs(b.pctBias)>allowable?'#c62828':
+    iqrFlags[i]?'#f59e0b':
     b.pctBias>0?'#1976d2':'#7c3aed'
   );
   const ctx=document.getElementById('bias-chart');
@@ -454,7 +466,7 @@ function calculate(){
     }
   });
 
-  window._lastResult={analyte,unit,n,meanBias,sdBias,ciLo,ciHi,t,df,pVal,sig,meanAbsPct,allowable,pass,biases};
+  window._lastResult={analyte,unit,n,meanBias,sdBias,ciLo,ciHi,t,df,pVal,sig,allowable,pass,biases,nExcl};
   document.querySelector('[data-tab="tab-results"]').click();
 }
 
@@ -468,13 +480,15 @@ function verdictHtml(pass,observed,limit){
 }
 
 function exportExcel(){
-  const r=window._lastResult; if(!r) return;
+  exportToExcel();
+}
+window.exportToExcel = function(){
+  const r=window._lastResult; if(!r){alert('Run analysis first.');return;}
   const wb=XLSX.utils.book_new();
   const summary=[
     ['Analyte',r.analyte],['Unit',r.unit],[],
     ['n',r.n],['Mean % Bias',r.meanBias],['SD of Bias',r.sdBias],
     ['95% CI lower',r.ciLo],['95% CI upper',r.ciHi],
-    ['Mean |Bias|',r.meanAbsPct],
     ['t-statistic',r.t],['df',r.df],['p-value',r.pVal],
     ['Significant bias',r.sig?'Yes':'No'],
     ...((!isNaN(r.allowable)&&r.allowable>0)?[['Allowable bias %',r.allowable],['Result',r.pass?'PASS':'FAIL']]:[]),
@@ -483,6 +497,85 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(summary),'Summary');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(detail),'Per-Sample');
   XLSX.writeFile(wb,`bias_${r.analyte||'results'}.xlsx`);
+}
+
+// ── EFLM integration ──
+var biasEFLMKey  = '';
+var biasEFLMTier = 'desirable';
+
+(function buildBiasEFLMDropdown() {
+  const sel = document.getElementById('bias-eflm-analyte');
+  if (!sel || typeof EFLM_DB === 'undefined') return;
+  Object.entries(EFLM_DB)
+    .sort((a, b) => a[1].name.localeCompare(b[1].name))
+    .forEach(([key, a]) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = a.name + ' (' + a.unit + ')';
+      sel.appendChild(opt);
+    });
+})();
+
+function biasEFLMAnalyteChange() {
+  biasEFLMKey = document.getElementById('bias-eflm-analyte').value;
+  if (!biasEFLMKey) {
+    document.getElementById('bias-eflm-tier-cards').style.display = 'none';
+    return;
+  }
+  biasRenderTierCards();
+  biasApplyEFLM();
+}
+
+function biasSelectTier(tier) {
+  biasEFLMTier = tier;
+  biasRenderTierCards();
+  biasApplyEFLM();
+}
+
+function biasRenderTierCards() {
+  const wrap = document.getElementById('bias-eflm-tier-cards');
+  if (!biasEFLMKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[biasEFLMKey]) {
+    wrap.style.display = 'none'; return;
+  }
+  const a      = EFLM_DB[biasEFLMKey];
+  const tiers  = calcEFLMTiers(a.cvi, a.cvg);
+  const colors = { optimal:'#059669', desirable:'#2563eb', minimum:'#d97706' };
+  const bgs    = { optimal:'#ecfdf5', desirable:'#eff6ff', minimum:'#fffbeb' };
+  const bords  = { optimal:'#6ee7b7', desirable:'#bfdbfe', minimum:'#fde68a' };
+
+  wrap.style.display = 'block';
+  wrap.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+    '<strong>' + a.name + '</strong> &nbsp;·&nbsp; ' + a.unit +
+    ' &nbsp;·&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;·&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    ['optimal','desirable','minimum'].map(tr => {
+      const active = tr === biasEFLMTier;
+      return `<div onclick="biasSelectTier('${tr}')" style="cursor:pointer;flex:1;min-width:100px;
+        background:${active ? bgs[tr] : '#fff'};
+        border:2px solid ${active ? bords[tr] : '#e5e7eb'};
+        border-radius:10px;padding:10px 12px;transition:all .12s;
+        ${active ? 'box-shadow:0 0 0 3px ' + bords[tr] + '80;' : ''}">
+        <div style="font-weight:700;font-size:11px;text-transform:uppercase;color:${colors[tr]};margin-bottom:5px;">${tr}</div>
+        <div style="font-size:12px;line-height:1.8;">Allowable bias ≤ <strong>${tiers[tr].bias}%</strong></div>
+        ${active ? `<div style="font-size:10px;color:${colors[tr]};margin-top:4px;font-weight:700;">&#10003; Applied</div>` : ''}
+      </div>`;
+    }).join('') +
+    '</div>';
+}
+
+function biasApplyEFLM() {
+  if (!biasEFLMKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[biasEFLMKey]) return;
+  const a = EFLM_DB[biasEFLMKey];
+  const t = calcEFLMTiers(a.cvi, a.cvg)[biasEFLMTier];
+  // Fill allowable bias
+  document.getElementById('inp-allowable').value = t.bias;
+  // Fill analyte name and unit if empty
+  const analyteEl = document.getElementById('inp-analyte');
+  const unitEl    = document.getElementById('inp-unit');
+  if (!analyteEl.value) analyteEl.value = a.name;
+  if (!unitEl.value)    unitEl.value    = a.unit;
 }
 </script>
 </body>

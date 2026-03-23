@@ -269,6 +269,235 @@ function diagHtml(c, xLbl, yLbl, threshX, threshY) {
 
 let _c1 = null, _c2 = null;
 
+// ── Outlier exclusion state ───────────────────────────────────
+
+let _lrRows  = [];
+let _lrAlpha = 0.05, _lrXLbl = 'X', _lrYLbl = 'Y';
+
+function _lrToggle(idx) {
+  _lrRows[idx].include = !_lrRows[idx].include;
+  const inc = _lrRows.filter(r => r.include);
+  if (inc.length >= 3) _renderLR(inc.map(r => r.x), inc.map(r => r.y));
+}
+
+function _renderLRDataTable(x, y, reg) {
+  const n   = x.length; // included rows
+  const MSE = reg.rmse * reg.rmse;
+  const p   = 2;        // intercept + slope
+  const ct  = 4 / n;   // Cook's D threshold
+  const ht  = 4 / n;   // leverage threshold (2p/n, p=2)
+
+  // Map included _lrRows indices
+  const incIdx = [];
+  _lrRows.forEach((row, i) => { if (row.include) incIdx.push(i); });
+
+  // Compute Cook's D + leverage per included row, store back on _lrRows
+  incIdx.forEach((rowI, j) => {
+    const hii   = 1/n + (x[j] - reg.mx) ** 2 / reg.Sxx;
+    const denom = Math.max(1e-12, (1 - hii) ** 2);
+    const cookD = MSE > 0 ? (reg.resid[j] ** 2 / (p * MSE)) * (hii / denom) : 0;
+    _lrRows[rowI].hii   = hii;
+    _lrRows[rowI].cookD = cookD;
+    _lrRows[rowI].resid = reg.resid[j];
+  });
+  // Clear metrics for excluded rows
+  _lrRows.forEach(row => {
+    if (!row.include) { row.hii = null; row.cookD = null; row.resid = null; }
+  });
+
+  const nFlagged = _lrRows.filter(row => row.include && (row.cookD > ct || row.hii > ht)).length;
+  const nExcl    = _lrRows.filter(row => !row.include).length;
+
+  const rowsHtml = _lrRows.map((row, i) => {
+    const excl  = !row.include;
+    const flagC = row.include && row.cookD !== null && row.cookD > ct;
+    const flagH = row.include && row.hii   !== null && row.hii   > ht;
+    const flag  = flagC || flagH;
+    const bg    = excl ? 'opacity:.4;' : flag ? 'background:#fef2f2;' : '';
+    return `<tr style="${bg}">
+      <td><input type="checkbox" ${row.include ? 'checked' : ''} onchange="_lrToggle(${i})"></td>
+      <td class="num">${i + 1}</td>
+      <td class="num">${_f(row.x, 4)}</td>
+      <td class="num">${_f(row.y, 4)}</td>
+      <td class="num">${row.resid !== null ? _f(row.resid, 4) : '—'}</td>
+      <td class="num" ${flagC ? 'style="color:#b91c1c;font-weight:700;"' : ''}>
+        ${row.cookD !== null ? row.cookD.toFixed(4) : '—'}${flagC ? ' ▲' : ''}
+      </td>
+      <td class="num" ${flagH ? 'style="color:#b91c1c;font-weight:700;"' : ''}>
+        ${row.hii !== null ? row.hii.toFixed(4) : '—'}${flagH ? ' ▲' : ''}
+      </td>
+      <td>${flag ? '<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#fee2e2;color:#991b1b;">outlier</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('lrDataTable').innerHTML = `
+    <details class="card" style="margin-top:14px;" ${nFlagged > 0 ? 'open' : ''}>
+      <summary style="cursor:pointer;font-weight:700;font-size:14px;user-select:none;display:flex;align-items:center;gap:8px;">
+        Data review &amp; outlier exclusion
+        ${nFlagged > 0 ? `<span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;">${nFlagged} flagged</span>` : ''}
+        ${nExcl    > 0 ? `<span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#f3f4f6;color:#374151;">${nExcl} excluded</span>` : ''}
+      </summary>
+      <div style="overflow-x:auto;margin-top:10px;">
+        <p class="note" style="margin-bottom:8px;">
+          Uncheck a row to exclude it from the analysis.
+          Flagged ▲ when Cook's D &gt; ${ct.toFixed(3)} or leverage &gt; ${ht.toFixed(3)}.
+        </p>
+        <table>
+          <thead><tr>
+            <th></th>
+            <th class="num">#</th>
+            <th class="num">${_lrXLbl}</th>
+            <th class="num">${_lrYLbl}</th>
+            <th class="num">Residual</th>
+            <th class="num">Cook's D</th>
+            <th class="num">Leverage</th>
+            <th></th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </details>`;
+}
+
+function _renderLR(x, y) {
+  const alpha = _lrAlpha;
+  const xLbl  = _lrXLbl;
+  const yLbl  = _lrYLbl;
+  const nExcl = _lrRows.filter(row => !row.include).length;
+
+  const n     = x.length;
+  const r     = pearsonR(x, y);
+  const rho   = spearmanR(x, y);
+  const t_r   = r   * Math.sqrt(n-2) / Math.sqrt(Math.max(1e-15, 1 - r*r));
+  const t_rho = rho * Math.sqrt(n-2) / Math.sqrt(Math.max(1e-15, 1 - rho*rho));
+  const p_r   = tPVal(t_r, n-2);
+  const p_rho = tPVal(t_rho, n-2);
+  const ci_r  = fisherCI(r, n, alpha);
+  const reg   = linReg(x, y);
+  const tc    = tCrit(alpha, n-2);
+  const ci_b  = [reg.b - tc*reg.SE_b, reg.b + tc*reg.SE_b];
+  const ci_a  = [reg.a - tc*reg.SE_a, reg.a + tc*reg.SE_a];
+  const pct   = Math.round((1-alpha)*100);
+
+  document.getElementById('resultsContent').innerHTML = `
+    ${nExcl > 0 ? `<div style="border-radius:12px;padding:10px 12px;border:1px solid #fbbf2455;background:#fffbeb;color:#92400e;font-size:13px;margin-bottom:10px;">
+      Analysis based on <strong>${n}</strong> of <strong>${_lrRows.length}</strong> pairs — ${nExcl} excluded.
+    </div>` : ''}
+    <div class="card">
+      <div class="section-title">Descriptive statistics</div>
+      <table>
+        <thead><tr>
+          <th>Variable</th><th class="num">n</th>
+          <th class="num">Mean</th><th class="num">SD</th>
+          <th class="num">Min</th><th class="num">Max</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>${xLbl}</strong></td><td class="num">${n}</td>
+            <td class="num">${_f(_mean(x),3)}</td><td class="num">${_f(_std(x),3)}</td>
+            <td class="num">${_f(Math.min(...x),3)}</td><td class="num">${_f(Math.max(...x),3)}</td>
+          </tr>
+          <tr>
+            <td><strong>${yLbl}</strong></td><td class="num">${n}</td>
+            <td class="num">${_f(_mean(y),3)}</td><td class="num">${_f(_std(y),3)}</td>
+            <td class="num">${_f(Math.min(...y),3)}</td><td class="num">${_f(Math.max(...y),3)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">Correlation</div>
+      <table>
+        <thead><tr>
+          <th>Method</th><th class="num">Coefficient</th>
+          <th class="num">t</th><th class="num">df</th>
+          <th class="num">p-value</th><th class="num">${pct}% CI</th>
+          <th>Strength</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Pearson r</strong></td>
+            <td class="num">${_f(r,4)}</td><td class="num">${_f(t_r,3)}</td>
+            <td class="num">${n-2}</td><td class="num">${pBadge(p_r,alpha)}</td>
+            <td class="num">${ci_r[0]!==null?`[${_f(ci_r[0],3)}, ${_f(ci_r[1],3)}]`:'–'}</td>
+            <td>${strength(r)}</td>
+          </tr>
+          <tr>
+            <td><strong>Spearman ρ</strong></td>
+            <td class="num">${_f(rho,4)}</td><td class="num">${_f(t_rho,3)}</td>
+            <td class="num">${n-2}</td><td class="num">${pBadge(p_rho,alpha)}</td>
+            <td class="num">–</td>
+            <td>${strength(rho)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">Pearson CI via Fisher z-transformation. Spearman approximation reliable for n ≥ 10.</p>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="section-title">Simple linear regression</div>
+      <div class="eqbox">ŷ = ${_f(reg.a,4)} + ${_f(reg.b,4)} &middot; ${xLbl}</div>
+      <table>
+        <thead><tr>
+          <th>Parameter</th><th class="num">Estimate</th>
+          <th class="num">SE</th><th class="num">t</th>
+          <th class="num">p-value</th><th class="num">${pct}% CI</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Intercept (a)</strong></td>
+            <td class="num">${_f(reg.a,4)}</td><td class="num">${_f(reg.SE_a,4)}</td>
+            <td class="num">${_f(reg.t_a,3)}</td><td class="num">${pBadge(reg.p_a,alpha)}</td>
+            <td class="num">[${_f(ci_a[0],3)}, ${_f(ci_a[1],3)}]</td>
+          </tr>
+          <tr>
+            <td><strong>Slope (b)</strong></td>
+            <td class="num">${_f(reg.b,4)}</td><td class="num">${_f(reg.SE_b,4)}</td>
+            <td class="num">${_f(reg.t_b,3)}</td><td class="num">${pBadge(reg.p_b,alpha)}</td>
+            <td class="num">[${_f(ci_b[0],3)}, ${_f(ci_b[1],3)}]</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-val">${_f(reg.r2,4)}</div><div class="stat-lbl">R²</div></div>
+        <div class="stat-box"><div class="stat-val">${_f(reg.adjR2,4)}</div><div class="stat-lbl">Adjusted R²</div></div>
+        <div class="stat-box"><div class="stat-val">${_f(reg.rmse,4)}</div><div class="stat-lbl">RMSE</div></div>
+        <div class="stat-box"><div class="stat-val">${n-2}</div><div class="stat-lbl">df (residual)</div></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:14px;">
+      <div class="card">
+        <div class="section-title">Scatterplot &amp; regression line</div>
+        <canvas id="scatterChart"></canvas>
+      </div>
+      <div class="card" id="residCard">
+        <div class="section-title">Residual plot</div>
+        <canvas id="residChart"></canvas>
+      </div>
+    </div>
+    <div id="diagSection"></div>
+    <div id="lrDataTable"></div>
+  `;
+
+  // Threshold / diagnostic classification
+  const showThresh = document.getElementById('showThresh').checked;
+  const threshX = showThresh ? parseFloat(document.getElementById('threshX').value) : NaN;
+  const threshY = showThresh ? parseFloat(document.getElementById('threshY').value) : NaN;
+  const hasThresh = showThresh && !isNaN(threshX) && !isNaN(threshY);
+
+  drawScatter(x, y, reg, xLbl, yLbl, alpha, hasThresh ? threshX : null, hasThresh ? threshY : null);
+  drawResiduals(reg);
+
+  if (hasThresh) {
+    const conf = computeConfusion(x, y, threshX, threshY);
+    document.getElementById('diagSection').innerHTML = diagHtml(conf, xLbl, yLbl, threshX, threshY);
+  }
+
+  _renderLRDataTable(x, y, reg);
+}
+
 function drawScatter(x, y, reg, xLbl, yLbl, alpha, threshX, threshY) {
   const ctx = document.getElementById('scatterChart').getContext('2d');
   if (_c1) { _c1.destroy(); _c1 = null; }
@@ -400,148 +629,25 @@ function drawResiduals(reg) {
 // ── Main ──────────────────────────────────────────────────────
 
 function runAnalysis() {
-  const x      = parseCol(document.getElementById('xData').value);
-  const y      = parseCol(document.getElementById('yData').value);
-  const alpha  = parseFloat(document.getElementById('alpha').value);
-  const xLbl   = document.getElementById('xLabel').value.trim() || 'X';
-  const yLbl   = document.getElementById('yLabel').value.trim() || 'Y';
-  const errEl  = document.getElementById('inputError');
+  const xAll  = parseCol(document.getElementById('xData').value);
+  const yAll  = parseCol(document.getElementById('yData').value);
+  const errEl = document.getElementById('inputError');
   errEl.style.display = 'none';
 
-  if (x.length < 3 || y.length < 3) {
+  if (xAll.length < 3 || yAll.length < 3) {
     errEl.textContent = 'At least 3 data pairs are required.';
     errEl.style.display = 'block'; return;
   }
-  if (x.length !== y.length) {
-    errEl.textContent = `X has ${x.length} values but Y has ${y.length} — they must match.`;
+  if (xAll.length !== yAll.length) {
+    errEl.textContent = `X has ${xAll.length} values but Y has ${yAll.length} — they must match.`;
     errEl.style.display = 'block'; return;
   }
 
-  const n   = x.length;
-  const r   = pearsonR(x, y);
-  const rho = spearmanR(x, y);
-  const t_r   = r   * Math.sqrt(n-2) / Math.sqrt(Math.max(1e-15, 1 - r*r));
-  const t_rho = rho * Math.sqrt(n-2) / Math.sqrt(Math.max(1e-15, 1 - rho*rho));
-  const p_r   = tPVal(t_r, n-2);
-  const p_rho = tPVal(t_rho, n-2);
-  const ci_r  = fisherCI(r, n, alpha);
-  const reg   = linReg(x, y);
-  const tc    = tCrit(alpha, n-2);
-  const ci_b  = [reg.b - tc*reg.SE_b, reg.b + tc*reg.SE_b];
-  const ci_a  = [reg.a - tc*reg.SE_a, reg.a + tc*reg.SE_a];
-  const pct   = Math.round((1-alpha)*100);
-
-  document.getElementById('resultsContent').innerHTML = `
-    <div class="card">
-      <div class="section-title">Descriptive statistics</div>
-      <table>
-        <thead><tr>
-          <th>Variable</th><th class="num">n</th>
-          <th class="num">Mean</th><th class="num">SD</th>
-          <th class="num">Min</th><th class="num">Max</th>
-        </tr></thead>
-        <tbody>
-          <tr>
-            <td><strong>${xLbl}</strong></td><td class="num">${n}</td>
-            <td class="num">${_f(_mean(x),3)}</td><td class="num">${_f(_std(x),3)}</td>
-            <td class="num">${_f(Math.min(...x),3)}</td><td class="num">${_f(Math.max(...x),3)}</td>
-          </tr>
-          <tr>
-            <td><strong>${yLbl}</strong></td><td class="num">${n}</td>
-            <td class="num">${_f(_mean(y),3)}</td><td class="num">${_f(_std(y),3)}</td>
-            <td class="num">${_f(Math.min(...y),3)}</td><td class="num">${_f(Math.max(...y),3)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <div class="section-title">Correlation</div>
-      <table>
-        <thead><tr>
-          <th>Method</th><th class="num">Coefficient</th>
-          <th class="num">t</th><th class="num">df</th>
-          <th class="num">p-value</th><th class="num">${pct}% CI</th>
-          <th>Strength</th>
-        </tr></thead>
-        <tbody>
-          <tr>
-            <td><strong>Pearson r</strong></td>
-            <td class="num">${_f(r,4)}</td><td class="num">${_f(t_r,3)}</td>
-            <td class="num">${n-2}</td><td class="num">${pBadge(p_r,alpha)}</td>
-            <td class="num">${ci_r[0]!==null?`[${_f(ci_r[0],3)}, ${_f(ci_r[1],3)}]`:'–'}</td>
-            <td>${strength(r)}</td>
-          </tr>
-          <tr>
-            <td><strong>Spearman ρ</strong></td>
-            <td class="num">${_f(rho,4)}</td><td class="num">${_f(t_rho,3)}</td>
-            <td class="num">${n-2}</td><td class="num">${pBadge(p_rho,alpha)}</td>
-            <td class="num">–</td>
-            <td>${strength(rho)}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="note">Pearson CI via Fisher z-transformation. Spearman approximation reliable for n ≥ 10.</p>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <div class="section-title">Simple linear regression</div>
-      <div class="eqbox">ŷ = ${_f(reg.a,4)} + ${_f(reg.b,4)} &middot; ${xLbl}</div>
-      <table>
-        <thead><tr>
-          <th>Parameter</th><th class="num">Estimate</th>
-          <th class="num">SE</th><th class="num">t</th>
-          <th class="num">p-value</th><th class="num">${pct}% CI</th>
-        </tr></thead>
-        <tbody>
-          <tr>
-            <td><strong>Intercept (a)</strong></td>
-            <td class="num">${_f(reg.a,4)}</td><td class="num">${_f(reg.SE_a,4)}</td>
-            <td class="num">${_f(reg.t_a,3)}</td><td class="num">${pBadge(reg.p_a,alpha)}</td>
-            <td class="num">[${_f(ci_a[0],3)}, ${_f(ci_a[1],3)}]</td>
-          </tr>
-          <tr>
-            <td><strong>Slope (b)</strong></td>
-            <td class="num">${_f(reg.b,4)}</td><td class="num">${_f(reg.SE_b,4)}</td>
-            <td class="num">${_f(reg.t_b,3)}</td><td class="num">${pBadge(reg.p_b,alpha)}</td>
-            <td class="num">[${_f(ci_b[0],3)}, ${_f(ci_b[1],3)}]</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="stat-grid">
-        <div class="stat-box"><div class="stat-val">${_f(reg.r2,4)}</div><div class="stat-lbl">R²</div></div>
-        <div class="stat-box"><div class="stat-val">${_f(reg.adjR2,4)}</div><div class="stat-lbl">Adjusted R²</div></div>
-        <div class="stat-box"><div class="stat-val">${_f(reg.rmse,4)}</div><div class="stat-lbl">RMSE</div></div>
-        <div class="stat-box"><div class="stat-val">${n-2}</div><div class="stat-lbl">df (residual)</div></div>
-      </div>
-    </div>
-
-    <div class="grid-2" style="margin-top:14px;">
-      <div class="card">
-        <div class="section-title">Scatterplot & regression line</div>
-        <canvas id="scatterChart"></canvas>
-      </div>
-      <div class="card" id="residCard">
-        <div class="section-title">Residual plot</div>
-        <canvas id="residChart"></canvas>
-      </div>
-    </div>
-    <div id="diagSection"></div>
-  `;
-
-  // Threshold / diagnostic classification
-  const showThresh = document.getElementById('showThresh').checked;
-  const threshX = showThresh ? parseFloat(document.getElementById('threshX').value) : NaN;
-  const threshY = showThresh ? parseFloat(document.getElementById('threshY').value) : NaN;
-  const hasThresh = showThresh && !isNaN(threshX) && !isNaN(threshY);
-
-  drawScatter(x, y, reg, xLbl, yLbl, alpha, hasThresh ? threshX : null, hasThresh ? threshY : null);
-  drawResiduals(reg);
-
-  if (hasThresh) {
-    const conf = computeConfusion(x, y, threshX, threshY);
-    document.getElementById('diagSection').innerHTML = diagHtml(conf, xLbl, yLbl, threshX, threshY);
-  }
+  _lrAlpha = parseFloat(document.getElementById('alpha').value);
+  _lrXLbl  = document.getElementById('xLabel').value.trim() || 'X';
+  _lrYLbl  = document.getElementById('yLabel').value.trim() || 'Y';
+  _lrRows  = xAll.map((xi, i) => ({ x: xi, y: yAll[i], include: true }));
+  _renderLR(xAll, yAll);
 }
 
 console.log('linear_regression.js loaded');

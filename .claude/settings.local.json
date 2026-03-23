@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python3:*)",
+      "Bash(find /Users/subashsundaralingam/Documents/app/clinical-statistics -name *eflm* -o -name *spec* -o -name *allowable* -o -name *quality*)",
+      "Bash(grep -rl \"eflm\\\\|EFLM\\\\|cvI\\\\|biological.var\\\\|allowable\" /Users/subashsundaralingam/Documents/app/clinical-statistics --include=*.html --include=*.js --include=*.json)",
+      "Bash(npm run:*)",
+      "Bash(ls /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(open \"/Users/subashsundaralingam/Documents/app/clinical-statistics/dist/Clinical Statistics-1.0.24.dmg\")",
+      "Bash(open \"/Users/subashsundaralingam/Documents/app/clinical-statistics/dist/Clinical Statistics-1.0.25.dmg\")",
+      "Bash(open \"dist/Clinical Statistics-1.0.26.dmg\")",
+      "Bash(find /Users/subashsundaralingam/Documents/app/clinical-statistics/node_modules -name html2canvas* -o -name jspdf*)",
+      "Bash(npm install:*)",
+      "Bash(open \"dist/Clinical Statistics-1.0.27.dmg\")",
+      "Bash(open \"dist/Clinical Statistics-1.0.28.dmg\")",
+      "Bash(open \"dist/Clinical Statistics-1.0.31.dmg\")"
     ]
   }
 }

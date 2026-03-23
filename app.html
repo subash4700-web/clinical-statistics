@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src 'self' file:; img-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src 'self' file:; img-src 'self' data: blob:;">
   <title>Clinical Statistics</title>
 
   <style>
@@ -38,7 +38,7 @@
     }
 
     .sidebar-version {
-      font-size: 12px;
+      font-size: 13px;
       color: #9CA3AF;
       margin-top: 0;
       margin-bottom: 16px;
@@ -50,7 +50,7 @@
       border: 1px solid rgba(255,255,255,.2);
       border-radius: 6px;
       padding: 3px 9px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
@@ -61,7 +61,7 @@
 
     .category {
       margin-top: 20px;
-      font-size: 12px;
+      font-size: 13px;
       text-transform: uppercase;
       color: #9CA3AF;
       margin-bottom: 8px;
@@ -71,7 +71,7 @@
 
     .sub-category {
       margin-top: 10px;
-      font-size: 12px;
+      font-size: 13px;
       color: #9CA3AF;
       padding-left: 6px;
     }
@@ -84,7 +84,7 @@
       color: #E5E7EB;
       text-align: left;
       padding: 8px 0;
-      font-size: 15px;
+      font-size: 16px;
       cursor: pointer;
       font-weight: 600;
     }
@@ -96,6 +96,19 @@
     .sidebar button.active {
       color: white;
       font-weight: 800;
+    }
+
+    .btn-hint {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.38);
+      margin-top: 1px;
+      line-height: 1.3;
+    }
+    .sidebar button:hover .btn-hint,
+    .sidebar button.active .btn-hint {
+      color: rgba(255,255,255,0.6);
     }
 
     .collapsible-content.child-nav {
@@ -130,7 +143,7 @@
 
     .workspace-content {
       flex: 1;
-      overflow: hidden;
+      overflow: auto;
     }
 
     /* ---------- INFO PANEL ---------- */
@@ -198,6 +211,30 @@
     }
     .report-issue-btn:hover { background: #DC2626; }
 
+    .export-btn {
+      background: #fff;
+      color: #1F2937;
+      border: 1px solid #E5E7EB;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      margin-left: 6px;
+      transition: background .15s;
+    }
+    .export-btn:hover { background: #F3F4F6; }
+    .export-btn-pdf { background: #1F2937; color: #fff; border-color: #1F2937; }
+    .export-btn-pdf:hover { background: #111827; }
+    #appToast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px);
+      background: #1F2937; color: #fff; padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s; z-index: 99999; white-space: nowrap;
+    }
+    #appToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .export-btn:disabled { opacity: .45; cursor: default; }
+
     /* Welcome page styles */
     .welcome-container {
       max-width: 960px;
@@ -264,12 +301,16 @@
 
     .home-tools-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
       margin-bottom: 16px;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
+      .home-tools-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
       .home-tools-grid { grid-template-columns: 1fr; }
     }
 
@@ -301,10 +342,15 @@
 
     .htc-icon svg { width: 22px; height: 22px; }
 
+    .htc-indigo .htc-icon { background: #e0e7ff; color: #3730a3; }
     .htc-blue   .htc-icon { background: #dbeafe; color: #1d4ed8; }
     .htc-teal   .htc-icon { background: #d1fae5; color: #065f46; }
+    .htc-rose   .htc-icon { background: #ffe4e6; color: #be123c; }
     .htc-purple .htc-icon { background: #ede9fe; color: #5b21b6; }
     .htc-orange .htc-icon { background: #ffedd5; color: #c2410c; }
+
+    .home-tool-card { cursor: pointer; }
+    .home-tool-card:focus { outline: 2px solid #2563eb; outline-offset: 2px; }
 
     .htc-body h3 {
       font-size: 15px;
@@ -366,6 +412,34 @@
       line-height: 1.6;
     }
 
+    #update-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #1e3a5f;
+      border-bottom: 1px solid #2563eb;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: #93c5fd;
+    }
+    #update-banner a {
+      color: #60a5fa;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    #update-banner button {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    #update-banner button:hover { color: #d1d5db; }
+
     .get-started {
       background: #1976d2;
       color: white;
@@ -381,14 +455,14 @@
       margin-top: 16px;
     }
 
-    .collapsible-header {
+    .sidebar .collapsible-header {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 12px 0;
       cursor: pointer;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 13px;
       text-transform: uppercase;
       color: #9CA3AF;
       letter-spacing: .06em;
@@ -399,18 +473,18 @@
       text-align: left;
     }
 
-    .collapsible-header:hover {
+    .sidebar .collapsible-header:hover {
       color: #D1D5DB;
     }
 
-    .collapsible-header::before {
+    .sidebar .collapsible-header::before {
       content: "▶";
       display: inline-block;
       transition: transform 0.2s;
       font-size: 12px;
     }
 
-    .collapsible-header.active::before {
+    .sidebar .collapsible-header.active::before {
       transform: rotate(90deg);
     }
 
@@ -423,6 +497,31 @@
       display: block;
     }
 
+    .guide-button {
+      display: block;
+      width: 100%;
+      background: rgba(25, 118, 210, 0.12);
+      border: 1px solid rgba(25, 118, 210, 0.4);
+      color: #90caf9;
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: 700;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .guide-button:hover {
+      background: rgba(25, 118, 210, 0.22);
+      color: #bbdefb;
+    }
+    .guide-button.active {
+      background: #1976d2;
+      color: white;
+      border-color: #1565c0;
+    }
+
     .home-button {
       display: block;
       width: 100%;
@@ -431,7 +530,7 @@
       color: #60A5FA;
       text-align: left;
       padding: 10px 8px;
-      font-size: 15px;
+      font-size: 16px;
       cursor: pointer;
       font-weight: 600;
       border-radius: 6px;
@@ -449,6 +548,161 @@
       color: white;
       border-color: #1E40AF;
     }
+
+    /* ─── Section Landing Pages ──────────────────────────────────── */
+    .section-landing {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    .sl-hero {
+      border-radius: 14px;
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sl-hero::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -30px;
+      width: 180px; height: 180px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+
+    .sl-hero-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: color 0.15s;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .sl-hero-back:hover { color: rgba(255,255,255,0.95); }
+
+    .sl-hero h2 {
+      font-size: 26px;
+      font-weight: 900;
+      margin: 0 0 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .sl-hero p {
+      font-size: 13px;
+      margin: 0;
+      opacity: 0.78;
+      line-height: 1.65;
+      max-width: 540px;
+    }
+
+    .sl-blue   { background: linear-gradient(135deg, #1a2f5e 0%, #1d4ed8 100%); }
+    .sl-teal   { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); }
+    .sl-rose   { background: linear-gradient(135deg, #4c0519 0%, #be123c 100%); }
+    .sl-purple { background: linear-gradient(135deg, #2e1065 0%, #7c3aed 100%); }
+    .sl-orange { background: linear-gradient(135deg, #431407 0%, #ea580c 100%); }
+
+    .sl-group { margin-bottom: 24px; }
+
+    .sl-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin: 0 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sl-tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .sl-tools-grid { grid-template-columns: 1fr; }
+    }
+
+    .sl-tool-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: box-shadow 0.15s, transform 0.12s, border-color 0.15s;
+    }
+    .sl-tool-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+      border-color: #d1d5db;
+    }
+    .sl-tool-card:focus { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+    .sl-tool-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+    .sl-tool-hint {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+    .sl-tool-arrow {
+      margin-left: auto;
+      flex-shrink: 0;
+      color: #d1d5db;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .sl-tool-card:hover .sl-tool-arrow { color: #9ca3af; }
+
+    .sl-subsection-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: box-shadow 0.15s, transform 0.12s;
+    }
+    .sl-subsection-card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.09);
+      transform: translateY(-2px);
+    }
+    .sl-subsection-card:focus { outline: 2px solid #2563eb; outline-offset: 2px; }
+    .sl-subsection-icon {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sl-subsection-icon svg { width: 20px; height: 20px; }
+    .sl-subsection-name { font-size: 15px; font-weight: 800; color: #111827; margin-bottom: 4px; }
+    .sl-subsection-desc { font-size: 13px; color: #6b7280; line-height: 1.5; }
+    .sl-subsection-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .sl-subsection-tags span {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 999px;
+      background: #f3f4f6; color: #374151;
+    }
   </style>
 </head>
 
@@ -462,12 +716,12 @@
 
       <!-- Home Button -->
       <button class="home-button active" onclick="loadHome(this)" data-i18n="nav.home">Home</button>
-      <button onclick="loadTool('test_guide.html','Statistical Test Guide', this)" data-i18n="nav.testGuide" style="background:#1e3a5f; color:#e0f0ff; margin-bottom:4px;">🧭 Test Guide</button>
+      <button onclick="loadTool('test_guide.html','Statistical Test Guide', this)" data-i18n="nav.testGuide" class="guide-button">🧭 Test Guide</button>
 
       <!-- Collapsible Hypothesis Tests Section -->
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.hypothesisTests">
-          Hypothesis Tests
+          Inferential Statistics
         </button>
 
         <div class="collapsible-content child-nav">
@@ -490,53 +744,78 @@
             <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.quantitativeTests">Quantitative Tests</button>
             <div class="collapsible-content child-nav">
               <div class="sub-category" data-i18n="sub.parametric">Parametric Tests</div>
-              <button onclick="loadTool('t_one_sample.html','One-Sample T-Test', this)" data-i18n="tool.oneSampleT">One-Sample T-Test</button>
-              <button onclick="loadTool('paired_t_test.html','Paired T-Test', this)" data-i18n="tool.pairedT">Paired T-Test</button>
-              <button onclick="loadTool('two_sample_t_test_independent.html','Independent T-Test', this)" data-i18n="tool.independentT">Independent T-Test</button>
-              <button onclick="loadTool('anova.html','One-Way ANOVA', this)" data-i18n="tool.oneWayAnova">One-Way ANOVA</button>
-              <button onclick="loadTool('two_way_anova.html','Two-Way ANOVA', this)" data-i18n="tool.twoWayAnova">Two-Way ANOVA</button>
+              <button onclick="loadTool('t_one_sample.html','One-Sample T-Test', this)" data-i18n="tool.oneSampleT">One-Sample T-Test<span class="btn-hint">Sample mean vs known value</span></button>
+              <button onclick="loadTool('paired_t_test.html','Paired T-Test', this)" data-i18n="tool.pairedT">Paired T-Test<span class="btn-hint">Same subjects, two conditions</span></button>
+              <button onclick="loadTool('two_sample_t_test_independent.html','Independent T-Test', this)" data-i18n="tool.independentT">Independent T-Test<span class="btn-hint">Two separate groups</span></button>
+              <button onclick="loadTool('anova.html','One-Way ANOVA', this)" data-i18n="tool.oneWayAnova">One-Way ANOVA<span class="btn-hint">3+ groups, one factor</span></button>
+              <button onclick="loadTool('two_way_anova.html','Two-Way ANOVA', this)" data-i18n="tool.twoWayAnova">Two-Way ANOVA<span class="btn-hint">3+ groups, two factors</span></button>
               <div class="sub-category" data-i18n="cat.nonparametric">Nonparametric Tests</div>
-              <button onclick="loadTool('mann_whitney.html','Mann–Whitney U', this)" data-i18n="tool.mannWhitney">Mann–Whitney U</button>
-              <button onclick="loadTool('wilcoxon.html','Wilcoxon signed-rank', this)" data-i18n="tool.wilcoxon">Wilcoxon signed-rank</button>
+              <button onclick="loadTool('mann_whitney.html','Mann–Whitney U', this)" data-i18n="tool.mannWhitney">Mann–Whitney U<span class="btn-hint">Two independent groups · non-normal</span></button>
+              <button onclick="loadTool('wilcoxon.html','Wilcoxon signed-rank', this)" data-i18n="tool.wilcoxon">Wilcoxon signed-rank<span class="btn-hint">Paired data · non-normal</span></button>
             </div>
           </div>
 
           <div class="collapsible-section" style="margin-top:0;">
             <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.qualitative">Categorical Tests</button>
             <div class="collapsible-content child-nav">
-              <button onclick="loadTool('Chi_GOF.html','Chi-Square GOF', this)" data-i18n="tool.chiGOF">Chi-Square GOF</button>
-              <button onclick="loadTool('Chi_independence.html','Chi-Square Independence', this)" data-i18n="tool.chiIndep">Chi-Square Independence</button>
-              <button onclick="loadTool('mcnemar.html','McNemar Test', this)" data-i18n="tool.mcnemar">McNemar Test</button>
-              <button onclick="loadTool('fisher_exact.html','Fisher\'s Exact Test', this)" data-i18n="tool.fisher">Fisher's Exact Test</button>
-              <button onclick="loadTool('kappa.html','Kappa', this)" data-i18n="tool.kappa">Kappa</button>
-              <button onclick="loadTool('weighted_kappa.html','Weighted Kappa', this)" data-i18n="tool.weightedKappa">Weighted Kappa</button>
+              <button onclick="loadTool('Chi_GOF.html','Chi-Square GOF', this)" data-i18n="tool.chiGOF">Chi-Square GOF<span class="btn-hint">Observed vs expected frequencies</span></button>
+              <button onclick="loadTool('Chi_independence.html','Chi-Square Independence', this)" data-i18n="tool.chiIndep">Chi-Square Independence<span class="btn-hint">Association between two categories</span></button>
+              <button onclick="loadTool('mcnemar.html','McNemar Test', this)" data-i18n="tool.mcnemar">McNemar Test<span class="btn-hint">Paired binary data · before/after</span></button>
+              <button onclick="loadTool('fisher_exact.html','Fisher\'s Exact Test', this)" data-i18n="tool.fisher">Fisher's Exact Test<span class="btn-hint">Small samples · 2×2 table</span></button>
+              <button onclick="loadTool('kappa.html','Kappa', this)" data-i18n="tool.kappa">Kappa<span class="btn-hint">Inter-rater agreement · nominal</span></button>
+              <button onclick="loadTool('weighted_kappa.html','Weighted Kappa', this)" data-i18n="tool.weightedKappa">Weighted Kappa<span class="btn-hint">Inter-rater agreement · ordinal</span></button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="category" data-i18n="cat.analytical">Analytical Performance</div>
-      <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC</button>
-      <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 Precision — Validation</button>
-      <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias</button>
-      <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison</button>
-
-      <div class="category" data-i18n="cat.correlation">Correlation &amp; Regression</div>
-      <button onclick="loadTool('linear_regression.html','Correlation & Linear Regression', this)" data-i18n="tool.linReg">Linear Regression</button>
-
-      <div class="category" data-i18n="cat.lab">Lab Tools</div>
-
-      <div class="collapsible-section" style="margin-top:0;">
-        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="ui.pcr">PCR</button>
+      <div class="collapsible-section">
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.analytical">Analytical Performance</button>
         <div class="collapsible-content child-nav">
-          <button onclick="loadTool('PCR.html','In Silico PCR', this)" data-i18n="tool.pcr">In Silico PCR</button>
-          <button onclick="loadTool('dilution_calculator.html#tab-reactions','PCR Setup', this)" data-i18n="tool.pcrSetup">PCR Setup</button>
-          <button onclick="loadTool('dilution_calculator.html#tab-primers','Primer Dilution', this)" data-i18n="tool.primerDil">Primer Dilution</button>
+          <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run statistics</span></button>
+          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol</span></button>
+          <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
+          <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Two methods · paired patient samples</span></button>
         </div>
       </div>
 
-      <button onclick="loadTool('dilution_calculator.html#tab-simple','Dilution Calculator', this)" data-i18n="tool.dilution">Dilution Calculator</button>
-      <button onclick="loadTool('molarity_solution_prep.html','Molarity & Solution Prep', this)" data-i18n="tool.molarity">Molarity &amp; Solution Prep</button>
+      <div class="collapsible-section">
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression</button>
+        <div class="collapsible-content child-nav">
+          <button onclick="loadTool('linear_regression.html','Correlation & Linear Regression', this)" data-i18n="tool.linReg">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
+          <button onclick="loadTool('logistic_regression_roc.html','ROC & Diagnostic Performance', this)" data-i18n="tool.logReg">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
+        </div>
+      </div>
+
+      <div class="collapsible-section">
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.lab">Lab Tools</button>
+        <div class="collapsible-content child-nav">
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="ui.pcr">PCR</button>
+            <div class="collapsible-content child-nav">
+              <button onclick="loadTool('PCR.html','In Silico PCR', this)" data-i18n="tool.pcr">In Silico PCR<span class="btn-hint">Primer design · simulation · melt curves</span></button>
+              <!-- hidden: PCR-RFLP HFE C282Y (learning exercise, not ready) -->
+              <!-- <button onclick="loadTool('pcr_rflp_hfe.html','PCR-RFLP: HFE C282Y', this)">PCR-RFLP: HFE C282Y ✦<span class="btn-hint">Learning exercise · rs1800562 genotyping</span></button> -->
+              <button onclick="loadTool('dilution_calculator.html#tab-reactions','PCR Setup', this, 'pcr_setup.html')" data-i18n="tool.pcrSetup">PCR Setup<span class="btn-hint">Master mix · reagent volumes</span></button>
+              <button onclick="loadTool('dilution_calculator.html#tab-primers','Primer Dilution', this, 'primer_dilution.html')" data-i18n="tool.primerDil">Primer Dilution<span class="btn-hint">Stock → working concentration</span></button>
+            </div>
+          </div>
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Prepare Solution</button>
+            <div class="collapsible-content child-nav">
+              <button onclick="loadTool('dilution_calculator.html#tab-simple','Dilution Calculator', this)" data-i18n="tool.dilution">Dilution Calculator<span class="btn-hint">Serial & simple dilutions</span></button>
+              <button onclick="loadTool('molarity_solution_prep.html','Molarity & Solution Prep', this)" data-i18n="tool.molarity">Molarity &amp; Solution Prep<span class="btn-hint">Solid → molar solution · g to prepare</span></button>
+            </div>
+          </div>
+          <div class="collapsible-section" style="margin-top:0;">
+            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.quantTools">Quantification Tools</button>
+            <div class="collapsible-content child-nav">
+              <button onclick="loadTool('lambert_beer.html','Photometry', this)" data-i18n="tool.photometry">Photometry<span class="btn-hint">Beer-Lambert · absorbance · concentration</span></button>
+              <button onclick="loadTool('nernst_ise.html','Potentiometry', this)" data-i18n="tool.potentiometry">Potentiometry<span class="btn-hint">Nernst equation · ISE · mV → concentration</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- WORKSPACE -->
@@ -545,9 +824,19 @@
         <span id="toolTitle"></span>
         <div>
           <button class="report-issue-btn" onclick="reportIssue()" style="display:none;" id="reportIssueBtn" data-i18n="ui.reportIssue">Report Issue</button>
+          <button class="export-btn" id="saveDataBtn" style="display:none;" onclick="saveToolData()" title="Save data to file">⬇ Save data</button>
+          <input type="file" id="loadDataInput" accept=".json" style="display:none;" onchange="loadToolData(event)">
+          <button class="export-btn" id="loadDataBtn" style="display:none;" onclick="document.getElementById('loadDataInput').click()" title="Load data from file">⬆ Load data</button>
+          <button class="export-btn" id="exportExcelBtn" style="display:none;" onclick="universalExportExcel()" title="Export to Excel">⬇ Excel</button>
+          <button class="export-btn export-btn-pdf" id="exportPdfBtn" style="display:none;" onclick="universalExportPDF()" title="Export to PDF">⬇ PDF</button>
           <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">🇩🇰 DA</button>
           <button class="info-toggle" onclick="toggleInfo()" data-i18n="ui.info">Info</button>
         </div>
+      </div>
+
+      <div id="update-banner">
+        <span id="update-banner-msg"></span>
+        <button onclick="document.getElementById('update-banner').style.display='none'" title="Dismiss">✕</button>
       </div>
 
       <div class="workspace-content" id="contentArea">
@@ -559,6 +848,23 @@
           </div>
 
           <div class="home-tools-grid">
+            <!-- Learning Tools -->
+            <div class="home-tool-card htc-indigo">
+              <div class="htc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </div>
+              <div class="htc-body">
+                <h3>Learning Tools</h3>
+                <p>Interactive simulations to build statistical intuition — explore p-value behaviour, sampling distributions, and inferential concepts.</p>
+                <div class="htc-tags">
+                  <span>Dance of the p-values</span><span>Normal Distribution</span><span>F Distribution</span><span>Chi-Square</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Hypothesis Tests -->
             <div class="home-tool-card htc-blue">
               <div class="htc-icon">
@@ -570,9 +876,9 @@
               </div>
               <div class="htc-body">
                 <h3>Hypothesis Tests</h3>
-                <p>Parametric and non-parametric tests with effect sizes, distribution visualizations, and assumption checks.</p>
+                <p>Parametric and non-parametric tests with effect sizes, confidence intervals, and assumption checks.</p>
                 <div class="htc-tags">
-                  <span>T-Tests</span><span>ANOVA</span><span>Mann-Whitney</span><span>Chi-Square</span><span>Wilcoxon</span>
+                  <span>T-Tests</span><span>ANOVA</span><span>Mann-Whitney</span><span>Chi-Square</span><span>Kappa</span>
                 </div>
               </div>
             </div>
@@ -592,9 +898,9 @@
               </div>
               <div class="htc-body">
                 <h3>Analytical Performance</h3>
-                <p>CLSI/EP5-A3 precision, trueness vs reference, Bland-Altman method comparison, and regression with diagnostic thresholds.</p>
+                <p>CLSI/EP5-A3 precision studies, trueness vs reference, Bland-Altman method comparison, and regression with diagnostic thresholds.</p>
                 <div class="htc-tags">
-                  <span>Precision (EP5-A3)</span><span>Bias</span><span>Bland-Altman</span><span>Regression</span>
+                  <span>Precision (EP5-A3)</span><span>Bias</span><span>Bland-Altman</span><span>Linear Regression</span>
                 </div>
               </div>
             </div>
@@ -642,11 +948,20 @@
 
           <div class="home-info-row">
             <div class="home-about">
-              <strong>Subash Suntharalingam</strong> — Clinical Laboratory Scientist<br>
-              Built to improve statistical literacy and data quality from the laboratory bench to epidemiological databases. Use the "Report Issue" button (available in any tool) to share feedback.
+              <div style="display:flex;align-items:flex-start;gap:14px;">
+                <div style="flex-shrink:0;width:48px;height:48px;background:#1976d2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                  <div style="font-weight:800;font-size:15px;color:#1e3a8a;margin-bottom:2px;">Subash Suntharalingam</div>
+                  <div style="font-size:12px;color:#3b82f6;font-weight:600;margin-bottom:8px;">Clinical Laboratory Scientist · MSc Biomedicine · Lecturer at University College Absalon</div>
+                  <div style="font-size:13px;color:#374151;line-height:1.6;">Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use the <strong>Report Issue</strong> button in any tool to share feedback.</div>
+                </div>
+              </div>
             </div>
             <div class="home-disclaimer">
-              <strong>For educational and research use.</strong> Always verify results and consult qualified statisticians for critical clinical decisions. Clinical decisions should never be based solely on this tool's output.
+              <div style="font-weight:800;font-size:13px;color:#92400e;margin-bottom:6px;">For educational and research use only</div>
+              <div style="font-size:13px;color:#78350f;line-height:1.6;">Always verify results independently and consult a qualified statistician for critical clinical decisions. This tool does not replace professional judgement.</div>
             </div>
           </div>
 
@@ -670,6 +985,9 @@
 
   </div>
 
+<script src="assets/js/html2canvas.min.js"></script>
+<script src="assets/js/jspdf.umd.min.js"></script>
+<script src="assets/js/xlsx.full.min.js"></script>
 <script src="assets/js/version.js"></script>
 <script>
   let currentToolPage = null;
@@ -683,24 +1001,37 @@
   }
 
   function setActiveButton(btn) {
-    document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".sidebar button:not(.collapsible-header)").forEach(b => b.classList.remove("active"));
     if (btn) btn.classList.add("active");
   }
 
-  function loadTool(page, title, btn) {
+  function loadTool(page, title, btn, infoFile) {
     currentToolPage = page;
     const displayTitle = (btn && btn.dataset.i18n) ? T(btn.dataset.i18n) : title;
     document.getElementById("toolTitle").innerText = (page === 'PCR.html') ? '' : displayTitle;
     setActiveButton(btn);
 
+    // Hide Excel until we confirm the tool supports it
+    document.getElementById("exportExcelBtn").style.display = "none";
+
     document.getElementById("contentArea").innerHTML =
       `<iframe src="${page}" style="width:100%; height:100%; border:none;" id="toolIframe"></iframe>`;
 
-    // Show Report Issue button
+    // Show Report Issue + PDF + Save/Load immediately; Excel only if tool supports it
     document.getElementById("reportIssueBtn").style.display = "inline-block";
+    document.getElementById("saveDataBtn").style.display = "inline-block";
+    document.getElementById("loadDataBtn").style.display = "inline-block";
+    document.getElementById("exportPdfBtn").style.display = "inline-block";
 
-    // Load info panel HTML from assets/info/<page>
-    fetch("assets/info/" + page.split('#')[0].toLowerCase())
+    // Show Excel button only after iframe has loaded and tool exposes exportToExcel
+    document.getElementById("toolIframe").addEventListener("load", function() {
+      const hasExcel = typeof this.contentWindow?.exportToExcel === "function";
+      document.getElementById("exportExcelBtn").style.display = hasExcel ? "inline-block" : "none";
+    });
+
+    // Load info panel HTML — use explicit infoFile if provided, otherwise derive from page name
+    const infoPath = infoFile || page.split('#')[0].toLowerCase();
+    fetch("assets/info/" + infoPath)
       .then(res => {
         if (!res.ok) throw new Error("No info file");
         return res.text();
@@ -933,10 +1264,11 @@
   }
 
   function getHomeHTML() {
-    const svgBars = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="2" width="4" height="19" rx="1"/></svg>`;
+    const svgBell   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19 C5 19 7 19 9 13 C10.5 8 11 5 12 5 C13 5 13.5 8 15 13 C17 19 19 19 22 19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="19" x2="12" y2="21"/></svg>`;
     const svgTarget = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>`;
-    const svgPCR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="7" cy="10" r="1.5" fill="currentColor"/><circle cx="12" cy="10" r="1.5" fill="currentColor"/><circle cx="17" cy="10" r="1.5" fill="currentColor"/><circle cx="7" cy="15" r="1.5" fill="currentColor"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/><circle cx="17" cy="15" r="1.5" fill="currentColor"/></svg>`;
-    const svgLab = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M9 3v6.5L5 17a2 2 0 001.8 2.9h10.4A2 2 0 0019 17l-4-7.5V3"/><line x1="6.1" y1="14" x2="17.9" y2="14"/></svg>`;
+    const svgROC    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="21" x2="21" y2="3" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/><path d="M3 21 C3 9 7 3 21 3"/></svg>`;
+    const svgLab    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M9 3v6.5L5 17a2 2 0 001.8 2.9h10.4A2 2 0 0019 17l-4-7.5V3"/><line x1="6.1" y1="14" x2="17.9" y2="14"/></svg>`;
+    const svgPerson = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
     return `
       <div class="welcome-container">
         <div class="home-hero">
@@ -944,47 +1276,259 @@
           <h1>${T('home.title')}</h1>
           <p>${T('home.subtitle')}</p>
         </div>
-        <div class="home-tools-grid">
-          <div class="home-tool-card htc-blue">
-            <div class="htc-icon">${svgBars}</div>
+        <div class="home-tools-grid" style="grid-template-columns:repeat(2,1fr);">
+          <div class="home-tool-card htc-blue" onclick="loadSection('inferential')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('inferential')">
+            <div class="htc-icon">${svgBell}</div>
             <div class="htc-body">
               <h3>${T('home.hypothesisTests')}</h3>
               <p>${T('home.hypothesisDesc')}</p>
-              <div class="htc-tags"><span>T-Tests</span><span>ANOVA</span><span>Mann-Whitney</span><span>Chi-Square</span><span>Wilcoxon</span></div>
+              <div class="htc-tags"><span>Learning &amp; Theory</span><span>T-Tests</span><span>ANOVA</span><span>Mann-Whitney</span><span>Chi-Square</span><span>Kappa</span></div>
             </div>
           </div>
-          <div class="home-tool-card htc-teal">
+          <div class="home-tool-card htc-teal" onclick="loadSection('analytical')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('analytical')">
             <div class="htc-icon">${svgTarget}</div>
             <div class="htc-body">
               <h3>${T('home.analytical')}</h3>
               <p>${T('home.analyticalDesc')}</p>
-              <div class="htc-tags"><span>Precision (EP5-A3)</span><span>Bias</span><span>Bland-Altman</span><span>Regression</span></div>
+              <div class="htc-tags"><span>Precision — Quick/QC</span><span>EP05/EP15 Validation</span><span>Bias — CRM/EQA</span><span>Method Comparison</span></div>
             </div>
           </div>
-          <div class="home-tool-card htc-purple">
-            <div class="htc-icon">${svgPCR}</div>
+          <div class="home-tool-card htc-rose" onclick="loadSection('regression')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('regression')">
+            <div class="htc-icon">${svgROC}</div>
             <div class="htc-body">
-              <h3>${T('home.pcr')}</h3>
-              <p>${T('home.pcrDesc')}</p>
-              <div class="htc-tags"><span>In Silico PCR</span><span>Master Mix</span><span>Primer Dilution</span></div>
+              <h3>${T('home.regression')}</h3>
+              <p>${T('home.regressionDesc')}</p>
+              <div class="htc-tags"><span>Linear Regression</span><span>ROC &amp; Diagnostic Performance</span><span>AUC · Sensitivity · Specificity</span></div>
             </div>
           </div>
-          <div class="home-tool-card htc-orange">
+          <div class="home-tool-card htc-orange" onclick="loadSection('lab')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('lab')">
             <div class="htc-icon">${svgLab}</div>
             <div class="htc-body">
               <h3>${T('home.labTools')}</h3>
               <p>${T('home.labDesc')}</p>
-              <div class="htc-tags"><span>${T('tool.dilution')}</span><span>Serial Dilution</span><span>${T('tool.molarity')}</span></div>
+              <div class="htc-tags"><span>PCR</span><span>Dilution Calculator</span><span>Molarity &amp; Solution Prep</span><span>Photometry</span><span>Potentiometry</span></div>
             </div>
           </div>
         </div>
         <div class="home-info-row">
-          <div class="home-about">${T('home.about')}</div>
-          <div class="home-disclaimer">${T('home.disclaimer')}</div>
+          <div class="home-about">
+            <div style="display:flex;align-items:flex-start;gap:14px;">
+              <div style="flex-shrink:0;width:48px;height:48px;background:#1976d2;border-radius:50%;display:flex;align-items:center;justify-content:center;">${svgPerson}</div>
+              <div>
+                <div style="font-weight:800;font-size:15px;color:#1e3a8a;margin-bottom:2px;">Subash Suntharalingam</div>
+                <div style="font-size:12px;color:#3b82f6;font-weight:600;margin-bottom:8px;">Clinical Laboratory Scientist · MSc Biomedicine · Lecturer at University College Absalon</div>
+                <div style="font-size:13px;color:#374151;line-height:1.6;">${T('home.aboutText')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="home-disclaimer">
+            <div style="font-weight:800;font-size:13px;color:#92400e;margin-bottom:6px;">${T('home.disclaimerTitle')}</div>
+            <div style="font-size:13px;color:#78350f;line-height:1.6;">${T('home.disclaimerText')}</div>
+          </div>
         </div>
         <div class="get-started">${T('home.getStarted')}</div>
       </div>
     `;
+  }
+
+  function openToTool(page) {
+    // Try exact match first (includes hash), then fall back to base filename
+    let btn = document.querySelector(`button[onclick*="${page}"]`);
+    if (!btn) {
+      const base = page.split('#')[0];
+      btn = document.querySelector(`button[onclick*="${base}"]`);
+    }
+    if (!btn) return;
+    let node = btn.parentElement;
+    while (node) {
+      if (node.classList.contains('collapsible-content')) {
+        node.classList.add('active');
+        const hdr = node.previousElementSibling;
+        if (hdr && hdr.classList.contains('collapsible-header')) hdr.classList.add('active');
+      }
+      node = node.parentElement;
+    }
+    btn.click();
+    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function expandSidebarFor(key) {
+    const map = {
+      inferential: ['cat.hypothesisTests'],
+      analytical:  ['cat.analytical'],
+      regression:  ['cat.correlation'],
+      lab:         ['cat.lab'],
+      pcr:         ['cat.lab', 'ui.pcr'],
+    };
+    (map[key] || []).forEach(i18nKey => {
+      const hdr = document.querySelector(`.sidebar .collapsible-header[data-i18n="${i18nKey}"]`);
+      if (!hdr) return;
+      // Add active directly (avoid re-triggering toggleCollapsible)
+      hdr.classList.add('active');
+      const content = hdr.nextElementSibling;
+      if (content && content.classList.contains('collapsible-content')) {
+        content.classList.add('active');
+      }
+    });
+  }
+
+  function loadSection(key) {
+    currentToolPage = null;
+    const titles = {
+      inferential: T('cat.hypothesisTests'),
+      analytical:  T('cat.analytical'),
+      regression:  T('cat.correlation'),
+      lab:         T('cat.lab'),
+      pcr:         'PCR',
+    };
+    document.getElementById('toolTitle').innerText = titles[key] || key;
+    setActiveButton(null);
+    document.querySelectorAll('.home-button').forEach(b => b.classList.remove('active'));
+    document.getElementById('contentArea').innerHTML = getSectionHTML(key);
+    document.getElementById('reportIssueBtn').style.display  = 'none';
+    document.getElementById('saveDataBtn').style.display     = 'none';
+    document.getElementById('loadDataBtn').style.display     = 'none';
+    document.getElementById('exportExcelBtn').style.display  = 'none';
+    document.getElementById('exportPdfBtn').style.display    = 'none';
+    document.getElementById('infoContent').innerHTML = "<p style='color:#6B7280;'>" + T('home.infoWelcome') + "</p>";
+    expandSidebarFor(key);
+  }
+
+  function getSectionHTML(key) {
+    const svgPCR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M9 3v5l-4 8a2 2 0 001.8 2.9h10.4A2 2 0 0019 16l-4-8V3"/><line x1="6" y1="13" x2="18" y2="13"/></svg>`;
+
+    function tc(page, name, hint) {
+      return `<div class="sl-tool-card" tabindex="0"
+        onclick="openToTool('${page}')"
+        onkeydown="if(event.key==='Enter')openToTool('${page}')">
+        <div style="flex:1;">
+          <div class="sl-tool-name">${name}</div>
+          <div class="sl-tool-hint">${hint}</div>
+        </div>
+        <div class="sl-tool-arrow">›</div>
+      </div>`;
+    }
+
+    function grp(title, cards) {
+      const hdr = title ? `<div class="sl-group-title">${title}</div>` : '';
+      return `<div class="sl-group">${hdr}<div class="sl-tools-grid">${cards.join('')}</div></div>`;
+    }
+
+    const configs = {
+      inferential: {
+        heroClass: 'sl-blue',
+        title: T('cat.hypothesisTests'),
+        desc: 'Hypothesis tests for comparing groups and drawing statistical conclusions. New to inferential statistics? Start with the Learning section.',
+        back: `loadHome()`,
+        backLabel: '← Home',
+        body: [
+          grp('📚 Learning', [
+            tc('inferential_statistics.html', 'Concepts &amp; Theory', 'Principles, assumptions, and when to use which test'),
+            tc('dance_of_p.html', 'Dance of the p-values', 'Interactive simulation of sampling variability'),
+            tc('normal_distribution.html', 'Normal Distribution', 'Explore shape, mean, and standard deviation'),
+            tc('f_distribution.html', 'F Distribution', 'F-ratio, critical values, and ANOVA context'),
+            tc('chi_distribution.html', 'Chi-Square Distribution', 'χ² shape, degrees of freedom, and critical values'),
+          ]),
+          grp('Quantitative Tests', [
+            tc('t_one_sample.html',                    'One-Sample T-Test',    'Sample mean vs known value'),
+            tc('paired_t_test.html',                   'Paired T-Test',        'Same subjects, two conditions'),
+            tc('two_sample_t_test_independent.html',   'Independent T-Test',   'Two separate groups'),
+            tc('anova.html',                           'One-Way ANOVA',        '3+ groups, one factor'),
+            tc('two_way_anova.html',                   'Two-Way ANOVA',        '3+ groups, two factors'),
+            tc('mann_whitney.html',                    'Mann–Whitney U',       'Two independent groups · non-normal'),
+            tc('wilcoxon.html',                        'Wilcoxon signed-rank', 'Paired data · non-normal'),
+          ]),
+          grp('Categorical Tests', [
+            tc('Chi_GOF.html',                 'Chi-Square GOF',        'Observed vs expected frequencies'),
+            tc('Chi_independence.html',        'Chi-Square Independence','Association between two categories'),
+            tc('mcnemar.html',                 'McNemar Test',          'Paired binary data · before/after'),
+            tc('fisher_exact.html',            "Fisher's Exact Test",   'Small samples · 2×2 table'),
+            tc('kappa.html',                   'Kappa',                 'Inter-rater agreement · nominal'),
+            tc('weighted_kappa.html',          'Weighted Kappa',        'Inter-rater agreement · ordinal'),
+          ]),
+        ].join(''),
+      },
+      analytical: {
+        heroClass: 'sl-teal',
+        title: T('cat.analytical'),
+        desc: 'Evaluate and validate analytical performance of laboratory methods. Choose Precision — Quick/QC for routine monitoring or EP05/EP15 for full validation studies.',
+        back: `loadHome()`,
+        backLabel: '← Home',
+        body: grp('', [
+          tc('precision.html',         'Precision — Quick / QC',  'Daily monitoring · run-to-run statistics'),
+          tc('precision_ep05.html',    'EP05/EP15 — Validation',  'Full validation study · CLSI protocol'),
+          tc('bias.html',              'Bias — CRM / EQA',        'Known reference value vs your method'),
+          tc('method_comparison.html', 'Method Comparison',       'Two methods · paired patient samples'),
+        ]),
+      },
+      regression: {
+        heroClass: 'sl-rose',
+        title: T('cat.correlation'),
+        desc: 'Explore relationships between continuous variables or evaluate the diagnostic accuracy of a test or biomarker. Use ROC &amp; Diagnostic Performance to find optimal cut-offs and compare analytes.',
+        back: `loadHome()`,
+        backLabel: '← Home',
+        body: grp('', [
+          tc('linear_regression.html',        'Linear Regression',            'r, R², prediction line · continuous outcome'),
+          tc('logistic_regression_roc.html',  'ROC &amp; Diagnostic Performance', 'AUC · cut-off · combine analytes via logistic regression'),
+        ]),
+      },
+      lab: {
+        heroClass: 'sl-orange',
+        title: T('cat.lab'),
+        desc: 'Practical laboratory tools for PCR workflows, solution preparation, and analyte quantification.',
+        back: `loadHome()`,
+        backLabel: '← Home',
+        body: [
+          `<div class="sl-group">
+            <div class="sl-group-title">PCR</div>
+            <div class="sl-subsection-card" tabindex="0"
+              onclick="loadSection('pcr')"
+              onkeydown="if(event.key==='Enter')loadSection('pcr')">
+              <div class="sl-subsection-icon" style="background:#ede9fe;color:#5b21b6;">${svgPCR}</div>
+              <div style="flex:1;">
+                <div class="sl-subsection-name">PCR Tools</div>
+                <div class="sl-subsection-desc">In silico primer design and simulation, mastermix calculator, and primer dilution planning.</div>
+                <div class="sl-subsection-tags"><span>In Silico PCR</span><span>PCR Setup</span><span>Primer Dilution</span></div>
+              </div>
+              <div class="sl-tool-arrow" style="font-size:20px;align-self:center;">›</div>
+            </div>
+          </div>`,
+          grp('Prepare Solution', [
+            tc('dilution_calculator.html#tab-simple', 'Dilution Calculator',       'Serial &amp; simple dilutions'),
+            tc('molarity_solution_prep.html',         'Molarity &amp; Solution Prep', 'Solid → molar solution · g to prepare'),
+          ]),
+          grp('Quantification Tools', [
+            tc('lambert_beer.html', 'Photometry',   'Beer-Lambert · absorbance · concentration'),
+            tc('nernst_ise.html',   'Potentiometry','Nernst equation · ISE · mV → concentration'),
+          ]),
+        ].join(''),
+      },
+      pcr: {
+        heroClass: 'sl-purple',
+        title: 'PCR',
+        desc: 'End-to-end PCR tools: design and validate primers in silico, simulate amplification and melt curves, plan your mastermix, and calculate primer dilutions.',
+        back: `loadSection('lab')`,
+        backLabel: '← Lab Tools',
+        body: grp('', [
+          tc('PCR.html',                          'In Silico PCR',          'Primer design · simulation · melt curves'),
+          // tc('pcr_rflp_hfe.html',                 'PCR-RFLP: HFE C282Y ✦', 'Learning exercise · rs1800562 genotyping'), // hidden
+          tc('dilution_calculator.html#tab-reactions', 'PCR Setup',         'Master mix · reagent volumes'),
+          tc('dilution_calculator.html#tab-primers',   'Primer Dilution',   'Stock → working concentration'),
+        ]),
+      },
+    };
+
+    const sec = configs[key];
+    if (!sec) return '';
+    return `
+      <div class="section-landing">
+        <div class="sl-hero ${sec.heroClass}">
+          <button class="sl-hero-back" onclick="${sec.back}">${sec.backLabel}</button>
+          <h2>${sec.title}</h2>
+          <p>${sec.desc}</p>
+        </div>
+        ${sec.body}
+      </div>`;
   }
 
   function loadHome(btn) {
@@ -994,14 +1538,31 @@
     document.querySelectorAll(".home-button").forEach(b => b.classList.add("active"));
     document.getElementById("contentArea").innerHTML = getHomeHTML();
     document.getElementById("reportIssueBtn").style.display = "none";
+    document.getElementById("saveDataBtn").style.display = "none";
+    document.getElementById("loadDataBtn").style.display = "none";
+    document.getElementById("exportExcelBtn").style.display = "none";
+    document.getElementById("exportPdfBtn").style.display = "none";
     document.getElementById("infoContent").innerHTML = "<p style='color:#6B7280;'>" + T('home.infoWelcome') + "</p>";
   }
 
   function toggleCollapsible(header) {
+    const wasActive = header.classList.contains("active");
     header.classList.toggle("active");
     const content = header.nextElementSibling;
     if (content && content.classList.contains("collapsible-content")) {
       content.classList.toggle("active");
+    }
+    // When expanding a top-level section, load its landing page
+    if (!wasActive) {
+      const sectionMap = {
+        'cat.hypothesisTests': 'inferential',
+        'cat.analytical':      'analytical',
+        'cat.correlation':     'regression',
+        'cat.lab':             'lab',
+        'ui.pcr':              'pcr',
+      };
+      const key = sectionMap[header.dataset.i18n];
+      if (key) loadSection(key);
     }
   }
 
@@ -1011,7 +1572,7 @@
       'appTitle':'Clinical Statistics','nav.home':'Home','nav.testGuide':'🧭 Test Guide',
       'cat.learning':'📚 Learning','cat.inferential':'Inferential Statistics',
       'cat.learningTools':'Learning Tools','tool.inferential':'Concepts & Theory','tool.danceP':'Dance of the p-values',
-      'cat.hypothesisTests':'Hypothesis Tests','cat.quantitative':'Quantitative Analysis',
+      'cat.hypothesisTests':'Inferential Statistics','cat.quantitative':'Quantitative Analysis',
       'sub.distributions':'Distributions','sub.parametric':'Parametric Tests',
       'sub.normalBased':'Based on Normal Distribution','sub.fBased':'Based on F Distribution',
       'cat.quantitativeTests':'Quantitative Tests','cat.nonparametric':'Nonparametric Tests','cat.qualitative':'Categorical Tests',
@@ -1026,22 +1587,28 @@
       'tool.mcnemar':'McNemar Test','tool.fisher':"Fisher's Exact Test",
       'tool.kappa':'Kappa','tool.weightedKappa':'Weighted Kappa',
       'tool.precision':'Precision — Quick / QC','tool.ep05':'EP05/EP15 Precision — Validation','tool.bias':'Bias','tool.methodComp':'Method Comparison',
-      'tool.linReg':'Linear Regression','tool.pcr':'In Silico PCR',
+      'tool.linReg':'Linear Regression','tool.logReg':'ROC & Diagnostic Performance','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Setup','tool.primerDil':'Primer Dilution',
       'tool.dilution':'Dilution Calculator','tool.molarity':'Molarity & Solution Prep',
+      'cat.quantTools':'Quantification Tools','tool.photometry':'Photometry','tool.potentiometry':'Potentiometry',
       'ui.reportIssue':'Report Issue','ui.info':'Info','ui.toolInfo':'Tool Information','ui.pcr':'PCR',
       'home.badge':'Clinical Laboratory Statistics','home.title':'Statistics Toolkit',
       'home.subtitle':'Evidence-based tools for analytical performance evaluation, hypothesis testing, and molecular biology workflows — built for clinical laboratory professionals.',
-      'home.hypothesisTests':'Hypothesis Tests',
-      'home.hypothesisDesc':'Parametric and non-parametric tests with effect sizes, distribution visualizations, and assumption checks.',
+      'home.learningTools':'Learning Tools',
+      'home.learningDesc':'Interactive simulations to build statistical intuition — explore p-value behaviour, sampling distributions, and inferential concepts.',
+      'home.hypothesisTests':'Inferential Statistics',
+      'home.hypothesisDesc':'Parametric and non-parametric tests with effect sizes, confidence intervals, and assumption checks.',
       'home.analytical':'Analytical Performance',
       'home.analyticalDesc':'CLSI/EP5-A3 precision, trueness vs reference, Bland-Altman method comparison, and regression with diagnostic thresholds.',
+      'home.regression':'Regression &amp; Diagnostics',
+      'home.regressionDesc':'Explore relationships between variables and evaluate the diagnostic performance of tests and biomarkers.',
       'home.pcr':'PCR',
       'home.pcrDesc':'End-to-end PCR workflow: in silico primer design and validation, master mix calculator, and primer dilution planning.',
       'home.labTools':'Lab Tools',
       'home.labDesc':'Everyday laboratory calculators for dilution series and solution preparation from molar concentrations.',
-      'home.about':'<strong>Subash Suntharalingam</strong> — Clinical Laboratory Scientist<br>Built to improve statistical literacy and data quality from the laboratory bench to epidemiological databases. Use the "Report Issue" button (available in any tool) to share feedback.',
-      'home.disclaimer':'<strong>For educational and research use.</strong> Always verify results and consult qualified statisticians for critical clinical decisions. Clinical decisions should never be based solely on this tool\'s output.',
+      'home.aboutText':'Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use the <strong>Report Issue</strong> button in any tool to share feedback.',
+      'home.disclaimerTitle':'For educational and research use only',
+      'home.disclaimerText':'Always verify results independently and consult a qualified statistician for critical clinical decisions. This tool does not replace professional judgement.',
       'home.getStarted':'Select a tool from the sidebar to begin your analysis',
       'home.infoWelcome':'Welcome to the Clinical Statistics Toolkit. Select a test or tool from the sidebar to get started.',
     },
@@ -1049,7 +1616,7 @@
       'appTitle':'Klinisk Statistik','nav.home':'Hjem','nav.testGuide':'🧭 Testguide',
       'cat.learning':'📚 Læring','cat.inferential':'Inferentiel Statistik',
       'cat.learningTools':'Læringsværktøjer','tool.inferential':'Begreber & Teori','tool.danceP':'Dans af p-værdier',
-      'cat.hypothesisTests':'Hypotesetest','cat.quantitative':'Kvantitativ Analyse',
+      'cat.hypothesisTests':'Inferentiel Statistik','cat.quantitative':'Kvantitativ Analyse',
       'sub.distributions':'Fordelinger','sub.parametric':'Parametriske Test',
       'sub.normalBased':'Baseret på Normalfordeling','sub.fBased':'Baseret på F-fordeling',
       'cat.quantitativeTests':'Kvantitative Test','cat.nonparametric':'Ikke-parametriske Test','cat.qualitative':'Kategoriske Test',
@@ -1064,22 +1631,28 @@
       'tool.mcnemar':'McNemars test','tool.fisher':'Fishers eksakte test',
       'tool.kappa':'Kappa','tool.weightedKappa':'Vægtet Kappa',
       'tool.precision':'Præcision — Hurtig / QC','tool.ep05':'EP05/EP15 Præcision — Validering','tool.bias':'Bias','tool.methodComp':'Metodekomparing',
-      'tool.linReg':'Lineær Regression','tool.pcr':'In Silico PCR',
+      'tool.linReg':'Lineær Regression','tool.logReg':'ROC & Diagnostisk Præstation','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Opsætning','tool.primerDil':'Primerfortynding',
       'tool.dilution':'Fortyndingsberegner','tool.molarity':'Molaritet & Opløsningsfremstilling',
+      'cat.quantTools':'Kvantificeringsværktøjer','tool.photometry':'Fotometri','tool.potentiometry':'Potentiometri',
       'ui.reportIssue':'Rapportér problem','ui.info':'Info','ui.toolInfo':'Værktøjsinformation','ui.pcr':'PCR',
       'home.badge':'Klinisk Laboratorie Statistik','home.title':'Statistikværktøjer',
       'home.subtitle':'Evidensbaserede værktøjer til analytisk ydeevne, hypotesetest og molekylærbiologiske arbejdsgange — bygget til kliniske laboratoriespecialister.',
-      'home.hypothesisTests':'Hypotesetest',
-      'home.hypothesisDesc':'Parametriske og ikke-parametriske test med effektstørrelse, fordelingsvisualisering og antagelseskontrol.',
+      'home.learningTools':'Læringsværktøjer',
+      'home.learningDesc':'Interaktive simuleringer til at opbygge statistisk intuition — udforsk p-værdiers adfærd, stikprøvefordelinger og inferensstatistiske begreber.',
+      'home.hypothesisTests':'Inferentiel Statistik',
+      'home.hypothesisDesc':'Parametriske og ikke-parametriske test med effektstørrelse, konfidensintervaller og antagelseskontrol.',
       'home.analytical':'Analytisk Præstation',
       'home.analyticalDesc':'CLSI/EP5-A3 præcision, trueness vs. reference, Bland-Altman metodekomparing og regression med diagnostiske grænseværdier.',
+      'home.regression':'Regression &amp; Diagnostik',
+      'home.regressionDesc':'Undersøg sammenhænge mellem variable og evaluer den diagnostiske præstation af tests og biomarkører.',
       'home.pcr':'PCR',
       'home.pcrDesc':'Komplet PCR-arbejdsgang: in silico primerdesign og validering, mastermix-beregner og primerfortyndingsplanlægning.',
       'home.labTools':'Laboratorieværktøjer',
       'home.labDesc':'Daglige laboratorieberegnere til fortyndingsrækker og opløsningsfremstilling fra molære koncentrationer.',
-      'home.about':'<strong>Subash Suntharalingam</strong> — Klinisk Laboratorieteknolog<br>Bygget til at forbedre statistisk forståelse og datakvalitet fra laboratoriebenken til epidemiologiske databaser. Brug "Rapportér problem"-knappen (tilgængelig i ethvert værktøj) til at dele feedback.',
-      'home.disclaimer':'<strong>Til uddannelses- og forskningsbrug.</strong> Verificer altid resultater og konsulter kvalificerede statistikere ved kritiske kliniske beslutninger. Kliniske beslutninger bør aldrig baseres udelukkende på dette værktøjs output.',
+      'home.aboutText':'Bygget til at bygge bro mellem laboratoriedata og stringent statistisk analyse — hjælper laboratorieprofessionelle med at anvende evidensbaserede metoder med sikkerhed. Brug <strong>Rapportér problem</strong>-knappen i ethvert værktøj til at dele feedback.',
+      'home.disclaimerTitle':'Kun til uddannelses- og forskningsbrug',
+      'home.disclaimerText':'Verificer altid resultater uafhængigt og konsulter en kvalificeret statistiker ved kritiske kliniske beslutninger. Dette værktøj erstatter ikke faglig vurdering.',
       'home.getStarted':'Vælg et værktøj i menuen for at starte din analyse',
       'home.infoWelcome':'Velkommen til Klinisk Statistik. Vælg en test eller et værktøj i menuen for at komme i gang.',
     }
@@ -1104,7 +1677,14 @@
       if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
         el.placeholder = val;
       } else {
-        el.textContent = val;
+        // Preserve any .btn-hint child spans when updating text
+        const hint = el.querySelector('.btn-hint');
+        if (hint) {
+          el.childNodes.forEach(n => { if (n !== hint) n.remove ? n.remove() : el.removeChild(n); });
+          el.insertBefore(document.createTextNode(val), hint);
+        } else {
+          el.textContent = val;
+        }
       }
     });
     // If home is showing, re-render it
@@ -1129,9 +1709,212 @@
 
   applyAppVersion();
   applyLanguage(currentLang);
+
+  // ── UPDATE CHECK ──────────────────────────────────────────────────────────
+  (async function checkForUpdate() {
+    try {
+      const res = await fetch('https://clinical-stats-api.vercel.app/api/version', { cache: 'no-store' });
+      if (!res.ok) return;
+      const { version: latest, url } = await res.json();
+      const current = window.APP_META?.version || '0.0.0';
+      const [lM, lm, lp] = latest.split('.').map(Number);
+      const [cM, cm, cp] = current.split('.').map(Number);
+      const isNewer = lM > cM || (lM === cM && lm > cm) || (lM === cM && lm === cm && lp > cp);
+      if (isNewer) {
+        const banner = document.getElementById('update-banner');
+        document.getElementById('update-banner-msg').innerHTML =
+          `A new version is available (v${latest}). <a onclick="window.appAPI.openExternal('${url}')">Download update</a>`;
+        banner.style.display = 'flex';
+      }
+    } catch (e) { /* fail silently */ }
+  })();
+
+  // ── UNIVERSAL EXPORT ──────────────────────────────────────────────────────
+
+  async function universalExportPDF() {
+    const iframe = document.getElementById("toolIframe");
+    if (!iframe) return;
+    const btn = document.getElementById("exportPdfBtn");
+    btn.disabled = true; btn.textContent = "Generating…";
+
+    try {
+      const toolTitle = document.getElementById("toolTitle").innerText || "Export";
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const margin = 14;
+
+      // Header bar
+      pdf.setFillColor(31, 41, 55);
+      pdf.rect(0, 0, pw, 22, "F");
+      pdf.setFontSize(9); pdf.setTextColor(156, 163, 175);
+      pdf.text("Clinical Statistics Toolkit", margin, 9);
+      pdf.text(new Date().toLocaleString(), pw - margin, 9, { align: "right" });
+      pdf.setFontSize(13); pdf.setTextColor(255, 255, 255); pdf.setFont(undefined, "bold");
+      pdf.text(toolTitle, margin, 17);
+      pdf.setFont(undefined, "normal");
+
+      // Capture iframe body
+      const canvas = await html2canvas(iframe.contentDocument.body, {
+        scale: 1.8, useCORS: true, allowTaint: true,
+        backgroundColor: "#f4f6f8",
+        windowWidth: iframe.contentDocument.body.scrollWidth,
+        windowHeight: iframe.contentDocument.body.scrollHeight
+      });
+
+      const contentW = pw - 2 * margin;
+      const fullImgH = (canvas.height / canvas.width) * contentW;
+      const firstPageH = ph - 22 - margin - 10;
+      const extraPageH = ph - margin - 10;
+      const scaleH = canvas.width / contentW; // px per mm
+
+      let srcY = 0; let isFirst = true;
+      while (srcY < canvas.height) {
+        const availMM = isFirst ? firstPageH : extraPageH;
+        const availPX = availMM * scaleH;
+        const slicePX = Math.min(availPX, canvas.height - srcY);
+        const sliceMM = slicePX / scaleH;
+
+        const slice = document.createElement("canvas");
+        slice.width = canvas.width; slice.height = Math.ceil(slicePX);
+        slice.getContext("2d").drawImage(canvas, 0, srcY, canvas.width, slicePX, 0, 0, canvas.width, slicePX);
+
+        const yPos = isFirst ? 26 : margin;
+        pdf.addImage(slice.toDataURL("image/png"), "PNG", margin, yPos, contentW, sliceMM);
+        srcY += slicePX;
+        if (srcY < canvas.height) pdf.addPage();
+        isFirst = false;
+      }
+
+      // Page numbers
+      const total = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8); pdf.setTextColor(156, 163, 175);
+        pdf.text(`Page ${i} of ${total}`, pw / 2, ph - 5, { align: "center" });
+      }
+
+      pdf.save(`${toolTitle.replace(/[^a-z0-9]/gi, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+      alert("PDF export failed: " + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "⬇ PDF";
+    }
+  }
+
+  function universalExportExcel() {
+    const iframe = document.getElementById("toolIframe");
+    if (!iframe) return;
+    const fn = iframe.contentWindow && iframe.contentWindow.exportToExcel;
+    if (typeof fn === 'function') {
+      fn();
+    } else {
+      alert('Excel export is not available for this tool — run the analysis first, or this tool does not support Excel export.');
+    }
+  }
+
+  // ── Toast notification ────────────────────────────────────────────────────
+  let _toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById("appToast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove("show"), 7000);
+  }
+
+  // ── Save / Load data ─────────────────────────────────────────────────────
+  function saveToolData() {
+    const iframe = document.getElementById("toolIframe");
+    if (!iframe || !iframe.contentDocument) return;
+    const iDoc = iframe.contentDocument;
+    const toolTitle = document.getElementById("toolTitle").innerText || "tool";
+
+    // If tool provides a custom save hook, use it
+    const customGet = iframe.contentWindow && iframe.contentWindow.getSaveData;
+    const customData = typeof customGet === 'function' ? customGet() : null;
+
+    let fields = {};
+    if (customData) {
+      fields = customData;
+    } else {
+      // Generic: collect all inputs, textareas and selects with an id or name
+      iDoc.querySelectorAll("input:not([type=file]):not([type=button]):not([type=submit]), textarea, select").forEach(el => {
+        const key = el.id || el.name;
+        if (!key) return;
+        if (el.type === "checkbox" || el.type === "radio") {
+          fields[key] = el.checked;
+        } else {
+          fields[key] = el.value;
+        }
+      });
+    }
+
+    const payload = {
+      tool: toolTitle,
+      savedAt: new Date().toISOString(),
+      custom: !!customData,
+      fields
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${toolTitle.replace(/[^a-z0-9]/gi, "_")}_data.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("Data saved — load it later with ⬆ Load data to restore your inputs.");
+  }
+
+  function loadToolData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const payload = JSON.parse(e.target.result);
+        const iframe = document.getElementById("toolIframe");
+        if (!iframe || !iframe.contentDocument) { alert("No tool is open."); return; }
+        const iDoc = iframe.contentDocument;
+        const fields = payload.fields || {};
+
+        // If tool provides a custom load hook, use it
+        const customSet = iframe.contentWindow && iframe.contentWindow.loadSaveData;
+        if (payload.custom && typeof customSet === 'function') {
+          customSet(fields);
+          event.target.value = "";
+          showToast("Data loaded — review your inputs, then click Run to recalculate. Works for the same tool only; save files from other tools will not match.");
+          return;
+        }
+
+        Object.entries(fields).forEach(([key, value]) => {
+          const el = iDoc.getElementById(key) || iDoc.querySelector(`[name="${key}"]`);
+          if (!el) return;
+          if (el.type === "checkbox" || el.type === "radio") {
+            el.checked = !!value;
+          } else {
+            el.value = value;
+          }
+          // Trigger change event so reactive tools update
+          el.dispatchEvent(new Event("input", {bubbles: true}));
+          el.dispatchEvent(new Event("change", {bubbles: true}));
+        });
+
+        // Reset the file input so the same file can be re-loaded
+        event.target.value = "";
+        showToast("Data loaded — review your inputs, then click Run to recalculate. Works for the same tool only; save files from other tools will not match.");
+      } catch(err) {
+        alert("Could not load data: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
 </script>
 
 <!-- ── License Info Modal ─────────────────────────────────────────── -->
+<div id="appToast"></div>
+
 <div id="licenseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:36px 36px 28px;width:420px;box-shadow:0 24px 64px rgba(0,0,0,.3);font-family:system-ui,sans-serif;color:#111827;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">

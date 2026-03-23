@@ -5,34 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Inferential Statistics</title>
   <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
   <style>
-    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f6f7fb; color: #101828; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
     .wrap { max-width: 860px; margin: 0 auto; padding: 28px 24px 80px; }
 
     h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
-    .lead { color: #667085; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+    .lead { color: #6b7280; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
 
     /* Index */
     .index {
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
       padding: 16px 20px; margin-bottom: 36px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.05);
     }
     .index h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; font-weight: 800; }
     .index ol { margin: 0; padding-left: 18px; }
     .index li { margin: 5px 0; }
-    .index a { color: #2b6cb0; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .index a { color: #1976d2; text-decoration: none; font-size: 13px; font-weight: 600; }
     .index a:hover { text-decoration: underline; }
 
     /* Sections */
     .section { margin-bottom: 44px; scroll-margin-top: 16px; }
-    .section h2 { font-size: 19px; margin: 0 0 10px; color: #1e3a5f; border-left: 4px solid #2b6cb0; padding-left: 10px; }
-    .section p { font-size: 14px; line-height: 1.8; color: #344054; margin: 0 0 12px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #1976d2; padding-left: 10px; }
+    .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
     .section p:last-child { margin-bottom: 0; }
 
     /* Callouts */
-    .callout { background: #eef4ff; border: 1px solid #c7d7fd; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #1e3a5f; margin: 14px 0; }
-    .callout b { color: #1e40af; }
+    .callout { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #0d47a1; margin: 14px 0; }
+    .callout b { color: #1565c0; }
     .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #7c2d12; margin: 14px 0; }
     .warn b { color: #9a3412; }
     .good { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #14532d; margin: 14px 0; }
@@ -40,8 +40,8 @@
 
     /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; border-radius: 10px; overflow: hidden; }
-    th { background: #1e3a5f; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
-    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #344054; vertical-align: top; }
+    th { background: #1976d2; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
+    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
     tr:last-child td { border-bottom: none; }
     tr:nth-child(even) td { background: #f9fafb; }
 
@@ -51,7 +51,7 @@
 
     .divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
 
-    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #2b6cb0; text-decoration: none; font-weight: 600; }
+    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #1976d2; text-decoration: none; font-weight: 600; }
     .back-top:hover { text-decoration: underline; }
   </style>
 </head>
@@ -66,6 +66,7 @@
     <h3>Contents</h3>
     <ol>
       <li><a href="#what-is">What is inferential statistics?</a></li>
+      <li><a href="#clt">The Central Limit Theorem</a></li>
       <li><a href="#hypothesis">Hypothesis testing</a></li>
       <li><a href="#pvalue">The p-value</a></li>
       <li><a href="#alpha">Significance level (α) and Type I error</a></li>
@@ -88,8 +89,80 @@
   <hr class="divider"/>
 
   <!-- 2 -->
+  <div class="section" id="clt">
+    <h2>2. The Central Limit Theorem</h2>
+    <p>The <b>Central Limit Theorem (CLT)</b> states that when you take repeated random samples from any population — regardless of the shape of that population's distribution — the distribution of sample means will approach a <b>normal (Gaussian) distribution</b> as sample size increases. This holds even if individual measurements are skewed, bimodal, or otherwise non-normal.</p>
+    <p>A common rule of thumb: the sampling distribution of the mean is approximately normal when <b>n ≥ 30</b>, though this threshold is lower for distributions that are already roughly symmetric, and higher for heavily skewed ones.</p>
+
+    <div class="callout">
+      <b>Why CLT matters in the lab:</b> Many biological measurements are not normally distributed in individuals — serum ferritin is strongly right-skewed, troponin values cluster near zero with a long tail, and platelet counts are roughly log-normal. Yet when we compare <em>group means</em> (e.g. mean HbA1c in two patient groups), CLT justifies treating the distribution of those means as normal, making parametric tests valid even with non-normal raw data — as long as n is adequate.
+    </div>
+
+    <p>This is the mathematical foundation that makes <b>parametric tests</b> (t-tests, ANOVA) robust in practice. Non-parametric tests, by contrast, work with ranks rather than means and do not rely on CLT.</p>
+
+    <table>
+      <tr><th>Test</th><th>Relies on CLT?</th><th>Why</th></tr>
+      <tr>
+        <td><b>One-sample t-test</b></td>
+        <td><span class="tag tag-green">Yes</span></td>
+        <td>Compares a sample mean to a known value; assumes the sampling distribution of the mean is normal</td>
+      </tr>
+      <tr>
+        <td><b>Independent t-test</b></td>
+        <td><span class="tag tag-green">Yes</span></td>
+        <td>Compares means of two groups; CLT justifies normality of the difference between means</td>
+      </tr>
+      <tr>
+        <td><b>Paired t-test</b></td>
+        <td><span class="tag tag-green">Yes</span></td>
+        <td>Compares the mean of within-pair differences to zero; CLT applies to the distribution of those differences</td>
+      </tr>
+      <tr>
+        <td><b>One-way ANOVA</b></td>
+        <td><span class="tag tag-green">Yes</span></td>
+        <td>Extends t-test to ≥3 groups; assumes normally distributed group means and equal variances</td>
+      </tr>
+      <tr>
+        <td><b>Repeated-measures ANOVA</b></td>
+        <td><span class="tag tag-green">Yes</span></td>
+        <td>Within-subject means assumed to be normally distributed; relies on CLT for validity</td>
+      </tr>
+      <tr>
+        <td><b>Mann-Whitney U</b></td>
+        <td><span class="tag tag-red">No</span></td>
+        <td>Non-parametric; compares rank distributions, not means — no normality assumption required</td>
+      </tr>
+      <tr>
+        <td><b>Wilcoxon signed-rank</b></td>
+        <td><span class="tag tag-red">No</span></td>
+        <td>Non-parametric alternative to the paired t-test; uses ranks of differences, not their mean</td>
+      </tr>
+      <tr>
+        <td><b>Chi-Square / Fisher's Exact</b></td>
+        <td><span class="tag tag-red">No</span></td>
+        <td>Work with counts and proportions in contingency tables — no assumption about continuous distributions</td>
+      </tr>
+      <tr>
+        <td><b>McNemar / Kappa</b></td>
+        <td><span class="tag tag-red">No</span></td>
+        <td>Based on frequencies of agreement/disagreement in paired categorical data — CLT not involved</td>
+      </tr>
+    </table>
+
+    <div class="warn">
+      <b>When CLT breaks down:</b> With very small samples (n &lt; 10–15) from heavily skewed distributions, the sampling distribution of the mean may not be adequately normal. In these cases, prefer non-parametric alternatives or consider transforming the data (e.g. log-transform for skewed lab values).
+    </div>
+
+    <div class="good">
+      <b>Practical takeaway:</b> For most clinical laboratory comparisons with n ≥ 30, CLT makes parametric tests valid regardless of how individual patient values are distributed. Below that threshold, assess the raw data distribution first — or default to a non-parametric test.
+    </div>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 3 -->
   <div class="section" id="hypothesis">
-    <h2>2. Hypothesis testing</h2>
+    <h2>3. Hypothesis testing</h2>
     <p>Every hypothesis test starts with two competing statements:</p>
     <p><b>Null hypothesis (H₀):</b> There is no effect, no difference, or no association. Any observed difference is due to random sampling variation.</p>
     <p><b>Alternative hypothesis (H₁):</b> There is a real effect or difference in the population.</p>
@@ -100,7 +173,7 @@
 
   <!-- 3 -->
   <div class="section" id="pvalue">
-    <h2>3. The p-value</h2>
+    <h2>4. The p-value</h2>
     <p>The p-value is the probability of obtaining a result as extreme as — or more extreme than — the one observed, <b>assuming the null hypothesis is true</b>.</p>
     <div class="callout">
       <b>Correct interpretation:</b> A p-value of 0.03 means: if H₀ were true, there would be a 3% chance of seeing a difference this large (or larger) purely by chance.
@@ -118,7 +191,7 @@
 
   <!-- 4 -->
   <div class="section" id="alpha">
-    <h2>4. Significance level (α)</h2>
+    <h2>5. Significance level (α)</h2>
     <p>The significance level α is the threshold we set <em>before</em> the experiment. It defines how willing we are to make a <b>Type I error</b> — falsely rejecting a true null hypothesis (a false positive).</p>
     <p>The most commonly used threshold is α = 0.05, meaning we accept a 5% risk of a false positive. This is a convention, not a law — in some contexts (e.g. genomics, safety-critical decisions) much lower α values are used.</p>
     <div class="callout">
@@ -130,7 +203,7 @@
 
   <!-- 5 -->
   <div class="section" id="errors">
-    <h2>5. Type I and Type II errors</h2>
+    <h2>6. Type I and Type II errors</h2>
     <p>Every decision in hypothesis testing carries two possible error types:</p>
     <table>
       <tr><th></th><th>H₀ is true (no real effect)</th><th>H₀ is false (real effect exists)</th></tr>
@@ -148,7 +221,7 @@
 
   <!-- 6 -->
   <div class="section" id="power">
-    <h2>6. Statistical power</h2>
+    <h2>7. Statistical power</h2>
     <p><b>Power</b> is the probability of correctly detecting a true effect — rejecting H₀ when H₁ is actually true. Power = 1 − β. A study with 80% power has a 20% chance of missing a real effect.</p>
     <p>Power is determined by three factors:</p>
     <table>
@@ -169,8 +242,8 @@
 
   <!-- 7 -->
   <div class="section" id="ci">
-    <h2>7. Confidence intervals</h2>
-    <p>A 95% confidence interval (CI) gives a range of plausible values for the population parameter based on the sample data.</p>
+    <h2>8. Confidence intervals</h2>
+    <p>A 95% confidence interval (CI) is a range calculated from sample data that, in repeated sampling, would contain the true population parameter 95% of the time. It does <em>not</em> mean there is a 95% probability that the true value lies within any single interval.</p>
     <div class="callout">
       <b>Correct interpretation:</b> If you repeated the same experiment 100 times and computed a 95% CI each time, approximately 95 of those intervals would contain the true population value. Any single CI either contains the true value or it doesn't — we just don't know which.
     </div>
@@ -184,7 +257,7 @@
 
   <!-- 8 -->
   <div class="section" id="effectsize">
-    <h2>8. Statistical vs. clinical significance</h2>
+    <h2>9. Statistical vs. clinical significance</h2>
     <p>A statistically significant result (p &lt; α) tells you only that the observed difference is unlikely to be due to chance. It says <b>nothing</b> about whether that difference is clinically meaningful.</p>
     <p>With a large enough sample size, almost any difference — no matter how trivially small — will eventually become statistically significant. This is why <b>effect size</b> matters.</p>
     <table>
@@ -207,7 +280,7 @@
 
   <!-- 9 -->
   <div class="section" id="categorical">
-    <h2>9. Categorical tests</h2>
+    <h2>10. Categorical tests</h2>
     <p>Categorical tests are used when the outcome variable is not a continuous measurement but a <b>category</b> — for example: positive/negative, disease present/absent, or agreement/disagreement between two raters.</p>
     <p>Like all inferential tests, they produce a p-value that answers: <em>if H₀ is true, how likely is this distribution of counts by chance?</em></p>
 
@@ -255,9 +328,12 @@
 
   <!-- 10 -->
   <div class="section" id="summary">
-    <h2>10. Summary</h2>
+    <h2>11. Summary</h2>
     <table>
       <tr><th>Concept</th><th>In plain language</th></tr>
+      <tr><td><b>Central Limit Theorem</b></td><td>Sample means follow a normal distribution as n grows, regardless of the population shape — the foundation of parametric tests</td></tr>
+      <tr><td><b>CLT-based tests</b></td><td>t-tests, ANOVA — compare means; require normality of the sampling distribution (CLT justifies this for n ≥ 30)</td></tr>
+      <tr><td><b>Non-CLT tests</b></td><td>Mann-Whitney, Wilcoxon, Chi-Square, Fisher's, McNemar, Kappa — use ranks or counts; no normality assumption</td></tr>
       <tr><td><b>H₀</b></td><td>The "nothing is happening" assumption</td></tr>
       <tr><td><b>p-value</b></td><td>Probability of your data (or more extreme) if H₀ were true — not the probability H₀ is true</td></tr>
       <tr><td><b>α</b></td><td>Your accepted false positive rate (typically 0.05), set before the experiment</td></tr>
