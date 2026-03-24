@@ -13,6 +13,7 @@
       <a href="#mc-loa"         style="color:var(--accent); text-decoration:none; padding:2px 0;">Limits of Agreement</a>
       <a href="#mc-te"          style="color:var(--accent); text-decoration:none; padding:2px 0;">Total Error</a>
       <a href="#mc-regression"  style="color:var(--accent); text-decoration:none; padding:2px 0;">Regression Analysis</a>
+      <a href="#mc-ccc"         style="color:var(--accent); text-decoration:none; padding:2px 0;">Lin's CCC</a>
       <a href="#mc-cvdiff"      style="color:var(--accent); text-decoration:none; padding:2px 0;">CV on Differences</a>
       <a href="#mc-correlation" style="color:var(--accent); text-decoration:none; padding:2px 0;">Correlation Warning</a>
       <a href="#mc-normality"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Normality of Differences</a>
@@ -108,6 +109,35 @@
   <p><strong>Deming Regression</strong> — accounts for measurement error in both methods (uses variance ratio λ).
   Preferred in clinical laboratory method comparisons where both methods have imprecision.
   Set λ = ratio of variance of Method Y to variance of Method X.</p>
+  <p><strong>Passing-Bablok Regression</strong> — a non-parametric method: no assumptions about the
+  distribution of errors, robust to outliers, and does not require a variance ratio. It is the
+  recommended regression method in CLSI EP09 for routine method comparison and is widely used
+  in published validation studies. <em>Not currently implemented in this tool — Deming regression
+  with λ = 1 is a reasonable substitute when both methods have similar imprecision.</em></p>
+
+  <h3 id="mc-ccc">Lin's Concordance Correlation Coefficient (ρc)</h3>
+  <p>
+    Lin's CCC measures <strong>agreement</strong> with the identity line (y = x) — not just correlation.
+    Two methods can have near-perfect R² yet poor CCC if one reads systematically higher or if the slope deviates from 1.
+  </p>
+  <p><strong>ρc = r × C<sub>b</sub></strong></p>
+  <ul>
+    <li><strong>r</strong> = Pearson correlation (precision — how tightly points follow a line)</li>
+    <li><strong>C<sub>b</sub></strong> = bias correction factor (accuracy — how close that line is to y = x)</li>
+    <li>C<sub>b</sub> = 1 means the regression line passes exactly through the origin with slope 1</li>
+    <li>C<sub>b</sub> &lt; 1 means location shift (mean bias) or scale shift (slope ≠ 1) is present</li>
+  </ul>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;"><th style="padding:5px 8px; text-align:left;">ρc</th><th style="padding:5px 8px; text-align:left;">Agreement</th></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">&gt; 0.99</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Almost perfect</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">0.95 – 0.99</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Substantial</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">0.90 – 0.95</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Moderate</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">&lt; 0.90</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Poor</td></tr>
+  </table>
+  <p class="note">
+    A high R² with a lower CCC signals that the methods correlate but do not agree — indicating systematic or proportional bias.
+    Use CCC alongside Bland-Altman and regression for a complete picture of method agreement.
+  </p>
 
   <h3 id="mc-cvdiff">CV on Differences</h3>
   <p>

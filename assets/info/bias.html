@@ -14,6 +14,7 @@
       <a href="#bias-ci"         style="color:var(--accent); text-decoration:none; padding:2px 0;">Confidence Interval</a>
       <a href="#bias-ttest"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Significance Test</a>
       <a href="#bias-specs"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Performance Specifications</a>
+      <a href="#bias-crm-eqa"    style="color:var(--accent); text-decoration:none; padding:2px 0;">CRM vs EQA</a>
       <a href="#bias-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
       <a href="#bias-decision"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Decision Rule</a>
       <a href="#bias-clinical"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Clinical Interpretation</a>
@@ -112,6 +113,32 @@
     <li><strong>Regulatory requirements</strong> — e.g. CLIA total allowable error limits (TEa), which implicitly constrain allowable bias</li>
     <li><strong>Clinical decision thresholds</strong> — bias that would not alter a clinical decision (e.g. reclassify a patient across a diagnostic cut-off)</li>
   </ul>
+
+  <h3 id="bias-crm-eqa">CRM vs EQA — Two Sources of Truth</h3>
+  <p>
+    The reference value used for bias assessment determines what type of trueness you are measuring:
+  </p>
+  <p><strong>Certified Reference Material (CRM)</strong> — a substance with a certified value traceable
+  to SI units (e.g. NIST, JCTLM). Measuring against a CRM evaluates <em>metrological trueness</em> —
+  whether your method gives the correct answer in an absolute sense. CRMs are the gold standard but
+  are not available for all analytes and may suffer from <strong>commutability issues</strong>
+  (the matrix behaves differently from native patient samples).</p>
+  <p><strong>EQA / EQAS / RIQAS assigned value</strong> — the peer group mean or consensus value
+  from an external quality assurance scheme. Measuring against EQA evaluates <em>harmonisation</em> —
+  whether your method agrees with other laboratories, not necessarily with the true value.
+  EQA targets are practical and use commutable patient-like material, but they reflect
+  peer group agreement, which may itself contain systematic bias.</p>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;"><th style="padding:5px 8px; text-align:left;"></th><th style="padding:5px 8px; text-align:left;">CRM</th><th style="padding:5px 8px; text-align:left;">EQA</th></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;"><strong>Measures</strong></td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Absolute trueness</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Peer harmonisation</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;"><strong>Traceability</strong></td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">SI units (JCTLM)</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Peer group consensus</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;"><strong>Matrix risk</strong></td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Non-commutability possible</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Usually commutable</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;"><strong>Availability</strong></td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Limited analytes</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Most routine analytes</td></tr>
+  </table>
+  <p class="note">
+    In routine laboratory practice, EQA is the most common source of reference values for bias assessment.
+    When both are available, CRM provides the stronger claim of trueness.
+  </p>
 
   <h3 id="bias-assumptions">Assumptions</h3>
   <ul>

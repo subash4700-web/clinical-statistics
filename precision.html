@@ -40,6 +40,16 @@
     .cb-excl { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
     .excl-info { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
     .excl-info strong { color: #b91c1c; }
+
+    /* Data entry table */
+    .prec-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .prec-tbl th { background: #f3f4f6; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px; border: 1px solid var(--line); text-align: center; white-space: nowrap; }
+    .prec-tbl td { border: 1px solid var(--line); padding: 0; }
+    .prec-tbl td input { width: 100%; border: none; background: transparent; padding: 4px 6px; font-size: 13px; outline: none; min-width: 60px; box-sizing: border-box; }
+    .prec-tbl td input:focus { background: #eff6ff; }
+    .prec-tbl td input.prec-label { font-weight: 600; color: #374151; font-size: 12px; min-width: 70px; }
+    .mode-btn { font-size: 11px; padding: 2px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; border: 1px solid var(--line); background: transparent; color: var(--muted); }
+    .mode-btn.active { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
   </style>
 </head>
 <body>
@@ -111,9 +121,42 @@
       </div>
 
       <div class="card">
-        <div class="section-title">Raw Data</div>
-        <textarea id="txt-data" placeholder="Paste measurements here…" oninput="previewParse()"></textarea>
-        <p class="note" id="parse-preview"></p>
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          Raw Data
+          <div style="display:flex;gap:4px;">
+            <button class="mode-btn active" id="btn-mode-table" onclick="setInputMode('table')">Table</button>
+            <button class="mode-btn" id="btn-mode-text" onclick="setInputMode('text')">Text</button>
+          </div>
+        </div>
+
+        <!-- Table mode -->
+        <div id="input-table-mode">
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            <div id="tbl-rep-config">
+              <label class="field-label" style="margin-bottom:4px;">n (observations)</label>
+              <input type="number" id="tbl-rep-n" value="20" min="3" step="1" style="width:80px;">
+            </div>
+            <div id="tbl-ip-config" style="display:none;align-items:flex-end;gap:10px;flex-wrap:wrap;">
+              <div>
+                <label class="field-label" style="margin-bottom:4px;">Groups (runs / days)</label>
+                <input type="number" id="tbl-ip-groups" value="5" min="2" step="1" style="width:80px;">
+              </div>
+              <div>
+                <label class="field-label" style="margin-bottom:4px;">Replicates per group</label>
+                <input type="number" id="tbl-ip-reps" value="3" min="2" step="1" style="width:80px;">
+              </div>
+            </div>
+            <button class="btn-ghost" style="padding:6px 14px;font-size:13px;" onclick="buildPrecTable()">Build Table</button>
+          </div>
+          <div id="prec-table-wrap" style="overflow-x:auto;max-height:380px;overflow-y:auto;"></div>
+          <p class="note" style="margin-top:8px;">Click any cell and paste from Excel (Ctrl+V / Cmd+V) to bulk-import data.</p>
+        </div>
+
+        <!-- Text mode -->
+        <div id="input-text-mode" style="display:none;">
+          <textarea id="txt-data" placeholder="Paste measurements here…" oninput="previewParse()"></textarea>
+          <p class="note" id="parse-preview"></p>
+        </div>
       </div>
     </div>
 
@@ -197,13 +240,18 @@ function updateHints(){
     document.getElementById('hint-example').innerHTML = '5.42<br>5.38<br>5.45<br>5.41<br>5.39';
     document.getElementById('gen-rep-opts').style.display = 'block';
     document.getElementById('gen-ip-opts').style.display  = 'none';
+    document.getElementById('tbl-rep-config').style.display = 'block';
+    document.getElementById('tbl-ip-config').style.display  = 'none';
   } else {
     document.getElementById('hint-title').textContent = 'Format — Intermediate Precision';
     document.getElementById('hint-body').textContent  = 'Each line: group_id, value — where group_id is run, day, or operator label.';
     document.getElementById('hint-example').innerHTML = 'Day1, 5.42<br>Day1, 5.38<br>Day2, 5.45<br>Day2, 5.41<br>Day3, 5.39<br>Day3, 5.43';
     document.getElementById('gen-rep-opts').style.display = 'none';
     document.getElementById('gen-ip-opts').style.display  = 'block';
+    document.getElementById('tbl-rep-config').style.display = 'none';
+    document.getElementById('tbl-ip-config').style.display  = 'flex';
   }
+  buildPrecTable();
   previewParse();
 }
 
@@ -231,7 +279,11 @@ function generatePrecData(){
 
 function usePrecData(){
   const val = document.getElementById('gen-output').value;
-  if(val){ document.getElementById('txt-data').value = val; previewParse(); calculate(); }
+  if(!val) return;
+  document.getElementById('txt-data').value = val;
+  if(_inputMode === 'table') populateTableFromText(val);
+  else previewParse();
+  calculate();
 }
 
 function loadExample(){
@@ -241,11 +293,13 @@ function loadExample(){
   document.getElementById('inp-allowable').value = '3.0';
   syncUnitLabels();
   if(type==='repeatability'){
-    document.getElementById('txt-data').value =
-      '5.42\n5.38\n5.45\n5.41\n5.39\n5.44\n5.37\n5.43\n5.40\n5.42\n5.39\n5.41\n5.44\n5.38\n5.43\n5.40\n5.42\n5.39\n5.41\n5.38';
+    const txt = '5.42\n5.38\n5.45\n5.41\n5.39\n5.44\n5.37\n5.43\n5.40\n5.42\n5.39\n5.41\n5.44\n5.38\n5.43\n5.40\n5.42\n5.39\n5.41\n5.38';
+    document.getElementById('txt-data').value = txt;
+    if(_inputMode === 'table') populateTableFromText(txt);
   } else {
-    document.getElementById('txt-data').value =
-      'Day1,5.42\nDay1,5.38\nDay1,5.45\nDay2,5.41\nDay2,5.39\nDay2,5.43\nDay3,5.44\nDay3,5.40\nDay3,5.37\nDay4,5.43\nDay4,5.40\nDay4,5.42\nDay5,5.39\nDay5,5.41\nDay5,5.38';
+    const txt = 'Day1,5.42\nDay1,5.38\nDay1,5.45\nDay2,5.41\nDay2,5.39\nDay2,5.43\nDay3,5.44\nDay3,5.40\nDay3,5.37\nDay4,5.43\nDay4,5.40\nDay4,5.42\nDay5,5.39\nDay5,5.41\nDay5,5.38';
+    document.getElementById('txt-data').value = txt;
+    if(_inputMode === 'table') populateTableFromText(txt);
   }
   previewParse();
 }
@@ -253,6 +307,7 @@ function loadExample(){
 function clearAll(){
   document.getElementById('txt-data').value='';
   document.getElementById('parse-preview').textContent='';
+  document.querySelectorAll('#prec-table-wrap .prec-cell:not(.prec-label)').forEach(c=>c.value='');
 }
 
 function previewParse(){
@@ -393,15 +448,16 @@ let _lastCalcType = null;
 let _lastMeta   = {};
 let lastCharts  = [];
 
-function destroyCharts(){ lastCharts.forEach(c=>c.destroy()); lastCharts=[]; }
+function destroyCharts(){ lastCharts.forEach(c=>c.destroy()); lastCharts=[]; _dotChartInst=null; }
 
 function calculate(){
   showError('');
   destroyCharts();
   _excludedSet = new Set();
+  if(_inputMode === 'table') syncTableToTextarea();
   const type = document.getElementById('sel-type').value;
   const raw  = document.getElementById('txt-data').value;
-  if(!raw.trim()){ showError('Please enter data.'); return; }
+  if(!raw.trim()){ showError('Please enter data in the table.'); return; }
   const analyte  = document.getElementById('inp-analyte').value.trim()||'Sample';
   const unit     = document.getElementById('inp-unit').value.trim();
   const allowable= parseFloat(document.getElementById('inp-allowable').value);
@@ -712,8 +768,17 @@ function renderIntermediate(){
   html+=`<div class="section-header">Group Means with Total SD Limits</div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="ip-chart"></canvas></div>`;
 
-  html+=`<div class="section-header">Measurements by Group</div>`;
-  html+=`<div class="card" style="padding:12px;"><canvas id="ip-dot-chart" style="height:260px;"></canvas></div>`;
+  html+=`<div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
+    Measurements by Group
+    <label style="font-size:12px;font-weight:400;display:flex;align-items:center;gap:6px;cursor:pointer;">
+      <span style="color:var(--muted);">Spacing:</span>
+      <select id="dot-spacing" onchange="rebuildDotChart()" style="font-size:12px;padding:2px 8px;border:1px solid var(--line);border-radius:6px;cursor:pointer;">
+        <option value="spread" selected>Spread</option>
+        <option value="compact">Compact</option>
+      </select>
+    </label>
+  </div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="ip-dot-chart" style="height:280px;"></canvas></div>`;
 
   html+=`<div class="section-header">Repeatability vs Intermediate Precision</div>`;
   html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
@@ -765,41 +830,8 @@ function renderIntermediate(){
   lastCharts.push(ch);
 
   // ── Dot chart: individual measurements by group ──────────────────────────
-  const grpColors=['#2b6cb0','#e05c2e','#118a4b','#7c3aed','#b42318',
-                   '#0891b2','#d97706','#059669','#9333ea','#dc2626'];
-  const dotDatasets=[];
-  keys.forEach((key,gi)=>{
-    const vals=allGroups[key];
-    const gm=gMeans[key];
-    const col=grpColors[gi%grpColors.length];
-    // jitter points within their group column
-    const pts=vals.map((v,j)=>({x: gi + (j-(vals.length-1)/2)*0.15, y:v}));
-    dotDatasets.push({label:String(key),data:pts,backgroundColor:col,pointRadius:5,pointHoverRadius:7,showLine:false});
-    // Day mean dashed line
-    const xs=pts.map(p=>p.x);
-    dotDatasets.push({label:'_m'+gi,data:[{x:Math.min(...xs)-0.15,y:gm},{x:Math.max(...xs)+0.15,y:gm}],
-      borderColor:col,borderWidth:1.5,borderDash:[4,3],pointRadius:0,showLine:true,fill:false});
-  });
-  // Grand mean line
-  dotDatasets.push({label:'Grand mean',data:[{x:-0.5,y:grandMean},{x:keys.length-0.5,y:grandMean}],
-    borderColor:'#334155',borderWidth:2,borderDash:[6,4],pointRadius:0,showLine:true,fill:false});
-
-  const dotCh=new Chart(document.getElementById('ip-dot-chart'),{
-    type:'scatter',
-    data:{datasets:dotDatasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{labels:{filter:item=>!item.text.startsWith('_m'),font:{size:11}}},
-        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(4)}}
-      },
-      scales:{
-        x:{display:false,min:-0.5,max:keys.length-0.5},
-        y:{title:{display:true,text:unit||'Value',font:{size:11}},ticks:{font:{size:11}}}
-      }
-    }
-  });
-  lastCharts.push(dotCh);
+  window._dotChartMeta = { keys, allGroups, gMeans, grandMean, unit };
+  buildDotChart('spread');
 
   // ── Distribution comparison: Sw vs St ─────────────────────────────────────
   function normalPDF(x,mu,sigma){return Math.exp(-0.5*((x-mu)/sigma)**2)/(sigma*Math.sqrt(2*Math.PI));}
@@ -868,6 +900,227 @@ function varBar(label,val,total,color){
   </div>`;
 }
 
+// ── Dot chart (measurements by group) ──
+const _grpColors=['#2b6cb0','#e05c2e','#118a4b','#7c3aed','#b42318',
+                  '#0891b2','#d97706','#059669','#9333ea','#dc2626'];
+let _dotChartInst = null;
+
+function rebuildDotChart(){
+  const sel = document.getElementById('dot-spacing');
+  const spacing = sel ? sel.value : 'spread';
+  if(_dotChartInst){ _dotChartInst.destroy(); _dotChartInst=null; }
+  buildDotChart(spacing);
+}
+
+function buildDotChart(spacing){
+  const m = window._dotChartMeta; if(!m) return;
+  const {keys,allGroups,gMeans,grandMean,unit} = m;
+  const isSpread = spacing !== 'compact';
+
+  const dotDatasets=[];
+  keys.forEach((key,gi)=>{
+    const vals=allGroups[key];
+    const gm=gMeans[key];
+    const col=_grpColors[gi%_grpColors.length];
+    // Clamp jitter so all points stay within ±0.38 of the group centre (never cross column boundary at ±0.5)
+    const maxSpan = 0.76; // total column width used for points
+    const jitterW = vals.length > 1 ? Math.min(isSpread ? 0.30 : 0.15, maxSpan / (vals.length - 1)) : 0;
+    const pts=vals.map((v,j)=>({x: gi + (j-(vals.length-1)/2)*jitterW, y:v}));
+    dotDatasets.push({label:String(key),data:pts,backgroundColor:col,pointRadius:5,pointHoverRadius:7,showLine:false});
+    // Group mean dashed line
+    const xs=pts.map(p=>p.x);
+    const xLo=Math.min(...xs)-(isSpread?0.12:0.08);
+    const xHi=Math.max(...xs)+(isSpread?0.12:0.08);
+    dotDatasets.push({label:'_m'+gi,data:[{x:xLo,y:gm},{x:xHi,y:gm}],
+      borderColor:col,borderWidth:1.5,borderDash:[4,3],pointRadius:0,showLine:true,fill:false});
+  });
+  // Grand mean
+  dotDatasets.push({label:'Grand mean',data:[{x:-0.5,y:grandMean},{x:keys.length-0.5,y:grandMean}],
+    borderColor:'#334155',borderWidth:2,borderDash:[6,4],pointRadius:0,showLine:true,fill:false});
+
+  // Vertical separator lines between groups (spread only)
+  if(isSpread){
+    for(let i=1;i<keys.length;i++){
+      dotDatasets.push({label:'_sep'+i,data:[{x:i-0.5,y:null}],showLine:false,pointRadius:0});
+    }
+  }
+
+  const canvas = document.getElementById('ip-dot-chart');
+  if(!canvas) return;
+
+  _dotChartInst = new Chart(canvas,{
+    type:'scatter',
+    data:{datasets:dotDatasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{filter:item=>!item.text.startsWith('_'),font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(4)}},
+        annotation: isSpread ? undefined : undefined
+      },
+      scales:{
+        x:{
+          display: isSpread,
+          min:-0.5, max:keys.length-0.5,
+          ticks:{
+            stepSize:1,
+            callback:(val)=>{ const k=keys[Math.round(val)]; return k!==undefined?String(k):''; },
+            font:{size:11}, maxRotation:0
+          },
+          grid:{ color:ctx=>Number.isInteger(ctx.tick.value-0.5)?'rgba(0,0,0,0)':'rgba(209,213,219,0.5)' }
+        },
+        y:{title:{display:true,text:unit||'Value',font:{size:11}},ticks:{font:{size:11}}}
+      }
+    },
+    plugins:[{
+      id:'groupSep',
+      beforeDraw(chart){
+        if(!isSpread) return;
+        const {ctx,chartArea:{top,bottom},scales:{x}} = chart;
+        ctx.save();
+        ctx.strokeStyle='rgba(209,213,219,0.8)';
+        ctx.lineWidth=1;
+        ctx.setLineDash([]);
+        for(let i=1;i<keys.length;i++){
+          const px=x.getPixelForValue(i-0.5);
+          ctx.beginPath(); ctx.moveTo(px,top); ctx.lineTo(px,bottom); ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }]
+  });
+  lastCharts.push(_dotChartInst);
+}
+
+// ── Table input ──
+let _inputMode = 'table';
+
+function setInputMode(mode){
+  _inputMode = mode;
+  document.getElementById('input-table-mode').style.display = mode==='table' ? 'block' : 'none';
+  document.getElementById('input-text-mode').style.display  = mode==='text'  ? 'block' : 'none';
+  document.getElementById('btn-mode-table').classList.toggle('active', mode==='table');
+  document.getElementById('btn-mode-text').classList.toggle('active',  mode==='text');
+}
+
+function buildPrecTable(){
+  const type = document.getElementById('sel-type').value;
+  if(type === 'repeatability') buildRepTable();
+  else buildIPTable();
+}
+
+function buildRepTable(){
+  const n = Math.max(3, parseInt(document.getElementById('tbl-rep-n').value)||20);
+  let html = '<table class="prec-tbl"><thead><tr>'
+    + '<th style="width:36px;color:var(--muted);">#</th>'
+    + '<th>Value</th>'
+    + '</tr></thead><tbody>';
+  for(let i=0;i<n;i++){
+    html += `<tr>
+      <td style="text-align:center;color:var(--muted);font-size:11px;padding:2px 4px;">${i+1}</td>
+      <td><input type="number" step="any" id="prec-r-${i}" class="prec-cell"
+        onpaste="handlePrecPaste(event,${i},0,'rep')"></td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('prec-table-wrap').innerHTML = html;
+}
+
+function buildIPTable(){
+  const groups = Math.max(2, parseInt(document.getElementById('tbl-ip-groups').value)||5);
+  const reps   = Math.max(1, parseInt(document.getElementById('tbl-ip-reps').value)||3);
+  let html = '<table class="prec-tbl"><thead><tr><th>Group</th>';
+  for(let r=0;r<reps;r++) html += `<th>Rep ${r+1}</th>`;
+  html += '</tr></thead><tbody>';
+  for(let g=0;g<groups;g++){
+    html += '<tr>';
+    html += `<td><input type="text" id="prec-gl-${g}" value="Day${g+1}" class="prec-cell prec-label"
+      style="width:70px;" onpaste="handlePrecPaste(event,${g},0,'ip')"></td>`;
+    for(let r=0;r<reps;r++){
+      html += `<td><input type="number" step="any" id="prec-g${g}-r${r}" class="prec-cell"
+        onpaste="handlePrecPaste(event,${g},${r},'ip')"></td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('prec-table-wrap').innerHTML = html;
+}
+
+function handlePrecPaste(e, startRow, startCol, mode){
+  e.preventDefault();
+  const text = (e.clipboardData||window.clipboardData).getData('text');
+  const rows = text.trim().split(/\r?\n/).map(r=>r.split(/\t/));
+  if(mode==='rep'){
+    rows.forEach((row,ri)=>{
+      const cell = document.getElementById(`prec-r-${startRow+ri}`);
+      if(cell && row[0]!==undefined) cell.value = row[0].trim();
+    });
+  } else {
+    const groups = parseInt(document.getElementById('tbl-ip-groups').value)||5;
+    const reps   = parseInt(document.getElementById('tbl-ip-reps').value)||3;
+    // Detect if first column is a label (not numeric)
+    const firstIsLabel = rows.length>0 && isNaN(parseFloat(rows[0][0]));
+    rows.forEach((row,ri)=>{
+      const gr = startRow+ri; if(gr>=groups) return;
+      let ci = 0;
+      if(firstIsLabel){
+        const lbl = document.getElementById(`prec-gl-${gr}`);
+        if(lbl && row[0]) lbl.value = row[0].trim();
+        ci = 1;
+      }
+      row.slice(ci).forEach((val,vi)=>{
+        const cr = startCol+vi; if(cr>=reps) return;
+        const cell = document.getElementById(`prec-g${gr}-r${cr}`);
+        if(cell) cell.value = val.trim();
+      });
+    });
+  }
+}
+
+function syncTableToTextarea(){
+  const type = document.getElementById('sel-type').value;
+  const lines = [];
+  if(type==='repeatability'){
+    const n = Math.max(3, parseInt(document.getElementById('tbl-rep-n').value)||20);
+    for(let i=0;i<n;i++){
+      const c = document.getElementById(`prec-r-${i}`);
+      if(c && c.value.trim()) lines.push(c.value.trim());
+    }
+  } else {
+    const groups = parseInt(document.getElementById('tbl-ip-groups').value)||5;
+    const reps   = parseInt(document.getElementById('tbl-ip-reps').value)||3;
+    for(let g=0;g<groups;g++){
+      const label = document.getElementById(`prec-gl-${g}`)?.value.trim()||`Day${g+1}`;
+      for(let r=0;r<reps;r++){
+        const c = document.getElementById(`prec-g${g}-r${r}`);
+        if(c && c.value.trim()) lines.push(`${label}, ${c.value.trim()}`);
+      }
+    }
+  }
+  document.getElementById('txt-data').value = lines.join('\n');
+}
+
+function populateTableFromText(txt){
+  const type = document.getElementById('sel-type').value;
+  if(type==='repeatability'){
+    const vals = parseRepeatability(txt);
+    document.getElementById('tbl-rep-n').value = vals.length;
+    buildRepTable();
+    vals.forEach((v,i)=>{ const c=document.getElementById(`prec-r-${i}`); if(c) c.value=v; });
+  } else {
+    const groups = parseGrouped(txt);
+    const keys = Object.keys(groups);
+    const reps = keys.length>0 ? Math.max(...keys.map(k=>groups[k].length)) : 3;
+    document.getElementById('tbl-ip-groups').value = keys.length||5;
+    document.getElementById('tbl-ip-reps').value   = reps||3;
+    buildIPTable();
+    keys.forEach((key,g)=>{
+      const lbl = document.getElementById(`prec-gl-${g}`); if(lbl) lbl.value = key;
+      groups[key].forEach((v,r)=>{ const c=document.getElementById(`prec-g${g}-r${r}`); if(c) c.value=v; });
+    });
+  }
+}
+
 // ── Export ──
 function exportExcel(){
   const r=window._lastResult; if(!r) return;
@@ -888,6 +1141,9 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Precision');
   XLSX.writeFile(wb,`precision_${r.analyte||'results'}.xlsx`);
 }
+
+// ── Init ──
+buildPrecTable();
 </script>
 </body>
 </html>

@@ -86,6 +86,41 @@
 
     .hidden { display:none !important; }
 
+    /* ---- INFO BUTTON ---- */
+    .info-btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--accent); color:#fff;
+      font-size:10px; font-weight:700; line-height:1;
+      cursor:pointer; border:none; padding:0; margin-left:6px;
+      vertical-align:middle; flex-shrink:0;
+    }
+    .info-btn:hover { opacity:.8; }
+
+    /* ---- MODAL ---- */
+    .info-modal-backdrop {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.45); z-index:9999;
+      align-items:center; justify-content:center;
+    }
+    .info-modal-backdrop.open { display:flex; }
+    .info-modal {
+      background:#fff; border-radius:16px; padding:28px 28px 24px;
+      max-width:560px; width:90%; max-height:80vh; overflow-y:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,.25); position:relative;
+    }
+    .info-modal h2 { font-size:17px; margin:0 0 6px; color:#1e293b; }
+    .info-modal .info-modal-sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
+    .info-modal p { font-size:13px; line-height:1.65; color:#374151; margin:0 0 10px; }
+    .info-modal table { width:100%; border-collapse:collapse; font-size:13px; margin:10px 0; }
+    .info-modal th { background:#f1f5f9; padding:6px 10px; text-align:left; font-weight:700; }
+    .info-modal td { padding:6px 10px; border-top:1px solid #e2e8f0; }
+    .info-modal-close {
+      position:absolute; top:14px; right:16px;
+      background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted);
+    }
+    .info-modal-close:hover { color:#1e293b; }
+
     /* ---- OUTLIER ROW ---- */
     tr.outlier-row td { background:#fff7ed; }
     tr.excluded-row td { background:#f9fafb; color:#9ca3af; }
@@ -440,6 +475,22 @@
       <button class="btn-danger"  onclick="exportToPDF()">Export to PDF</button>
     </div>
 
+    <!-- Results selector -->
+    <div id="resultsSelectorWrap" style="display:none; margin-bottom:12px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
+      <div style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">Show results</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px 20px;">
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-n" checked> Sample Size</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-bias" checked> Mean Bias</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-sd" checked> SD</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-te" checked> Calculated TE</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-loa-upper" checked> Upper LoA</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-loa-lower" checked> Lower LoA</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-tae-pct" checked> % within TAE</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-maxbias" checked> Max Bias</label>
+        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-ccc" checked> Lin's CCC</label>
+      </div>
+    </div>
+
     <!-- KPI cards -->
     <div id="statsDisplay" class="stat-cards"></div>
 
@@ -585,6 +636,15 @@
                 } else {
                     inputs.classList.add('hidden');
                 }
+            });
+
+            // Results selector — re-render stat cards when any checkbox changes
+            ['show-n','show-bias','show-sd','show-te','show-loa-upper','show-loa-lower',
+             'show-tae-pct','show-maxbias','show-ccc'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', () => {
+                    if (currentStats) updateStatsDisplay(currentStats);
+                });
             });
         });
 
@@ -749,11 +809,21 @@
             
             const totalWithinTE = differences.filter(d => Math.abs(d) <= teaPercentage).length;
             const te_percentage = (totalWithinTE / n) * 100;
-            
+
+            // Lin's Concordance Correlation Coefficient
+            const vals1 = data.map(d => d.method1);
+            const vals2 = data.map(d => d.method2);
+            const mu1 = vals1.reduce((a, b) => a + b, 0) / n;
+            const mu2 = vals2.reduce((a, b) => a + b, 0) / n;
+            const sig1sq = vals1.reduce((s, v) => s + (v - mu1) ** 2, 0) / (n - 1);
+            const sig2sq = vals2.reduce((s, v) => s + (v - mu2) ** 2, 0) / (n - 1);
+            const covXY = vals1.reduce((s, v, i) => s + (v - mu1) * (vals2[i] - mu2), 0) / (n - 1);
+            const ccc = (2 * covXY) / (sig1sq + sig2sq + (mu1 - mu2) ** 2);
+
             return {
                 n, meanDiff, sd, loa_upper, loa_lower, differences, xValues,
                 teaPercentage, te_percentage, te_calculated, maxBias,
-                zValue, zValueTE, teaRaw, maxBiasRaw
+                zValue, zValueTE, teaRaw, maxBiasRaw, ccc
             };
         }
 
@@ -762,53 +832,81 @@
             return rawStr.split('.')[1].length;
         }
 
+        function chk(id) {
+            const el = document.getElementById(id);
+            return el ? el.checked : true;
+        }
+
         function updateStatsDisplay(stats) {
             const suffix = document.getElementById('relativeBlandAltman').checked ? '%' : '';
             const showLoA = document.getElementById('showLoA').checked;
             const teaDec = decimalCount(stats.teaRaw);
             const maxBiasDec = decimalCount(stats.maxBiasRaw);
-            
-            let html = `
+
+            // Show the results selector once we have data
+            const selectorWrap = document.getElementById('resultsSelectorWrap');
+            if (selectorWrap) selectorWrap.style.display = 'block';
+
+            let html = '';
+
+            if (chk('show-n')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Sample Size</div>
                     <div class="stat-value">${stats.n}</div>
-                </div>
+                </div>`;
+
+            if (chk('show-bias')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Mean Bias</div>
                     <div class="stat-value">${stats.meanDiff.toFixed(3)}${suffix}</div>
-                </div>
+                </div>`;
+
+            if (chk('show-sd')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Standard Deviation</div>
                     <div class="stat-value">${stats.sd.toFixed(3)}${suffix}</div>
-                </div>
+                </div>`;
+
+            if (chk('show-te')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Calculated TE (|Bias|+${stats.zValueTE}SD)</div>
                     <div class="stat-value">${stats.te_calculated.toFixed(3)}${suffix}</div>
                 </div>`;
 
-            if (showLoA) {
-                html += `
+            if (showLoA && chk('show-loa-upper')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Upper LoA (Z=${stats.zValue})</div>
                     <div class="stat-value">${stats.loa_upper.toFixed(3)}${suffix}</div>
-                </div>
+                </div>`;
+
+            if (showLoA && chk('show-loa-lower')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Lower LoA (Z=${stats.zValue})</div>
                     <div class="stat-value">${stats.loa_lower.toFixed(3)}${suffix}</div>
                 </div>`;
-            }
 
-            html += `
+            if (chk('show-tae-pct')) html += `
                 <div class="stat-card">
                     <div class="stat-label">TE within TAE (±${stats.teaPercentage.toFixed(teaDec)}${suffix})</div>
                     <div class="stat-value">${stats.te_percentage.toFixed(1)}%</div>
-                </div>
+                </div>`;
+
+            if (chk('show-maxbias')) html += `
                 <div class="stat-card">
                     <div class="stat-label">Max Acceptable Bias</div>
                     <div class="stat-value">±${stats.maxBias.toFixed(maxBiasDec)}${suffix}</div>
-                </div>
-            `;
-            
+                </div>`;
+
+            if (chk('show-ccc') && stats.ccc !== undefined) {
+                const cccVal = stats.ccc.toFixed(4);
+                const cccStr = isFinite(stats.ccc) ? cccVal : 'n/a';
+                html += `
+                <div class="stat-card">
+                    <div class="stat-label">Lin's CCC (ρc)</div>
+                    <div class="stat-value">${cccStr}</div>
+                </div>`;
+            }
+
             document.getElementById('statsDisplay').innerHTML = html;
         }
 
@@ -877,7 +975,7 @@
             renderCVDifferences(stats, includedData);
             updateNormalityStats(stats);
 
-            const regressionStats = updateRegressionStats(includedData);
+            const regressionStats = updateRegressionStats(includedData, stats.ccc);
             generateXYPlot(includedData, regressionStats);
             generateInterpretation(stats, includedData, regressionStats);
             generateBlandAltmanPlot(includedData, stats);
@@ -1014,26 +1112,29 @@
             return arr.map(val => sorted.indexOf(val) + 1);
         }
 
-        function updateRegressionStats(data) {
+        function updateRegressionStats(data, ccc) {
             const method = document.getElementById('regressionMethod').value;
             const lambda = parseFloat(document.getElementById('varianceRatio').value);
             const regression = performRegression(data, method, lambda);
             const rSquared = calculateRSquared(data, regression);
             const spearmanRho = calculateSpearmanCorrelation(data);
-            
+
+            const cccStr = (ccc !== undefined && isFinite(ccc)) ? ccc.toFixed(4) : '—';
+
             const html = `
                 <div class="card">
-                    <div class="section-title">Regression Statistics</div>
+                    <div class="section-title">Regression & Agreement</div>
                     <table><tbody>
+                        <tr><td><strong>Method</strong></td><td>${method === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression (λ=' + lambda + ')'}</td></tr>
                         <tr><td><strong>Regression Equation</strong></td><td>y = ${regression.slope.toFixed(4)}x + ${regression.intercept.toFixed(4)}</td></tr>
                         <tr><td><strong>R² (Coefficient of Determination)</strong></td><td>${rSquared.toFixed(4)}</td></tr>
                         <tr><td><strong>Spearman Correlation (ρ)</strong></td><td>${spearmanRho.toFixed(4)}</td></tr>
-                        <tr><td><strong>Method</strong></td><td>${method === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression (λ=' + lambda + ')'}</td></tr>
+                        <tr><td><strong>Lin's CCC (ρc)</strong><button class="info-btn" onclick="document.getElementById('cccInfoModal').classList.add('open')" title="What is Lin's CCC?">i</button></td><td>${cccStr}</td></tr>
                     </tbody></table>
                 </div>
                 <div id="classificationBox"></div>
             `;
-            
+
             document.getElementById('regressionStats').innerHTML = html;
             return { regression, rSquared, spearmanRho };
         }
@@ -1183,6 +1284,21 @@
                 html += `Moderate correlation. Further investigation may be needed.`;
             }
             html += `</p>`;
+
+            if (isFinite(stats.ccc)) {
+                html += `<p><strong>Lin's Concordance Correlation Coefficient (ρc):</strong> ρc = ${stats.ccc.toFixed(4)}. `;
+                if (stats.ccc >= 0.99) {
+                    html += `Almost perfect agreement — methods are highly interchangeable.`;
+                } else if (stats.ccc >= 0.95) {
+                    html += `Substantial agreement — methods can generally be used interchangeably.`;
+                } else if (stats.ccc >= 0.90) {
+                    html += `Moderate agreement — clinical judgment recommended before substitution.`;
+                } else {
+                    html += `Poor agreement — methods should not be used interchangeably without further evaluation.`;
+                }
+                html += ` CCC combines both precision (Pearson r) and accuracy (proximity to the line of identity).`;
+                html += `</p>`;
+            }
             
             if (currentClassification) {
                 const c = currentClassification;
@@ -1469,8 +1585,8 @@
             ];
 
             const showThresh = document.getElementById('showDiscriminationThreshold').checked;
-            const threshX = parseFloat(document.getElementById('thresholdX').value);
-            const threshY = parseFloat(document.getElementById('thresholdY').value);
+            const threshX = parseFloat(document.getElementById('thresholdX')?.value);
+            const threshY = parseFloat(document.getElementById('thresholdY')?.value);
             currentClassification = null;
 
             if (showThresh && !isNaN(threshX) && !isNaN(threshY)) {
@@ -1995,7 +2111,7 @@
             renderCVDifferences(stats, data);
             updateNormalityStats(stats);
 
-            const regressionStats = updateRegressionStats(data);
+            const regressionStats = updateRegressionStats(data, stats.ccc);
             generateXYPlot(data, regressionStats);
             generateInterpretation(stats, data, regressionStats);
             generateBlandAltmanPlot(data, stats);
@@ -2272,6 +2388,42 @@
 
         // Initialize spreadsheet on load
         window.addEventListener('load', function() { generateSpreadsheet(); });
+</script>
+<!-- ===== LIN'S CCC INFO MODAL ===== -->
+<div class="info-modal-backdrop" id="cccInfoModal" onclick="closeCCCModal(event)">
+  <div class="info-modal">
+    <button class="info-modal-close" onclick="document.getElementById('cccInfoModal').classList.remove('open')">✕</button>
+    <h2>Lin's Concordance Correlation Coefficient (ρc)</h2>
+    <div class="info-modal-sub">Lin, L.I. (1989) — Agreement between two methods of measurement</div>
+
+    <p><strong>The problem with Pearson r:</strong> Two methods can correlate perfectly (r = 1.0) yet one consistently reads twice as high as the other. Pearson r measures how tightly points follow <em>any</em> straight line — not whether that line is y = x. Lin's CCC tests agreement with the <strong>identity line (y = x)</strong> specifically.</p>
+
+    <p><strong>Formula:</strong> ρc = r × C<sub>b</sub></p>
+    <p>Where <strong>r</strong> = Pearson correlation (precision — how tightly points follow a line) and <strong>C<sub>b</sub></strong> = bias correction factor (accuracy — how close that line is to y = x). C<sub>b</sub> = 1 means perfect identity; C<sub>b</sub> &lt; 1 means there is location or scale shift.</p>
+
+    <p><strong>Interpretation (McBride 2005):</strong></p>
+    <table>
+      <tr><th>ρc</th><th>Strength of agreement</th></tr>
+      <tr><td>&gt; 0.99</td><td>Almost perfect</td></tr>
+      <tr><td>0.95 – 0.99</td><td>Substantial</td></tr>
+      <tr><td>0.90 – 0.95</td><td>Moderate</td></tr>
+      <tr><td>&lt; 0.90</td><td>Poor</td></tr>
+    </table>
+
+    <p><strong>What it detects that R² misses:</strong> A high R² with a low CCC means the methods correlate but do not agree — e.g. systematic bias (y = x + 5) or proportional bias (y = 1.2x). CCC penalises both scatter <em>and</em> deviation from identity.</p>
+
+    <p><strong>Relationship to Bland-Altman:</strong> They are complementary. Bland-Altman shows <em>where</em> disagreement occurs across the range. CCC gives a single number summarising overall agreement — useful for reporting and comparing studies.</p>
+
+    <p><strong>Clinical use:</strong> In EP09 method comparison, CCC is appropriate because it accounts for both random error (imprecision) and systematic error (bias), directly testing whether methods are interchangeable.</p>
+  </div>
+</div>
+
+<script>
+  function closeCCCModal(e) {
+    if (e.target === document.getElementById('cccInfoModal')) {
+      document.getElementById('cccInfoModal').classList.remove('open');
+    }
+  }
 </script>
 </body>
 </html>

@@ -1,0 +1,109 @@
+<div class="info-content">
+
+  <h2>Total Error & Sigma</h2>
+
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#tae-purpose"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#tae-te"        style="color:var(--accent); text-decoration:none; padding:2px 0;">Total Error (TE)</a>
+      <a href="#tae-tae"       style="color:var(--accent); text-decoration:none; padding:2px 0;">Total Allowable Error (TAE)</a>
+      <a href="#tae-sigma"     style="color:var(--accent); text-decoration:none; padding:2px 0;">Sigma Metric</a>
+      <a href="#tae-qc"        style="color:var(--accent); text-decoration:none; padding:2px 0;">QC Implications</a>
+      <a href="#tae-eflm"      style="color:var(--accent); text-decoration:none; padding:2px 0;">EFLM Specifications</a>
+      <a href="#tae-interpret" style="color:var(--accent); text-decoration:none; padding:2px 0;">Interpreting Results</a>
+    </div>
+  </div>
+
+  <h3 id="tae-purpose">Purpose</h3>
+  <p>
+    This tool evaluates whether a method's combined analytical error — bias and imprecision together —
+    falls within the clinically acceptable limit for a given analyte. It also calculates the Sigma metric,
+    which expresses how many standard deviations of analytical error fit within the allowable error limit.
+  </p>
+
+  <h3 id="tae-te">Total Error (TE)</h3>
+  <p>
+    Total error combines both sources of analytical error into a single estimate of the worst-case error
+    expected for an individual result:
+  </p>
+  <p><strong>TE = |Bias%| + Z × CV%</strong></p>
+  <ul>
+    <li><strong>Z = 1.65</strong> — covers 95% of results (one-sided, conventional for TE)</li>
+    <li><strong>|Bias%|</strong> — systematic error: the average offset from the true value</li>
+    <li><strong>CV%</strong> — random error: the coefficient of variation from your precision study</li>
+  </ul>
+  <p class="note">
+    Use intermediate precision CV (combining within-run and between-run variation) rather than repeatability CV alone,
+    as TE should reflect the error a patient result actually carries under routine conditions.
+  </p>
+
+  <h3 id="tae-tae">Total Allowable Error (TAE)</h3>
+  <p>
+    TAE is the maximum total error permitted before a result is considered clinically unacceptable.
+    It is set <strong>before</strong> measurement, based on:
+  </p>
+  <ul>
+    <li><strong>Biological variation</strong> — desirable TAE = 0.5 × CV<sub>I</sub> + 1.65 × 0.5 × CV<sub>I</sub> + |allowable bias| (Ricos et al.)</li>
+    <li><strong>EFLM database</strong> — use the analyte lookup in this tool for minimum, desirable, and optimum tiers</li>
+    <li><strong>CLIA / regulatory</strong> — fixed proficiency testing limits for specific analytes</li>
+    <li><strong>Clinical decision impact</strong> — error that would not change a clinical decision at the relevant cut-off</li>
+  </ul>
+  <p>If <strong>TE ≤ TAE</strong>: the method is analytically acceptable. If TE &gt; TAE: the method exceeds the allowable error budget.</p>
+
+  <h3 id="tae-sigma">Sigma Metric</h3>
+  <p>
+    The Sigma metric expresses analytical performance in units borrowed from Six Sigma manufacturing:
+  </p>
+  <p><strong>σ = (TAE% − |Bias%|) / CV%</strong></p>
+  <p>It answers: <em>how many CVs of imprecision fit between the observed bias and the allowable error limit?</em></p>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;"><th style="padding:5px 8px; text-align:left;">Sigma</th><th style="padding:5px 8px; text-align:left;">Performance</th><th style="padding:5px 8px; text-align:left;">QC strategy</th></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">&ge; 6</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">World class</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Minimal QC needed</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">5 – 6</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Excellent</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">1 control level, simple rules</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">4 – 5</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Good</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">2 levels, Westgard rules</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">3 – 4</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Marginal</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Tighter QC, investigate bias</td></tr>
+    <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">&lt; 3</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Poor</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">Method review required</td></tr>
+  </table>
+
+  <h3 id="tae-qc">QC Implications</h3>
+  <p>
+    Sigma directly informs QC design. A high-sigma method is inherently robust — errors are detected before they
+    become clinically significant. A low-sigma method requires intensive QC to compensate for poor analytical performance.
+  </p>
+  <ul>
+    <li>σ ≥ 6: run 1 QC level with 1<sub>3s</sub> rule — few false rejections, few missed errors</li>
+    <li>σ 4–6: standard Westgard multirule (1<sub>3s</sub>, 2<sub>2s</sub>, R<sub>4s</sub>, 4<sub>1s</sub>)</li>
+    <li>σ &lt; 4: increase QC frequency, add QC levels, investigate and correct root cause</li>
+  </ul>
+  <p class="note">
+    QC cannot fix a poor-sigma method — it can only detect when it has failed. The real solution is reducing
+    bias (recalibration, reagent change) or reducing imprecision (instrument maintenance, better reagent lots).
+  </p>
+
+  <h3 id="tae-eflm">EFLM Performance Specifications</h3>
+  <p>
+    The EFLM lookup uses the biological variation database (Ricos et al. 2014) to provide three tiers of
+    allowable error for each analyte:
+  </p>
+  <ul>
+    <li><strong>Minimum</strong> — floor performance; failing this means the method is not fit for purpose</li>
+    <li><strong>Desirable</strong> — recommended target for routine clinical use</li>
+    <li><strong>Optimum</strong> — aspirational standard for high-complexity or critical analytes</li>
+  </ul>
+  <p>Click an analyte to auto-fill the TAE and allowable bias fields from the selected tier.</p>
+
+  <h3 id="tae-interpret">Interpreting Results</h3>
+  <ul>
+    <li>TE ≤ TAE and σ ≥ 4: method is performing well — proceed with standard QC</li>
+    <li>TE ≤ TAE but σ = 3–4: method is borderline — monitor closely, consider bias reduction</li>
+    <li>TE &gt; TAE: method fails the allowable error criterion — investigate bias and CV before clinical use</li>
+    <li>σ &lt; 3: even with intensive QC, a meaningful proportion of results will exceed TAE — method improvement is needed</li>
+  </ul>
+  <p class="note">
+    Always interpret Sigma in context. A σ of 3.5 for an analyte with a tight TAE (e.g. sodium) is more
+    concerning than σ = 3.5 for an analyte where the TAE is generous. The underlying CV and bias values
+    matter as much as the Sigma number itself.
+  </p>
+
+</div>

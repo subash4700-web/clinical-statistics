@@ -52,6 +52,33 @@
   <li><strong>Confirmatory test (rule in):</strong> minimise false positives → choose a high threshold → high specificity, lower sensitivity. Example: troponin at a high percentile for AMI confirmation.</li>
 </ul>
 
+<h3>Prevalence and the PPV trap</h3>
+<p>
+  PPV and NPV are <strong>not fixed properties of a test</strong> — they depend entirely on the prevalence
+  of disease in the population being tested. A test with 90% sensitivity and 90% specificity sounds impressive,
+  but its clinical usefulness varies dramatically with prevalence:
+</p>
+<table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+  <tr style="background:#f1f5f9;"><th style="padding:5px 8px; text-align:left;">Prevalence</th><th style="padding:5px 8px; text-align:left;">PPV</th><th style="padding:5px 8px; text-align:left;">NPV</th></tr>
+  <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">50%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">90%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">90%</td></tr>
+  <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">10%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">50%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">99%</td></tr>
+  <tr><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">1%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">8%</td><td style="padding:5px 8px; border-top:1px solid #e2e8f0;">99.9%</td></tr>
+</table>
+<p>
+  At 1% prevalence, 9 out of 10 positive results are false positives — even with a 90% specific test.
+  This is why a test validated in a high-risk hospital population may perform very differently
+  in a low-prevalence primary care or screening setting.
+</p>
+<p><strong>Bayes theorem — adjusting PPV/NPV for your population:</strong></p>
+<p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:12px;">
+  PPV = (Sensitivity × Prevalence) / [(Sensitivity × Prevalence) + ((1−Specificity) × (1−Prevalence))]
+</p>
+<p class="note" style="margin-top:6px;">
+  Always report PPV and NPV alongside the prevalence they were calculated at.
+  Sensitivity and specificity (and AUC) are prevalence-independent and should be the primary metrics
+  when evaluating or comparing tests across different settings.
+</p>
+
 <h3>Performance metrics</h3>
 
 <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;">
