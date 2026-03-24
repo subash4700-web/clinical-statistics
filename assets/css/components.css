@@ -36,6 +36,17 @@ body {
   margin: 0 auto;
 }
 
+/* ── Tool header banner ──────────────────────────────────── */
+.tool-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1565c0 60%, #1976d2 100%);
+  color: white;
+  padding: 18px 22px 16px;
+  border-radius: 12px;
+  margin: 0 0 20px;
+}
+.tool-header h1 { color: white; margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+.tool-header p   { color: rgba(255,255,255,0.82); margin: 0; font-size: 13px; line-height: 1.5; }
+
 /* ── Typography ──────────────────────────────────────────── */
 h1 {
   font-size: 22px;

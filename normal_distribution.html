@@ -1,903 +1,913 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Normal and t Distribution Explorer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding the Normal Distribution</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
-<link rel="stylesheet" href="assets/css/components.css">
-
-<style>
-  :root{
-    --accent2:#1565c0;
-    --red:#c62828;
-    --green:#2e7d32;
-  }
-
-  .layout{
-    display:grid;
-    grid-template-columns: 380px 1fr;
-    gap:16px;
-    align-items:start;
-  }
-  @media (max-width: 980px){
-    .layout{ grid-template-columns: 1fr; }
-  }
-
-  label{ font-weight:900; display:block; margin-top:10px; font-size:12.5px; }
-  input[type="range"]{ padding:0; }
-
-  hr{ border:none; border-top:1px solid var(--line); margin:14px 0; }
-
-  .result{
-    background:#f9fafb;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    font-weight:800;
-    line-height:1.35;
-    font-size:13px;
-  }
-
-  .mode-row{
-    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
-  }
-  .mode-btn{
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:#fff;
-    cursor:pointer;
-    font-weight:900;
-    color:var(--muted);
-    font-size:12.5px;
-    user-select:none;
-  }
-  .mode-btn.active{
-    background:var(--accent);
-    color:#fff;
-    border-color:var(--accent);
-  }
-
-  .legend{
-    display:flex; gap:14px; flex-wrap:wrap;
-    font-size:12.5px; font-weight:800; color:var(--muted);
-    align-items:center; margin-bottom:8px;
-  }
-  .legend-item{ display:flex; align-items:center; gap:6px; }
-  .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
-  .dot.blue{ background:var(--accent); }
-  .dot.red{ background:var(--red); }
-  .dot.shadeblue{ background:rgba(25,118,210,.25); border:1px solid rgba(25,118,210,.35); }
-  .dot.shadered{ background:rgba(198,40,40,.25); border:1px solid rgba(198,40,40,.35); }
-  .dot.obs{ background:#111827; }
-
-  .chart-wrap{
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:12px;
-    background:#fff;
-  }
-
-  canvas{
-    width:100% !important;
-    height:66vh !important;
-    max-height:720px;
-  }
-  @media (max-width: 980px){
-    canvas{
-      height:52vh !important;
-      max-height:none;
+    /* ── PAGE HEADER ── */
+    .page-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1565c0 60%, #1976d2 100%);
+      color: white; padding: 20px 28px 18px;
     }
-  }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p  { margin: 0; font-size: 13px; opacity: .78; }
 
-  .formula{
-    font-family: "Times New Roman", serif;
-    background:#fafafa;
-    padding:10px 12px;
-    border-left:4px solid #ccc;
-    margin:10px 0;
-    border-radius:10px;
-  }
-</style>
+    /* ── SHELL ── */
+    .shell {
+      display: flex;
+      height: calc(100vh - 70px - 200px); /* header + exercises */
+      min-height: 420px;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 300px; min-width: 300px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 16px 18px;
+    }
+
+    .section-title {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .07em; color: #9ca3af;
+      margin: 16px 0 8px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .ctrl-group { margin-bottom: 14px; }
+    .ctrl-group > .ctrl-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 11px; font-weight: 700; color: #374151;
+      text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: 5px;
+    }
+    .ctrl-val {
+      font-size: 13px; font-weight: 800; color: #1565c0;
+      min-width: 46px; text-align: right;
+    }
+    input[type=range] {
+      width: 100%; accent-color: #1565c0; cursor: pointer;
+    }
+
+    label.field-label {
+      display: block; font-size: 11px; font-weight: 700; color: #374151;
+      text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 4px;
+    }
+    label.field-label:first-child { margin-top: 0; }
+    select, input[type=number] {
+      width: 100%; padding: 6px 9px; border: 1px solid #e5e7eb;
+      border-radius: 7px; background: #fff; font-size: 13px;
+      outline: none; font-family: inherit;
+    }
+    select:focus, input[type=number]:focus { border-color: #1565c0; }
+
+    .mode-btns { display: flex; gap: 7px; margin-bottom: 12px; }
+    .mode-btn {
+      flex: 1; padding: 7px 6px; border-radius: 8px;
+      border: 1.5px solid #e5e7eb; background: #f9fafb;
+      font-size: 11px; font-weight: 800; color: #6b7280;
+      cursor: pointer; text-align: center; transition: all .15s;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .mode-btn:hover { border-color: #93c5fd; color: #1e40af; }
+    .mode-btn.active { background: #1565c0; border-color: #1565c0; color: white; }
+
+    .result-box {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 10px; padding: 11px 13px;
+      font-size: 12px; line-height: 1.7; color: #1e3a8a;
+      margin-top: 10px;
+    }
+    .result-box b { color: #1565c0; }
+
+    .compare-legend {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+    }
+    .leg-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; color: #374151;
+    }
+    .leg-swatch {
+      width: 14px; height: 6px; border-radius: 3px;
+    }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      flex: 1; display: flex; flex-direction: column;
+      background: #f4f6f8; overflow: hidden;
+    }
+    .chart-area {
+      flex: 1; padding: 14px 18px 8px;
+      display: flex; flex-direction: column; min-height: 0;
+    }
+    .chart-wrap {
+      flex: 1; position: relative; min-height: 0;
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 12px; overflow: hidden;
+      padding: 10px;
+    }
+    .chart-wrap canvas { position: absolute; inset: 10px; }
+
+    .insight-area { padding: 0 18px 10px; flex-shrink: 0; }
+    .insight-box {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 10px; padding: 11px 14px;
+      font-size: 12px; line-height: 1.7; color: #1e3a8a;
+    }
+    .insight-box b { color: #1565c0; }
+
+    /* ── EXERCISES ── */
+    .exercises {
+      background: white; border-top: 1px solid #e5e7eb;
+      padding: 14px 20px 16px;
+    }
+    .ex-section-label {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .07em; color: #9ca3af; margin: 0 0 10px;
+    }
+    .ex-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 1100px) { .ex-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 700px)  { .ex-grid { grid-template-columns: 1fr 1fr; } }
+
+    .ex-card {
+      background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
+      padding: 13px; cursor: pointer; transition: border-color .15s, box-shadow .15s;
+      display: flex; flex-direction: column;
+    }
+    .ex-card:hover { border-color: #93c5fd; box-shadow: 0 2px 10px rgba(21,101,192,.10); }
+    .ex-card.active { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.12); }
+    .ex-num   { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 4px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #1e3a8a; margin-bottom: 5px; line-height: 1.3; }
+    .ex-obj   { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 8px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+    .ex-param  { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn {
+      width: 100%; padding: 6px; background: #1565c0; color: #fff;
+      border: none; border-radius: 7px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .ex-btn:hover { opacity: .88; }
+
+    /* ── SCROLLBAR ── */
+    .left-panel::-webkit-scrollbar { width: 5px; }
+    .left-panel::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+    .ex-instructions { background:#f8faff; border:1px solid #c7d7fd; border-radius:10px; padding:14px 16px; margin-top:12px; font-size:13px; line-height:1.7; color:#1e3a5f; display:none; }
+    .ex-instructions.visible { display:block; }
+    .ex-instructions b { color:#1e40af; }
+    .ex-instructions ol { margin:8px 0 0 16px; padding:0; }
+    .ex-instructions li { margin-bottom:5px; }
+  </style>
 </head>
-
 <body>
-<a href="quantitative_analysis.html" class="back-home">← Back to quantitative tests</a>
 
-<div class="container">
-  <h1>Normal & t Distribution Explorer</h1>
-  <p class="subtitle">Calculator + comparison tool (Normal vs t) in one place</p>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="explorer">Explorer</div>
-    <div class="tab" data-tab="formulas">Formulas</div>
-  </div>
-
-  <!-- ================= EXPLORER TAB ================= -->
-  <div id="explorer" class="tab-content active">
-
-    <div class="layout">
-
-      <!-- LEFT: controls -->
-      <div class="card">
-        <div class="section-title">Tool</div>
-
-        <div class="mode-row">
-          <div class="mode-btn active" id="btnToolCalc">Calculator</div>
-          <div class="mode-btn" id="btnToolCompare">Normal vs t</div>
-        </div>
-
-        <div class="small" style="margin-top:-4px;">
-          Calculator preserves your original features. Normal vs t overlays two standardised distributions and highlights rejection regions.
-        </div>
-
-        <!-- ================= CALCULATOR CONTROLS (ORIGINAL IDs PRESERVED) ================= -->
-        <div id="calcControls" style="margin-top:12px;">
-
-          <div class="section-title">Calculator settings</div>
-
-          <label>Data type</label>
-          <select id="dataType">
-            <option value="population">Population</option>
-            <option value="sample">Sample (t)</option>
-          </select>
-
-          <label>Mean</label>
-          <input type="number" id="mean" value="100" step="1">
-          <input type="range" id="meanSlider" min="-200" max="200" step="1" value="100">
-
-          <label>Standard deviation (SD)</label>
-          <input type="number" id="sd" value="10" step="0.01" min="0.0001">
-          <input type="range" id="sdSlider" min="0.01" max="50" step="0.01" value="10">
-
-          <div id="sampleBlock" style="display:none">
-            <label>Sample size (n)</label>
-            <input type="number" id="n" value="30">
-          </div>
-
-          <hr>
-
-          <label>Analysis type</label>
-          <select id="analysis">
-            <option value="percent">Percent → score</option>
-            <option value="score">Score → percent</option>
-            <option value="range">Between two values</option>
-          </select>
-
-          <label>Tail type</label>
-          <select id="tail">
-            <option value="two">Two-tailed</option>
-            <option value="one">One-tailed</option>
-          </select>
-
-          <div id="directionBlock" style="display:none">
-            <label>Direction (one-tailed)</label>
-            <select id="direction">
-              <option value="right">Right</option>
-              <option value="left">Left</option>
-            </select>
-          </div>
-
-          <div id="percentBlock">
-            <label id="alphaLabel">α (alpha)</label>
-            <input type="number" id="percent" value="0.05" step="0.001" min="0.0001" max="0.9999">
-            <input type="range" id="percentSlider" min="0.0001" max="0.9999" step="0.0001" value="0.05">
-            <div id="alphaNote" class="small" style="margin-top:6px;"></div>
-          </div>
-
-          <div id="scoreBlock" style="display:none">
-            <label>Score</label>
-            <input type="number" id="score" value="1.96" step="0.01">
-            <input type="range" id="scoreSlider" min="-4" max="4" step="0.01" value="1.96">
-          </div>
-
-          <div id="intervalTypeBlock" style="display:none">
-            <label>Interval-type</label>
-            <select id="intervalType">
-              <option value="x">Between two X-values</option>
-              <option value="z" class="opt-z">Between Z-values</option>
-              <option value="t" class="opt-t">Between t-values</option>
-            </select>
-          </div>
-
-          <div id="rangeBlock" style="display:none">
-            <label>From (X)</label>
-            <input type="number" id="x1" value="95">
-            <label>To (X)</label>
-            <input type="number" id="x2" value="105">
-          </div>
-
-          <label>Axis font size</label>
-          <input type="range" id="fontSizeSlider" min="10" max="30" value="16">
-          <div id="fontSizeValue" class="small" style="margin-top:6px;">16 px</div>
-
-          <div class="result" id="output" style="margin-top:12px;"></div>
-        </div>
-
-        <!-- ================= COMPARE CONTROLS ================= -->
-        <div id="compareControls" style="display:none; margin-top:12px;">
-          <div class="section-title">Normal vs t (standardised)</div>
-
-          <div class="pill">Blue = Normal (Z). Red = Student’s t (df = n − 1).</div>
-
-          <label>α (significance level)</label>
-          <input type="range" id="cmpAlphaSlider" min="0.001" max="0.20" step="0.001" value="0.05">
-          <div class="small" id="cmpAlphaDisplay">α = 0.050</div>
-
-          <label>Tail type</label>
-          <select id="cmpTail">
-            <option value="two" selected>Two-tailed</option>
-            <option value="right">One-tailed (right)</option>
-            <option value="left">One-tailed (left)</option>
-          </select>
-
-          <label>Sample size for t (n)</label>
-          <input type="range" id="cmpN" min="2" max="200" step="1" value="5">
-          <div class="small" id="cmpNDisplay">n = 5 (df = 4)</div>
-
-          <label style="display:flex; align-items:center; gap:10px; margin-top:12px;">
-            <input type="checkbox" id="cmpShowObs" style="width:auto; margin:0;">
-            <span>Show observed statistic</span>
-          </label>
-
-          <div id="cmpObsBlock" style="display:none;">
-            <label>Observed stat (Z / t)</label>
-            <input type="range" id="cmpObs" min="-6" max="6" step="0.05" value="2.1">
-            <div class="small" id="cmpObsDisplay">Observed = 2.10</div>
-          </div>
-
-          <div class="result" id="cmpOutput" style="margin-top:12px;"></div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT: chart -->
-      <div class="card">
-        <div class="section-title">Visualisation</div>
-
-        <div id="compareLegend" class="legend" style="display:none;">
-          <div class="legend-item"><span class="dot blue"></span>Normal (Z)</div>
-          <div class="legend-item"><span class="dot red"></span>Student’s t</div>
-          <div class="legend-item"><span class="dot shadeblue"></span>Rejection (Z)</div>
-          <div class="legend-item"><span class="dot shadered"></span>Rejection (t)</div>
-          <div class="legend-item" id="obsLegendItem" style="display:none;"><span class="dot obs"></span>Observed</div>
-        </div>
-
-        <div class="chart-wrap">
-          <canvas id="chart"></canvas>
-        </div>
-
-        <div class="small" id="chartHint" style="margin-top:10px;">
-          In Calculator mode, the shaded region matches the selected analysis. In Compare mode, shaded regions show the rejection region(s).
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================= FORMULAS TAB ================= -->
-  <div id="formulas" class="tab-content">
-    <div class="card">
-      <h2 style="margin-top:0;">Formulas used in this tool</h2>
-
-      <h3>Population (Normal distribution)</h3>
-      <p class="small">
-        Use this when the population standard deviation <strong>σ</strong> is treated as known (or assumed known).
-      </p>
-
-      <div class="formula">
-        <strong>Standardization:</strong><br>
-        Z = (X − μ) / σ
-      </div>
-
-      <div class="formula">
-        <strong>Back-transform:</strong><br>
-        X = μ + Z · σ
-      </div>
-
-      <div class="formula">
-        <strong>Probability between two X-values:</strong><br>
-        P(a ≤ X ≤ b) = Φ(Z₂) − Φ(Z₁)
-      </div>
-
-      <hr>
-
-      <h3>Sample (t distribution)</h3>
-      <p class="small">
-        Use this when the population σ is unknown and we substitute the sample SD <strong>s</strong>.
-        The distribution depends on degrees of freedom.
-      </p>
-
-      <div class="formula">
-        <strong>Standard error:</strong><br>
-        SE = s / √n
-      </div>
-
-      <div class="formula">
-        <strong>Standardization:</strong><br>
-        t = (X − μ) / (s / √n)
-      </div>
-
-      <div class="formula">
-        <strong>Degrees of freedom:</strong><br>
-        df = n − 1
-      </div>
-
-      <div class="formula">
-        <strong>Back-transform:</strong><br>
-        X = μ + t · (s / √n)
-      </div>
-
-      <div class="formula">
-        <strong>Probability between two limits:</strong><br>
-        P(a ≤ X ≤ b) = Fₜ(t₂) − Fₜ(t₁)
-      </div>
-
-      <p class="small">
-        Here, Φ is the standard normal CDF and Fₜ is the Student's t CDF.
-      </p>
-
-      <hr>
-
-      <h3>Compare tool: Normal vs t</h3>
-      <p class="small">
-        In Compare mode, we overlay the <strong>standard normal</strong> and a <strong>Student’s t</strong> distribution
-        (df = n − 1) on the same standardised axis, and show the rejection region for a chosen α and tail type.
-      </p>
-      <div class="formula">
-        Two-tailed critical values:<br>
-        Z<sub>crit</sub> = Φ<sup>−1</sup>(1 − α/2), &nbsp;&nbsp;
-        t<sub>crit</sub> = F<sub>t</sub><sup>−1</sup>(1 − α/2; df)
-      </div>
-    </div>
-  </div>
-
+<!-- ── HEADER ── -->
+<div class="page-header">
+  <h1>Understanding the Normal Distribution</h1>
+  <p>Explore how mean, SD, and sample size shape the distribution — and what shaded areas mean for p-values and reference ranges.</p>
 </div>
 
+<!-- ── EXERCISES ── -->
+<div class="exercises">
+  <div class="ex-section-label">Guided Exercises</div>
+  <div class="ex-grid" id="exGrid"></div>
+  <div class="ex-instructions" id="exInstructions"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+
+    <!-- Mode toggle -->
+    <div class="section-title">Tool mode</div>
+    <div class="mode-btns">
+      <div class="mode-btn active" id="btnCalc"    onclick="setMode('calc')">Calculator</div>
+      <div class="mode-btn"        id="btnCompare" onclick="setMode('compare')">Normal vs t</div>
+    </div>
+
+    <!-- ════ CALCULATOR CONTROLS ════ -->
+    <div id="calcPanel">
+
+      <div class="section-title">Distribution</div>
+
+      <label class="field-label">Data type</label>
+      <select id="dataType" onchange="recalcCalc()">
+        <option value="population">Population (Z)</option>
+        <option value="sample">Sample (t-distribution)</option>
+      </select>
+
+      <div class="ctrl-group" style="margin-top:12px;">
+        <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+          <span>Mean (μ)</span><span class="ctrl-val" id="meanVal">100</span>
+        </div>
+        <input type="range" id="meanSlider" min="-200" max="200" step="1" value="100" oninput="syncNumFromSlider('mean','meanSlider','meanVal','0'); recalcCalc();">
+        <input type="number" id="mean" value="100" step="1" style="margin-top:5px;" oninput="syncSliderFromNum('mean','meanSlider','meanVal','0'); recalcCalc();">
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+          <span>SD (σ)</span><span class="ctrl-val" id="sdVal">10</span>
+        </div>
+        <input type="range" id="sdSlider" min="0.01" max="50" step="0.01" value="10" oninput="syncNumFromSlider('sd','sdSlider','sdVal','2'); recalcCalc();">
+        <input type="number" id="sd" value="10" step="0.01" min="0.0001" style="margin-top:5px;" oninput="syncSliderFromNum('sd','sdSlider','sdVal','2'); recalcCalc();">
+      </div>
+
+      <div id="sampleBlock" style="display:none;">
+        <label class="field-label">Sample size (n)</label>
+        <input type="number" id="n" value="30" min="2" step="1" onchange="recalcCalc()">
+      </div>
+
+      <div class="section-title" style="margin-top:14px;">Analysis</div>
+
+      <label class="field-label">Analysis type</label>
+      <select id="analysis" onchange="recalcCalc()">
+        <option value="percent">Percent → score (α → critical value)</option>
+        <option value="score">Score → percent (value → probability)</option>
+        <option value="range">Between two X-values</option>
+      </select>
+
+      <label class="field-label">Tail type</label>
+      <select id="tail" onchange="recalcCalc()">
+        <option value="two">Two-tailed</option>
+        <option value="one">One-tailed</option>
+      </select>
+
+      <div id="directionBlock" style="display:none;">
+        <label class="field-label">Direction</label>
+        <select id="direction" onchange="recalcCalc()">
+          <option value="right">Right (upper tail)</option>
+          <option value="left">Left (lower tail)</option>
+        </select>
+      </div>
+
+      <!-- percent inputs -->
+      <div id="percentBlock">
+        <div class="ctrl-group" style="margin-top:10px;">
+          <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+            <span id="alphaLabel">α (alpha)</span>
+            <span class="ctrl-val" id="percentVal">0.0500</span>
+          </div>
+          <input type="range" id="percentSlider" min="0.0001" max="0.9999" step="0.0001" value="0.05" oninput="syncNumFromSlider('percent','percentSlider','percentVal','4'); recalcCalc();">
+          <input type="number" id="percent" value="0.05" step="0.001" min="0.0001" max="0.9999" style="margin-top:5px;" oninput="syncSliderFromNum('percent','percentSlider','percentVal','4'); recalcCalc();">
+        </div>
+        <div id="alphaNote" style="font-size:11px;color:#6b7280;margin-top:-6px;margin-bottom:4px;"></div>
+      </div>
+
+      <!-- score inputs -->
+      <div id="scoreBlock" style="display:none;">
+        <div class="ctrl-group" style="margin-top:10px;">
+          <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+            <span>Score (Z / t)</span><span class="ctrl-val" id="scoreVal">1.96</span>
+          </div>
+          <input type="range" id="scoreSlider" min="-4" max="4" step="0.01" value="1.96" oninput="syncNumFromSlider('score','scoreSlider','scoreVal','2'); recalcCalc();">
+          <input type="number" id="score" value="1.96" step="0.01" style="margin-top:5px;" oninput="syncSliderFromNum('score','scoreSlider','scoreVal','2'); recalcCalc();">
+        </div>
+      </div>
+
+      <!-- range inputs -->
+      <div id="rangeBlock" style="display:none;">
+        <label class="field-label">From (X₁)</label>
+        <input type="number" id="x1" value="95" step="0.1" onchange="recalcCalc()">
+        <label class="field-label">To (X₂)</label>
+        <input type="number" id="x2" value="105" step="0.1" onchange="recalcCalc()">
+      </div>
+
+      <div class="result-box" id="output" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- ════ COMPARE CONTROLS ════ -->
+    <div id="comparePanel" style="display:none;">
+
+      <div class="compare-legend">
+        <div class="leg-item"><div class="leg-swatch" style="background:#1976d2;"></div>Normal (Z)</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#c62828;"></div>Student's t</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:rgba(25,118,210,.35);height:10px;width:14px;border-radius:3px;"></div>Rejection (Z)</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:rgba(198,40,40,.35);height:10px;width:14px;border-radius:3px;"></div>Rejection (t)</div>
+      </div>
+
+      <div class="section-title">Settings</div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+          <span>α (significance)</span><span class="ctrl-val" id="cmpAlphaVal">0.050</span>
+        </div>
+        <input type="range" id="cmpAlphaSlider" min="0.001" max="0.20" step="0.001" value="0.05"
+          oninput="document.getElementById('cmpAlphaVal').textContent=parseFloat(this.value).toFixed(3); recalcCompare();">
+      </div>
+
+      <label class="field-label">Tail type</label>
+      <select id="cmpTail" onchange="recalcCompare()">
+        <option value="two" selected>Two-tailed</option>
+        <option value="right">One-tailed (right)</option>
+        <option value="left">One-tailed (left)</option>
+      </select>
+
+      <div class="ctrl-group" style="margin-top:12px;">
+        <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+          <span>Sample size (n)</span><span class="ctrl-val" id="cmpNVal">n=5 df=4</span>
+        </div>
+        <input type="range" id="cmpN" min="2" max="200" step="1" value="5"
+          oninput="const n=parseInt(this.value,10); document.getElementById('cmpNVal').textContent='n='+n+' df='+(n-1); recalcCompare();">
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px;cursor:pointer;">
+        <input type="checkbox" id="cmpShowObs" style="width:auto;margin:0;" onchange="toggleObsBlock(); recalcCompare();">
+        Show observed statistic
+      </label>
+      <div id="cmpObsBlock" style="display:none;">
+        <div class="ctrl-group">
+          <div class="ctrl-label" style="display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">
+            <span>Observed stat</span><span class="ctrl-val" id="cmpObsVal">2.10</span>
+          </div>
+          <input type="range" id="cmpObs" min="-6" max="6" step="0.05" value="2.1"
+            oninput="document.getElementById('cmpObsVal').textContent=parseFloat(this.value).toFixed(2); recalcCompare();">
+        </div>
+      </div>
+
+      <div class="result-box" id="cmpOutput" style="margin-top:10px;"></div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right-panel">
+    <div class="chart-area">
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+    <div class="insight-area">
+      <div class="insight-box" id="insightBox">Adjust the controls to explore the distribution.</div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
 <script>
-/* ========= Utilities ========= */
-const el=id=>document.getElementById(id);
+/* ─────────────────────────────────────────────
+   Utilities
+───────────────────────────────────────────── */
+const el = id => document.getElementById(id);
+
 let chart;
-let toolMode = "calc"; // "calc" | "compare"
+let toolMode = 'calc';
 
-function fmt(x){ return Number(x).toFixed(4); }
-
-/* Tabs (kept from original logic, adapted to new layout) */
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById(tab.dataset.tab).classList.add("active");
-    // ensure chart resizes nicely when switching tabs
-    setTimeout(()=>{ if(chart) chart.resize(); }, 50);
-  });
-});
-
-/* ===== Original UI logic (preserved) ===== */
-function updateUI(){
-  const useT = el("dataType").value==="sample";
-  const interval = el("intervalType");
-  const analysisVal = el("analysis").value;
-  const tailVal = el("tail").value;
-
-  el("intervalTypeBlock").style.display = analysisVal==="range" ? "block" : "none";
-
-  if(interval){
-    const optZ = interval.querySelector('option[value="z"]');
-    const optT = interval.querySelector('option[value="t"]');
-
-    if(useT){
-      optZ.disabled = true; optZ.hidden = true;
-      optT.disabled = false; optT.hidden = false;
-      if(interval.value === "z") interval.value = "x";
-    } else {
-      optT.disabled = true; optT.hidden = true;
-      optZ.disabled = false; optZ.hidden = false;
-      if(interval.value === "t") interval.value = "x";
-    }
-  }
-
-  el("sampleBlock").style.display = useT ? "block" : "none";
-  el("directionBlock").style.display = tailVal==="one" ? "block" : "none";
-  el("percentBlock").style.display = analysisVal==="percent" ? "block" : "none";
-  el("scoreBlock").style.display = analysisVal==="score" ? "block" : "none";
-  el("rangeBlock").style.display = analysisVal==="range" ? "block" : "none";
-
-  if(analysisVal==="percent"){
-    const alpha = parseFloat(el("percent").value);
-    const conf = (1 - alpha) * 100;
-    if(tailVal==="two"){
-      el("alphaNote").textContent = `α = ${alpha.toFixed(4)} → confidence level: ${conf.toFixed(2)}%`;
-    } else {
-      el("alphaNote").textContent = `α = ${alpha.toFixed(4)} → ${(alpha*100).toFixed(2)}% in one tail`;
-    }
+function syncNumFromSlider(numId, sliderId, valId, dec) {
+  const v = parseFloat(el(sliderId).value).toFixed(dec);
+  el(numId).value = v;
+  el(valId).textContent = v;
+}
+function syncSliderFromNum(numId, sliderId, valId, dec) {
+  const v = parseFloat(el(numId).value);
+  if (isFinite(v)) {
+    el(sliderId).value = v;
+    el(valId).textContent = v.toFixed(dec);
   }
 }
 
-function compute(){
-  const mean=parseFloat(el("mean").value);
-  const sd=parseFloat(el("sd").value);
-  const n=parseFloat(el("n").value||2);
+/* ─────────────────────────────────────────────
+   UI visibility helpers
+───────────────────────────────────────────── */
+function updateCalcUI() {
+  const useT      = el('dataType').value === 'sample';
+  const analysis  = el('analysis').value;
+  const tail      = el('tail').value;
 
-  if(!isFinite(mean) || !isFinite(sd) || sd <= 0) return null;
+  el('sampleBlock').style.display      = useT ? 'block' : 'none';
+  el('directionBlock').style.display   = tail === 'one' ? 'block' : 'none';
+  el('percentBlock').style.display     = analysis === 'percent' ? 'block' : 'none';
+  el('scoreBlock').style.display       = analysis === 'score'   ? 'block' : 'none';
+  el('rangeBlock').style.display       = analysis === 'range'   ? 'block' : 'none';
 
-  const df=n-1;
-  const useT=el("dataType").value==="sample";
-  const analysisVal = el("analysis").value;
-  const tailVal = el("tail").value;
-  const dirVal = el("direction").value;
+  if (analysis === 'percent') {
+    const alpha = parseFloat(el('percent').value);
+    const conf  = (1 - alpha) * 100;
+    el('alphaNote').textContent = tail === 'two'
+      ? `Confidence level: ${conf.toFixed(2)}%`
+      : `${(alpha * 100).toFixed(2)}% in one tail`;
+  } else {
+    el('alphaNote').textContent = '';
+  }
+}
 
-  const scale = useT ? sd / Math.sqrt(n) : sd;
-  const label = useT ? "t" : "Z";
+function toggleObsBlock() {
+  el('cmpObsBlock').style.display = el('cmpShowObs').checked ? 'block' : 'none';
+}
 
-  let shadedArea=0;
-  let zVals=[];
-  let shadingMode="between";
+function setMode(mode) {
+  toolMode = mode;
+  el('btnCalc').classList.toggle('active',    mode === 'calc');
+  el('btnCompare').classList.toggle('active', mode === 'compare');
+  el('calcPanel').style.display    = mode === 'calc'    ? 'block' : 'none';
+  el('comparePanel').style.display = mode === 'compare' ? 'block' : 'none';
+  if (mode === 'calc')    recalcCalc();
+  else                    recalcCompare();
+}
 
-  /* ===== Percent (alpha) -> score ===== */
-  if(analysisVal==="percent"){
-    const alpha = Math.max(0.0001, Math.min(0.9999, parseFloat(el("percent").value)));
+/* ─────────────────────────────────────────────
+   Calculator: compute
+───────────────────────────────────────────── */
+function computeCalc() {
+  const mean     = parseFloat(el('mean').value);
+  const sd       = parseFloat(el('sd').value);
+  const n        = parseFloat(el('n').value || 2);
+  if (!isFinite(mean) || !isFinite(sd) || sd <= 0) return null;
 
-    if(tailVal==="two"){
-      const z=useT?
-        jStat.studentt.inv(1-alpha/2,df):
-        jStat.normal.inv(1-alpha/2,0,1);
-      zVals=[-z,z];
-      shadedArea = 1 - alpha;
-      shadingMode = "between";
+  const useT     = el('dataType').value === 'sample';
+  const df       = n - 1;
+  const scale    = useT ? sd / Math.sqrt(n) : sd;
+  const analysis = el('analysis').value;
+  const tail     = el('tail').value;
+  const dir      = el('direction').value;
+  const label    = useT ? 't' : 'Z';
 
-      const xCrit1 = mean + zVals[0]*scale;
-      const xCrit2 = mean + zVals[1]*scale;
+  let shadedArea = 0, zVals = [], shadingMode = 'between', outputHTML = '';
 
-      el("output").innerHTML =
-        `Central area (confidence): ${(shadedArea*100).toFixed(2)}%<br>`+
-        `${label}<sub>crit</sub> = ±${z.toFixed(4)}<br>`+
-        `X limits: ${xCrit1.toFixed(4)} to ${xCrit2.toFixed(4)}`;
+  /* ── percent → score ── */
+  if (analysis === 'percent') {
+    const alpha = Math.max(1e-4, Math.min(0.9999, parseFloat(el('percent').value)));
+    if (tail === 'two') {
+      const z = useT ? jStat.studentt.inv(1 - alpha / 2, df) : jStat.normal.inv(1 - alpha / 2, 0, 1);
+      zVals = [-z, z]; shadedArea = 1 - alpha; shadingMode = 'between';
+      const xL = mean + zVals[0] * scale, xR = mean + zVals[1] * scale;
+      outputHTML = `<b>Central area:</b> ${(shadedArea * 100).toFixed(2)}%<br>
+        ${label}<sub>crit</sub> = ±${z.toFixed(4)}<br>
+        X limits: ${xL.toFixed(4)} to ${xR.toFixed(4)}`;
     } else {
-      const critZ = useT ? jStat.studentt.inv(1-alpha, df) : jStat.normal.inv(1-alpha, 0, 1);
-      zVals=[critZ];
-
-      if(dirVal==="right"){
-        shadingMode="left"; // non-rejection
-        const xCrit = mean + critZ*scale;
-        shadedArea = 1 - alpha;
-        el("output").innerHTML =
-          `Non-rejection area (left of crit): ${(shadedArea*100).toFixed(2)}%<br>`+
-          `${label}<sub>crit</sub> = ${critZ.toFixed(4)}<br>`+
-          `X critical value: ${xCrit.toFixed(4)}`;
+      const critZ = useT ? jStat.studentt.inv(1 - alpha, df) : jStat.normal.inv(1 - alpha, 0, 1);
+      if (dir === 'right') {
+        zVals = [critZ]; shadingMode = 'right'; shadedArea = alpha;
+        outputHTML = `<b>Right-tail area (rejection):</b> ${(alpha * 100).toFixed(2)}%<br>
+          ${label}<sub>crit</sub> = ${critZ.toFixed(4)}<br>
+          X critical value: ${(mean + critZ * scale).toFixed(4)}`;
       } else {
-        shadingMode="right";
-        const xCrit = mean - critZ*scale;
-        shadedArea = 1 - alpha;
-        el("output").innerHTML =
-          `Non-rejection area (right of crit): ${(shadedArea*100).toFixed(2)}%<br>`+
-          `${label}<sub>crit</sub> = -${critZ.toFixed(4)}<br>`+
-          `X critical value: ${xCrit.toFixed(4)}`;
-        zVals=[-critZ];
+        zVals = [-critZ]; shadingMode = 'left'; shadedArea = alpha;
+        outputHTML = `<b>Left-tail area (rejection):</b> ${(alpha * 100).toFixed(2)}%<br>
+          ${label}<sub>crit</sub> = −${critZ.toFixed(4)}<br>
+          X critical value: ${(mean - critZ * scale).toFixed(4)}`;
       }
     }
   }
 
-  /* ===== Score -> percent ===== */
-  if(analysisVal==="score"){
-    const score = parseFloat(el("score").value);
-    if(!isFinite(score)) return null;
-
-    let p;
-    if(tailVal==="two"){
-      const cdf = useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score, 0, 1);
-      const upper = 1 - cdf;
-      const lower = useT ? jStat.studentt.cdf(-score, df) : jStat.normal.cdf(-score, 0, 1);
-      p = lower + upper;
-      shadedArea = p;
-      zVals=[-Math.abs(score), Math.abs(score)];
-      shadingMode="between";
-      el("output").innerHTML =
-        `Two-tailed p-value (outside ±score): ${p.toFixed(6)}<br>`+
-        `Score = ±${Math.abs(score).toFixed(4)}`;
+  /* ── score → percent ── */
+  if (analysis === 'score') {
+    const score = parseFloat(el('score').value);
+    if (!isFinite(score)) return null;
+    if (tail === 'two') {
+      const cdf   = useT ? jStat.studentt.cdf(Math.abs(score), df) : jStat.normal.cdf(Math.abs(score), 0, 1);
+      const pVal  = 2 * (1 - cdf);
+      shadedArea  = pVal; zVals = [-Math.abs(score), Math.abs(score)]; shadingMode = 'tails';
+      outputHTML  = `<b>Two-tailed p-value:</b> ${pVal.toFixed(6)}<br>Score = ±${Math.abs(score).toFixed(4)}`;
     } else {
-      if(dirVal==="right"){
-        p = 1 - (useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score,0,1));
-        shadedArea = p;
-        zVals=[score];
-        shadingMode="right";
-        el("output").innerHTML =
-          `Right-tailed p-value: ${p.toFixed(6)}<br>`+
-          `Score = ${score.toFixed(4)}`;
+      if (dir === 'right') {
+        const p = 1 - (useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score, 0, 1));
+        shadedArea = p; zVals = [score]; shadingMode = 'right';
+        outputHTML = `<b>Right-tail probability:</b> ${(p * 100).toFixed(4)}%<br>Score = ${score.toFixed(4)}`;
       } else {
-        p = (useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score,0,1));
-        shadedArea = p;
-        zVals=[score];
-        shadingMode="left";
-        el("output").innerHTML =
-          `Left-tailed p-value: ${p.toFixed(6)}<br>`+
-          `Score = ${score.toFixed(4)}`;
+        const p = useT ? jStat.studentt.cdf(score, df) : jStat.normal.cdf(score, 0, 1);
+        shadedArea = p; zVals = [score]; shadingMode = 'left';
+        outputHTML = `<b>Left-tail probability:</b> ${(p * 100).toFixed(4)}%<br>Score = ${score.toFixed(4)}`;
       }
     }
   }
 
-  /* ===== Between two values ===== */
-  if(analysisVal==="range"){
-    const x1=parseFloat(el("x1").value);
-    const x2=parseFloat(el("x2").value);
-    if(!isFinite(x1)||!isFinite(x2)) return null;
-
-    const intervalType = el("intervalType").value;
-    let z1,z2,prob;
-
-    if(intervalType==="x"){
-      z1=(x1-mean)/scale;
-      z2=(x2-mean)/scale;
-    } else if(intervalType==="z"){
-      z1=x1; z2=x2;
-    } else {
-      z1=x1; z2=x2;
-    }
-
-    const cdf = (z)=> useT ? jStat.studentt.cdf(z,df) : jStat.normal.cdf(z,0,1);
-    prob = Math.max(0, Math.min(1, cdf(z2) - cdf(z1)));
-
-    shadedArea = prob;
-    zVals=[z1,z2];
-    shadingMode="between";
-
-    const xa = mean + z1*scale;
-    const xb = mean + z2*scale;
-
-    el("output").innerHTML =
-      `P(between) = ${(prob*100).toFixed(2)}%<br>`+
-      `Standardised: ${label} from ${z1.toFixed(4)} to ${z2.toFixed(4)}<br>`+
-      `X limits: ${xa.toFixed(4)} to ${xb.toFixed(4)}`;
+  /* ── range ── */
+  if (analysis === 'range') {
+    const x1 = parseFloat(el('x1').value), x2 = parseFloat(el('x2').value);
+    if (!isFinite(x1) || !isFinite(x2)) return null;
+    const z1 = (x1 - mean) / scale, z2 = (x2 - mean) / scale;
+    const cdf = z => useT ? jStat.studentt.cdf(z, df) : jStat.normal.cdf(z, 0, 1);
+    const prob = Math.max(0, Math.min(1, cdf(z2) - cdf(z1)));
+    shadedArea = prob; zVals = [z1, z2]; shadingMode = 'between';
+    outputHTML = `<b>P(between):</b> ${(prob * 100).toFixed(4)}%<br>
+      ${label}: ${z1.toFixed(4)} to ${z2.toFixed(4)}<br>
+      X: ${x1.toFixed(4)} to ${x2.toFixed(4)}`;
   }
 
-  return { mean, sd, df, useT, zVals, shadingMode };
+  el('output').innerHTML = outputHTML;
+  return { mean, sd, df, useT, scale, zVals, shadingMode, shadedArea, analysis, tail, dir };
 }
 
-/* ===== Chart init (preserved structure, but made legend-friendly) ===== */
-function initChart(){
-  const ctx=el("chart").getContext("2d");
+/* ─────────────────────────────────────────────
+   Calculator: build chart
+───────────────────────────────────────────── */
+function buildCalcChart(res) {
+  const { mean, scale, df, useT, zVals, shadingMode } = res;
 
-  chart=new Chart(ctx,{
-    type:"line",
-    data:{datasets:[]},
-    options:{
-      animation:false,
-      plugins:{
-        legend:{ display:false }, // we use our own legend row in compare mode
-        tooltip:{ enabled:false }
-      },
-      scales:{
-        x:{
-          type:"linear",
-          position:"bottom",
-          title:{display:true,text:"X values",font:{size:20,weight:"bold"}},
-          ticks:{font:{size:16,weight:"bold"}}
-        },
-        xZ:{
-          type:"linear",
-          position:"bottom",
-          title:{display:true,text:"Z values",font:{size:18,weight:"bold"}},
-          ticks:{
-            stepSize:1,
-            font:{size:14,weight:"bold"},
-            callback:(value)=>Number(value).toFixed(1)
-          },
-          grid:{drawOnChartArea:false}
-        },
-        y:{display:false}
-      }
+  const left  = mean - 4 * scale;
+  const right = mean + 4 * scale;
+  const step  = (right - left) / 600;
+
+  const pdf = (x) => {
+    const z = (x - mean) / scale;
+    const d = useT ? jStat.studentt.pdf(z, df) / scale : jStat.normal.pdf(z, 0, 1) / scale;
+    return d;
+  };
+
+  const curveData = [], shadeData = [];
+  for (let x = left; x <= right; x += step) {
+    const y = pdf(x);
+    curveData.push({ x, y });
+
+    let include = false;
+    if (shadingMode === 'between' && zVals.length === 2) {
+      const x1 = mean + zVals[0] * scale, x2 = mean + zVals[1] * scale;
+      if (x >= Math.min(x1, x2) && x <= Math.max(x1, x2)) include = true;
     }
-  });
-}
+    if (shadingMode === 'tails' && zVals.length === 2) {
+      const x1 = mean + zVals[0] * scale, x2 = mean + zVals[1] * scale;
+      if (x <= Math.min(x1, x2) || x >= Math.max(x1, x2)) include = true;
+    }
+    if (shadingMode === 'right' && zVals.length === 1) {
+      if (x >= mean + zVals[0] * scale) include = true;
+    }
+    if (shadingMode === 'left' && zVals.length === 1) {
+      if (x <= mean + zVals[0] * scale) include = true;
+    }
+    shadeData.push({ x, y: include ? y : 0 });
+  }
 
-/* ===== Original builder (preserved) ===== */
-function buildChart(res){
-  const mean=res.mean;
-  const sd=res.sd;
-  const df=res.df;
-  const useT=res.useT;
-  const shadingMode=res.shadingMode;
-
-  const scale = useT ? sd / Math.sqrt(el("n").value) : sd;
-
-  const left=mean-4*scale;
-  const right=mean+4*scale;
+  chart.data.datasets = [
+    {
+      data: curveData,
+      borderColor: '#1565c0', borderWidth: 3,
+      pointRadius: 0, fill: false,
+      label: useT ? 't-distribution' : 'Normal',
+    },
+    {
+      data: shadeData,
+      backgroundColor: 'rgba(21,101,192,0.22)',
+      borderWidth: 0, pointRadius: 0, fill: true,
+      label: 'Shaded area',
+    }
+  ];
 
   chart.options.scales.x.min = left;
   chart.options.scales.x.max = right;
-  chart.options.scales.xZ.min = (left - mean) / scale;
-  chart.options.scales.xZ.max = (right - mean) / scale;
-
-  const step=(right-left)/500;
-
-  let curve=[];
-  let shade=[];
-
-  for(let x=left;x<=right;x+=step){
-    const z=(x-mean)/scale;
-    const y=useT ? jStat.studentt.pdf(z,df) : jStat.normal.pdf(z,0,1);
-    curve.push({x,y});
-
-    let include=false;
-
-    if(shadingMode==="between" && res.zVals.length===2){
-      const x1=mean+res.zVals[0]*scale;
-      const x2=mean+res.zVals[1]*scale;
-      if(x>=Math.min(x1,x2) && x<=Math.max(x1,x2)) include=true;
-    }
-    if(shadingMode==="left" && res.zVals.length===1){
-      const xLimit=mean+res.zVals[0]*scale;
-      if(x<=xLimit) include=true;
-    }
-    if(shadingMode==="right" && res.zVals.length===1){
-      const xLimit=mean+res.zVals[0]*scale;
-      if(x>=xLimit) include=true;
-    }
-
-    if(include) shade.push({x,y});
-    else shade.push({x,y:0});
-  }
-
-  chart.data.datasets=[
-    {
-      data:curve,
-      borderColor:"#1976d2",
-      borderWidth:3,
-      pointRadius:0,
-      fill:false
-    },
-    {
-      data:shade,
-      backgroundColor:"rgba(255,0,0,0.25)",
-      borderWidth:0,
-      fill:true,
-      pointRadius:0
-    }
-  ];
-
-  chart.options.scales.x.title.text = "X values";
-  chart.options.scales.xZ.display = true;
-  chart.options.scales.xZ.title.text = useT ? "t values" : "Z values";
-
+  chart.options.scales.x.title.text = 'X';
+  chart.options.plugins.title.display = false;
   chart.update();
 }
 
-/* ===== Compare tool (new) ===== */
-function buildCompareChart(){
-  const alpha = parseFloat(el("cmpAlphaSlider").value);
-  const tail = el("cmpTail").value;
-  const n = parseInt(el("cmpN").value, 10);
-  const df = Math.max(1, n - 1);
+/* ─────────────────────────────────────────────
+   Compare: build chart
+───────────────────────────────────────────── */
+function buildCompareChart() {
+  const alpha  = parseFloat(el('cmpAlphaSlider').value);
+  const tail   = el('cmpTail').value;
+  const n      = parseInt(el('cmpN').value, 10);
+  const df     = Math.max(1, n - 1);
+  const showObs = el('cmpShowObs').checked;
+  const obs    = parseFloat(el('cmpObs').value);
 
-  const showObs = el("cmpShowObs").checked;
-  const obs = parseFloat(el("cmpObs").value);
+  const xmin = -4.5, xmax = 4.5;
+  const step  = (xmax - xmin) / 800;
 
-  // axis range similar to your compare tool screenshot
-  const xmin = -4.5;
-  const xmax = 4.5;
-  const step = (xmax - xmin) / 700;
-
-  const zCurve=[];
-  const tCurve=[];
-  const zShade=[];
-  const tShade=[];
-  const zLines=[];
-  const tLines=[];
-  const obsLine=[];
-
-  // critical values
-  let zCritPos, tCritPos, zCritNeg=null, tCritNeg=null;
-
-  if(tail==="two"){
-    zCritPos = jStat.normal.inv(1 - alpha/2, 0, 1);
-    tCritPos = jStat.studentt.inv(1 - alpha/2, df);
-    zCritNeg = -zCritPos;
-    tCritNeg = -tCritPos;
-  } else if(tail==="right"){
+  let zCritPos, tCritPos, zCritNeg = null, tCritNeg = null;
+  if (tail === 'two') {
+    zCritPos = jStat.normal.inv(1 - alpha / 2, 0, 1);
+    tCritPos = jStat.studentt.inv(1 - alpha / 2, df);
+    zCritNeg = -zCritPos; tCritNeg = -tCritPos;
+  } else if (tail === 'right') {
     zCritPos = jStat.normal.inv(1 - alpha, 0, 1);
     tCritPos = jStat.studentt.inv(1 - alpha, df);
-  } else { // left
-    zCritPos = jStat.normal.inv(alpha, 0, 1);     // negative
-    tCritPos = jStat.studentt.inv(alpha, df);     // negative
+  } else {
+    zCritPos = jStat.normal.inv(alpha, 0, 1);
+    tCritPos = jStat.studentt.inv(alpha, df);
   }
 
-  // helper rejection check
-  function inReject(x, critPos, critNeg){
-    if(tail==="two"){
-      return (x <= critNeg) || (x >= critPos);
-    }
-    if(tail==="right"){
-      return x >= critPos;
-    }
-    return x <= critPos; // left
+  function inReject(x, critPos, critNeg) {
+    if (tail === 'two')   return (x <= critNeg) || (x >= critPos);
+    if (tail === 'right') return x >= critPos;
+    return x <= critPos;
   }
 
-  for(let x=xmin; x<=xmax; x+=step){
-    const yz = jStat.normal.pdf(x,0,1);
-    const yt = jStat.studentt.pdf(x,df);
+  const yMax = Math.max(jStat.normal.pdf(0, 0, 1), jStat.studentt.pdf(0, df)) * 1.15;
 
-    zCurve.push({x, y: yz});
-    tCurve.push({x, y: yt});
-
-    const rz = inReject(x, zCritPos, zCritNeg);
-    const rt = inReject(x, tCritPos, tCritNeg);
-
-    zShade.push({x, y: rz ? yz : 0});
-    tShade.push({x, y: rt ? yt : 0});
+  const zCurve = [], tCurve = [], zShade = [], tShade = [];
+  for (let x = xmin; x <= xmax; x += step) {
+    const yz = jStat.normal.pdf(x, 0, 1);
+    const yt = jStat.studentt.pdf(x, df);
+    zCurve.push({ x, y: yz });
+    tCurve.push({ x, y: yt });
+    zShade.push({ x, y: inReject(x, zCritPos, zCritNeg) ? yz : 0 });
+    tShade.push({ x, y: inReject(x, tCritPos, tCritNeg) ? yt : 0 });
   }
 
-  // vertical line datasets (Chart.js: two points with same x)
-  function vline(x, yMax){
-    return [{x, y:0}, {x, y:yMax}];
-  }
-  // compute a reasonable yMax
-  const yMax = Math.max(
-    jStat.normal.pdf(0,0,1),
-    jStat.studentt.pdf(0,df)
-  ) * 1.1;
+  const vline = (xv, col, w, dash) => ({
+    data: [{ x: xv, y: 0 }, { x: xv, y: yMax }],
+    borderColor: col, borderWidth: w, borderDash: dash || [], pointRadius: 0, fill: false, label: ''
+  });
 
-  // crit lines
-  zLines.push({ data: vline(zCritPos, yMax), borderColor:"rgba(25,118,210,.75)", borderWidth:2, pointRadius:0 });
-  tLines.push({ data: vline(tCritPos, yMax), borderColor:"rgba(198,40,40,.75)", borderWidth:2, pointRadius:0 });
-
-  if(tail==="two"){
-    zLines.push({ data: vline(zCritNeg, yMax), borderColor:"rgba(25,118,210,.75)", borderWidth:2, pointRadius:0 });
-    tLines.push({ data: vline(tCritNeg, yMax), borderColor:"rgba(198,40,40,.75)", borderWidth:2, pointRadius:0 });
-  }
-
-  // observed line
-  if(showObs){
-    obsLine.push({
-      data: vline(obs, yMax),
-      borderColor:"#111827",
-      borderWidth:3,
-      pointRadius:0
-    });
-  }
-
-  // Reconfigure axes for standardised compare
-  chart.options.scales.x.min = xmin;
-  chart.options.scales.x.max = xmax;
-  chart.options.scales.x.title.text = "Standardised value (Z / t)";
-  chart.options.scales.xZ.display = false;
-
-  // datasets order: curves, shades, lines, obs
   const datasets = [
-    { data: zCurve, borderColor:"#1976d2", borderWidth:3, pointRadius:0, fill:false },
-    { data: tCurve, borderColor:"#c62828", borderWidth:3, pointRadius:0, fill:false },
-    { data: zShade, backgroundColor:"rgba(25,118,210,0.22)", borderWidth:0, pointRadius:0, fill:true },
-    { data: tShade, backgroundColor:"rgba(198,40,40,0.22)", borderWidth:0, pointRadius:0, fill:true },
-    ...zLines,
-    ...tLines,
-    ...obsLine
+    { data: zCurve, borderColor: '#1976d2', borderWidth: 2.5, pointRadius: 0, fill: false, label: 'Normal (Z)' },
+    { data: tCurve, borderColor: '#c62828', borderWidth: 2.5, pointRadius: 0, fill: false, label: "Student's t" },
+    { data: zShade, backgroundColor: 'rgba(25,118,210,0.22)', borderWidth: 0, pointRadius: 0, fill: true, label: '' },
+    { data: tShade, backgroundColor: 'rgba(198,40,40,0.22)',  borderWidth: 0, pointRadius: 0, fill: true, label: '' },
+    vline(zCritPos, 'rgba(25,118,210,.8)', 2, [5, 4]),
+    vline(tCritPos, 'rgba(198,40,40,.8)',  2, [5, 4]),
   ];
+  if (tail === 'two') {
+    datasets.push(vline(zCritNeg, 'rgba(25,118,210,.8)', 2, [5, 4]));
+    datasets.push(vline(tCritNeg, 'rgba(198,40,40,.8)',  2, [5, 4]));
+  }
+  if (showObs) {
+    datasets.push(vline(obs, '#111827', 2.5, []));
+  }
 
   chart.data.datasets = datasets;
+  chart.options.scales.x.min = xmin;
+  chart.options.scales.x.max = xmax;
+  chart.options.scales.x.title.text = 'Standardised value (Z / t)';
+  chart.options.plugins.title.display = false;
   chart.update();
 
-  // UI text
-  el("cmpAlphaDisplay").textContent = `α = ${alpha.toFixed(3)}`;
-  el("cmpNDisplay").textContent = `n = ${n} (df = ${df})`;
-  el("cmpObsDisplay").textContent = `Observed = ${obs.toFixed(2)}`;
-
-  const zText = (tail==="two") ? `±${zCritPos.toFixed(3)}` : `${zCritPos.toFixed(3)}`;
-  const tText = (tail==="two") ? `±${tCritPos.toFixed(3)}` : `${tCritPos.toFixed(3)}`;
-
-  // A small decision hint if observed is enabled
-  let decision = "";
-  if(showObs){
+  /* output */
+  const zText = tail === 'two' ? `±${zCritPos.toFixed(3)}` : zCritPos.toFixed(3);
+  const tText = tail === 'two' ? `±${tCritPos.toFixed(3)}` : tCritPos.toFixed(3);
+  let decision = '';
+  if (showObs) {
     const rejZ = inReject(obs, zCritPos, zCritNeg);
     const rejT = inReject(obs, tCritPos, tCritNeg);
-    decision = `<br>Observed: Z ${rejZ ? "✅ reject" : "❌ do not reject"}; t ${rejT ? "✅ reject" : "❌ do not reject"}`;
+    decision = `<br>Observed = ${obs.toFixed(2)}: Z ${rejZ ? '✅ reject H₀' : '❌ do not reject'} · t ${rejT ? '✅ reject H₀' : '❌ do not reject'}`;
   }
+  el('cmpOutput').innerHTML =
+    `<b>Critical values</b><br>Z<sub>crit</sub> = ${zText} · t<sub>crit</sub>(df=${df}) = ${tText}${decision}`;
 
-  el("cmpOutput").innerHTML =
-    `Critical values<br>`+
-    `Z<sub>crit</sub> = ${zText} &nbsp;&nbsp; | &nbsp;&nbsp; t<sub>crit</sub>(df=${df}) = ${tText}`+
-    decision;
-}
-
-/* ===== Tool mode switching ===== */
-function setToolMode(next){
-  toolMode = next;
-
-  // buttons
-  el("btnToolCalc").classList.toggle("active", next==="calc");
-  el("btnToolCompare").classList.toggle("active", next==="compare");
-
-  // panes
-  el("calcControls").style.display = (next==="calc") ? "block" : "none";
-  el("compareControls").style.display = (next==="compare") ? "block" : "none";
-  el("compareLegend").style.display = (next==="compare") ? "flex" : "none";
-  el("obsLegendItem").style.display = (next==="compare" && el("cmpShowObs").checked) ? "flex" : "none";
-
-  // rebuild chart
-  if(next==="calc"){
-    updateUI();
-    const res = compute();
-    if(res) buildChart(res);
+  /* insight */
+  const diff = Math.abs(tCritPos) - Math.abs(zCritPos);
+  let ins;
+  if (n >= 100) {
+    ins = `<b>With df = ${df}</b>, the t-distribution is nearly identical to the normal. Critical values differ by only ${diff.toFixed(3)} — the distinction is negligible in large samples.`;
   } else {
-    buildCompareChart();
+    ins = `<b>With df = ${df} (n = ${n})</b>, the t-distribution has heavier tails than the normal. The critical value is <b>±${Math.abs(tCritPos).toFixed(3)}</b> vs ±${Math.abs(zCritPos).toFixed(3)} for Z — a difference of ${diff.toFixed(3)}. A larger observed effect is needed to reject H₀.`;
   }
+  el('insightBox').innerHTML = ins;
 }
 
-/* ===== Wire up original linked sliders (preserved behavior) ===== */
-function linkNumberAndSlider(numId, sliderId, fn){
-  const num=el(numId), slider=el(sliderId);
-  if(!num || !slider) return;
+/* ─────────────────────────────────────────────
+   Insight generator (calculator mode)
+───────────────────────────────────────────── */
+function buildCalcInsight(res) {
+  if (!res) { el('insightBox').textContent = 'Adjust the controls to explore the distribution.'; return; }
 
-  num.addEventListener("input", ()=>{
-    slider.value = num.value;
-    fn();
-  });
-  slider.addEventListener("input", ()=>{
-    num.value = slider.value;
-    fn();
-  });
+  const { shadedArea, analysis, tail, dir, useT, zVals, mean, scale, df } = res;
+  const pct = (shadedArea * 100).toFixed(2);
+
+  let msg = '';
+  if (analysis === 'percent') {
+    if (tail === 'two') {
+      const z = zVals[1].toFixed(3);
+      msg = `<b>Two-tailed critical value: ±${z}.</b> The central ${pct}% of values (the non-rejection region) fall between these limits. The two tails together hold ${(shadedArea < 1 ? (100 - shadedArea * 100).toFixed(2) : 0)}% — the rejection region.`;
+    } else {
+      const cv = Math.abs(zVals[0]).toFixed(3);
+      const side = dir === 'right' ? 'above' : 'below';
+      msg = `<b>${pct}% of values fall ${side} the critical value (${cv}).</b> This represents the ${dir}-tail rejection region for a one-sided test at α = ${(shadedArea).toFixed(4)}.`;
+    }
+  } else if (analysis === 'score') {
+    if (tail === 'two') {
+      msg = `<b>Two-tailed p-value: ${shadedArea.toFixed(6)}.</b> This is the probability of observing a value as extreme as ±${Math.abs(zVals[0]).toFixed(4)} in both tails combined. ${shadedArea < 0.05 ? 'This is statistically significant at p < 0.05.' : 'This does not reach significance at p < 0.05.'}`;
+    } else {
+      const side = dir === 'right' ? 'above' : 'below';
+      msg = `<b>${pct}% of values fall ${side} the chosen score.</b> This is the one-tailed probability. ${shadedArea < 0.05 ? 'Significant at p < 0.05.' : 'Not significant at p < 0.05.'}`;
+    }
+  } else if (analysis === 'range') {
+    const x1d = (mean + zVals[0] * scale).toFixed(4);
+    const x2d = (mean + zVals[1] * scale).toFixed(4);
+    msg = `<b>${pct}% of values fall between ${x1d} and ${x2d}.</b> ${pct > 90 ? 'This wide interval captures most of the distribution.' : pct < 50 ? 'This narrow interval captures less than half the distribution — consider widening the range.' : 'This captures a substantial portion of the distribution.'}`;
+  }
+
+  el('insightBox').innerHTML = msg || 'Adjust the controls to explore the distribution.';
 }
 
-/* ===== Boot ===== */
-initChart();
-
-/* Original input interactions but ONLY inside calculator controls */
-function recalcCalc(){
-  updateUI();
-  const res = compute();
-  if(res) buildChart(res);
+/* ─────────────────────────────────────────────
+   Top-level recalc functions
+───────────────────────────────────────────── */
+function recalcCalc() {
+  updateCalcUI();
+  const res = computeCalc();
+  if (res) { buildCalcChart(res); buildCalcInsight(res); }
 }
 
-document.querySelectorAll("#calcControls input, #calcControls select")
-.forEach(e=>e.addEventListener("input", ()=>{ if(toolMode==="calc") recalcCalc(); }));
-
-/* Link paired sliders in calculator */
-linkNumberAndSlider("mean","meanSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
-linkNumberAndSlider("sd","sdSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
-linkNumberAndSlider("percent","percentSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
-linkNumberAndSlider("score","scoreSlider", ()=>{ if(toolMode==="calc") recalcCalc(); });
-
-/* Axis font size slider (calculator only, but safe to apply always) */
-el("fontSizeSlider").addEventListener("input", function(){
-  const size = parseInt(this.value, 10);
-  el("fontSizeValue").innerHTML = size + " px";
-
-  chart.options.scales.x.ticks.font  = { size: size,   weight: "bold" };
-  chart.options.scales.xZ.ticks.font = { size: Math.max(10, size-2), weight: "bold" };
-
-  chart.options.scales.x.title.font  = { size: Math.max(14, size+4), weight:"bold" };
-  chart.options.scales.xZ.title.font = { size: Math.max(12, size+2), weight:"bold" };
-
-  chart.update();
-});
-
-/* Compare controls listeners */
-function recalcCompare(){
-  if(toolMode!=="compare") return;
-  el("obsLegendItem").style.display = el("cmpShowObs").checked ? "flex" : "none";
+function recalcCompare() {
   buildCompareChart();
 }
 
-el("cmpAlphaSlider").addEventListener("input", recalcCompare);
-el("cmpTail").addEventListener("input", recalcCompare);
-el("cmpN").addEventListener("input", recalcCompare);
-el("cmpShowObs").addEventListener("change", ()=>{
-  el("cmpObsBlock").style.display = el("cmpShowObs").checked ? "block" : "none";
-  recalcCompare();
-});
-el("cmpObs").addEventListener("input", recalcCompare);
+/* ─────────────────────────────────────────────
+   Chart init
+───────────────────────────────────────────── */
+function initChart() {
+  const ctx = el('mainChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets: [] },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        title: { display: false }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: { display: true, text: 'X', font: { size: 12 }, color: '#6b7280' },
+          ticks: { font: { size: 11 }, color: '#6b7280', maxTicksLimit: 10 },
+          grid: { color: '#f3f4f6' }
+        },
+        y: {
+          display: true,
+          title: { display: true, text: 'Density', font: { size: 12 }, color: '#6b7280' },
+          ticks: { font: { size: 11 }, color: '#6b7280' },
+          grid: { color: '#f3f4f6' }
+        }
+      }
+    }
+  });
+}
 
-/* Tool mode buttons */
-el("btnToolCalc").addEventListener("click", ()=> setToolMode("calc"));
-el("btnToolCompare").addEventListener("click", ()=> setToolMode("compare"));
+/* ─────────────────────────────────────────────
+   Exercises
+───────────────────────────────────────────── */
+const exercises = [
+  {
+    num: 'Exercise 1',
+    title: 'Standard normal',
+    obj: 'The Z-distribution. z = ±1.96 cuts off 5% in the two tails. This is the basis for all two-tailed tests at p < 0.05.',
+    params: ['μ = 0', 'σ = 1', 'α = 0.05'],
+    instructions:
+      '<b>Learning objective:</b> Understand the Z-distribution and why z = ±1.96 is the critical value for all two-tailed tests at p < 0.05.<br><br><ol>' +
+      '<li>The shaded areas represent the 5% split across both tails (2.5% each).</li>' +
+      '<li>z = ±1.96 cuts off exactly 95% of the area in the middle.</li>' +
+      '<li>Try changing α to 0.01 — the critical values shift to ±2.576.</li>' +
+      '<li>Now switch to a one-tailed test — only one side is shaded, and the critical z is 1.645.</li>' +
+      '</ol><b>Key insight:</b> The Z-distribution is the universal reference for normal probability. z = 1.96 is one of the most important numbers in statistics — it appears in every confidence interval formula at the 95% level.',
+    load() {
+      setMode('calc');
+      el('dataType').value = 'population';
+      el('mean').value = 0;        el('meanSlider').value = 0;        el('meanVal').textContent = '0';
+      el('sd').value   = 1;        el('sdSlider').value   = 1;        el('sdVal').textContent   = '1';
+      el('analysis').value = 'percent';
+      el('tail').value     = 'two';
+      el('percent').value  = 0.05; el('percentSlider').value = 0.05; el('percentVal').textContent = '0.0500';
+      recalcCalc();
+    }
+  },
+  {
+    num: 'Exercise 2',
+    title: 'Lab reference range',
+    obj: 'How much of the healthy population falls in the reference interval? With ±2SD, ~95.4% are captured — 4.6% of healthy patients will be flagged.',
+    params: ['μ = 5.0', 'σ = 0.5', 'X₁ = 4.0', 'X₂ = 6.0'],
+    instructions:
+      '<b>Learning objective:</b> Calculate how much of a healthy population falls within a ±2SD reference interval and understand the false positive rate.<br><br><ol>' +
+      '<li>The reference range is 4.0 to 6.0, mean = 5.0, SD = 0.5. The shaded area shows the included percentage.</li>' +
+      '<li>±2SD captures ~95.4% of healthy patients — 4.6% will be flagged as abnormal despite being healthy.</li>' +
+      '<li>This is the inherent false positive rate of a ±2SD reference range by definition.</li>' +
+      '<li>Try widening the range to 3.5–6.5 — what percentage is now included?</li>' +
+      '</ol><b>Key insight:</b> A ±2SD reference interval is chosen to include ~95% of healthy individuals. This means ~1 in 20 healthy patients will fall outside — important context when ordering multiple tests simultaneously.',
+    load() {
+      setMode('calc');
+      el('dataType').value = 'population';
+      el('mean').value = 5;   el('meanSlider').value = 5;   el('meanVal').textContent = '5';
+      el('sd').value   = 0.5; el('sdSlider').value   = 0.5; el('sdVal').textContent   = '0.50';
+      el('analysis').value = 'range';
+      el('tail').value     = 'two';
+      el('x1').value = 4.0;
+      el('x2').value = 6.0;
+      recalcCalc();
+    }
+  },
+  {
+    num: 'Exercise 3',
+    title: 'One-tailed upper limit',
+    obj: 'The 95th percentile (upper reference limit). 5% of values exceed this — used for one-sided clinical decision limits.',
+    params: ['μ = 0', 'σ = 1', 'z = 1.645'],
+    instructions:
+      '<b>Learning objective:</b> Find the 95th percentile and understand when one-tailed limits are used clinically.<br><br><ol>' +
+      '<li>z = 1.645 cuts off 5% in the upper tail — the 95th percentile.</li>' +
+      '<li>One-tailed limits are used when only one direction is clinically relevant (e.g. troponin — high is the concern, not low).</li>' +
+      '<li>Compare with the two-tailed critical value (±1.96) — the one-tailed value is lower, making it easier to exceed.</li>' +
+      '<li>Try z = 2.326 — this is the 99th percentile, used for very sensitive decision limits.</li>' +
+      '</ol><b>Key insight:</b> One-tailed tests and reference limits are appropriate when the clinical concern is only in one direction. Using a two-tailed limit when only one tail matters wastes statistical power.',
+    load() {
+      setMode('calc');
+      el('dataType').value = 'population';
+      el('mean').value = 0;    el('meanSlider').value = 0;    el('meanVal').textContent = '0';
+      el('sd').value   = 1;    el('sdSlider').value   = 1;    el('sdVal').textContent   = '1';
+      el('analysis').value = 'score';
+      el('tail').value     = 'one';
+      el('direction').value = 'right';
+      el('score').value = 1.645; el('scoreSlider').value = 1.645; el('scoreVal').textContent = '1.65';
+      recalcCalc();
+    }
+  },
+  {
+    num: 'Exercise 4',
+    title: 'Wide imprecision',
+    obj: 'Same reference range but double the SD. Now only ~38% of values fall within range — high imprecision destroys the reference interval.',
+    params: ['μ = 5.0', 'σ = 2.0', 'X₁ = 4.0', 'X₂ = 6.0'],
+    instructions:
+      '<b>Learning objective:</b> See how high analytical imprecision destroys the clinical utility of a reference interval.<br><br><ol>' +
+      '<li>Same reference range (4.0–6.0) as Exercise 2, but SD has doubled to 2.0.</li>' +
+      '<li>Only ~38% of values now fall within range — the same fixed limits capture far fewer results.</li>' +
+      '<li>The distribution is much wider. Results are scattered far beyond the reference range.</li>' +
+      '<li>This is why analytical precision is a pre-analytical requirement for reference intervals.</li>' +
+      '</ol><b>Key insight:</b> Poor precision inflates the spread of results, making fixed reference intervals clinically meaningless. Before applying any reference range, verify that your method\'s imprecision is fit for purpose.',
+    load() {
+      setMode('calc');
+      el('dataType').value = 'population';
+      el('mean').value = 5;   el('meanSlider').value = 5;   el('meanVal').textContent = '5';
+      el('sd').value   = 2.0; el('sdSlider').value   = 2.0; el('sdVal').textContent   = '2.00';
+      el('analysis').value = 'range';
+      el('tail').value     = 'two';
+      el('x1').value = 4.0;
+      el('x2').value = 6.0;
+      recalcCalc();
+    }
+  },
+  {
+    num: 'Exercise 5',
+    title: 't vs Normal (n = 5)',
+    obj: 'With only 5 samples, the t-distribution has heavier tails. The critical value shifts from ±1.96 to ±2.78 — requiring a larger observed effect to reject H₀.',
+    params: ['n = 5', 'df = 4', 'α = 0.05'],
+    instructions:
+      '<b>Learning objective:</b> Understand why the t-distribution replaces the Z when sample size is small and population SD is unknown.<br><br><ol>' +
+      '<li>With n = 5 (df = 4), the t-distribution has heavier tails than the normal.</li>' +
+      '<li>The critical value shifts from ±1.96 (Z) to ±2.78 (t). A larger observed effect is needed to reject H₀.</li>' +
+      '<li>This compensates for the uncertainty introduced by estimating σ from only 5 data points.</li>' +
+      '<li>Try increasing n to 30 — the t-distribution converges to the normal, and the critical value approaches 1.96.</li>' +
+      '</ol><b>Key insight:</b> The t-distribution is the correct choice whenever you are estimating the population SD from sample data. With small samples (n &lt; 30), the heavier tails provide honest uncertainty estimates.',
+    load() {
+      setMode('compare');
+      el('cmpN').value = 5; el('cmpNVal').textContent = 'n=5 df=4';
+      el('cmpAlphaSlider').value = 0.05; el('cmpAlphaVal').textContent = '0.050';
+      el('cmpTail').value = 'two';
+      el('cmpShowObs').checked = false;
+      el('cmpObsBlock').style.display = 'none';
+      recalcCompare();
+    }
+  },
+];
 
-/* Initial render */
-updateUI();
-const res0 = compute();
-if(res0) buildChart(res0);
+function buildExercises() {
+  const grid = el('exGrid');
+  exercises.forEach((ex, i) => {
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.id = 'exCard' + i;
+    card.innerHTML = `
+      <div class="ex-num">${ex.num}</div>
+      <div class="ex-title">${ex.title}</div>
+      <div class="ex-obj">${ex.obj}</div>
+      <div class="ex-params">${ex.params.map(p => `<span class="ex-param">${p}</span>`).join('')}</div>
+      <button class="ex-btn">Load exercise</button>
+    `;
+    card.querySelector('.ex-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      ex.load();
+      const instrDiv = document.getElementById('exInstructions');
+      if (instrDiv && ex.instructions) {
+        instrDiv.innerHTML = '<b style="font-size:14px;color:#1e3a5f">' + ex.num + ': ' + ex.title + '</b><br><br>' + ex.instructions;
+        instrDiv.classList.add('visible');
+      }
+    });
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      ex.load();
+      const instrDiv = document.getElementById('exInstructions');
+      if (instrDiv && ex.instructions) {
+        instrDiv.innerHTML = '<b style="font-size:14px;color:#1e3a5f">' + ex.num + ': ' + ex.title + '</b><br><br>' + ex.instructions;
+        instrDiv.classList.add('visible');
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   Boot
+───────────────────────────────────────────── */
+initChart();
+buildExercises();
+updateCalcUI();
+const res0 = computeCalc();
+if (res0) { buildCalcChart(res0); buildCalcInsight(res0); }
 </script>
-
 </body>
 </html>

@@ -380,6 +380,10 @@ function _doCalculateBias(pairs){
     <span style="color:var(--muted);font-size:12px;">H₀: mean bias = 0</span>
   </div>`;
 
+  // Distribution chart
+  html+=`<div class="section-header">Distribution of Results vs Reference</div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="dist-chart" style="height:220px;"></canvas></div>`;
+
   // Bias chart
   html+=`<div class="section-header">Individual % Bias (per sample)</div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="bias-chart"></canvas></div>`;
@@ -465,6 +469,45 @@ function _doCalculateBias(pairs){
       }
     }
   });
+
+  // ── Distribution: measured vs reference ─────────────────────────────────
+  const measuredVals = biases.map(b=>b.measured);
+  const refVals      = biases.map(b=>b.reference);
+  const measMean = measuredVals.reduce((s,v)=>s+v,0)/measuredVals.length;
+  const refMean  = refVals.reduce((s,v)=>s+v,0)/refVals.length;
+  const measSD   = Math.sqrt(measuredVals.reduce((s,v)=>s+(v-measMean)**2,0)/(measuredVals.length-1));
+  if (measSD > 0) {
+    const distRange = measSD * 4.5;
+    const nPts = 120;
+    const distLabels=[], refData=[], measData=[];
+    function normPDF(x,mu,s){ return Math.exp(-0.5*((x-mu)/s)**2)/(s*Math.sqrt(2*Math.PI)); }
+    for(let i=0;i<=nPts;i++){
+      const x = Math.min(refMean,measMean) - distRange + (Math.abs(measMean-refMean)+2*distRange)*i/nPts;
+      distLabels.push(parseFloat(x.toFixed(4)));
+      refData.push(normPDF(x,refMean,measSD));
+      measData.push(normPDF(x,measMean,measSD));
+    }
+    const distCtx = document.getElementById('dist-chart');
+    if(distCtx) {
+      if(lastChart && lastChart._distChart) { lastChart._distChart.destroy(); }
+      const dc = new Chart(distCtx,{
+        type:'line',
+        data:{labels:distLabels,datasets:[
+          {label:'Target value distribution',data:refData,borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,0.10)',fill:true,borderWidth:2,borderDash:[5,4],pointRadius:0,tension:0.4},
+          {label:`Your method (mean bias ${fmt(meanBias,2)}%)`,data:measData,borderColor:'#e05c2e',backgroundColor:'rgba(224,92,46,0.10)',fill:true,borderWidth:2.5,pointRadius:0,tension:0.4}
+        ]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{font:{size:11}}},tooltip:{enabled:false}},
+          scales:{
+            x:{ticks:{maxTicksLimit:7,font:{size:10}},title:{display:true,text:unit||'Value',font:{size:11}}},
+            y:{display:false}
+          }
+        }
+      });
+      if(lastChart) lastChart._distChart = dc;
+    }
+  }
 
   window._lastResult={analyte,unit,n,meanBias,sdBias,ciLo,ciHi,t,df,pVal,sig,allowable,pass,biases,nExcl};
   document.querySelector('[data-tab="tab-results"]').click();

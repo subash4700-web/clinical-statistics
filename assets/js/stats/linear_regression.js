@@ -554,6 +554,20 @@ function drawScatter(x, y, reg, xLbl, yLbl, alpha, threshX, threshY) {
     });
   }
 
+  // Lollipop residual lines on scatter chart
+  if (document.getElementById('showResid').checked) {
+    const residLines = x.map((xi, i) => ({
+      label: i === 0 ? 'Residuals' : '_',
+      data: [{ x: xi, y: y[i] }, { x: xi, y: reg.a + reg.b * xi }],
+      type: 'line',
+      borderColor: 'rgba(107,114,128,0.4)',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0,
+    }));
+    datasets.push(...residLines);
+  }
+
   // Threshold lines
   if (hasThresh) {
     datasets.push({

@@ -712,6 +712,15 @@ function renderIntermediate(){
   html+=`<div class="section-header">Group Means with Total SD Limits</div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="ip-chart"></canvas></div>`;
 
+  html+=`<div class="section-header">Measurements by Group</div>`;
+  html+=`<div class="card" style="padding:12px;"><canvas id="ip-dot-chart" style="height:260px;"></canvas></div>`;
+
+  html+=`<div class="section-header">Repeatability vs Intermediate Precision</div>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+    <div class="card" style="padding:12px;"><canvas id="ip-dist-chart" style="height:200px;"></canvas></div>
+    <div class="card" style="padding:12px;"><canvas id="ip-cv-chart" style="height:200px;"></canvas></div>
+  </div>`;
+
   document.getElementById('results-body').innerHTML=html;
 
   const ptBg=keys.map((_,ki)=>{
@@ -754,6 +763,91 @@ function renderIntermediate(){
     }
   });
   lastCharts.push(ch);
+
+  // ── Dot chart: individual measurements by group ──────────────────────────
+  const grpColors=['#2b6cb0','#e05c2e','#118a4b','#7c3aed','#b42318',
+                   '#0891b2','#d97706','#059669','#9333ea','#dc2626'];
+  const dotDatasets=[];
+  keys.forEach((key,gi)=>{
+    const vals=allGroups[key];
+    const gm=gMeans[key];
+    const col=grpColors[gi%grpColors.length];
+    // jitter points within their group column
+    const pts=vals.map((v,j)=>({x: gi + (j-(vals.length-1)/2)*0.15, y:v}));
+    dotDatasets.push({label:String(key),data:pts,backgroundColor:col,pointRadius:5,pointHoverRadius:7,showLine:false});
+    // Day mean dashed line
+    const xs=pts.map(p=>p.x);
+    dotDatasets.push({label:'_m'+gi,data:[{x:Math.min(...xs)-0.15,y:gm},{x:Math.max(...xs)+0.15,y:gm}],
+      borderColor:col,borderWidth:1.5,borderDash:[4,3],pointRadius:0,showLine:true,fill:false});
+  });
+  // Grand mean line
+  dotDatasets.push({label:'Grand mean',data:[{x:-0.5,y:grandMean},{x:keys.length-0.5,y:grandMean}],
+    borderColor:'#334155',borderWidth:2,borderDash:[6,4],pointRadius:0,showLine:true,fill:false});
+
+  const dotCh=new Chart(document.getElementById('ip-dot-chart'),{
+    type:'scatter',
+    data:{datasets:dotDatasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{filter:item=>!item.text.startsWith('_m'),font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(4)}}
+      },
+      scales:{
+        x:{display:false,min:-0.5,max:keys.length-0.5},
+        y:{title:{display:true,text:unit||'Value',font:{size:11}},ticks:{font:{size:11}}}
+      }
+    }
+  });
+  lastCharts.push(dotCh);
+
+  // ── Distribution comparison: Sw vs St ─────────────────────────────────────
+  function normalPDF(x,mu,sigma){return Math.exp(-0.5*((x-mu)/sigma)**2)/(sigma*Math.sqrt(2*Math.PI));}
+  const distRange=Math.max(Sw,St)*4;
+  const nPts=120;
+  const distLabels=[],swData=[],stData=[];
+  for(let i=0;i<=nPts;i++){
+    const x=grandMean - distRange + 2*distRange*i/nPts;
+    distLabels.push(parseFloat(x.toFixed(4)));
+    swData.push(Sw>0?normalPDF(x,grandMean,Sw):0);
+    stData.push(St>0?normalPDF(x,grandMean,St):0);
+  }
+  const distCh=new Chart(document.getElementById('ip-dist-chart'),{
+    type:'line',
+    data:{labels:distLabels,datasets:[
+      {label:`Repeatability (Sw = ${fmt(Sw,4)})`,data:swData,borderColor:'#2b6cb0',backgroundColor:'rgba(43,108,176,0.12)',fill:true,borderWidth:2,pointRadius:0,tension:0.4},
+      {label:`Intermediate (St = ${fmt(St,4)})`,data:stData,borderColor:'#e05c2e',backgroundColor:'rgba(224,92,46,0.10)',fill:true,borderWidth:2,pointRadius:0,tension:0.4}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:11}}},tooltip:{enabled:false}},
+      scales:{
+        x:{ticks:{maxTicksLimit:6,font:{size:10}},title:{display:true,text:unit||'Value',font:{size:11}}},
+        y:{display:false}
+      }
+    }
+  });
+  lastCharts.push(distCh);
+
+  // ── CV% bar chart ──────────────────────────────────────────────────────────
+  const cvCh=new Chart(document.getElementById('ip-cv-chart'),{
+    type:'bar',
+    data:{
+      labels:['Repeatability\n(Sw)','Between-run\n(Sb)','Intermediate\n(St)'],
+      datasets:[{data:[isNaN(cvW)?0:cvW,isNaN(cvB)?0:cvB,isNaN(cvT)?0:cvT],
+        backgroundColor:['#2b6cb0','#7c3aed','#e05c2e'],borderRadius:6,borderSkipped:false}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'CV: '+ctx.parsed.y.toFixed(2)+'%'}}},
+      scales:{
+        x:{ticks:{font:{size:10}}},
+        y:{title:{display:true,text:'CV%',font:{size:11}},ticks:{font:{size:11},callback:v=>v.toFixed(1)+'%'},beginAtZero:true}
+      }
+    }
+  });
+  lastCharts.push(cvCh);
+
   window._lastResult={type:'intermediate',analyte,unit,grandMean,Sw,Sb,St,cvW,cvB,cvT,ciSw,ciSt,ciCVlo,ciCVhi,groups:allGroups,keys,allowable,pass};
 }
 

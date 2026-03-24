@@ -17,6 +17,9 @@
     .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
     h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
     .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
 
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
@@ -98,9 +101,11 @@
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page-header">
   <h1>🎯 Understanding Precision</h1>
-  <p class="subtitle">Simulate precision studies — see the difference between repeatability, intermediate precision, and reproducibility.</p>
+  <p>Simulate precision studies — see the difference between repeatability, intermediate precision, and reproducibility.</p>
+</div>
+<div class="wrap">
 
   <!-- Exercises -->
   <div class="exercises">
@@ -675,46 +680,56 @@ function drawCVChart(stats, mean) {
 // Exercises
 var EXERCISES = {
   1: {
+    title: 'Repeatability only',
     params: { trueMean: 5.0, sigWithin: 1.5, sigBetween: 0, nDays: 1, samplesPerDay: 2 },
-    instructions: '<b>Exercise 1 — Repeatability only</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand that a single-day precision study only captures repeatability — the best-case, lower bound of precision.<br><br><ol>' +
       '<li>Notice all points are from one day — there is no between-day variation.</li>' +
       '<li>Sb = 0. St = Sw. Intermediate precision equals repeatability.</li>' +
       '<li>Now change <b>Number of days to 5</b> and keep σ_between at 0 — what happens?</li>' +
-      '<li>Key message: one-day studies only measure repeatability. They give the best-case precision.</li></ol>'
+      '<li>Key message: one-day studies only measure repeatability. They give the best-case precision.</li></ol>' +
+      '<b>Key insight:</b> One-day studies are optimistic by design. The true intermediate precision will always be higher once between-day variation is included.'
   },
   2: {
+    title: 'Between-day variation appears',
     params: { trueMean: 5.0, sigWithin: 1.5, sigBetween: 2.0, nDays: 5, samplesPerDay: 2 },
-    instructions: '<b>Exercise 2 — Between-day variation appears</b><ol>' +
+    instructions: '<b>Learning objective:</b> See how spreading measurements across multiple days reveals between-day drift that a single-day study completely misses.<br><br><ol>' +
       '<li>The same within-run SD (1.5) as Exercise 1 — but now measurements span 5 days.</li>' +
       '<li>Each day has its own mean (dashed line) — this is the day-to-day drift captured by Sb.</li>' +
       '<li>St is now larger than Sw. Intermediate precision is worse than repeatability.</li>' +
-      '<li>Ask yourself: if you only ran this on one day, what would you have missed?</li></ol>'
+      '<li>Ask yourself: if you only ran this on one day, what would you have missed?</li></ol>' +
+      '<b>Key insight:</b> Intermediate precision is what patients actually experience — their results are compared across days, not within a single run.'
   },
   3: {
+    title: 'Why you cannot add SDs',
     params: { trueMean: 5.0, sigWithin: 2.0, sigBetween: 2.0, nDays: 10, samplesPerDay: 2 },
-    instructions: '<b>Exercise 3 — Why you cannot add SDs</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand why standard deviations must be combined by adding variances (SD²), not SDs directly.<br><br><ol>' +
       '<li>Sw = 2.0 and Sb = 2.0 (approximately). What do you expect St to be?</li>' +
       '<li>Wrong answer: 2.0 + 2.0 = 4.0.</li>' +
       '<li>Correct: √(2.0² + 2.0²) = √8 ≈ 2.83.</li>' +
       '<li>Check the formula box on the left — see the difference between the two approaches.</li>' +
-      '<li>Rule: <b>you always combine variances (SD²), never SDs directly.</b></li></ol>'
+      '<li>Rule: <b>you always combine variances (SD²), never SDs directly.</b></li></ol>' +
+      '<b>Key insight:</b> Always combine variances, never SDs. This is one of the most common errors in laboratory statistics — even in published papers.'
   },
   4: {
+    title: 'Stable analyser',
     params: { trueMean: 5.0, sigWithin: 1.0, sigBetween: 0.3, nDays: 10, samplesPerDay: 2 },
-    instructions: '<b>Exercise 4 — Stable analyser</b><ol>' +
+    instructions: '<b>Learning objective:</b> Recognise what a well-performing, stable analyser looks like in a precision study.<br><br><ol>' +
       '<li>The analyser has very low between-day variation (Sb =0.3).</li>' +
       '<li>Day means (dashed lines) are nearly identical.</li>' +
       '<li>St ≈ Sw — intermediate precision is close to repeatability.</li>' +
-      '<li>This is a well-maintained, stable system. Calibration holds between days.</li></ol>'
+      '<li>This is a well-maintained, stable system. Calibration holds between days.</li></ol>' +
+      '<b>Key insight:</b> When Sb is very small relative to Sw, intermediate precision ≈ repeatability. This indicates good day-to-day calibration stability.'
   },
   5: {
+    title: 'Problematic calibration drift',
     params: { trueMean: 5.0, sigWithin: 1.0, sigBetween: 4.0, nDays: 10, samplesPerDay: 2 },
-    instructions: '<b>Exercise 5 — Problematic calibration drift</b><ol>' +
+    instructions: '<b>Learning objective:</b> Identify the hallmarks of between-day drift and understand why intermediate precision matters more than repeatability for clinical use.<br><br><ol>' +
       '<li>Within-run precision looks fine (Sw = 1.0), but between-day drift is large (Sb =4.0).</li>' +
       '<li>Day means vary widely. Results on Monday vs Friday could differ substantially.</li>' +
       '<li>A patient measured twice would get very different results on different days.</li>' +
       '<li>This is why intermediate precision matters more than repeatability for real-world use.</li>' +
-      '<li>What conditions could cause this? Calibration frequency, reagent lot changes, temperature.</li></ol>'
+      '<li>What conditions could cause this? Calibration frequency, reagent lot changes, temperature.</li></ol>' +
+      '<b>Key insight:</b> High between-day variation (large Sb) is the most clinically relevant precision problem — it means two results from the same patient on different days may differ substantially even without any true biological change.'
   }
 };
 
@@ -736,7 +751,7 @@ function loadExercise(n) {
   document.getElementById('samplesPerDay').value = p.samplesPerDay;
 
   var instr = document.getElementById('exInstructions');
-  instr.innerHTML = ex.instructions;
+  instr.innerHTML = '<b style="font-size:14px;color:#1e3a5f">Exercise ' + n + ': ' + ex.title + '</b><br><br>' + ex.instructions;
   instr.classList.add('visible');
 
   simulate();

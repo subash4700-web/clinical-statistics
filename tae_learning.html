@@ -17,6 +17,9 @@
     .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
     h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
     .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
 
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
@@ -107,9 +110,11 @@
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page-header">
   <h1>⚖️ Understanding Total Error &amp; Sigma</h1>
-  <p class="subtitle">See how bias and imprecision combine into total error — and what the sigma metric tells you about method quality and QC design.</p>
+  <p>See how bias and imprecision combine into total error — and what the sigma metric tells you about method quality and QC design.</p>
+</div>
+<div class="wrap">
 
   <!-- Exercises -->
   <div class="exercises">
@@ -692,46 +697,54 @@ function drawSigmaChart(currentBias, currentCV, taePct) {
 // Exercises
 var EXERCISES = {
   1: {
+    title: 'World class — Sigma \u2265 6',
     params: { trueMean: 5.0, biasPct: 0.5, cvPct: 0.8, taePct: 6 },
-    instructions: '<b>Exercise 1 — World class (σ ≥ 6)</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand what a world-class method looks like on the sigma scale and why sigma ≥ 6 requires minimal QC.<br><br><ol>' +
       '<li>Notice how the entire distribution sits well within the TAE limits (purple lines).</li>' +
       '<li>The red "outside TAE" area is essentially invisible — almost no patient results are unacceptable.</li>' +
       '<li>Try increasing CV% to 2% — watch sigma drop and the red area grow.</li>' +
       '<li>Now try increasing bias to 3% — which has a bigger effect on sigma?</li>' +
-      '<li>Key message: at sigma ≥ 6, minimal QC is needed. The method protects patients automatically.</li></ol>'
+      '</ol><b>Key insight:</b> At sigma ≥ 6, the method\'s own performance protects patients — QC is still needed for equipment failure detection, but error detection rules can be simple.'
   },
   2: {
+    title: 'Good method — Sigma ~4\u20135',
     params: { trueMean: 5.0, biasPct: 1.5, cvPct: 1.5, taePct: 8 },
-    instructions: '<b>Exercise 2 — Good method (σ ~4–5)</b><ol>' +
+    instructions: '<b>Learning objective:</b> Recognise a good but not exceptional method and understand what QC strategy is appropriate.<br><br><ol>' +
       '<li>A small but visible red area appears at the tail of the distribution.</li>' +
       '<li>Standard Westgard QC rules (1-3s / 2-2s) are sufficient to catch errors before they accumulate.</li>' +
       '<li>Look at the error budget — bias and imprecision share the TAE fairly equally here.</li>' +
-      '<li>What would you need to do to push sigma above 6? Try reducing bias to 0.5%.</li></ol>'
+      '<li>What would you need to do to push sigma above 6? Try reducing bias to 0.5%.</li>' +
+      '</ol><b>Key insight:</b> Sigma 4–5 represents most well-validated laboratory methods. Standard Westgard rules provide adequate patient protection without excessive false rejection.'
   },
   3: {
+    title: 'Marginal — Sigma ~3',
     params: { trueMean: 5.0, biasPct: 2.0, cvPct: 2.0, taePct: 8 },
-    instructions: '<b>Exercise 3 — Marginal (σ ~3)</b><ol>' +
+    instructions: '<b>Learning objective:</b> Identify a method at the minimum acceptable sigma level and understand the clinical implications of marginal performance.<br><br><ol>' +
       '<li>The red area is now clearly visible. About 1–2% of patient results exceed TAE.</li>' +
       '<li>This method passes technically (TE &lt; TAE) but sigma is at the minimum acceptable level.</li>' +
       '<li>The QC box shows that more intensive QC rules are needed.</li>' +
-      '<li>Consider: is 1–2% of unacceptable results clinically acceptable for this analyte?</li></ol>'
+      '<li>Consider: is 1–2% of unacceptable results clinically acceptable for this analyte?</li>' +
+      '</ol><b>Key insight:</b> Sigma ~3 means the method technically passes TAE but leaves very little safety margin. Intensive QC is required, and the clinical team should be aware of the elevated error risk.'
   },
   4: {
+    title: 'Poor method — Sigma < 3',
     params: { trueMean: 5.0, biasPct: 3.0, cvPct: 3.0, taePct: 8 },
-    instructions: '<b>Exercise 4 — Poor method (σ &lt; 3)</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand that QC cannot rescue a fundamentally poor method — sigma &lt; 3 requires method improvement, not just more QC.<br><br><ol>' +
       '<li>A large proportion of patient results now fall outside TAE.</li>' +
       '<li>The insight box tells you whether bias or imprecision is the dominant problem.</li>' +
       '<li>Read the QC implications — QC cannot rescue a method with sigma &lt; 3.</li>' +
-      '<li>The method itself needs improvement: investigate calibration, reagents, or interference.</li></ol>'
+      '<li>The method itself needs improvement: investigate calibration, reagents, or interference.</li>' +
+      '</ol><b>Key insight:</b> No QC strategy can make a sigma &lt; 3 method safe for routine clinical use. The root cause — whether calibration, reagent, or interference — must be identified and fixed.'
   },
   5: {
+    title: 'Optimise bias or imprecision?',
     params: { trueMean: 5.0, biasPct: 4.0, cvPct: 3.0, taePct: 10 },
-    instructions: '<b>Exercise 5 — Fix the method</b><ol>' +
+    instructions: '<b>Learning objective:</b> Apply sigma reasoning to decide whether to target bias reduction or precision improvement when optimising a method.<br><br><ol>' +
       '<li>Current sigma is failing. Your goal: reach sigma ≥ 4.</li>' +
       '<li>Try reducing bias first: set bias to 1%. Does that get you to sigma ≥ 4?</li>' +
       '<li>Now reset bias to 4% and try reducing CV to 1.5%. Compare the two approaches.</li>' +
-      '<li>Key insight: <b>reducing bias is usually more effective than improving precision</b> because bias shifts the entire distribution. Precision improvement only narrows it.</li>' +
-      '<li>What combination gives the best sigma?</li></ol>'
+      '<li>What combination gives the best sigma?</li>' +
+      '</ol><b>Key insight:</b> Reducing bias is usually more impactful than improving precision because bias shifts the entire distribution while precision only narrows it. Focus troubleshooting on calibration and systematic error sources first.'
   }
 };
 
@@ -751,7 +764,7 @@ function loadExercise(n) {
   document.getElementById('taePctVal').value = parseFloat(p.taePct).toFixed(1);
 
   var instr = document.getElementById('exInstructions');
-  instr.innerHTML = ex.instructions;
+  instr.innerHTML = '<b style="font-size:14px;color:#1e3a5f">Exercise ' + n + ': ' + ex.title + '</b><br><br>' + ex.instructions;
   instr.classList.add('visible');
   simulate();
 }

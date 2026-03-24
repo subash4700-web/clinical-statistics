@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Total Error &amp; Sigma</title>
+  <script src="assets/js/eflm_db.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    .tae-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;}
+    .sigma-badge{display:flex;align-items:center;justify-content:center;flex-direction:column;
+      border-radius:12px;padding:18px 12px;margin-bottom:14px;border:2px solid;}
+    .sigma-badge .sig-value{font-size:46px;font-weight:900;letter-spacing:-.03em;line-height:1;}
+    .sigma-badge .sig-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+    .sigma-badge .sig-level{font-size:13px;font-weight:700;margin-top:6px;}
+    .sigma-wc  {background:#f0fdf4;border-color:#16a34a;color:#14532d;}
+    .sigma-ex  {background:#eff6ff;border-color:#3b82f6;color:#1e3a8a;}
+    .sigma-ok  {background:#fffbeb;border-color:#f59e0b;color:#78350f;}
+    .sigma-poor{background:#fef2f2;border-color:#dc2626;color:#7f1d1d;}
+
+    .formula-box{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:10px 13px;
+      font-size:12px;font-family:ui-monospace,monospace;line-height:2;margin-top:8px;}
+    .formula-box .f-label{color:#94a3b8;font-size:10px;display:block;margin-bottom:-4px;}
+
+    .qc-box{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-top:8px;border:1px solid;}
+    .qc-wc  {background:#f0fdf4;border-color:#bbf7d0;color:#14532d;}
+    .qc-ex  {background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;}
+    .qc-ok  {background:#fffbeb;border-color:#fcd34d;color:#78350f;}
+    .qc-poor{background:#fef2f2;border-color:#fecaca;color:#7f1d1d;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:9px;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-blue {background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .insight-red  {background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+
+    .results-col{display:flex;flex-direction:column;gap:14px;}
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+    .stat-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+    .stat-item{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-item .sk{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-item .sv{font-size:15px;font-weight:800;margin-top:2px;}
+    .stat-item .ss{font-size:10px;color:var(--muted);margin-top:1px;}
+    .stat-item.pass{border-color:#16a34a;background:#f0fdf4;} .stat-item.pass .sv{color:#15803d;}
+    .stat-item.fail{border-color:#dc2626;background:#fef2f2;} .stat-item.fail .sv{color:#b91c1c;}
+    .stat-item.warn{border-color:#f59e0b;background:#fffbeb;} .stat-item.warn .sv{color:#b45309;}
+
+    #results-area{display:none;}
+    @media(max-width:900px){.tae-layout{grid-template-columns:1fr;}.charts-row{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Total Error &amp; Sigma</h1>
+  <p class="subtitle">Enter your method's bias and imprecision to calculate total error, sigma metric, and QC strategy recommendation.</p>
+
+  <div class="tae-layout">
+
+    <!-- LEFT: INPUTS -->
+    <div>
+      <div class="card">
+        <div class="section-title">Method Details</div>
+
+        <label class="field-label">Analyte</label>
+        <input type="text" id="inp-analyte" placeholder="e.g. Glucose, HbA1c">
+
+        <label class="field-label">Unit</label>
+        <input type="text" id="inp-unit" placeholder="e.g. mmol/L, %">
+
+        <div style="height:12px;"></div>
+        <div class="section-title">Performance Parameters</div>
+
+        <label class="field-label">Bias% (absolute value)</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="inp-bias" min="0" step="0.1" placeholder="e.g. 2.0" style="flex:1;">
+          <span style="font-size:13px;color:var(--muted);">%</span>
+        </div>
+        <p class="note">Enter the absolute % bias (always positive). E.g. if measured is 2% above target, enter 2.</p>
+
+        <label class="field-label">CV% (imprecision)</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="inp-cv" min="0" step="0.1" placeholder="e.g. 1.5" style="flex:1;">
+          <span style="font-size:13px;color:var(--muted);">%</span>
+        </div>
+        <p class="note">Coefficient of variation from your precision study (intermediate or total CV).</p>
+
+        <label class="field-label">Total Allowable Error — TAE%</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="inp-tae" min="0" step="0.5" placeholder="e.g. 8.0" style="flex:1;">
+          <span style="font-size:13px;color:var(--muted);">%</span>
+        </div>
+        <p class="note">The maximum permissible total error for this analyte (e.g. from EFLM, CLIA, or your lab's specification). Or use the EFLM lookup below.</p>
+
+        <div class="error-msg" id="input-error"></div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" onclick="loadExample()">Load Example</button>
+          <button class="btn-primary" onclick="calculate()">Calculate</button>
+        </div>
+      </div>
+
+      <!-- EFLM card -->
+      <div class="card" style="margin-top:12px;">
+        <div class="section-title">EFLM Performance Specifications</div>
+        <p class="note" style="margin-bottom:10px;">Select an analyte to look up allowable bias and TAE from the EFLM biological variation database (Ricos et al. 2014).</p>
+        <label class="field-label">Analyte</label>
+        <select id="eflm-analyte" onchange="eflmAnalyteChange()">
+          <option value="">— Select analyte —</option>
+        </select>
+        <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+      </div>
+
+      <details style="margin-bottom:0;margin-top:12px;">
+      <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
+      <div class="card" style="margin-top:8px;">
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Reference / target value</label>
+            <input type="number" id="gen-mean" value="5.00" step="any">
+
+            <label class="field-label">True % bias to simulate</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" id="gen-bias" value="2.0" step="0.1" style="flex:1;">
+              <span style="font-size:13px;color:var(--muted);">%</span>
+            </div>
+
+            <label class="field-label">Imprecision (CV%)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" id="gen-cv" value="1.5" min="0.1" step="0.1" style="flex:1;">
+              <span style="font-size:13px;color:var(--muted);">%</span>
+            </div>
+
+            <label class="field-label">n measurements</label>
+            <input type="number" id="gen-n" value="20" min="5" step="1">
+          </div>
+          <div>
+            <label class="field-label">Generated measurements</label>
+            <textarea id="gen-output" readonly style="min-height:130px;font-size:12px;font-family:ui-monospace,monospace;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:#f9fafb;box-sizing:border-box;resize:vertical;"></textarea>
+            <div id="gen-stats" style="margin-top:6px;font-size:12px;color:var(--muted);line-height:1.7;"></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn-ghost" onclick="generateTAEData()">Generate</button>
+          <button class="btn-secondary" onclick="useTAEData()">Use calculated values</button>
+        </div>
+        <p class="note" style="margin-top:8px;">Simulates measurements with the given true bias and CV. "Use calculated values" fills in the Bias% and CV% computed from the generated data — reflecting real-world sampling variation.</p>
+      </div>
+      </details>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div id="results-area">
+
+      <!-- Sigma badge -->
+      <div id="sigmaBadge" class="sigma-badge sigma-poor">
+        <div class="sig-value" id="sigValue">—</div>
+        <div class="sig-label">Sigma metric</div>
+        <div class="sig-level" id="sigLevel">—</div>
+      </div>
+
+      <div class="results-col">
+
+        <!-- KPI stats -->
+        <div class="card">
+          <div class="section-title">Results</div>
+          <div class="stat-grid-3">
+            <div class="stat-item" id="stat-bias-box">
+              <div class="sk">|Bias%|</div>
+              <div class="sv" id="stat-bias-val">—</div>
+              <div class="ss" id="stat-bias-sub">—</div>
+            </div>
+            <div class="stat-item" id="stat-te-box">
+              <div class="sk">Total Error (TE)</div>
+              <div class="sv" id="stat-te-val">—</div>
+              <div class="ss" id="stat-te-sub">vs TAE</div>
+            </div>
+            <div class="stat-item" id="stat-verdict-box">
+              <div class="sk">Verdict</div>
+              <div class="sv" id="stat-verdict-val">—</div>
+              <div class="ss" id="stat-verdict-sub">—</div>
+            </div>
+          </div>
+          <div id="insight-box" class="insight-box insight-blue"></div>
+        </div>
+
+        <!-- Formula -->
+        <div class="card">
+          <div class="section-title">Formula</div>
+          <div class="formula-box">
+            <span class="f-label">Total Error:</span>
+            TE = |Bias%| + 1.65 &times; CV%
+            <br>
+            <span class="f-label">Sigma metric:</span>
+            &sigma; = (TAE% &minus; |Bias%|) / CV%
+            <br>
+            <span class="f-label">Pass if:</span>
+            TE &le; TAE  (or &sigma; &ge; 3)
+          </div>
+          <div id="formula-values" style="margin-top:8px;font-size:12px;color:#344054;line-height:2;"></div>
+        </div>
+
+        <!-- QC implications -->
+        <div class="card">
+          <div class="section-title">QC Implications</div>
+          <div id="qc-box" class="qc-box qc-poor"></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="section-header">Patient Result Distribution vs TAE Limits</div>
+        <div class="card" style="padding:12px;">
+          <canvas id="dist-chart" style="height:280px;"></canvas>
+        </div>
+
+        <div class="section-header">Error Budget Breakdown</div>
+        <div class="card" style="padding:12px;">
+          <canvas id="budget-chart" style="height:160px;"></canvas>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" id="export-row" style="display:none;margin-top:16px;">
+    <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
+  </div>
+</div>
+
+<script>
+var distChart = null, budgetChart = null;
+
+function fmt(v, d) {
+  if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return '—';
+  return Number(v).toFixed(d === undefined ? 2 : d);
+}
+
+function normalPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+}
+
+function normalCDF(z) {
+  var t = 1 / (1 + 0.2316419 * Math.abs(z));
+  var d = 0.3989423 * Math.exp(-z * z / 2);
+  var p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  return z > 0 ? 1 - p : p;
+}
+
+function getSigmaClass(sigma) {
+  if (sigma >= 6) return 'sigma-wc';
+  if (sigma >= 4) return 'sigma-ex';
+  if (sigma >= 3) return 'sigma-ok';
+  return 'sigma-poor';
+}
+
+function getSigmaLevel(sigma) {
+  if (sigma >= 6) return '🏆 World class';
+  if (sigma >= 4) return '✅ Excellent';
+  if (sigma >= 3) return '⚠️ Acceptable';
+  return '❌ Poor — improvement needed';
+}
+
+function showError(msg) {
+  var el = document.getElementById('input-error');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function randNormal(mu, sigma) {
+  var u1 = Math.random(), u2 = Math.random();
+  return mu + sigma * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+function generateTAEData() {
+  var trueMean = parseFloat(document.getElementById('gen-mean').value) || 5.0;
+  var biasPct  = parseFloat(document.getElementById('gen-bias').value) || 0;
+  var cvPct    = parseFloat(document.getElementById('gen-cv').value)   || 1.5;
+  var n        = Math.max(5, parseInt(document.getElementById('gen-n').value) || 20);
+
+  var measMean = trueMean * (1 + biasPct / 100);
+  var sd       = trueMean * cvPct / 100;
+
+  var vals = [];
+  for (var i = 0; i < n; i++) vals.push(randNormal(measMean, sd));
+
+  document.getElementById('gen-output').value = vals.map(function(v) { return v.toFixed(4); }).join('\n');
+
+  // Compute estimated stats from the generated data
+  var estMean  = vals.reduce(function(s, v) { return s + v; }, 0) / n;
+  var estBias  = (estMean - trueMean) / trueMean * 100;
+  var estSD    = Math.sqrt(vals.reduce(function(s, v) { return s + Math.pow(v - estMean, 2); }, 0) / (n - 1));
+  var estCV    = estSD / estMean * 100;
+
+  document.getElementById('gen-stats').innerHTML =
+    '<b>From generated data (n=' + n + '):</b><br>' +
+    'Estimated mean: ' + fmt(estMean, 4) + ' &nbsp;&middot;&nbsp; ' +
+    'Estimated Bias: ' + fmt(Math.abs(estBias), 2) + '% &nbsp;&middot;&nbsp; ' +
+    'Estimated CV: ' + fmt(estCV, 2) + '%';
+}
+
+function useTAEData() {
+  var output = document.getElementById('gen-output').value.trim();
+  if (!output) { generateTAEData(); }
+
+  var trueMean = parseFloat(document.getElementById('gen-mean').value) || 5.0;
+  var vals = output.split(/\r?\n/).map(function(l) { return parseFloat(l.trim()); }).filter(function(v) { return !isNaN(v); });
+  if (vals.length < 2) return;
+
+  var estMean = vals.reduce(function(s, v) { return s + v; }, 0) / vals.length;
+  var estBias = Math.abs((estMean - trueMean) / trueMean * 100);
+  var estSD   = Math.sqrt(vals.reduce(function(s, v) { return s + Math.pow(v - estMean, 2); }, 0) / (vals.length - 1));
+  var estCV   = estSD / estMean * 100;
+
+  document.getElementById('inp-bias').value = estBias.toFixed(2);
+  document.getElementById('inp-cv').value   = estCV.toFixed(2);
+}
+
+function loadExample() {
+  document.getElementById('inp-analyte').value = 'Glucose';
+  document.getElementById('inp-unit').value = 'mmol/L';
+  document.getElementById('inp-bias').value = '2.0';
+  document.getElementById('inp-cv').value = '2.0';
+  document.getElementById('inp-tae').value = '8.0';
+}
+
+function calculate() {
+  showError('');
+
+  var biasPct = parseFloat(document.getElementById('inp-bias').value);
+  var cvPct   = parseFloat(document.getElementById('inp-cv').value);
+  var taePct  = parseFloat(document.getElementById('inp-tae').value);
+
+  if (isNaN(biasPct) || biasPct < 0) { showError('Enter a valid Bias% (0 or greater).'); return; }
+  if (isNaN(cvPct)   || cvPct <= 0)  { showError('Enter a valid CV% (greater than 0).'); return; }
+  if (isNaN(taePct)  || taePct <= 0) { showError('Enter a valid TAE% (greater than 0).'); return; }
+
+  var absBias = Math.abs(biasPct);
+  var te      = absBias + 1.65 * cvPct;
+  var sigma   = (taePct - absBias) / cvPct;
+  var passes  = te <= taePct;
+
+  // % outside TAE — use a reference mean of 100 (works in % space)
+  var trueMean = 100;
+  var measMean = trueMean * (1 + absBias / 100);
+  var sd       = trueMean * cvPct / 100;
+  var upperLimit = trueMean * (1 + taePct / 100);
+  var lowerLimit = trueMean * (1 - taePct / 100);
+  var zUpper = (upperLimit - measMean) / sd;
+  var zLower = (lowerLimit - measMean) / sd;
+  var pctInside = (normalCDF(zUpper) - normalCDF(zLower)) * 100;
+  var pctOut = Math.max(0, 100 - pctInside);
+
+  // Show results panel
+  document.getElementById('results-area').style.display = 'block';
+  document.getElementById('export-row').style.display = 'flex';
+
+  // Sigma badge
+  var badge = document.getElementById('sigmaBadge');
+  badge.className = 'sigma-badge ' + getSigmaClass(sigma);
+  document.getElementById('sigValue').textContent = fmt(sigma, 2);
+  document.getElementById('sigLevel').textContent = getSigmaLevel(sigma);
+
+  // Stats
+  var biasClass = absBias < taePct * 0.3 ? 'pass' : absBias < taePct * 0.5 ? 'warn' : 'fail';
+  document.getElementById('stat-bias-box').className = 'stat-item ' + biasClass;
+  document.getElementById('stat-bias-val').textContent = fmt(absBias, 1) + '%';
+  document.getElementById('stat-bias-sub').textContent = fmt(absBias / taePct * 100, 0) + '% of TAE consumed';
+
+  document.getElementById('stat-te-box').className = 'stat-item ' + (passes ? 'pass' : 'fail');
+  document.getElementById('stat-te-val').textContent = fmt(te, 2) + '%';
+  document.getElementById('stat-te-sub').textContent = 'TAE = ' + fmt(taePct, 1) + '%';
+
+  document.getElementById('stat-verdict-box').className = 'stat-item ' + (passes ? 'pass' : 'fail');
+  document.getElementById('stat-verdict-val').textContent = passes ? 'PASS' : 'FAIL';
+  document.getElementById('stat-verdict-sub').textContent = fmt(pctOut, 3) + '% of results exceed TAE';
+
+  // Formula values
+  document.getElementById('formula-values').innerHTML =
+    'TE = ' + fmt(absBias,1) + ' + 1.65 \u00d7 ' + fmt(cvPct,1) + ' = <b>' + fmt(te,2) + '%</b><br>' +
+    '\u03c3 = (' + fmt(taePct,1) + ' \u2212 ' + fmt(absBias,1) + ') / ' + fmt(cvPct,1) + ' = <b>' + fmt(sigma,2) + '</b><br>' +
+    (passes
+      ? '<span style="color:#15803d;font-weight:700;">\u2713 ' + fmt(te,2) + '% \u2264 TAE ' + fmt(taePct,1) + '% \u2014 PASS</span>'
+      : '<span style="color:#b91c1c;font-weight:700;">\u2717 ' + fmt(te,2) + '% > TAE ' + fmt(taePct,1) + '% \u2014 FAIL</span>');
+
+  // QC box
+  updateQCBox(sigma);
+
+  // Insight
+  updateInsight(sigma, absBias, cvPct, te, taePct, passes, pctOut);
+
+  // Charts
+  drawDistChart(trueMean, measMean, sd, taePct, pctOut);
+  drawBudgetChart(absBias, cvPct, taePct);
+
+  // Store for export
+  window._taeResult = {
+    analyte: document.getElementById('inp-analyte').value.trim() || 'Sample',
+    unit:    document.getElementById('inp-unit').value.trim(),
+    biasPct: absBias, cvPct, taePct, te, sigma, passes, pctOut
+  };
+}
+
+function updateQCBox(sigma) {
+  var box = document.getElementById('qc-box');
+  var msg = '', cls = '';
+  if (sigma >= 6) {
+    cls = 'qc-wc';
+    msg = '<b>Sigma \u2265 6 \u2014 Minimal QC required.</b> One QC level, run once per day. Simple 1-2s warning rule. Patient results are extremely unlikely to exceed TAE even if QC misses an error.';
+  } else if (sigma >= 4) {
+    cls = 'qc-ex';
+    msg = '<b>Sigma 4\u20136 \u2014 Standard QC sufficient.</b> Two QC levels, Westgard 1-3s/2-2s rules. Daily QC runs are adequate to detect clinically important errors before patients are affected.';
+  } else if (sigma >= 3) {
+    cls = 'qc-ok';
+    msg = '<b>Sigma 3\u20134 \u2014 Intensive QC needed.</b> Two or more QC levels, Westgard multirule. More frequent runs. The narrow error budget means errors can reach patients between QC checks.';
+  } else {
+    cls = 'qc-poor';
+    msg = '<b>Sigma &lt; 3 \u2014 QC cannot rescue this method.</b> Even running QC before every patient will not prevent a significant proportion of unacceptable results. The method itself needs improvement \u2014 recalibrate, change reagents, or investigate the bias source.';
+  }
+  box.className = 'qc-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function updateInsight(sigma, biasPct, cvPct, te, taePct, passes, pctOut) {
+  var box = document.getElementById('insight-box');
+  var msg = '', cls = '';
+
+  if (sigma >= 6) {
+    msg = '<b>World class performance.</b> Bias (' + fmt(biasPct,1) + '%) and CV (' + fmt(cvPct,1) + '%) together leave plenty of room in the TAE budget. Only ' + fmt(pctOut,3) + '% of patient results exceed TAE \u2014 effectively zero. This method barely needs QC.';
+    cls = 'insight-green';
+  } else if (sigma >= 4) {
+    msg = '<b>Good method.</b> Sigma = ' + fmt(sigma,2) + '. Total error (' + fmt(te,2) + '%) passes TAE (' + fmt(taePct,1) + '%). About ' + fmt(pctOut,3) + '% of patient results exceed TAE. Standard QC rules will catch errors before they reach patients.';
+    cls = 'insight-blue';
+  } else if (sigma >= 3) {
+    msg = '<b>Acceptable \u2014 but tight.</b> Sigma = ' + fmt(sigma,2) + '. TE ' + (passes ? 'just passes' : 'fails') + '. About ' + fmt(pctOut,2) + '% of results exceed TAE. A tighter QC strategy is needed. Consider whether you can reduce bias or improve precision.';
+    cls = 'insight-amber';
+  } else {
+    var biasContrib = biasPct / te * 100;
+    var imprecContrib = (1.65 * cvPct) / te * 100;
+    var dominant = biasContrib > imprecContrib ? 'bias' : 'imprecision';
+    msg = '<b>Poor method \u2014 ' + fmt(pctOut,2) + '% of patient results exceed TAE.</b> Sigma = ' + fmt(sigma,2) + '. ' + fmt(biasContrib,0) + '% of TE comes from bias, ' + fmt(imprecContrib,0) + '% from imprecision. <b>' + dominant.charAt(0).toUpperCase() + dominant.slice(1) + ' is the bigger problem here</b> \u2014 focus improvement efforts there first.';
+    cls = 'insight-red';
+  }
+
+  box.className = 'insight-box ' + cls;
+  box.innerHTML = msg;
+}
+
+function drawDistChart(trueMean, measMean, sd, taePct, pctOut) {
+  if (distChart) { distChart.destroy(); distChart = null; }
+
+  var upperLimit = trueMean * (1 + taePct / 100);
+  var lowerLimit = trueMean * (1 - taePct / 100);
+  var range = Math.max(sd * 5, Math.abs(measMean - trueMean) + sd * 4.5, taePct / 100 * trueMean + sd * 2);
+
+  var nPts = 200;
+  var labels = [], mainData = [], outsideData = [];
+  var step = 2 * range / nPts;
+
+  for (var i = 0; i <= nPts; i++) {
+    var x = (trueMean - range) + step * i;
+    labels.push(parseFloat(x.toFixed(4)));
+    var y = normalPDF(x, measMean, sd);
+    var outside = x < lowerLimit || x > upperLimit;
+    mainData.push(outside ? null : y);
+    outsideData.push(outside ? y : null);
+  }
+
+  // Smooth boundary fill
+  for (var j = 1; j < labels.length - 1; j++) {
+    var xl = labels[j];
+    if ((xl >= lowerLimit - step && xl <= lowerLimit + step) ||
+        (xl >= upperLimit - step && xl <= upperLimit + step)) {
+      var yb = normalPDF(xl, measMean, sd);
+      mainData[j] = yb;
+      outsideData[j] = yb;
+    }
+  }
+
+  var ctx = document.getElementById('dist-chart').getContext('2d');
+  distChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Within TAE (' + fmt(100 - pctOut, 2) + '%)',
+          data: mainData,
+          borderColor: '#7c3aed',
+          backgroundColor: 'rgba(124,58,237,0.15)',
+          fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4, spanGaps: false
+        },
+        {
+          label: 'Outside TAE (' + fmt(pctOut, 3) + '%)',
+          data: outsideData,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.25)',
+          fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 8, font: { size: 10 },
+            callback: function(val, i) {
+              // Show % deviation from true mean
+              var raw = this.getLabelForValue(val);
+              var dev = ((raw - 100) / 1).toFixed(1);
+              return dev + '%';
+            }
+          },
+          title: { display: true, text: 'Deviation from target (%)', font: { size: 11 } }
+        },
+        y: { display: false }
+      }
+    }
+  });
+}
+
+function drawBudgetChart(biasPct, cvPct, taePct) {
+  if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
+
+  var imprecContrib = 1.65 * cvPct;
+  var te = biasPct + imprecContrib;
+  var remaining = Math.max(0, taePct - te);
+  var overflow  = Math.max(0, te - taePct);
+
+  var datasets = [
+    { label: '|Bias%|',      data: [biasPct],       backgroundColor: '#e05c2e' },
+    { label: '1.65 \u00d7 CV%', data: [imprecContrib], backgroundColor: '#f59e0b' },
+  ];
+  if (remaining > 0) datasets.push({ label: 'Remaining budget', data: [remaining], backgroundColor: '#86efac' });
+  if (overflow  > 0) datasets.push({ label: 'Exceeds TAE',      data: [overflow],  backgroundColor: '#fca5a5' });
+
+  var ctx = document.getElementById('budget-chart').getContext('2d');
+  budgetChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ['Error budget'], datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + fmt(c.parsed.x, 2) + '%'; } } }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: '%', font: { size: 11 } },
+          ticks: { font: { size: 10 }, callback: function(v) { return v + '%'; } },
+          max: Math.max(taePct, te) * 1.15
+        },
+        y: { stacked: true, display: false }
+      }
+    }
+  });
+}
+
+function exportExcel() {
+  var r = window._taeResult;
+  if (!r) { alert('Run the calculation first.'); return; }
+  var wb = XLSX.utils.book_new();
+  var rows = [
+    ['Total Error & Sigma Report'], [],
+    ['Analyte', r.analyte],
+    ['Unit', r.unit], [],
+    ['|Bias%|', r.biasPct],
+    ['CV%', r.cvPct],
+    ['TAE%', r.taePct], [],
+    ['Total Error (TE%)', r.te],
+    ['Sigma metric', r.sigma],
+    ['% results outside TAE', r.pctOut],
+    ['Verdict', r.passes ? 'PASS' : 'FAIL'],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'TAE & Sigma');
+  XLSX.writeFile(wb, 'tae_sigma_' + (r.analyte || 'results') + '.xlsx');
+}
+
+// ── EFLM integration ────────────────────────────────────────────────────────
+var eflmKey  = '';
+var eflmTier = 'desirable';
+
+(function buildEFLMDropdown() {
+  var sel = document.getElementById('eflm-analyte');
+  if (!sel || typeof EFLM_DB === 'undefined') return;
+  Object.entries(EFLM_DB)
+    .sort(function(a, b) { return a[1].name.localeCompare(b[1].name); })
+    .forEach(function(entry) {
+      var opt = document.createElement('option');
+      opt.value = entry[0];
+      opt.textContent = entry[1].name + ' (' + entry[1].unit + ')';
+      sel.appendChild(opt);
+    });
+})();
+
+function eflmAnalyteChange() {
+  eflmKey = document.getElementById('eflm-analyte').value;
+  if (!eflmKey) {
+    document.getElementById('eflm-tier-cards').style.display = 'none';
+    return;
+  }
+  renderEFLMTierCards();
+  applyEFLM();
+}
+
+function selectEFLMTier(tier) {
+  eflmTier = tier;
+  renderEFLMTierCards();
+  applyEFLM();
+}
+
+function renderEFLMTierCards() {
+  var wrap = document.getElementById('eflm-tier-cards');
+  if (!eflmKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[eflmKey]) {
+    wrap.style.display = 'none'; return;
+  }
+  var a     = EFLM_DB[eflmKey];
+  var tiers = calcEFLMTiers(a.cvi, a.cvg);
+  var colors = { optimal: '#059669', desirable: '#2563eb', minimum: '#d97706' };
+  var bgs    = { optimal: '#ecfdf5', desirable: '#eff6ff', minimum: '#fffbeb' };
+  var bords  = { optimal: '#6ee7b7', desirable: '#bfdbfe', minimum: '#fde68a' };
+
+  wrap.style.display = 'block';
+  wrap.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+    '<strong>' + a.name + '</strong> &nbsp;&middot;&nbsp; ' + a.unit +
+    ' &nbsp;&middot;&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;&middot;&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    ['optimal', 'desirable', 'minimum'].map(function(tr) {
+      var active = tr === eflmTier;
+      return '<div onclick="selectEFLMTier(\'' + tr + '\')" style="cursor:pointer;flex:1;min-width:90px;' +
+        'background:' + (active ? bgs[tr] : '#fff') + ';' +
+        'border:2px solid ' + (active ? bords[tr] : '#e5e7eb') + ';' +
+        'border-radius:10px;padding:10px 12px;transition:all .12s;' +
+        (active ? 'box-shadow:0 0 0 3px ' + bords[tr] + '80;' : '') + '">' +
+        '<div style="font-weight:700;font-size:11px;text-transform:uppercase;color:' + colors[tr] + ';margin-bottom:5px;">' + tr + '</div>' +
+        '<div style="font-size:11px;line-height:1.8;">Bias \u2264 <strong>' + tiers[tr].bias + '%</strong><br>CV \u2264 <strong>' + tiers[tr].cv + '%</strong><br>TAE \u2264 <strong>' + tiers[tr].tea + '%</strong></div>' +
+        (active ? '<div style="font-size:10px;color:' + colors[tr] + ';margin-top:4px;font-weight:700;">&#10003; Applied</div>' : '') +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
+function applyEFLM() {
+  if (!eflmKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[eflmKey]) return;
+  var a = EFLM_DB[eflmKey];
+  var t = calcEFLMTiers(a.cvi, a.cvg)[eflmTier];
+  document.getElementById('inp-tae').value  = t.tea;
+  var analyteEl = document.getElementById('inp-analyte');
+  var unitEl    = document.getElementById('inp-unit');
+  if (!analyteEl.value) analyteEl.value = a.name;
+  if (!unitEl.value)    unitEl.value    = a.unit;
+}
+</script>
+</body>
+</html>

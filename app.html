@@ -845,6 +845,7 @@
             <button class="collapsible-header" onclick="toggleCollapsible(this)">Bias &amp; Method Comparison</button>
             <div class="collapsible-content child-nav">
               <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
+              <button onclick="loadTool('tae.html','Total Error & Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications</span></button>
               <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Two methods · paired patient samples</span></button>
             </div>
           </div>
@@ -1368,7 +1369,7 @@
             <div class="htc-body">
               <h3>${T('home.hypothesisTests')}</h3>
               <p>${T('home.hypothesisDesc')}</p>
-              <div class="htc-tags"><span>Learning &amp; Theory</span><span>T-Tests</span><span>ANOVA</span><span>Mann-Whitney</span><span>Chi-Square</span><span>Kappa</span></div>
+              <div class="htc-tags"><span>Theory &amp; Simulations</span><span>Dance of p-values</span><span>Distributions</span><span>T-Tests</span><span>ANOVA</span><span>Chi-Square</span><span>Kappa</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-teal" onclick="loadSection('analytical')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('analytical')">
@@ -1376,7 +1377,7 @@
             <div class="htc-body">
               <h3>${T('home.analytical')}</h3>
               <p>${T('home.analyticalDesc')}</p>
-              <div class="htc-tags"><span>Precision — Quick/QC</span><span>EP05/EP15 Validation</span><span>Bias — CRM/EQA</span><span>Method Comparison</span></div>
+              <div class="htc-tags"><span>Precision · Bias · TAE</span><span>Sigma Metric</span><span>EP05/EP15 Validation</span><span>Method Comparison</span><span>Biological Variation</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-rose" onclick="loadSection('regression')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('regression')">
@@ -1384,7 +1385,7 @@
             <div class="htc-body">
               <h3>${T('home.regression')}</h3>
               <p>${T('home.regressionDesc')}</p>
-              <div class="htc-tags"><span>Linear Regression</span><span>ROC &amp; Diagnostic Performance</span><span>AUC · Sensitivity · Specificity</span></div>
+              <div class="htc-tags"><span>Correlation · r · R²</span><span>Linear Regression</span><span>ROC Curves</span><span>AUC · Sensitivity · Specificity</span><span>Method Comparison</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-orange" onclick="loadSection('lab')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('lab')">
@@ -1553,6 +1554,7 @@
           ]),
           grp('Bias &amp; Method Comparison', [
             tc('bias.html',              'Bias — CRM / EQA',        'Known reference value vs your method'),
+            tc('tae.html',               'Total Error &amp; Sigma', 'Sigma metric · QC implications'),
             tc('method_comparison.html', 'Method Comparison',       'Two methods · paired patient samples'),
           ]),
         ].join(''),
@@ -1661,6 +1663,7 @@
     { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Precision' },
     { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Precision' },
     { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Bias' },
+    { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Bias' },
     { file:'method_comparison.html',             name:'Method Comparison',                section:'Analytical Performance › Bias' },
     { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
     { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
@@ -1872,19 +1875,19 @@
       'cat.quantTools':'Quantification Tools','tool.photometry':'Photometry','tool.potentiometry':'Potentiometry',
       'ui.reportIssue':'Report Issue','ui.info':'Info','ui.toolInfo':'Tool Information','ui.pcr':'PCR',
       'home.badge':'Clinical Laboratory Statistics','home.title':'Statistics Toolkit',
-      'home.subtitle':'Evidence-based tools for analytical performance evaluation, hypothesis testing, and molecular biology workflows — built for clinical laboratory professionals.',
+      'home.subtitle':'Interactive learning tools, statistical calculators, and method validation — built for clinical laboratory scientists and students.',
       'home.learningTools':'Learning Tools',
       'home.learningDesc':'Interactive simulations to build statistical intuition — explore p-value behaviour, sampling distributions, and inferential concepts.',
       'home.hypothesisTests':'Inferential Statistics',
-      'home.hypothesisDesc':'Parametric and non-parametric tests with effect sizes, confidence intervals, and assumption checks.',
+      'home.hypothesisDesc':'Theory, interactive simulations, and calculators for hypothesis testing — from p-values and distributions to t-tests, ANOVA, and categorical tests.',
       'home.analytical':'Analytical Performance',
-      'home.analyticalDesc':'CLSI/EP5-A3 precision, trueness vs reference, Bland-Altman method comparison, and regression with diagnostic thresholds.',
+      'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP5/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
       'home.regression':'Regression &amp; Diagnostics',
-      'home.regressionDesc':'Explore relationships between variables and evaluate the diagnostic performance of tests and biomarkers.',
+      'home.regressionDesc':'Understand and apply correlation, linear regression, and diagnostic test performance — with interactive simulations for ROC curves, AUC, and cut-off selection.',
       'home.pcr':'PCR',
       'home.pcrDesc':'End-to-end PCR workflow: in silico primer design and validation, master mix calculator, and primer dilution planning.',
       'home.labTools':'Lab Tools',
-      'home.labDesc':'Everyday laboratory calculators for dilution series and solution preparation from molar concentrations.',
+      'home.labDesc':'Everyday laboratory calculators for dilution series, solution preparation, photometry, and potentiometry.',
       'home.aboutText':'Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use the <strong>Report Issue</strong> button in any tool to share feedback.',
       'home.disclaimerTitle':'For educational and research use only',
       'home.disclaimerText':'Always verify results independently and consult a qualified statistician for critical clinical decisions. This tool does not replace professional judgement.',

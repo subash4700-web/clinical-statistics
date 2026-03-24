@@ -7,16 +7,16 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
     .page-header {
       background: linear-gradient(135deg, #881337 0%, #be185d 60%, #e11d48 100%);
-      color: white; padding: 20px 28px 18px;
+      color: white; padding: 20px 28px 18px; flex-shrink: 0;
     }
     .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
     .page-header p { margin: 0; font-size: 13px; opacity: .78; }
 
-    .shell { display: flex; height: calc(100vh - 72px - 80px); }
+    .shell { display: flex; flex: 1; min-height: 0; }
 
     /* LEFT */
     .left-panel {
@@ -66,14 +66,26 @@
     .chart-wrap { position: relative; flex: 1; min-height: 0; }
 
     /* EXERCISES */
-    .exercises { background: white; border-top: 1px solid #e5e7eb; padding: 12px 20px; }
-    .exercise-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .ex-tab {
-      padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
-      border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; transition: all .15s;
-    }
-    .ex-tab:hover, .ex-tab.active { background: #e11d48; color: white; border-color: #e11d48; }
-    .ex-desc { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
+    .exercises { background: white; border-bottom: 1px solid #e5e7eb; padding: 14px 20px; flex-shrink: 0; overflow-y: auto; max-height: 50vh; }
+    .ex-toggle { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 800; color: #344054; padding: 0 0 10px; width: 100%; }
+    .ex-toggle .ex-arrow { font-size: 11px; color: #9ca3af; transition: transform .2s; }
+    .ex-toggle.open .ex-arrow { transform: rotate(90deg); }
+    .ex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .ex-card { background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; position: relative; display: flex; flex-direction: column; }
+    .ex-card:hover { border-color: #fda4af; box-shadow: 0 2px 10px rgba(225,29,72,.1); }
+    .ex-card.active { border-color: #e11d48; box-shadow: 0 0 0 3px rgba(225,29,72,.12); }
+    .ex-num { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 5px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #881337; margin-bottom: 6px; line-height: 1.3; }
+    .ex-obj { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 10px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .ex-param { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn { width: 100%; padding: 7px; background: #e11d48; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .ex-btn:hover { opacity: .88; }
+    .ex-instructions { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.7; color: #881337; display: none; }
+    .ex-instructions.visible { display: block; }
+    .ex-instructions b { color: #be185d; }
+    .ex-instructions ol { margin: 8px 0 0 16px; padding: 0; }
+    .ex-instructions li { margin-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -81,6 +93,80 @@
 <div class="page-header">
   <h1>Understanding ROC &amp; Diagnostic Performance</h1>
   <p>Explore how sensitivity, specificity, AUC, and the cut-off interact. Adjust the distributions and move the threshold to see the trade-off in real time.</p>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+    <span>📋 Guided Exercises</span>
+    <span class="ex-arrow">▶</span>
+  </button>
+  <div id="exPanel">
+    <div class="ex-grid">
+
+      <div class="ex-card" id="exCard0" onclick="loadExercise(0)">
+        <div class="ex-num">Exercise 1</div>
+        <div class="ex-title">Excellent test</div>
+        <div class="ex-obj">Understand what a high-performing diagnostic test looks like — wide separation, minimal overlap, AUC near 1.</div>
+        <div class="ex-params">
+          <span class="ex-param">Sep = 3.5</span>
+          <span class="ex-param">σH = 0.8</span>
+          <span class="ex-param">σD = 0.8</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+        <div class="ex-num">Exercise 2</div>
+        <div class="ex-title">Poor test</div>
+        <div class="ex-obj">Understand why heavy distribution overlap destroys diagnostic accuracy regardless of the threshold you choose.</div>
+        <div class="ex-params">
+          <span class="ex-param">Sep = 0.8</span>
+          <span class="ex-param">σH = 1.0</span>
+          <span class="ex-param">σD = 1.0</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+        <div class="ex-num">Exercise 3</div>
+        <div class="ex-title">Sens/Spec trade-off</div>
+        <div class="ex-obj">See how moving the threshold creates a direct trade-off between sensitivity and specificity — and understand when to favour each.</div>
+        <div class="ex-params">
+          <span class="ex-param">Sep = 2.0</span>
+          <span class="ex-param">Thresh = 1.0</span>
+          <span class="ex-param">Prev = 20%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+        <div class="ex-num">Exercise 4</div>
+        <div class="ex-title">Prevalence effect</div>
+        <div class="ex-obj">Understand why the same test has very different predictive values at different disease prevalences.</div>
+        <div class="ex-params">
+          <span class="ex-param">Sep = 2.5</span>
+          <span class="ex-param">Prev = 2%</span>
+          <span class="ex-param">→ 40%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+        <div class="ex-num">Exercise 5</div>
+        <div class="ex-title">Asymmetric SDs</div>
+        <div class="ex-obj">Explore how different variability in healthy vs diseased populations changes the shape of the ROC curve and optimal cut-off.</div>
+        <div class="ex-params">
+          <span class="ex-param">σH = 0.6</span>
+          <span class="ex-param">σD = 1.8</span>
+          <span class="ex-param">Sep = 2.0</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+    </div>
+    <div class="ex-instructions" id="exInstructions"></div>
+  </div>
 </div>
 
 <div class="shell">
@@ -187,38 +273,67 @@
   </div>
 </div>
 
-<!-- EXERCISES -->
-<div class="exercises">
-  <div class="exercise-tabs" id="exTabs"></div>
-  <div class="ex-desc" id="exDesc"></div>
-</div>
-
 <script>
 const exercises = [
   {
-    label: '1. Excellent test',
+    title: 'Excellent test',
     sep: 3.5, sdH: 0.8, sdD: 0.8, prev: 20, thresh: 1.75,
-    desc: 'Wide separation between groups → AUC near 0.99. The distributions barely overlap. Even a rough threshold gives very high sensitivity and specificity. This would be an almost-perfect biomarker.'
+    obj: 'Understand what a high-performing diagnostic test looks like — wide separation, minimal overlap, AUC near 1.',
+    steps: [
+      'Set separation to 3.5. The two distributions barely overlap — AUC ≈ 0.99.',
+      'Move the threshold slider left and right. Even large threshold shifts barely change sensitivity or specificity.',
+      'This is what you would see with a troponin assay in acute MI: clear biochemical separation between groups.',
+      'Note the Youden optimal threshold — it sits exactly between the two peaks.'
+    ],
+    insight: 'When AUC > 0.95, almost any threshold gives good performance. Clinical focus shifts to choosing the right trade-off between sensitivity and specificity for the clinical question.'
   },
   {
-    label: '2. Poor test',
+    title: 'Poor test',
     sep: 0.8, sdH: 1.0, sdD: 1.0, prev: 20, thresh: 0.4,
-    desc: 'Small separation → heavy overlap → AUC ≈ 0.71. Many false positives and false negatives regardless of where you set the threshold. The ROC curve barely rises above the diagonal. Consider combining with another marker.'
+    obj: 'Understand why heavy distribution overlap destroys diagnostic accuracy regardless of the threshold you choose.',
+    steps: [
+      'Separation = 0.8. The distributions overlap almost completely — AUC ≈ 0.71.',
+      'Move the threshold through its full range. Watch that you can never get both sensitivity AND specificity above ~70% simultaneously.',
+      'The ROC curve barely rises above the diagonal — the test performs only slightly better than chance.',
+      'Consider combining this marker with another to improve discrimination.'
+    ],
+    insight: 'A test with AUC < 0.75 rarely justifies standalone clinical use. The critical question is always: what is the clinical cost of false positives vs false negatives for THIS condition?'
   },
   {
-    label: '3. Sens/Spec trade-off',
+    title: 'Sens/Spec trade-off',
     sep: 2.0, sdH: 1.0, sdD: 1.0, prev: 20, thresh: 1.0,
-    desc: 'Drag the threshold slider left and right. Watch sensitivity and specificity move in opposite directions on the chart. Moving the threshold left catches more disease cases (higher sensitivity) but creates more false alarms (lower specificity). There is no free lunch.'
+    obj: 'See how moving the threshold creates a direct trade-off between sensitivity and specificity — and understand when to favour each.',
+    steps: [
+      'Start with the threshold at 1.0 and note the sens/spec values.',
+      'Drag the threshold left — sensitivity rises (catches more disease) but specificity falls (more false alarms).',
+      'Drag right — specificity rises but sensitivity falls.',
+      'Ask: for a life-threatening disease, which direction do you move the threshold? For a screening test vs a confirmatory test?'
+    ],
+    insight: 'There is no free lunch: every gain in sensitivity costs specificity and vice versa. The Youden index (sensitivity + specificity − 1) marks the threshold where their combined performance is maximised.'
   },
   {
-    label: '4. Prevalence effect',
+    title: 'Prevalence effect',
     sep: 2.5, sdH: 1.0, sdD: 1.0, prev: 2, thresh: 1.25,
-    desc: 'Prevalence = 2% (rare disease). Even with AUC ≈ 0.94, the PPV is low — most positive results are false positives. Now increase prevalence to 40% and watch PPV climb dramatically. PPV and NPV depend heavily on pre-test probability, not just test performance.'
+    obj: 'Understand why the same test has very different predictive values at different disease prevalences.',
+    steps: [
+      'Start with prevalence = 2%. Note the PPV — it is low despite reasonable AUC.',
+      'Gradually increase prevalence to 40%. Watch PPV climb dramatically while NPV falls slightly.',
+      'This is Bayes\' theorem in action: a positive result means more when disease is common.',
+      'Clinical example: troponin in a chest pain patient (high pre-test probability) vs general population screening (very low prevalence).'
+    ],
+    insight: 'Sensitivity and specificity are properties of the test. PPV and NPV are properties of the test AND the population. Never report predictive values without stating the prevalence used.'
   },
   {
-    label: '5. Asymmetric SDs',
+    title: 'Asymmetric SDs',
     sep: 2.0, sdH: 0.6, sdD: 1.8, prev: 20, thresh: 1.0,
-    desc: 'The disease group has much greater variability (σ_D = 1.8 vs σ_H = 0.6). This creates an asymmetric distribution: many diseased patients cluster near healthy values. The optimal cut-off shifts differently than with equal SDs. This is common with heterogeneous disease populations.'
+    obj: 'Explore how different variability in healthy vs diseased populations changes the shape of the ROC curve and optimal cut-off.',
+    steps: [
+      'Set σH = 0.6 and σD = 1.8. The disease group is much more spread out.',
+      'Notice the asymmetric ROC curve — the optimal threshold shifts relative to equal-SD scenarios.',
+      'This is common in real biomarkers: diseased patients are heterogeneous (different disease severity), while healthy subjects are more uniform.',
+      'Compare the Youden threshold here vs Exercise 1 — which direction does it shift?'
+    ],
+    insight: 'Real disease biomarkers rarely have equal variance in the two groups. When the diseased population is more variable (higher σD), some diseased patients cluster close to healthy values — limiting the achievable sensitivity at any threshold.'
   },
 ];
 
@@ -502,26 +617,38 @@ function update() {
   });
 }
 
-// Build exercises
-const tabsEl = document.getElementById('exTabs');
-const descEl = document.getElementById('exDesc');
-exercises.forEach((ex, i) => {
-  const btn = document.createElement('button');
-  btn.className = 'ex-tab';
-  btn.textContent = ex.label;
-  btn.onclick = () => {
-    document.querySelectorAll('.ex-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    descEl.textContent = ex.desc;
-    document.getElementById('sepSlider').value   = ex.sep;
-    document.getElementById('sdHSlider').value   = ex.sdH;
-    document.getElementById('sdDSlider').value   = ex.sdD;
-    document.getElementById('prevSlider').value  = ex.prev;
-    document.getElementById('threshSlider').value = ex.thresh;
-    update();
-  };
-  tabsEl.appendChild(btn);
-});
+function loadExercise(i) {
+  const ex = exercises[i];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
+  const card = document.getElementById('exCard' + i);
+  if (card) card.classList.add('active');
+
+  document.getElementById('sepSlider').value    = ex.sep;
+  document.getElementById('sdHSlider').value    = ex.sdH;
+  document.getElementById('sdDSlider').value    = ex.sdD;
+  document.getElementById('prevSlider').value   = ex.prev;
+  document.getElementById('threshSlider').value = ex.thresh;
+
+  const stepsHtml = ex.steps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+  const instr = document.getElementById('exInstructions');
+  instr.innerHTML =
+    '<b>Exercise ' + (i + 1) + ': ' + ex.title + '</b><br><br>' +
+    '<b>Learning objective:</b> ' + ex.obj + '<br><br>' +
+    '<ol>' + stepsHtml + '</ol>' +
+    '<b>Key insight:</b> ' + ex.insight;
+  instr.classList.add('visible');
+
+  update();
+}
+
+function toggleExercises() {
+  const toggle = document.getElementById('exToggle');
+  const panel  = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
 
 update();
 </script>

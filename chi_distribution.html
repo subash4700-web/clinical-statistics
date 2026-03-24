@@ -1,322 +1,621 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Chi-Square Distribution Explorer</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding the Chi-Square Distribution</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
-<link rel="stylesheet" href="assets/css/components.css">
+    /* PAGE HEADER */
+    .page-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1565c0 60%, #1976d2 100%);
+      color: white; padding: 20px 28px 18px;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p  { margin: 0; font-size: 13px; opacity: .78; line-height: 1.5; }
 
-<style>
-body { background:#fff; }
+    /* SHELL */
+    .shell {
+      display: flex;
+      height: calc(100vh - 74px - 320px);
+      min-height: 360px;
+    }
 
-.wrapper {
-  display:grid;
-  grid-template-columns: 420px 1fr;
-  min-height:100vh;
-}
+    /* LEFT PANEL */
+    .left-panel {
+      width: 300px; min-width: 300px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
 
-.controls {
-  padding:20px;
-  border-right:2px solid #eee;
-}
+    .ctrl-group { margin-bottom: 16px; }
+    .ctrl-group > .ctrl-label {
+      display: block; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: #374151; margin-bottom: 6px;
+    }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #1565c0; cursor: pointer; }
+    .ctrl-val {
+      font-size: 13px; font-weight: 700; color: #1565c0;
+      min-width: 48px; text-align: right;
+    }
 
-.chart-area {
-  padding:20px;
-}
+    .section-label {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em; color: #9ca3af; margin: 18px 0 8px;
+    }
 
-label { font-weight:600; margin-top:10px; display:block; }
-input, select { width:100%; padding:6px; margin-bottom:10px; }
+    /* Mode toggle buttons */
+    .mode-btns { display: flex; gap: 6px; margin-bottom: 4px; }
+    .mode-btn {
+      flex: 1; padding: 7px 6px; border-radius: 8px; font-size: 12px;
+      font-weight: 700; cursor: pointer; border: 1px solid #d1d5db;
+      background: #f9fafb; color: #374151; transition: all .15s;
+      font-family: inherit;
+    }
+    .mode-btn.active { background: #1565c0; color: white; border-color: #1565c0; }
 
-.result {
-  background:#f3f3f3;
-  padding:12px;
-  border-radius:8px;
-  font-weight:600;
-  line-height:1.4;
-}
+    /* Compare toggle */
+    .compare-toggle {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px;
+    }
+    .compare-toggle input[type=checkbox] { accent-color: #1565c0; width: 15px; height: 15px; cursor: pointer; }
+    .compare-toggle span { font-size: 12px; font-weight: 700; color: #374151; cursor: pointer; }
 
-canvas {
-  width:100% !important;
-  height:75vh !important;
-}
-</style>
+    /* Result badge */
+    .result-badge {
+      background: #eff6ff; border: 2px solid #bfdbfe;
+      border-radius: 12px; padding: 12px 14px; margin-top: 4px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .result-badge .rb-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #1565c0; margin-bottom: 2px; }
+    .result-badge .rb-val   { font-size: 32px; font-weight: 900; color: #1e3a8a; line-height: 1.1; }
+    .result-badge .rb-sub   { font-size: 11px; color: #3b82f6; margin-top: 3px; text-align: center; }
+
+    .p-badge {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 10px; padding: 9px 12px; margin-top: 8px;
+      font-size: 12px; color: #14532d;
+    }
+    .p-badge b { color: #166534; }
+
+    /* Insight box */
+    .insight-box {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 10px; padding: 11px 13px;
+      font-size: 12px; line-height: 1.7; color: #1e3a8a;
+      margin-top: 8px;
+    }
+    .insight-box b { color: #1565c0; }
+
+    /* RIGHT PANEL */
+    .right-panel {
+      flex: 1; display: flex; flex-direction: column;
+      background: #f8fafc; overflow: hidden;
+    }
+    .chart-wrap {
+      flex: 1; position: relative; padding: 14px 18px 10px;
+      min-height: 0;
+    }
+    .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+    /* EXERCISES SECTION */
+    .exercises {
+      background: white; border-top: 1px solid #e5e7eb;
+      padding: 16px 22px 20px;
+    }
+    .exercises-hd {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em; color: #9ca3af; margin-bottom: 12px;
+    }
+    .ex-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    }
+    .ex-card {
+      background: #fff; border: 2px solid #e5e7eb; border-radius: 12px;
+      padding: 14px; cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      display: flex; flex-direction: column;
+    }
+    .ex-card:hover  { border-color: #93c5fd; box-shadow: 0 2px 10px rgba(21,101,192,.1); }
+    .ex-card.active { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.12); }
+    .ex-num   { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 5px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #1e3a8a; margin-bottom: 6px; line-height: 1.3; }
+    .ex-obj   { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 10px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .ex-param  { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn {
+      width: 100%; padding: 7px; background: #1565c0; color: #fff;
+      border: none; border-radius: 7px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .ex-btn:hover { opacity: .88; }
+
+    @media (max-width: 1100px) { .ex-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 780px)  { .shell { flex-direction: column; height: auto; }
+                                  .left-panel { width: 100%; min-width: 0; }
+                                  .ex-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .ex-instructions { background:#f8faff; border:1px solid #c7d7fd; border-radius:10px; padding:14px 16px; margin-top:12px; font-size:13px; line-height:1.7; color:#1e3a5f; display:none; }
+    .ex-instructions.visible { display:block; }
+    .ex-instructions b { color:#1e40af; }
+    .ex-instructions ol { margin:8px 0 0 16px; padding:0; }
+    .ex-instructions li { margin-bottom:5px; }
+  </style>
 </head>
-
 <body>
 
-<div class="wrapper">
-
-<div class="controls">
-
-<h2>Chi-Square Distribution Explorer</h2>
-
-<label>Mode</label>
-<select id="mode">
-  <option value="alpha">α → Critical Value</option>
-  <option value="chisq">χ² → p-value</option>
-</select>
-
-<label>Degrees of Freedom (df)</label>
-<input type="range" id="dfSlider" min="1" max="50" value="5">
-<input type="number" id="df" value="5" min="1" max="200">
-
-<hr>
-
-<div id="alphaBlock">
-  <label>α (Right Tail)</label>
-  <input type="range" id="alphaSlider" min="0.001" max="0.2" step="0.001" value="0.05">
-  <input type="number" id="alpha" value="0.05" step="0.001">
-  <div class="small">Right tail: P(χ² ≥ χ²<sub>crit</sub>) = α</div>
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1>Understanding the Chi-Square Distribution</h1>
+  <p>Explore critical values, p-values, and how degrees of freedom shape the chi-square distribution — used in contingency tables and goodness-of-fit tests.</p>
 </div>
 
-<div id="chisqBlock" style="display:none;">
-  <label>χ² Value</label>
-  <input type="range" id="chisqSlider" min="0.1" max="40" step="0.1" value="10">
-  <input type="number" id="chisq" value="10" step="0.1">
+<!-- EXERCISES -->
+<div class="exercises">
+  <div class="exercises-hd">Guided Exercises</div>
+  <div class="ex-grid" id="exGrid"></div>
+  <div class="ex-instructions" id="exInstructions"></div>
 </div>
 
-<hr>
+<div class="shell">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
 
-<label>
-  <input type="checkbox" id="compare">
-  Compare second df
-</label>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Mode</span>
+      <div class="mode-btns">
+        <button class="mode-btn active" id="btnAlpha" onclick="setMode('alpha')">&#945; &#8594; Critical Value</button>
+        <button class="mode-btn"        id="btnChisq" onclick="setMode('chisq')">&#967;&#178; &#8594; p-value</button>
+      </div>
+    </div>
 
-<div id="compareBlock" style="display:none;">
-  <label>Second df</label>
-  <input type="range" id="df2Slider" min="1" max="50" value="10">
-  <input type="number" id="df2" value="10">
-</div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Degrees of Freedom (df)</span>
+      <div class="ctrl-row">
+        <input type="range" id="dfSlider" min="1" max="50" step="1" value="5" oninput="syncDF(this.value); draw();">
+        <span class="ctrl-val" id="dfVal">5</span>
+      </div>
+    </div>
 
-<hr>
+    <!-- Alpha block -->
+    <div id="alphaBlock">
+      <div class="ctrl-group">
+        <span class="ctrl-label">&#945; (right-tail probability)</span>
+        <div class="ctrl-row">
+          <input type="range" id="alphaSlider" min="0.001" max="0.20" step="0.001" value="0.05" oninput="syncAlpha(this.value); draw();">
+          <span class="ctrl-val" id="alphaVal">0.050</span>
+        </div>
+      </div>
+    </div>
 
-<label>Axis Font Size</label>
-<input type="range" id="fontSlider" min="10" max="26" value="16">
-<div id="fontValue" class="small">16 px</div>
+    <!-- Chi-sq block -->
+    <div id="chisqBlock" style="display:none;">
+      <div class="ctrl-group">
+        <span class="ctrl-label">&#967;&#178; observed value</span>
+        <div class="ctrl-row">
+          <input type="range" id="chisqSlider" min="0.1" max="60" step="0.1" value="8.0" oninput="syncChisq(this.value); draw();">
+          <span class="ctrl-val" id="chisqVal">8.0</span>
+        </div>
+      </div>
+    </div>
 
-<div class="result" id="output"></div>
+    <div class="section-label">Compare df</div>
+    <div class="ctrl-group">
+      <div class="compare-toggle">
+        <input type="checkbox" id="compareChk" onchange="toggleCompare(); draw();">
+        <span onclick="document.getElementById('compareChk').click()">Show second df curve</span>
+      </div>
+      <div id="compareBlock" style="display:none; margin-top:8px;">
+        <div class="ctrl-row">
+          <input type="range" id="df2Slider" min="1" max="50" step="1" value="10" oninput="syncDF2(this.value); draw();">
+          <span class="ctrl-val" id="df2Val">10</span>
+        </div>
+      </div>
+    </div>
 
-</div>
+    <div class="section-label">Result</div>
+    <div class="result-badge" id="resultBadge">
+      <div class="rb-label" id="rbLabel">Critical Value</div>
+      <div class="rb-val"   id="rbVal">—</div>
+      <div class="rb-sub"   id="rbSub">—</div>
+    </div>
 
-<div class="chart-area">
-<canvas id="chart"></canvas>
-</div>
+    <div class="p-badge" id="pBadge" style="display:none;"></div>
 
+    <div class="insight-box" id="insightBox">Adjust the controls to explore the chi-square distribution.</div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="chart-wrap">
+      <canvas id="chiChart"></canvas>
+    </div>
+  </div>
 </div>
 
 <script>
-const el = id => document.getElementById(id);
-let chart;
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentMode = 'alpha';
+let chiChart = null;
 
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function el(id) { return document.getElementById(id); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-function compute(){
-  const df = parseInt(el("df").value, 10) || 1;
-  const mode = el("mode").value;
+// ─── Sync helpers (no feedback loops) ────────────────────────────────────────
+function syncDF(v) {
+  v = clamp(parseInt(v, 10) || 1, 1, 50);
+  el('dfSlider').value = v;
+  el('dfVal').textContent = v;
+}
+function syncAlpha(v) {
+  v = clamp(parseFloat(v) || 0.05, 0.001, 0.20);
+  el('alphaSlider').value = v;
+  el('alphaVal').textContent = v.toFixed(3);
+}
+function syncChisq(v) {
+  v = Math.max(parseFloat(v) || 0.1, 0.01);
+  el('chisqSlider').value = Math.min(v, 60);
+  el('chisqVal').textContent = v.toFixed(1);
+}
+function syncDF2(v) {
+  v = clamp(parseInt(v, 10) || 1, 1, 50);
+  el('df2Slider').value = v;
+  el('df2Val').textContent = v;
+}
 
-  const alpha = clamp(parseFloat(el("alpha").value) || 0.05, 0.001, 0.2);
-  const chisq = Math.max(parseFloat(el("chisq").value) || 0.1, 0);
+// ─── Mode toggle ──────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  el('btnAlpha').classList.toggle('active', mode === 'alpha');
+  el('btnChisq').classList.toggle('active', mode === 'chisq');
+  el('alphaBlock').style.display = mode === 'alpha' ? 'block' : 'none';
+  el('chisqBlock').style.display = mode === 'chisq' ? 'block' : 'none';
+  draw();
+}
 
-  let crit = null;
-  let p = null;
+// ─── Compare toggle ───────────────────────────────────────────────────────────
+function toggleCompare() {
+  el('compareBlock').style.display = el('compareChk').checked ? 'block' : 'none';
+}
 
-  if(mode === "alpha"){
+// ─── Curve builders ───────────────────────────────────────────────────────────
+function buildCurve(df, maxX) {
+  const n = 600;
+  const step = maxX / n;
+  const pts = [];
+  for (let x = 0.001; x <= maxX; x += step) {
+    pts.push({ x, y: jStat.chisquare.pdf(x, df) });
+  }
+  return pts;
+}
+
+function buildShade(df, maxX, threshold) {
+  const n = 600;
+  const step = maxX / n;
+  const pts = [];
+  for (let x = 0.001; x <= maxX; x += step) {
+    pts.push({ x, y: x >= threshold ? jStat.chisquare.pdf(x, df) : 0 });
+  }
+  return pts;
+}
+
+// ─── Main draw ────────────────────────────────────────────────────────────────
+function draw() {
+  const df    = clamp(parseInt(el('dfSlider').value, 10) || 1, 1, 200);
+  const alpha = clamp(parseFloat(el('alphaSlider').value) || 0.05, 0.001, 0.20);
+  const chisq = Math.max(parseFloat(el('chisqSlider').value) || 0.1, 0.01);
+
+  // Compute
+  let crit, p, threshold;
+  if (currentMode === 'alpha') {
     crit = jStat.chisquare.inv(1 - alpha, df);
-    el("output").innerHTML =
-      `df = ${df}<br>
-       χ²<sub>crit</sub> = ${crit.toFixed(4)}<br>
-       Right-tail area (α) = ${alpha.toFixed(3)}`;
+    threshold = crit;
+    p = alpha;
   } else {
+    crit = null;
     p = 1 - jStat.chisquare.cdf(chisq, df);
-    el("output").innerHTML =
-      `df = ${df}<br>
-       χ² = ${chisq.toFixed(3)}<br>
-       p-value (right tail) = ${p.toFixed(6)}`;
+    threshold = chisq;
   }
 
-  return { df, mode, alpha, chisq, crit };
-}
+  // Dynamic x range
+  const maxX = Math.max(jStat.chisquare.inv(0.999, df), threshold * 1.15, 5);
 
-function buildCurve(df, maxX){
-  const step = maxX / 700;
-  const curve = [];
-  for(let x = 0.0001; x <= maxX; x += step){
-    curve.push({ x, y: jStat.chisquare.pdf(x, df) });
+  // Update result badge
+  if (currentMode === 'alpha') {
+    el('rbLabel').textContent = 'Critical Value';
+    el('rbVal').textContent   = crit.toFixed(3);
+    el('rbSub').textContent   = `P(\u03c7\u00b2 \u2265 ${crit.toFixed(2)}) = \u03b1 = ${alpha.toFixed(3)}`;
+    el('pBadge').style.display = 'none';
+  } else {
+    el('rbLabel').textContent = 'p-value (right tail)';
+    el('rbVal').textContent   = p < 0.0001 ? '< 0.0001' : p.toFixed(4);
+    el('rbSub').textContent   = `\u03c7\u00b2 = ${chisq.toFixed(2)}, df = ${df}`;
+    const sig = p < 0.05;
+    el('pBadge').style.display = 'block';
+    el('pBadge').innerHTML = sig
+      ? `<b>Significant at \u03b1 = 0.05.</b> The observed \u03c7\u00b2 exceeds the critical value.`
+      : `<b>Not significant at \u03b1 = 0.05.</b> The observed \u03c7\u00b2 is below the critical value (${jStat.chisquare.inv(0.95, df).toFixed(2)}).`;
   }
-  return curve;
-}
 
-function buildShade(df, maxX, threshold){
-  const step = maxX / 700;
-  const shade = [];
-  for(let x = 0.0001; x <= maxX; x += step){
-    const y = jStat.chisquare.pdf(x, df);
-    shade.push({ x, y: (x >= threshold) ? y : 0 });
-  }
-  return shade;
-}
+  // Update insight
+  updateInsight(df, alpha, crit, chisq, p);
 
-function draw(){
-  const res = compute();
-
-  // Dynamic x-range: show most of the mass
-  const maxX = jStat.chisquare.inv(0.999, res.df);
-
-  const curveA = buildCurve(res.df, maxX);
-
-  const threshold = (res.mode === "alpha") ? res.crit : res.chisq;
-  const shadeA = buildShade(res.df, maxX, threshold);
+  // Build datasets
+  const mainCurve = buildCurve(df, maxX);
+  const shadePts  = buildShade(df, maxX, threshold);
 
   const datasets = [
     {
-      label: `χ²(df=${res.df})`,
-      data: curveA,
-      borderColor: "#1976d2",
-      borderWidth: 3,
+      label: `\u03c7\u00b2(df=${df})`,
+      data: mainCurve,
+      borderColor: '#1565c0',
+      borderWidth: 2.5,
+      backgroundColor: 'rgba(21,101,192,0.06)',
+      fill: true,
       pointRadius: 0,
-      fill: false
+      tension: 0.3,
+      parsing: false,
     },
     {
-      label: "Right tail",
-      data: shadeA,
-      backgroundColor: "rgba(255,0,0,0.30)",
-      borderColor: "transparent",
+      label: currentMode === 'alpha' ? `Right tail (\u03b1 = ${alpha.toFixed(3)})` : `p = ${p < 0.0001 ? '< 0.0001' : p.toFixed(4)}`,
+      data: shadePts,
+      backgroundColor: 'rgba(220,38,38,0.28)',
+      borderColor: 'transparent',
       pointRadius: 0,
-      fill: true
+      fill: true,
+      tension: 0.3,
+      parsing: false,
     }
   ];
 
+  // Threshold annotation line (manual via extra dataset)
+  const threshLine = [];
+  const maxY = Math.max(...mainCurve.map(p => p.y)) * 1.12;
+  for (let y = 0; y <= maxY; y += maxY / 40) {
+    threshLine.push({ x: threshold, y });
+  }
+  datasets.push({
+    label: currentMode === 'alpha' ? `\u03c7\u00b2\u209c = ${crit.toFixed(2)}` : `\u03c7\u00b2 = ${chisq.toFixed(2)}`,
+    data: threshLine,
+    borderColor: '#dc2626',
+    borderWidth: 2,
+    borderDash: [6, 4],
+    pointRadius: 0,
+    fill: false,
+    parsing: false,
+    tension: 0,
+  });
+
   // Optional comparison curve
-  if(el("compare").checked){
-    const df2 = parseInt(el("df2").value, 10) || 1;
-    const curveB = buildCurve(df2, maxX);
+  if (el('compareChk').checked) {
+    const df2 = clamp(parseInt(el('df2Slider').value, 10) || 1, 1, 200);
+    const curve2 = buildCurve(df2, maxX);
     datasets.push({
-      label: `χ²(df=${df2})`,
-      data: curveB,
-      borderColor: "#555",
+      label: `\u03c7\u00b2(df=${df2}) — compare`,
+      data: curve2,
+      borderColor: '#059669',
       borderWidth: 2,
+      backgroundColor: 'rgba(5,150,105,0.05)',
+      fill: true,
       pointRadius: 0,
-      fill: false
+      tension: 0.3,
+      parsing: false,
+      borderDash: [6, 3],
     });
   }
 
-  chart.data.datasets = datasets;
-  chart.options.scales.x.min = 0;
-  chart.options.scales.x.max = maxX;
-  chart.update();
-}
+  // Title text
+  let titleText;
+  if (currentMode === 'alpha') {
+    titleText = `\u03c7\u00b2(df=${df})  |  \u03b1 = ${alpha.toFixed(3)}  |  Critical value = ${crit.toFixed(3)}`;
+  } else {
+    titleText = `\u03c7\u00b2(df=${df})  |  Observed \u03c7\u00b2 = ${chisq.toFixed(2)}  |  p = ${p < 0.0001 ? '< 0.0001' : p.toFixed(4)}`;
+  }
 
-function init(){
-  const ctx = el("chart").getContext("2d");
-  chart = new Chart(ctx, {
-    type: "line",
-    data: { datasets: [] },
+  // Draw chart
+  if (chiChart) chiChart.destroy();
+  chiChart = new Chart(el('chiChart'), {
+    type: 'scatter',
+    data: { datasets },
     options: {
       animation: false,
-      plugins: { legend: { display: true } },
+      responsive: true,
+      maintainAspectRatio: false,
+      showLine: true,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 12, font: { size: 11 }, padding: 10 }
+        },
+        title: {
+          display: true,
+          text: titleText,
+          font: { size: 11, weight: 'bold' },
+          color: '#374151',
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `\u03c7\u00b2 = ${ctx.parsed.x.toFixed(2)}, density = ${ctx.parsed.y.toFixed(4)}`
+          }
+        }
+      },
       scales: {
-        x: { type: "linear", title: { display: true, text: "χ² values" } },
-        y: { display: false }
+        x: {
+          type: 'linear',
+          min: 0,
+          max: maxX,
+          title: { display: true, text: '\u03c7\u00b2 value', font: { size: 11 } },
+          grid: { color: '#f3f4f6' },
+          ticks: { maxTicksLimit: 10, font: { size: 10 } }
+        },
+        y: {
+          display: true,
+          title: { display: true, text: 'Probability density', font: { size: 11 } },
+          grid: { color: '#f3f4f6' },
+          ticks: { maxTicksLimit: 6, font: { size: 10 } }
+        }
       }
     }
   });
 }
 
-/* --- Mode toggle --- */
-function updateModeUI(){
-  const mode = el("mode").value;
-  el("alphaBlock").style.display = (mode === "alpha") ? "block" : "none";
-  el("chisqBlock").style.display = (mode === "chisq") ? "block" : "none";
+// ─── Insight text ─────────────────────────────────────────────────────────────
+function updateInsight(df, alpha, crit, chisq, p) {
+  let msg = '';
+  if (currentMode === 'alpha') {
+    msg = `<b>\u03c7\u00b2(df=${df}).</b> Critical value = <b>${crit.toFixed(2)}</b> — chi-square statistics above this give p < \u03b1 = ${alpha.toFixed(3)}. `;
+    if (df === 1)  msg += 'df = 1 is the most common case, used in 2\u00d72 contingency tables. ';
+    if (df >= 10)  msg += 'As df increases, the distribution shifts right and becomes more symmetric. ';
+    if (alpha <= 0.01) msg += 'At \u03b1 = 0.01, you require stronger evidence to reject the null hypothesis. ';
+  } else {
+    const sig = p < 0.05;
+    const critAt05 = jStat.chisquare.inv(0.95, df);
+    msg = `<b>\u03c7\u00b2(df=${df}).</b> \u03c7\u00b2 = ${chisq.toFixed(2)} gives <b>p = ${p < 0.0001 ? '< 0.0001' : p.toFixed(4)}</b>. `;
+    if (sig) {
+      msg += `<b>Significant at \u03b1 = 0.05.</b> The shaded right-tail area represents the probability of observing this result or larger by chance. `;
+    } else {
+      msg += `<b>Not significant at \u03b1 = 0.05.</b> The critical value is ${critAt05.toFixed(2)} — your statistic does not reach it. `;
+    }
+    if (p < 0.001) msg += 'This result is highly significant (p < 0.001). ';
+  }
+  el('insightBox').innerHTML = msg;
 }
 
-/* --- Compare toggle --- */
-function updateCompareUI(){
-  el("compareBlock").style.display = el("compare").checked ? "block" : "none";
+// ─── Exercises ────────────────────────────────────────────────────────────────
+const exercises = [
+  {
+    num: 'Exercise 1',
+    title: '2\u00d72 contingency table',
+    obj: 'Chi-square with df = 1 is the most common case — comparing two proportions. Critical value = 3.84. Any \u03c7\u00b2 \u2265 3.84 gives p < 0.05.',
+    params: ['df = 1', '\u03b1 = 0.05'],
+    mode: 'alpha', df: 1, alpha: 0.05, chisq: 8.0, compare: false, df2: 10,
+    instructions:
+      '<b>Learning objective:</b> Understand the most common chi-square test — the 2×2 contingency table — and what the critical value of 3.84 means.<br><br><ol>' +
+      '<li>The shaded right-tail area represents α = 0.05 — the rejection region.</li>' +
+      '<li>Critical value = 3.84. Any χ² ≥ 3.84 gives p &lt; 0.05.</li>' +
+      '<li>This is the standard test for comparing two proportions (e.g. positive rate in two groups).</li>' +
+      '<li>Try entering χ² = 3.84 in the χ² input field — confirm p = exactly 0.05.</li>' +
+      '</ol><b>Key insight:</b> χ² = 3.84 is one of the most important thresholds in statistics. It is the boundary between "significant" and "not significant" for any comparison of two proportions at the 5% level.',
+  },
+  {
+    num: 'Exercise 2',
+    title: 'Goodness of fit (6 groups)',
+    obj: 'Testing whether 6 blood groups match expected proportions. df = 6 \u2212 1 = 5, critical value = 11.07. The distribution shifts right as df increases.',
+    params: ['df = 5', '\u03b1 = 0.05'],
+    mode: 'alpha', df: 5, alpha: 0.05, chisq: 8.0, compare: false, df2: 10,
+    instructions:
+      '<b>Learning objective:</b> See how increasing degrees of freedom shifts the chi-square distribution rightward and raises the critical value.<br><br><ol>' +
+      '<li>With df = 5 (6 groups − 1), the distribution peaks further right and the critical value is 11.07.</li>' +
+      '<li>Compare with Exercise 1 (df = 1, critical = 3.84). More categories = harder to reach significance.</li>' +
+      '<li>This is a goodness-of-fit test: do observed blood group frequencies match expected proportions?</li>' +
+      '<li>Try changing df to 1, 3, 10 — watch how the shape and critical value change.</li>' +
+      '</ol><b>Key insight:</b> In goodness-of-fit tests, df = number of categories − 1. Each additional category adds one degree of freedom and raises the critical threshold, requiring a larger overall deviation to declare significance.',
+  },
+  {
+    num: 'Exercise 3',
+    title: 'Chi-square \u2192 p-value',
+    obj: '\u03c7\u00b2 = 8.0 with df = 3 gives p \u2248 0.046. Just significant at \u03b1 = 0.05. Understand what the shaded right-tail area represents.',
+    params: ['df = 3', '\u03c7\u00b2 = 8.0'],
+    mode: 'chisq', df: 3, alpha: 0.05, chisq: 8.0, compare: false, df2: 10,
+    instructions:
+      '<b>Learning objective:</b> Read a chi-square statistic and find the corresponding p-value from the distribution.<br><br><ol>' +
+      '<li>χ² = 8.0 with df = 3. The shaded area to the right shows the p-value.</li>' +
+      '<li>p ≈ 0.046 — just below the 0.05 threshold. This result is significant, but only barely.</li>' +
+      '<li>Look at where 8.0 sits relative to the critical value (7.81). Only slightly beyond.</li>' +
+      '<li>Now try χ² = 7.0 — is it still significant? What is the p-value now?</li>' +
+      '</ol><b>Key insight:</b> The p-value from a chi-square test is the area to the RIGHT of the observed statistic. A result "just significant" at p = 0.046 should be interpreted cautiously — it is not strong evidence against H₀.',
+  },
+  {
+    num: 'Exercise 4',
+    title: 'Effect of df on shape',
+    obj: 'Toggle the comparison to see how increasing df shifts and reshapes the distribution. High df distributions approach symmetry.',
+    params: ['df A = 1', 'df B = 10', '\u03b1 = 0.05'],
+    mode: 'alpha', df: 1, alpha: 0.05, chisq: 8.0, compare: true, df2: 10,
+    instructions:
+      '<b>Learning objective:</b> Visually compare two chi-square distributions with different degrees of freedom to understand how df controls the shape.<br><br><ol>' +
+      '<li>Distribution A (df = 1, blue) is highly right-skewed. Distribution B (df = 10, orange) is more symmetric.</li>' +
+      '<li>As df increases, the distribution shifts right and approaches a normal shape.</li>' +
+      '<li>The critical values differ substantially — use the right df for every test.</li>' +
+      '<li>Toggle the comparison off and back on — notice how the peak and spread change.</li>' +
+      '</ol><b>Key insight:</b> The chi-square distribution shape depends entirely on df. With df = 1 it is J-shaped; with df ≥ 30 it is nearly normal. Always use the correct degrees of freedom when looking up critical values.',
+  },
+  {
+    num: 'Exercise 5',
+    title: 'Large chi-square',
+    obj: '\u03c7\u00b2 = 18.5 with df = 4 gives p < 0.001. Highly significant. The critical value at \u03b1 = 0.05 is only 9.49 — our statistic far exceeds it.',
+    params: ['df = 4', '\u03c7\u00b2 = 18.5'],
+    mode: 'chisq', df: 4, alpha: 0.05, chisq: 18.5, compare: false, df2: 10,
+    instructions:
+      '<b>Learning objective:</b> Interpret a highly significant chi-square result and understand what p < 0.001 means in practice.<br><br><ol>' +
+      '<li>χ² = 18.5 with df = 4. The critical value at α = 0.05 is only 9.49.</li>' +
+      '<li>Our statistic nearly doubles the critical value — p &lt; 0.001. Extremely strong evidence against H₀.</li>' +
+      '<li>In a contingency table, this means the association between the two variables is very unlikely to be due to chance.</li>' +
+      '<li>Try reducing χ² to 9.5 — notice how the p-value jumps from &lt;0.001 to exactly the boundary.</li>' +
+      '</ol><b>Key insight:</b> A very large chi-square (much greater than the critical value) means the result is highly unlikely under H₀. But statistical significance does not equal clinical importance — always report effect size (e.g., odds ratio) alongside the p-value.',
+  },
+];
+
+function loadExercise(idx) {
+  const ex = exercises[idx];
+
+  // Mark card active
+  document.querySelectorAll('.ex-card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+
+  // Apply settings
+  syncDF(ex.df);
+  syncAlpha(ex.alpha);
+  syncChisq(ex.chisq);
+  syncDF2(ex.df2);
+
+  el('compareChk').checked = ex.compare;
+  toggleCompare();
+
+  setMode(ex.mode);
+  // setMode calls draw() internally
+
+  const instrDiv = document.getElementById('exInstructions');
+  if (instrDiv && ex.instructions) {
+    instrDiv.innerHTML = '<b style="font-size:14px;color:#1e3a5f">Exercise ' + (idx+1) + ': ' + ex.title + '</b><br><br>' + ex.instructions;
+    instrDiv.classList.add('visible');
+  }
 }
 
-/* --- Wiring (ONE-WAY sync, no loops) --- */
-// df
-el("dfSlider").addEventListener("input", () => {
-  el("df").value = el("dfSlider").value;
-  draw();
-});
-el("df").addEventListener("input", () => {
-  const v = Math.max(parseInt(el("df").value || "1", 10), 1);
-  el("df").value = v;
-  el("dfSlider").value = clamp(v, parseInt(el("dfSlider").min,10), parseInt(el("dfSlider").max,10));
-  draw();
+// Build exercise cards
+const grid = el('exGrid');
+exercises.forEach((ex, i) => {
+  const card = document.createElement('div');
+  card.className = 'ex-card';
+  card.id = `exCard${i}`;
+
+  const paramsHtml = ex.params.map(p => `<span class="ex-param">${p}</span>`).join('');
+
+  card.innerHTML = `
+    <div class="ex-num">${ex.num}</div>
+    <div class="ex-title">${ex.title}</div>
+    <div class="ex-obj">${ex.obj}</div>
+    <div class="ex-params">${paramsHtml}</div>
+    <button class="ex-btn">Load exercise</button>
+  `;
+  card.addEventListener('click', () => loadExercise(i));
+  grid.appendChild(card);
 });
 
-// alpha
-el("alphaSlider").addEventListener("input", () => {
-  el("alpha").value = el("alphaSlider").value;
-  draw();
-});
-el("alpha").addEventListener("input", () => {
-  const v = clamp(parseFloat(el("alpha").value || "0.05"), 0.001, 0.2);
-  el("alpha").value = v.toFixed(3);
-  el("alphaSlider").value = v;
-  draw();
-});
-
-// chisq
-el("chisqSlider").addEventListener("input", () => {
-  el("chisq").value = el("chisqSlider").value;
-  draw();
-});
-el("chisq").addEventListener("input", () => {
-  const v = Math.max(parseFloat(el("chisq").value || "0.1"), 0);
-  el("chisq").value = v;
-  el("chisqSlider").value = v;
-  draw();
-});
-
-// df2 compare
-el("compare").addEventListener("change", () => {
-  updateCompareUI();
-  draw();
-});
-el("df2Slider").addEventListener("input", () => {
-  el("df2").value = el("df2Slider").value;
-  draw();
-});
-el("df2").addEventListener("input", () => {
-  const v = Math.max(parseInt(el("df2").value || "1", 10), 1);
-  el("df2").value = v;
-  el("df2Slider").value = clamp(v, parseInt(el("df2Slider").min,10), parseInt(el("df2Slider").max,10));
-  draw();
-});
-
-// mode
-el("mode").addEventListener("change", () => {
-  updateModeUI();
-  draw();
-});
-
-// font size
-el("fontSlider").addEventListener("input", () => {
-  const size = parseInt(el("fontSlider").value, 10);
-  el("fontValue").textContent = `${size} px`;
-  chart.options.scales.x.ticks = chart.options.scales.x.ticks || {};
-  chart.options.scales.x.ticks.font = { size };
-  chart.options.scales.x.title.font = { size: size + 2 };
-  chart.update();
-});
-
-init();
-updateModeUI();
-updateCompareUI();
-
-// Initial sync
-el("dfSlider").value = el("df").value;
-el("alphaSlider").value = el("alpha").value;
-el("chisqSlider").value = el("chisq").value;
-el("df2Slider").value = el("df2").value;
-
+// ─── Initial render ───────────────────────────────────────────────────────────
+syncDF(5);
+syncAlpha(0.05);
+syncChisq(8.0);
+syncDF2(10);
 draw();
 </script>
-
 </body>
 </html>

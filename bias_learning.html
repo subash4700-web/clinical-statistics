@@ -17,6 +17,9 @@
     .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
     h1{margin:0 0 3px;font-size:23px;letter-spacing:-.02em;}
     .subtitle{color:var(--muted);font-size:13px;margin:0 0 16px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
 
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
@@ -100,9 +103,11 @@
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page-header">
   <h1>📐 Understanding Bias</h1>
-  <p class="subtitle">Simulate systematic error — see how bias shifts results, how CRM and EQA detect it, and how it combines with imprecision to affect patients.</p>
+  <p>Simulate systematic error — see how bias shifts results, how CRM and EQA detect it, and how it combines with imprecision to affect patients.</p>
+</div>
+<div class="wrap">
 
   <!-- Exercises -->
   <div class="exercises">
@@ -679,45 +684,55 @@ function drawBudgetChart(absBiasPct, cvPct, taePct) {
 
 var EXERCISES = {
   1: {
+    title: 'No bias — method is correct',
     params: { trueMean: 5.0, biasPct: 0, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
-    instructions: '<b>Exercise 1 — No bias</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand what a method with zero systematic error looks like — and how imprecision alone affects the distribution of patient results.<br><br><ol>' +
       '<li>The distribution is centred exactly on the target value. Results are symmetrical.</li>' +
       '<li>Random error (imprecision) causes scatter, but on average the method is correct.</li>' +
       '<li>Try increasing CV% — watch the distribution widen. TE increases even though bias is zero.</li>' +
-      '<li>Key message: even without bias, high imprecision alone can cause total error to fail.</li></ol>'
+      '<li>Key message: even without bias, high imprecision alone can cause total error to fail.</li></ol>' +
+      '<b>Key insight:</b> A method with no bias but high imprecision still fails patients — random error alone can push individual results outside acceptable limits.'
   },
   2: {
+    title: 'Positive bias — results too high',
     params: { trueMean: 5.0, biasPct: 4, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
-    instructions: '<b>Exercise 2 — Positive bias</b><ol>' +
+    instructions: '<b>Learning objective:</b> See how systematic bias shifts the entire distribution of patient results and understand why it cannot be reduced by averaging repeated measurements.<br><br><ol>' +
       '<li>The entire distribution has shifted to the right — away from the true value.</li>' +
       '<li>Unlike random error, this shift does NOT cancel out. Every patient result is too high.</li>' +
       '<li>Notice the error budget chart: bias is consuming most of the TAE.</li>' +
-      '<li>Try reducing bias to 1% — does the method pass now? What does TE become?</li></ol>'
+      '<li>Try reducing bias to 1% — does the method pass now? What does TE become?</li></ol>' +
+      '<b>Key insight:</b> Bias affects every single patient result in the same direction. Unlike random error, it cannot be averaged away — it must be identified and corrected at the source.'
   },
   3: {
+    title: 'Bias passes — but TE fails',
     params: { trueMean: 5.0, biasPct: 2, cvPct: 3.0, nMeas: 40, taePct: 6, mode: 'crm', matrix: false, patientBias: 0 },
-    instructions: '<b>Exercise 3 — Bias passes, TE fails</b><ol>' +
+    instructions: '<b>Learning objective:</b> Understand why individual acceptance criteria for bias and CV are not sufficient — total error must always be calculated.<br><br><ol>' +
       '<li>Bias = 2% and CV = 3% — both might seem acceptable individually.</li>' +
       '<li>But TE = |2| + 1.65 × 3 = 6.95% — which exceeds TAE = 6%.</li>' +
       '<li>This is the most dangerous scenario: the method appears fine by individual criteria, but total error fails.</li>' +
-      '<li>Always evaluate TE, not bias and imprecision in isolation.</li></ol>'
+      '<li>Always evaluate TE, not bias and imprecision in isolation.</li></ol>' +
+      '<b>Key insight:</b> A method can pass individual bias and imprecision targets yet still fail total error. Always calculate TE = |Bias| + 1.65 × CV% and compare to TAE before accepting a method.'
   },
   4: {
+    title: 'EQA bias — matrix effect?',
     params: { trueMean: 5.0, biasPct: 5, cvPct: 2.0, nMeas: 40, taePct: 6, mode: 'eqa', matrix: true, patientBias: 0 },
-    instructions: '<b>Exercise 4 — EQA bias vs matrix effect</b><ol>' +
+    instructions: '<b>Learning objective:</b> Distinguish between true calibration bias and a matrix effect in external quality assurance materials.<br><br><ol>' +
       '<li>The EQA material shows +5% bias — but patient samples show 0% bias (native matrix).</li>' +
       '<li>This is a matrix effect: the lyophilized EQA material behaves differently on this analyser.</li>' +
       '<li>If you corrected the calibration based on EQA alone, you would introduce a real bias into patient results.</li>' +
       '<li>Try changing patient sample bias to +5% — now both materials agree. That is a real bias.</li>' +
-      '<li>Rule: always confirm EQA-detected bias with a patient-based comparison before acting.</li></ol>'
+      '<li>Rule: always confirm EQA-detected bias with a patient-based comparison before acting.</li></ol>' +
+      '<b>Key insight:</b> Matrix effects are a major source of false EQA failures. Before adjusting calibration based on EQA alone, confirm the bias is reproducible with patient-like native samples.'
   },
   5: {
+    title: 'Negative bias — underestimation risk',
     params: { trueMean: 5.0, biasPct: -3.5, cvPct: 1.5, nMeas: 40, taePct: 5, mode: 'crm', matrix: false, patientBias: 0 },
-    instructions: '<b>Exercise 5 — Negative bias</b><ol>' +
+    instructions: '<b>Learning objective:</b> Recognise that negative bias carries its own clinical risks and that the direction of systematic error matters — not just its magnitude.<br><br><ol>' +
       '<li>Results are consistently below the true value.</li>' +
       '<li>For some analytes, underestimation is clinically more dangerous: creatinine (missed kidney disease), troponin (missed MI), HbA1c (under-treated diabetes).</li>' +
       '<li>TE = 3.5 + 1.65 × 1.5 = 5.975% — just below TAE = 5%? Check the numbers.</li>' +
-      '<li>The direction of bias matters clinically, even if the numbers pass.</li></ol>'
+      '<li>The direction of bias matters clinically, even if the numbers pass.</li></ol>' +
+      '<b>Key insight:</b> Negative bias can be just as harmful as positive bias — for critical analytes, systematic underestimation delays diagnoses and treatment even when total error technically passes.'
   }
 };
 
@@ -744,7 +759,7 @@ function loadExercise(n) {
   document.getElementById('patientBiasPctVal').value = parseFloat(p.patientBias).toFixed(1);
 
   var instr = document.getElementById('exInstructions');
-  instr.innerHTML = ex.instructions;
+  instr.innerHTML = '<b style="font-size:14px;color:#134e4a">Exercise ' + n + ': ' + ex.title + '</b><br><br>' + ex.instructions;
   instr.classList.add('visible');
 
   simulate();
