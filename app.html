@@ -414,14 +414,18 @@
 
     #update-banner {
       display: none;
+      flex-direction: column;
+      background: #1e3a5f;
+      border-bottom: 1px solid #2563eb;
+      font-size: 13px;
+      color: #93c5fd;
+    }
+    #update-banner-top {
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      background: #1e3a5f;
-      border-bottom: 1px solid #2563eb;
       padding: 8px 18px;
-      font-size: 13px;
-      color: #93c5fd;
     }
     #update-banner a {
       color: #60a5fa;
@@ -439,6 +443,29 @@
       padding: 0 4px;
     }
     #update-banner button:hover { color: #d1d5db; }
+    #update-whats-new-panel {
+      display: none;
+      padding: 10px 18px 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: #162d4a;
+    }
+    #update-whats-new-panel.open { display: block; }
+    #update-whats-new-panel .uwn-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    #update-whats-new-panel .uwn-item:last-child { border-bottom: none; }
+    #update-whats-new-panel .uwn-icon { font-size: 15px; flex-shrink:0; margin-top:1px; }
+    #update-whats-new-panel .uwn-title { font-weight: 700; color: #bfdbfe; font-size: 12px; }
+    #update-whats-new-panel .uwn-detail { font-size: 11.5px; color: #7da8d4; margin-top: 1px; }
+    #update-whats-new-panel .uwn-download {
+      display: inline-block; margin-top: 10px;
+      background: #2563eb; color: #fff;
+      padding: 6px 16px; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+    }
+    #update-whats-new-panel .uwn-download:hover { background: #1d4ed8; }
 
     /* ── What's New modal ── */
     #whats-new-backdrop {
@@ -996,8 +1023,11 @@
       </div>
 
       <div id="update-banner">
-        <span id="update-banner-msg"></span>
-        <button onclick="document.getElementById('update-banner').style.display='none'" title="Dismiss">✕</button>
+        <div id="update-banner-top">
+          <span id="update-banner-msg"></span>
+          <button onclick="document.getElementById('update-banner').style.display='none'" title="Dismiss">✕</button>
+        </div>
+        <div id="update-whats-new-panel"></div>
       </div>
 
       <div class="workspace-content" id="contentArea">
@@ -2171,12 +2201,45 @@
       const isNewer = lM > cM || (lM === cM && lm > cm) || (lM === cM && lm === cm && lp > cp);
       if (isNewer) {
         const banner = document.getElementById('update-banner');
+        const release = CHANGELOG[latest];
+        const hasNotes = release && release.highlights && release.highlights.length;
+
+        // Build the top message
+        const whatsNewLink = hasNotes
+          ? ` &nbsp;·&nbsp; <a id="uwn-toggle" onclick="toggleUpdateWhatsNew('${latest}','${url}')">What's new ▾</a>`
+          : '';
         document.getElementById('update-banner-msg').innerHTML =
-          `A new version is available (v${latest}). <a onclick="window.appAPI.openExternal('${url}')">Download update</a>`;
+          `A new version is available (v${latest}). <a onclick="window.appAPI.openExternal('${url}')">Download update</a>${whatsNewLink}`;
+
         banner.style.display = 'flex';
       }
     } catch (e) { /* fail silently */ }
   })();
+
+  function toggleUpdateWhatsNew(version, url) {
+    const panel = document.getElementById('update-whats-new-panel');
+    const toggle = document.getElementById('uwn-toggle');
+    if (panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      if (toggle) toggle.innerHTML = "What's new ▾";
+      return;
+    }
+    // Build content
+    const release = CHANGELOG[version];
+    if (!release) return;
+    let html = release.highlights.map(h => `
+      <div class="uwn-item">
+        <div class="uwn-icon">${h.icon}</div>
+        <div>
+          <div class="uwn-title">${h.title}</div>
+          <div class="uwn-detail">${h.detail}</div>
+        </div>
+      </div>`).join('');
+    html += `<a class="uwn-download" onclick="window.appAPI.openExternal('${url}')">⬇ Download v${version}</a>`;
+    panel.innerHTML = html;
+    panel.classList.add('open');
+    if (toggle) toggle.innerHTML = "What's new ▴";
+  }
 
   // ── UNIVERSAL EXPORT ──────────────────────────────────────────────────────
 
