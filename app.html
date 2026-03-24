@@ -440,6 +440,63 @@
     }
     #update-banner button:hover { color: #d1d5db; }
 
+    /* ── What's New modal ── */
+    #whats-new-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 9000;
+      align-items: center; justify-content: center;
+    }
+    #whats-new-backdrop.open { display: flex; }
+    #whats-new-modal {
+      background: #fff; border-radius: 14px; width: 500px; max-width: 92vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.22); overflow: hidden;
+      animation: wnSlideIn .18s ease;
+    }
+    @keyframes wnSlideIn {
+      from { opacity:0; transform:translateY(-18px) scale(.97); }
+      to   { opacity:1; transform:none; }
+    }
+    #whats-new-modal .wn-header {
+      background: linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#2b6cb0 100%);
+      color: #fff; padding: 20px 22px 16px;
+    }
+    #whats-new-modal .wn-header h2 { margin: 0 0 4px; font-size: 18px; font-weight: 900; }
+    #whats-new-modal .wn-header p  { margin: 0; font-size: 12px; opacity: .78; }
+    #whats-new-modal .wn-body { padding: 18px 22px; }
+    #whats-new-modal .wn-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; line-height: 1.5;
+    }
+    #whats-new-modal .wn-item:last-child { border-bottom: none; }
+    #whats-new-modal .wn-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+    #whats-new-modal .wn-item b { display: block; color: #111827; margin-bottom: 1px; }
+    #whats-new-modal .wn-item span { color: #6b7280; font-size: 12px; }
+    #whats-new-modal .wn-expand {
+      background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 700;
+      color: #2563eb; padding: 4px 0 0; font-family: inherit; display: flex; align-items: center; gap: 4px;
+    }
+    #whats-new-modal .wn-expand:hover { color: #1d4ed8; }
+    #whats-new-modal .wn-extra { display: none; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+    #whats-new-modal .wn-extra.open { display: block; }
+    #whats-new-modal .wn-footer {
+      padding: 14px 22px; border-top: 1px solid #f3f4f6;
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+    #whats-new-modal .wn-btn-close {
+      background: #f3f4f6; border: none; border-radius: 8px; padding: 9px 18px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: #374151;
+    }
+    #whats-new-modal .wn-btn-got-it {
+      background: #1e3a5f; border: none; border-radius: 8px; padding: 9px 20px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: #fff;
+    }
+    #whats-new-modal .wn-btn-got-it:hover { background: #1e40af; }
+    .wn-trigger {
+      display: inline-block; font-size: 10px; font-weight: 700; color: #60a5fa;
+      cursor: pointer; margin-left: 6px; text-decoration: underline;
+    }
+    .wn-trigger:hover { color: #93c5fd; }
+
     .get-started {
       background: #1976d2;
       color: white;
@@ -747,7 +804,7 @@
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
       <h2 data-i18n="appTitle">Clinical Statistics</h2>
-      <div class="sidebar-version" id="appVersion">Version v1.0.0 (Build 0)</div>
+      <div class="sidebar-version" id="appVersion">Version v1.0.0 (Build 0)<span class="wn-trigger" id="wn-trigger" style="display:none" onclick="openWhatsNew()">What's new</span></div>
 
       <!-- Search -->
       <div class="search-wrap" id="searchWrap">
@@ -918,6 +975,23 @@
           <button class="export-btn export-btn-pdf" id="exportPdfBtn" style="display:none;" onclick="universalExportPDF()" title="Export to PDF">⬇ PDF</button>
           <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">🇩🇰 DA</button>
           <button class="info-toggle" onclick="toggleInfo()" data-i18n="ui.info">Info</button>
+        </div>
+      </div>
+
+      <!-- What's New Modal -->
+      <div id="whats-new-backdrop" onclick="if(event.target===this)closeWhatsNew()">
+        <div id="whats-new-modal">
+          <div class="wn-header">
+            <h2>What's new <span id="wn-version-badge" style="font-size:13px;font-weight:700;opacity:.85;"></span></h2>
+            <p>Here's what was added or improved in this release.</p>
+          </div>
+          <div class="wn-body" id="wn-body">
+            <!-- filled by JS -->
+          </div>
+          <div class="wn-footer">
+            <button class="wn-btn-close" onclick="closeWhatsNew()">Close</button>
+            <button class="wn-btn-got-it" onclick="closeWhatsNew()">Got it ✓</button>
+          </div>
         </div>
       </div>
 
@@ -1991,6 +2065,70 @@
 
   applyAppVersion();
   applyLanguage(currentLang);
+
+  // ── WHAT'S NEW ────────────────────────────────────────────────────────────
+
+  const CHANGELOG = {
+    '2.0.2': {
+      highlights: [
+        {
+          icon: '⚖️',
+          title: 'New tool: Total Error & Sigma',
+          detail: 'Calculate total error, sigma metric, and QC strategy from your Bias% and CV%. Includes EFLM allowable limits lookup, patient result distribution chart, error budget breakdown, and generate sample data.'
+        },
+        {
+          icon: '📈',
+          title: 'ROC & Diagnostic Performance — 3 new charts',
+          detail: 'Score distributions (disease vs healthy groups with live threshold line), sensitivity & specificity vs threshold, and predictive values vs prevalence. Plus a generate sample data section to simulate two groups instantly.'
+        },
+        {
+          icon: '📉',
+          title: 'Linear Regression — lollipop residuals',
+          detail: 'When "Show residual plot" is checked, vertical lines now connect each data point to its fitted value on the regression line — the same lollipop visualisation as in the learning tool.'
+        }
+      ]
+    }
+  };
+
+  function buildWhatsNewBody(version) {
+    const release = CHANGELOG[version];
+    if (!release) return '';
+    return release.highlights.map(item =>
+      `<div class="wn-item">
+        <div class="wn-icon">${item.icon}</div>
+        <div>
+          <b>${item.title}</b>
+          <span>${item.detail}</span>
+        </div>
+      </div>`
+    ).join('');
+  }
+
+  function openWhatsNew() {
+    const version = window.APP_META?.version || '';
+    document.getElementById('wn-version-badge').textContent = version ? 'v' + version : '';
+    document.getElementById('wn-body').innerHTML = buildWhatsNewBody(version);
+    document.getElementById('whats-new-backdrop').classList.add('open');
+  }
+
+  function closeWhatsNew() {
+    document.getElementById('whats-new-backdrop').classList.remove('open');
+    const version = window.APP_META?.version || '';
+    if (version) localStorage.setItem('lastSeenVersion', version);
+  }
+
+  // Show automatically if this version hasn't been seen yet
+  (function checkWhatsNew() {
+    const version = window.APP_META?.version || '';
+    if (!version || !CHANGELOG[version]) return;
+    const lastSeen = localStorage.getItem('lastSeenVersion') || '';
+    if (lastSeen !== version) {
+      document.getElementById('wn-trigger').style.display = 'inline';
+      setTimeout(openWhatsNew, 600);
+    } else {
+      document.getElementById('wn-trigger').style.display = 'inline';
+    }
+  })();
 
   // ── UPDATE CHECK ──────────────────────────────────────────────────────────
   (async function checkForUpdate() {
