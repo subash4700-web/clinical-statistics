@@ -331,6 +331,7 @@
           <select id="regressionMethod">
             <option value="ols">Ordinary Least Squares (OLS)</option>
             <option value="deming">Deming Regression</option>
+            <option value="pb">Passing-Bablok</option>
           </select>
         </div>
         <div>
@@ -1062,6 +1063,44 @@
                 const slope = num / den;
                 const intercept = meanY - slope * meanX;
                 return { slope, intercept };
+            } else if (method === 'pb') {
+                // Passing-Bablok regression (1983)
+                const slopes = [];
+                for (let i = 0; i < n; i++) {
+                    for (let j = i + 1; j < n; j++) {
+                        const dx = x[j] - x[i];
+                        if (Math.abs(dx) < 1e-10) continue;
+                        const s = (y[j] - y[i]) / dx;
+                        if (Math.abs(s + 1) < 1e-10) continue; // skip s = -1
+                        slopes.push(s);
+                    }
+                }
+                slopes.sort((a, b) => a - b);
+                const N = slopes.length;
+                const L = slopes.filter(s => s < -1).length;
+
+                // Median slope with L-shift
+                let slope;
+                if (N % 2 === 1) {
+                    slope = slopes[Math.floor(N / 2) + L];
+                } else {
+                    slope = (slopes[N / 2 - 1 + L] + slopes[N / 2 + L]) / 2;
+                }
+
+                // 95% CI for slope
+                const C = 1.96 * Math.sqrt(n * (n - 1) * (2 * n + 5) / 18);
+                const M1 = Math.round((N - C) / 2);
+                const M2 = N - M1 + 1;
+                const slopeLower = (M1 + L - 1 >= 0 && M1 + L - 1 < N) ? slopes[M1 + L - 1] : null;
+                const slopeUpper = (M2 + L - 1 >= 0 && M2 + L - 1 < N) ? slopes[M2 + L - 1] : null;
+
+                // Intercept = median(y - slope * x)
+                const arrMed = v => { const s = v.slice().sort((a,b)=>a-b); return s.length%2===1?s[(s.length-1)/2]:(s[s.length/2-1]+s[s.length/2])/2; };
+                const intercept = arrMed(x.map((xi, i) => y[i] - slope * xi));
+                const interceptLower = slopeUpper !== null ? arrMed(x.map((xi, i) => y[i] - slopeUpper * xi)) : null;
+                const interceptUpper = slopeLower !== null ? arrMed(x.map((xi, i) => y[i] - slopeLower * xi)) : null;
+
+                return { slope, intercept, slopeLower, slopeUpper, interceptLower, interceptUpper };
             } else {
                 const sxx = x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0) / (n - 1);
                 const syy = y.reduce((sum, yi) => sum + Math.pow(yi - meanY, 2), 0) / (n - 1);
@@ -1120,12 +1159,17 @@
             const spearmanRho = calculateSpearmanCorrelation(data);
 
             const cccStr = (ccc !== undefined && isFinite(ccc)) ? ccc.toFixed(4) : '—';
+            const methodLabel = method === 'ols' ? 'Ordinary Least Squares' : method === 'pb' ? 'Passing-Bablok' : 'Deming Regression (λ=' + lambda + ')';
+
+            const fmtCI = (lo, hi) => (lo !== null && hi !== null) ? ` <span style="font-size:11px;color:#6b7280;">(95% CI: ${lo.toFixed(4)} – ${hi.toFixed(4)})</span>` : '';
 
             const html = `
                 <div class="card">
                     <div class="section-title">Regression & Agreement</div>
                     <table><tbody>
-                        <tr><td><strong>Method</strong></td><td>${method === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression (λ=' + lambda + ')'}</td></tr>
+                        <tr><td><strong>Method</strong></td><td>${methodLabel}</td></tr>
+                        <tr><td><strong>Slope</strong></td><td>${regression.slope.toFixed(4)}${fmtCI(regression.slopeLower ?? null, regression.slopeUpper ?? null)}</td></tr>
+                        <tr><td><strong>Intercept</strong></td><td>${regression.intercept.toFixed(4)}${fmtCI(regression.interceptLower ?? null, regression.interceptUpper ?? null)}</td></tr>
                         <tr><td><strong>Regression Equation</strong></td><td>y = ${regression.slope.toFixed(4)}x + ${regression.intercept.toFixed(4)}</td></tr>
                         <tr><td><strong>R² (Coefficient of Determination)</strong></td><td>${rSquared.toFixed(4)}</td></tr>
                         <tr><td><strong>Spearman Correlation (ρ)</strong></td><td>${spearmanRho.toFixed(4)}</td></tr>
@@ -1560,7 +1604,7 @@
             
             const explanationText = document.getElementById('explanationTextXY').value;
             const regressionMethod = document.getElementById('regressionMethod').value;
-            const methodName = regressionMethod === 'ols' ? 'OLS' : 'Deming';
+            const methodName = regressionMethod === 'ols' ? 'OLS' : regressionMethod === 'pb' ? 'Passing-Bablok' : 'Deming';
 
             const datasets = [
                 {
@@ -2212,7 +2256,7 @@
                 });
                 const regSummary = [
                     ['Regression Analysis', ''],
-                    ['Method', regressionMethod === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression'],
+                    ['Method', regressionMethod === 'ols' ? 'Ordinary Least Squares' : regressionMethod === 'pb' ? 'Passing-Bablok' : 'Deming Regression'],
                     ['Slope', safeNum(regData.slope, 6)],
                     ['Intercept', safeNum(regData.intercept, 6)],
                     ['R-squared', safeNum(rSq, 6)],
@@ -2346,7 +2390,7 @@
                 const regressionData = performRegression(currentData, regressionMethod, parseFloat(document.getElementById('varianceRatio').value));
                 const rSquared = calculateRSquared(currentData, regressionData);
                 const spearmanRho = calculateSpearmanCorrelation(currentData);
-                [`Method: ${regressionMethod === 'ols' ? 'Ordinary Least Squares' : 'Deming Regression'}`, `Equation: y = ${regressionData.slope.toFixed(6)}x + ${regressionData.intercept.toFixed(6)}`, `R²: ${rSquared.toFixed(6)}`, `Spearman Correlation (ρ): ${spearmanRho.toFixed(6)}`].forEach(text => { pdf.text(text, margin, yPosition); yPosition += 6; });
+                [`Method: ${regressionMethod === 'ols' ? 'Ordinary Least Squares' : regressionMethod === 'pb' ? 'Passing-Bablok' : 'Deming Regression'}`, `Equation: y = ${regressionData.slope.toFixed(6)}x + ${regressionData.intercept.toFixed(6)}`, `R²: ${rSquared.toFixed(6)}`, `Spearman Correlation (ρ): ${spearmanRho.toFixed(6)}`].forEach(text => { pdf.text(text, margin, yPosition); yPosition += 6; });
                 
                 // Data table
                 pdf.addPage(); yPosition = margin;

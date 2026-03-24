@@ -104,7 +104,12 @@
       <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
       <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
       <li><a href="#sigma">The Sigma metric</a></li>
+      <li><a href="#ep05">EP05 — Precision validation protocol</a></li>
+      <li><a href="#ep15">EP15 — Precision verification protocol</a></li>
+      <li><a href="#ep09">EP09 — Method comparison and bias estimation</a></li>
+      <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
       <li><a href="#summary">Summary table</a></li>
+
     </ol>
   </div>
 
@@ -573,9 +578,199 @@
 
   <hr class="divider">
 
-  <!-- 13 -->
+  <!-- 15 -->
+  <div class="section" id="ep05">
+    <h2>15. EP05 — Precision Validation Protocol (CLSI EP05-A3)</h2>
+    <p>
+      CLSI EP05 defines the standard protocol for evaluating the precision of a quantitative measurement procedure.
+      Its purpose is to estimate <strong>repeatability (Sw)</strong> and <strong>intermediate precision (St)</strong>
+      under controlled, real-world conditions before a method is released for clinical use.
+    </p>
+
+    <h3>Study design</h3>
+    <p>The recommended design is <strong>2 levels × 2 replicates × 20 days</strong>:</p>
+    <ul>
+      <li><strong>2 concentration levels</strong> — typically a low-normal and a high-pathological concentration, ideally at clinical decision points</li>
+      <li><strong>2 replicates per run</strong> — measured in the same analytical run, back-to-back</li>
+      <li><strong>20 days</strong> — spread over at least 20 working days (not necessarily consecutive)</li>
+    </ul>
+    <p>This gives 40 measurements per level. A shorter design (5 days × 4 replicates) is allowed for verification studies (EP15).</p>
+
+    <h3>What is estimated</h3>
+    <ul>
+      <li><strong>Sw (within-run SD)</strong> — purely from the duplicate pairs within each run. Captures random error within a single analytical session</li>
+      <li><strong>Sb (between-run SD)</strong> — variation attributable to run-to-run differences (reagent lots, calibration drift, operator effects)</li>
+      <li><strong>St (total/intermediate precision SD)</strong> — combines within-run and between-run: St = √(Sw² + Sb²)</li>
+    </ul>
+    <div class="callout">
+      <b>Why 20 days?</b> Precision is estimated under routine conditions — including normal day-to-day sources of variation such as reagent changes, different operators, maintenance, and environmental drift. Fewer days underestimates this variation.
+    </div>
+
+    <h3>Acceptance criteria</h3>
+    <p>Compare your CV% against the allowable imprecision derived from your performance specification:</p>
+    <ul>
+      <li><strong>Biological variation (desirable)</strong>: allowable CV% ≤ 0.5 × CVi</li>
+      <li><strong>EFLM / manufacturer claim</strong>: stated CV% from the IFU or EFLM database</li>
+      <li><strong>Sigma-based</strong>: CV% ≤ (TAE − |Bias|) / desired sigma level</li>
+    </ul>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- 16 -->
+  <div class="section" id="ep15">
+    <h2>16. EP15 — Precision Verification Protocol (CLSI EP15-A3)</h2>
+    <p>
+      EP15 is a <strong>verification</strong> protocol — not a full evaluation. Its purpose is to confirm that
+      a commercially available method performs in your laboratory as the manufacturer has claimed.
+      It is shorter than EP05 and is the standard approach for clinical laboratories implementing
+      a new analyser or reagent system.
+    </p>
+
+    <h3>Validation vs Verification</h3>
+    <table>
+      <tr><th></th><th>Validation (EP05)</th><th>Verification (EP15)</th></tr>
+      <tr><td><strong>Purpose</strong></td><td>Establish performance from scratch</td><td>Confirm claimed performance in your lab</td></tr>
+      <tr><td><strong>Question asked</strong></td><td>"What is this method's precision?"</td><td>"Can we reproduce the manufacturer's precision?"</td></tr>
+      <tr><td><strong>Study design</strong></td><td>2 levels × 2 replicates × 20 days</td><td>2 levels × 3–5 replicates × 5 days</td></tr>
+      <tr><td><strong>Who does it</strong></td><td>Manufacturers, research labs</td><td>Clinical laboratories</td></tr>
+      <tr><td><strong>Prior data needed</strong></td><td>No</td><td>Yes — manufacturer's stated CV%</td></tr>
+      <tr><td><strong>Output</strong></td><td>New precision estimates + CI</td><td>Pass/fail vs stated specification</td></tr>
+    </table>
+
+    <h3>EP15 study design</h3>
+    <ul>
+      <li><strong>Minimum 2 concentration levels</strong> — low and high, ideally at clinical decision points</li>
+      <li><strong>3–5 replicates per run</strong></li>
+      <li><strong>5 days</strong> — spread over at least 5 working days</li>
+      <li>This gives a minimum of 15 measurements per level (5 days × 3 replicates)</li>
+    </ul>
+
+    <h3>Acceptance criterion</h3>
+    <p>
+      The observed CV% must be within the manufacturer's stated CV% claim, verified using a
+      <strong>chi-squared test</strong> on the ratio of observed variance to claimed variance:
+    </p>
+    <ul>
+      <li>If the upper 95% confidence limit of your observed CV% ≤ manufacturer's CV% → <strong>PASS</strong></li>
+      <li>If the upper limit exceeds the claim → <strong>FAIL</strong> — investigate before clinical release</li>
+    </ul>
+    <div class="callout">
+      <b>Practical note:</b> With only 15 measurements, the CI on your CV% is wide. A result that barely fails may still be acceptable — always evaluate the clinical impact alongside the statistical result. If the manufacturer's CV% is 2.0% and you observe 2.2%, the CI may overlap and the method may still be fit for purpose.
+    </div>
+    <div class="warn">
+      <b>EP15 does not replace EP05.</b> If no manufacturer claim exists, or if you are modifying the method, or if the method is developed in-house, a full validation (EP05 or equivalent) is required.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- 17 -->
+  <div class="section" id="ep09">
+    <h2>17. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
+    <p>
+      CLSI EP09 defines the standard protocol for comparing two measurement procedures using patient samples.
+      Its goal is to estimate <strong>systematic bias</strong> between methods and determine whether they are
+      clinically interchangeable — i.e., whether a new method can replace an existing one without affecting patient care.
+    </p>
+
+    <h3>Study design</h3>
+    <ul>
+      <li><strong>Minimum 40 patient samples</strong> — at least 40 paired results (some sources recommend 100 for robust regression)</li>
+      <li><strong>Span the full clinical measurement range</strong> — samples should cover low, normal, and high concentrations including clinical decision levels</li>
+      <li><strong>Native patient samples preferred</strong> — processed or stabilised materials may introduce matrix effects</li>
+      <li><strong>Both methods measured on the same day</strong> — ideally within a short time window to minimise pre-analytical differences</li>
+      <li><strong>Single measurement per sample per method</strong> — replicates are not required; EP09 uses sample-to-sample variation to assess bias, not within-sample precision</li>
+    </ul>
+
+    <h3>Statistical analysis</h3>
+    <p>EP09 recommends a two-stage approach:</p>
+    <ol>
+      <li><strong>Bland-Altman plot</strong> — visualise and quantify the magnitude and pattern of differences. Check for constant bias (horizontal band) vs proportional bias (differences increase with concentration)</li>
+      <li><strong>Regression analysis</strong> — Passing-Bablok regression is preferred (non-parametric, no distributional assumptions). Deming regression is acceptable when both methods have similar imprecision. OLS is not appropriate when both methods have random error</li>
+    </ol>
+
+    <h3>Acceptance criteria</h3>
+    <p>Define criteria <strong>before</strong> the study. A method passes when:</p>
+    <ul>
+      <li>Mean bias ≤ allowable bias (from biological variation or clinical requirement)</li>
+      <li>95% confidence interval of the bias lies entirely within ± allowable bias</li>
+      <li>Regression slope: 95% CI includes 1.0 (no proportional bias)</li>
+      <li>Regression intercept: 95% CI includes 0 (no constant bias)</li>
+      <li>Total Error (|bias| + 1.65 × SD of differences) ≤ TAE</li>
+    </ul>
+
+    <div class="warn">
+      <b>Correlation is not agreement.</b> A high Pearson r or R² does not mean the methods agree — it only means they track each other. Two methods can correlate perfectly yet show clinically unacceptable systematic differences. Always base your conclusion on Bland-Altman and bias assessment, not r alone.
+    </div>
+
+    <div class="callout">
+      <b>EP09 vs method comparison in general:</b> EP09 is specifically for patient sample comparisons. If you are comparing against a certified reference material (CRM), use EP15 (trueness verification) instead. EP09 is appropriate when both methods measure real patient samples under routine conditions.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- 18 -->
+  <div class="section" id="iso15189">
+    <h2>18. ISO 15189 — Validation and Verification Requirements</h2>
+    <p>
+      ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
+      accreditation standard for clinical laboratories. It requires that all measurement procedures
+      be evaluated for fitness for purpose before clinical use — but distinguishes clearly between
+      <strong>validation</strong> and <strong>verification</strong> depending on the type of method.
+    </p>
+
+    <h3>The core rule</h3>
+    <table>
+      <tr><th>Situation</th><th>Requirement</th><th>Typical protocol</th></tr>
+      <tr><td>Commercially available, used as intended by manufacturer</td><td><strong>Verification</strong></td><td>EP15 (precision) + bias check</td></tr>
+      <tr><td>Modified commercial method (different sample type, dilution, range)</td><td><strong>Validation</strong></td><td>EP05 + EP09 + full performance panel</td></tr>
+      <tr><td>In-house developed method</td><td><strong>Full validation</strong></td><td>EP05 + EP09 + linearity + interferences + reference interval</td></tr>
+      <tr><td>Method transferred from another laboratory</td><td><strong>Verification</strong></td><td>Confirm performance matches originating lab</td></tr>
+    </table>
+
+    <h3>What must be evaluated</h3>
+    <p>ISO 15189 (clause 7.3) requires documented evidence for:</p>
+    <ul>
+      <li><strong>Precision</strong> — repeatability and intermediate precision (EP05 or EP15)</li>
+      <li><strong>Trueness / Bias</strong> — against CRM, EQA, or reference method (EP09, bias study)</li>
+      <li><strong>Measurement uncertainty</strong> — combined estimate of all error sources</li>
+      <li><strong>Analytical measurement range (AMR)</strong> — the reportable range of the method</li>
+      <li><strong>Reference intervals</strong> — verified or established for the local population</li>
+      <li><strong>Interferences</strong> — haemolysis, lipaemia, icterus (HLI), common drugs</li>
+    </ul>
+    <div class="info">
+      <b>Verification scope:</b> For a commercial method, ISO 15189 accepts a reduced verification package — typically precision (EP15), bias against EQA or CRM, and confirmation of the reportable range. Full interference and reference interval studies are only required if the manufacturer's data cannot be applied to your patient population.
+    </div>
+
+    <h3>Practical decision guide — validation or verification?</h3>
+    <div class="callout">
+      Ask these questions in order:<br><br>
+      1. <b>Is this method commercially available and used exactly as the manufacturer intends?</b><br>
+      → Yes: verification is sufficient.<br><br>
+      2. <b>Have you changed anything?</b> (sample matrix, pre-treatment, calibrators, reportable range, instrument platform)<br>
+      → Yes to any: validation is required for the changed parameter(s).<br><br>
+      3. <b>Did you develop this method yourself?</b><br>
+      → Yes: full validation is required.<br><br>
+      4. <b>Is the manufacturer's performance data applicable to your population?</b><br>
+      → If not (e.g. paediatric reference intervals in an adult study): establish your own.
+    </div>
+
+    <h3>Documentation requirements</h3>
+    <p>ISO 15189 requires a written validation/verification plan before starting, and a report after completion including:</p>
+    <ul>
+      <li>Study design and acceptance criteria (defined before data collection)</li>
+      <li>Raw data and statistical analysis</li>
+      <li>Pass/fail conclusion against each acceptance criterion</li>
+      <li>Authorisation by the laboratory director before clinical release</li>
+    </ul>
+    <div class="warn">
+      <b>Pre-define your acceptance criteria.</b> ISO 15189 auditors specifically check that criteria were set before data collection — not adjusted after seeing the results. Always document your allowable bias and CV% targets in the validation plan before running the study.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- 19 -->
   <div class="section" id="summary">
-    <h2>13. Summary table</h2>
+    <h2>19. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
