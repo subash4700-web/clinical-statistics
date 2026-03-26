@@ -1,0 +1,56 @@
+<div class="info-content">
+
+  <h2>Understanding Categorical Method Comparison</h2>
+
+  <h3>What is categorical method comparison?</h3>
+  <p>
+    When two methods produce qualitative (pos/neg, reactive/non-reactive) results rather than numbers,
+    you cannot use Bland-Altman or regression. Instead, you build a <strong>2×2 contingency table</strong>
+    of paired results and use <strong>Cohen's Kappa</strong> to measure agreement and <strong>McNemar's test</strong>
+    to check for systematic directional bias.
+  </p>
+
+  <h3>The 2×2 table</h3>
+  <p>Rows = Method A result. Columns = Method B result.</p>
+  <ul>
+    <li><strong>a</strong> — both positive (concordant positive)</li>
+    <li><strong>b</strong> — only Method A positive (A over-calls, or B misses)</li>
+    <li><strong>c</strong> — only Method B positive (B over-calls, or A misses)</li>
+    <li><strong>d</strong> — both negative (concordant negative)</li>
+  </ul>
+  <p>
+    <strong>a + d</strong> are the concordant cells (agreement). <strong>b + c</strong> are discordant
+    (disagreement) — these drive both Kappa and McNemar.
+  </p>
+
+  <h3>Cohen's Kappa (κ)</h3>
+  <p>
+    Kappa corrects observed agreement (Po) for the agreement expected by chance alone (Pe):
+  </p>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    κ = (Po − Pe) / (1 − Pe)
+  </p>
+  <p>Landis &amp; Koch scale: &lt;0 poor · 0–0.20 slight · 0.20–0.40 fair · 0.40–0.60 moderate · 0.60–0.80 substantial · 0.80–1.0 almost perfect.</p>
+
+  <h3>McNemar's test</h3>
+  <p>
+    Tests whether <strong>b ≠ c</strong> — i.e., whether one method calls significantly more positives
+    than the other. A significant result means there is a systematic directional bias (not just random disagreement).
+    Uses exact binomial when b+c &lt; 25, χ² with continuity correction otherwise.
+  </p>
+
+  <h3>The Kappa paradox</h3>
+  <p class="note">
+    <strong>High observed agreement does not mean high Kappa.</strong> When prevalence is very low or very high,
+    chance agreement (Pe) is also high — so Kappa can be surprisingly low even with 95%+ observed agreement.
+    This is the Kappa paradox. Always report both Po and κ.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust the four cells of the 2×2 table with sliders and see Kappa, McNemar, and the direction tilt
+    update in real time. Load the exercises to explore the Kappa paradox, systematic over-calling,
+    and balanced vs asymmetric disagreement.
+  </p>
+
+</div>

@@ -1,0 +1,60 @@
+<div class="info-content">
+
+  <h2>Understanding Method Comparison</h2>
+
+  <h3>What is method comparison?</h3>
+  <p>
+    Method comparison evaluates whether two measurement methods produce results that are interchangeable
+    in clinical practice. You run the same patient samples through both methods and examine the pattern of
+    differences — not just whether they correlate, but <em>how much they differ</em> and whether that difference
+    is clinically acceptable.
+  </p>
+
+  <h3>Why correlation (r) is not enough</h3>
+  <p>
+    Two methods can have r = 0.99 and still produce clinically unacceptable differences. Pearson r measures
+    the <em>strength of the linear relationship</em>, not agreement. If both methods consistently differ by
+    20% across all concentrations, r is still 1.0 — but patients would be harmed by the difference.
+    Always use agreement-focused methods.
+  </p>
+
+  <h3>Key methods</h3>
+  <ul>
+    <li>
+      <strong>Bland-Altman plot</strong> — plots the difference (Method A − Method B) against the mean of both.
+      Shows the average bias and the 95% limits of agreement (LoA). The LoA define the range within which
+      95% of differences will fall. Compare LoA against your clinically acceptable difference.
+    </li>
+    <li>
+      <strong>Passing-Bablok regression</strong> — non-parametric regression that separates constant bias
+      (intercept ≠ 0) from proportional bias (slope ≠ 1). Preferred when both methods have measurement error.
+    </li>
+    <li>
+      <strong>Deming regression</strong> — like Passing-Bablok but parametric. Requires knowing the ratio of
+      the error variances between the two methods.
+    </li>
+  </ul>
+
+  <h3>What to check</h3>
+  <ul>
+    <li>Is the mean bias clinically acceptable?</li>
+    <li>Do the limits of agreement fall within your predefined acceptable difference?</li>
+    <li>Is there proportional bias (differences grow with concentration)?</li>
+    <li>Are there outliers suggesting specific sample matrix problems?</li>
+  </ul>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Using correlation to accept a new method.</strong> r &gt; 0.95 is often quoted as "good agreement"
+    in lab reports — but this is statistically incorrect. Use Bland-Altman and set your acceptable difference
+    criterion before collecting data, not after seeing the results.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust true bias (constant and proportional), imprecision, and sample range to see how the Bland-Altman
+    and regression results change. The exercises illustrate how r can mislead and when proportional bias
+    matters more than constant bias.
+  </p>
+
+</div>

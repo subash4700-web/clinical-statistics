@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Categorical Method Comparison</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;--accent:#7c3aed;--shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#3b0764 0%,#6d28d9 60%,#7c3aed 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select,input[type=text]{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 56px;gap:7px;align-items:center;}
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .chart-bd{padding:12px 14px;}
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .divider-soft{height:1px;background:var(--line);margin:12px 0;}
+
+    /* 2×2 visual */
+    .vis-2x2{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;margin:10px 0;}
+    .vis-hdr{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:4px 2px;}
+    .vis-row-hdr{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;text-align:right;padding:4px 6px;display:flex;align-items:center;justify-content:flex-end;}
+    .vis-cell{border-radius:10px;padding:12px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .vis-cell-agree{background:#dbeafe;border:2px solid #93c5fd;}
+    .vis-cell-disagree{background:#fff7ed;border:2px solid #fdba74;}
+    .vc-val{font-size:26px;font-weight:900;line-height:1;}
+    .vc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;margin-top:2px;}
+    .vc-pct{font-size:11px;margin-top:1px;opacity:.7;}
+
+    /* stats strip */
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0;}
+    .stat-box{border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
+    .stat-box .sk{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-box .sv{font-size:18px;font-weight:900;margin-top:2px;}
+    .stat-box .ss{font-size:10px;color:var(--muted);margin-top:2px;}
+    .stat-pass{border-color:#16a34a;background:#f0fdf4;}.stat-pass .sv{color:#15803d;}
+    .stat-fail{border-color:#dc2626;background:#fef2f2;}.stat-fail .sv{color:#b91c1c;}
+    .stat-neutral{border-color:#7c3aed;background:#f5f3ff;}.stat-neutral .sv{color:#6d28d9;}
+    .stat-warn{border-color:#d97706;background:#fffbeb;}.stat-warn .sv{color:#b45309;}
+    .stat-info{border-color:#0284c7;background:#f0f9ff;}.stat-info .sv{color:#0369a1;}
+
+    /* Kappa scale bar */
+    .kappa-scale{display:flex;gap:0;border-radius:8px;overflow:hidden;height:20px;margin:6px 0;}
+    .ks-seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+    .ks-poor{background:#dc2626;}
+    .ks-slight{background:#ef4444;}
+    .ks-fair{background:#f97316;}
+    .ks-moderate{background:#f59e0b;}
+    .ks-substantial{background:#22c55e;}
+    .ks-perfect{background:#16a34a;}
+    .kappa-marker{position:relative;height:12px;margin-bottom:2px;}
+    .kappa-marker-pin{position:absolute;top:0;transform:translateX(-50%);font-size:14px;transition:left .3s;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:8px;}
+    .insight-blue{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .insight-red{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+
+    /* Exercises */
+    .exercises{margin-bottom:16px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#a78bfa;}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-instructions{background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:13px;line-height:1.7;color:#3b0764;display:none;}
+    .ex-instructions.visible{display:block;}
+
+    /* concept box */
+    .concept-box{background:#fafafa;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.7;margin-top:10px;}
+    .concept-box strong{color:var(--accent);}
+
+    @media(max-width:980px){.layout{grid-template-columns:1fr;} .ex-grid{grid-template-columns:repeat(2,1fr);} .stats-strip{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Understanding Categorical Method Comparison</h1>
+  <p>Explore how Kappa and McNemar work — adjust the 2×2 table and see live statistics, interpretations, and clinical implications.</p>
+</div>
+<div class="wrap">
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">Perfect agreement</div>
+          <div class="ex-obj">All samples agree — see why κ = 1 and McNemar has nothing to test.</div>
+          <div class="ex-params"><span class="ex-param">κ = 1.0</span><span class="ex-param">b=0, c=0</span></div>
+          <button class="ex-btn">Load</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">High agreement — Kappa paradox</div>
+          <div class="ex-obj">95% observed agreement but κ is only moderate. Low prevalence inflates chance agreement (Pe). Classic Kappa paradox.</div>
+          <div class="ex-params"><span class="ex-param">Po = 0.95</span><span class="ex-param">Low prevalence</span></div>
+          <button class="ex-btn">Load</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-title">Systematic bias — method A over-calls</div>
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-obj">Good agreement overall, but McNemar is significant. Method A calls far more positives than B. Kappa is reduced by asymmetric discordances.</div>
+          <div class="ex-params"><span class="ex-param">McNemar p &lt; 0.05</span><span class="ex-param">b ≫ c</span></div>
+          <button class="ex-btn">Load</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">Balanced but poor agreement</div>
+          <div class="ex-obj">Discordances are symmetric (McNemar non-significant) but Kappa is low — both methods simply disagree a lot on both sides equally.</div>
+          <div class="ex-params"><span class="ex-param">κ ≈ 0.40</span><span class="ex-param">b ≈ c</span></div>
+          <button class="ex-btn">Load</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT: controls -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="panel">
+        <div class="panel-hd">Method names</div>
+        <div class="panel-bd">
+          <label>Method A (rows — reference / new)</label>
+          <input type="text" id="inp-mA" value="Method A" oninput="update()">
+          <label>Method B (columns — comparator / old)</label>
+          <input type="text" id="inp-mB" value="Method B" oninput="update()">
+          <label>Positive label</label>
+          <input type="text" id="inp-pos" value="Positive" oninput="update()">
+          <label>Negative label</label>
+          <input type="text" id="inp-neg" value="Negative" oninput="update()">
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">2×2 Table — adjust cells</div>
+        <div class="panel-bd">
+          <p style="font-size:11px;color:var(--muted);margin:0 0 10px;">Drag sliders or type values. Results update live.</p>
+
+          <label>a — both positive (concordant)</label>
+          <div class="range-row">
+            <input type="range" id="sl-a" min="0" max="100" value="40" oninput="syncSlider('a');update()">
+            <input type="number" id="inp-a" value="40" min="0" max="500" oninput="syncNum('a');update()">
+          </div>
+          <label>b — A positive, B negative (only A calls positive)</label>
+          <div class="range-row">
+            <input type="range" id="sl-b" min="0" max="100" value="5" oninput="syncSlider('b');update()">
+            <input type="number" id="inp-b" value="5" min="0" max="500" oninput="syncNum('b');update()">
+          </div>
+          <label>c — A negative, B positive (only B calls positive)</label>
+          <div class="range-row">
+            <input type="range" id="sl-c" min="0" max="100" value="3" oninput="syncSlider('c');update()">
+            <input type="number" id="inp-c" value="3" min="0" max="500" oninput="syncNum('c');update()">
+          </div>
+          <label>d — both negative (concordant)</label>
+          <div class="range-row">
+            <input type="range" id="sl-d" min="0" max="100" value="52" oninput="syncSlider('d');update()">
+            <input type="number" id="inp-d" value="52" min="0" max="500" oninput="syncNum('d');update()">
+          </div>
+
+          <div class="divider-soft"></div>
+          <label>Significance level (α)</label>
+          <select id="inp-alpha" onchange="update()">
+            <option value="0.05" selected>0.05</option>
+            <option value="0.01">0.01</option>
+            <option value="0.10">0.10</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Kappa concept box -->
+      <div class="panel">
+        <div class="panel-hd">How Kappa works</div>
+        <div class="panel-bd" style="font-size:12px;line-height:1.7;color:#374151;">
+          <p style="margin:0 0 6px;"><strong>κ = (Po − Pe) / (1 − Pe)</strong></p>
+          <p style="margin:0 0 4px;"><strong>Po</strong> = observed agreement = (a+d)/n</p>
+          <p style="margin:0 0 4px;"><strong>Pe</strong> = expected agreement by chance alone</p>
+          <p style="margin:0 0 8px;">Kappa corrects for chance — high Po with high Pe gives a low κ (the <em>Kappa paradox</em>).</p>
+          <div class="divider-soft" style="margin:6px 0;"></div>
+          <p style="margin:0 0 4px;"><strong>McNemar</strong> tests whether b ≠ c (asymmetric disagreement).</p>
+          <p style="margin:0;">If significant: one method calls more positives than the other — there is a systematic directional bias.</p>
+        </div>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- RIGHT: live results -->
+    <div class="charts-col">
+
+      <!-- 2×2 visual -->
+      <div class="chart-panel">
+        <div class="chart-hd">2×2 Contingency Table</div>
+        <div class="chart-bd">
+          <div class="vis-2x2" id="vis-table"></div>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="chart-panel">
+        <div class="chart-hd">Key Statistics</div>
+        <div class="chart-bd">
+          <div class="stats-strip" id="stats-strip"></div>
+          <div id="kappa-scale-wrap">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Landis &amp; Koch scale</div>
+            <div class="kappa-marker" id="kappa-marker-row"><span class="kappa-marker-pin" id="kappa-pin">▼</span></div>
+            <div class="kappa-scale">
+              <div class="ks-seg ks-poor" title="&lt; 0">Poor</div>
+              <div class="ks-seg ks-slight" title="0–0.20">Slight</div>
+              <div class="ks-seg ks-fair" title="0.20–0.40">Fair</div>
+              <div class="ks-seg ks-moderate" title="0.40–0.60">Moderate</div>
+              <div class="ks-seg ks-substantial" title="0.60–0.80">Substantial</div>
+              <div class="ks-seg ks-perfect" title="0.80–1.0">Almost perfect</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:1px;">
+              <span>&lt;0</span><span>0</span><span>0.20</span><span>0.40</span><span>0.60</span><span>0.80</span><span>1.0</span>
+            </div>
+          </div>
+          <div id="insight-area"></div>
+        </div>
+      </div>
+
+      <!-- McNemar detail -->
+      <div class="chart-panel">
+        <div class="chart-hd">McNemar Test — Systematic Bias</div>
+        <div class="chart-bd" id="mcnemar-detail"></div>
+      </div>
+
+      <!-- Tilt bar -->
+      <div class="chart-panel">
+        <div class="chart-hd">Discordance Direction</div>
+        <div class="chart-bd" id="tilt-area"></div>
+      </div>
+
+    </div><!-- /right -->
+  </div><!-- /layout -->
+</div><!-- /wrap -->
+
+<script>
+// ── Slider/number sync ──────────────────────────────────────────────────────
+function syncSlider(cell) {
+  var sl = document.getElementById('sl-' + cell);
+  document.getElementById('inp-' + cell).value = sl.value;
+}
+function syncNum(cell) {
+  var inp = document.getElementById('inp-' + cell);
+  var v = Math.max(0, parseInt(inp.value) || 0);
+  document.getElementById('sl-' + cell).value = Math.min(v, 100);
+  inp.value = v;
+}
+
+// ── Core stats ──────────────────────────────────────────────────────────────
+function erf(x) {
+  var sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+  var t = 1 / (1 + 0.3275911 * x);
+  var y = 1 - (((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));
+  return sign * y;
+}
+function chi2p(x) { return 1 - erf(Math.sqrt(x / 2)); }
+function binomCoeff(n, k) {
+  if (k > n) return 0; if (k === 0 || k === n) return 1;
+  var c = 1;
+  for (var i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+  return c;
+}
+
+function calcKappa(a, b, c, d) {
+  var N = a + b + c + d; if (N === 0) return null;
+  var Po = (a + d) / N;
+  var Pe = ((a+b)*(a+c) + (c+d)*(b+d)) / (N*N);
+  if (Pe === 1) return null;
+  var k = (Po - Pe) / (1 - Pe);
+  var se = Math.sqrt(Po*(1-Po) / (N*(1-Pe)*(1-Pe)));
+  return { k:k, Po:Po, Pe:Pe, se:se, N:N };
+}
+
+function calcMcNemar(b, c, alpha) {
+  var n = b + c; if (n === 0) return null;
+  var p, method;
+  if (n < 25) {
+    var m = Math.min(b,c), cum = 0;
+    for (var k = 0; k <= m; k++) cum += binomCoeff(n,k) * Math.pow(0.5, n);
+    p = Math.min(1, 2 * cum);
+    method = 'Exact binomial';
+  } else {
+    var chi2 = Math.pow(Math.abs(b-c)-1, 2) / n;
+    p = chi2p(chi2);
+    method = 'χ² with continuity correction';
+  }
+  return { p:p, method:method, sig: p < alpha };
+}
+
+function kappaColour(k) {
+  if (k < 0)    return { lbl:'Poor',             cl:'stat-fail' };
+  if (k < 0.20) return { lbl:'Slight',           cl:'stat-fail' };
+  if (k < 0.40) return { lbl:'Fair',             cl:'stat-warn' };
+  if (k < 0.60) return { lbl:'Moderate',         cl:'stat-warn' };
+  if (k < 0.80) return { lbl:'Substantial',      cl:'stat-neutral' };
+  return               { lbl:'Almost perfect',   cl:'stat-pass' };
+}
+
+// ── Main update ─────────────────────────────────────────────────────────────
+function update() {
+  var a = parseInt(document.getElementById('inp-a').value) || 0;
+  var b = parseInt(document.getElementById('inp-b').value) || 0;
+  var c = parseInt(document.getElementById('inp-c').value) || 0;
+  var d = parseInt(document.getElementById('inp-d').value) || 0;
+  var alpha = parseFloat(document.getElementById('inp-alpha').value);
+  var N = a + b + c + d;
+  var mA = document.getElementById('inp-mA').value || 'Method A';
+  var mB = document.getElementById('inp-mB').value || 'Method B';
+  var pos = document.getElementById('inp-pos').value || 'Positive';
+  var neg = document.getElementById('inp-neg').value || 'Negative';
+
+  if (N === 0) {
+    document.getElementById('vis-table').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;">Enter values above.</p>';
+    return;
+  }
+
+  var kap = calcKappa(a, b, c, d);
+  var mcn = calcMcNemar(b, c, alpha);
+  var zCrit = alpha === 0.01 ? 2.576 : alpha === 0.10 ? 1.645 : 1.960;
+
+  // 2×2 table
+  var pctA = function(x){ return N > 0 ? (100*x/N).toFixed(1)+'%' : '—'; };
+  document.getElementById('vis-table').innerHTML =
+    '<div></div>' +
+    '<div class="vis-hdr">' + mB + '<br>' + pos + '</div>' +
+    '<div class="vis-hdr">' + mB + '<br>' + neg + '</div>' +
+    '<div class="vis-row-hdr">' + mA + '<br>' + pos + '</div>' +
+    '<div class="vis-cell vis-cell-agree"><div class="vc-val">' + a + '</div><div class="vc-lbl">a — concordant<br>positive</div><div class="vc-pct">' + pctA(a) + '</div></div>' +
+    '<div class="vis-cell vis-cell-disagree"><div class="vc-val">' + b + '</div><div class="vc-lbl">b — only A<br>positive</div><div class="vc-pct">' + pctA(b) + '</div></div>' +
+    '<div class="vis-row-hdr">' + mA + '<br>' + neg + '</div>' +
+    '<div class="vis-cell vis-cell-disagree"><div class="vc-val">' + c + '</div><div class="vc-lbl">c — only B<br>positive</div><div class="vc-pct">' + pctA(c) + '</div></div>' +
+    '<div class="vis-cell vis-cell-agree"><div class="vc-val">' + d + '</div><div class="vc-lbl">d — concordant<br>negative</div><div class="vc-pct">' + pctA(d) + '</div></div>';
+
+  // Stats strip
+  var Po = (a+d)/N;
+  var kStr = kap ? kap.k.toFixed(3) : '—';
+  var kLo = kap ? (kap.k - zCrit*kap.se).toFixed(3) : '—';
+  var kHi = kap ? (kap.k + zCrit*kap.se).toFixed(3) : '—';
+  var kc = kap ? kappaColour(kap.k) : { lbl:'—', cl:'stat-info' };
+  var pStr = mcn ? (mcn.p < 0.001 ? '< 0.001' : mcn.p.toFixed(3)) : '—';
+  var mcnCl = mcn ? (mcn.sig ? 'stat-fail' : 'stat-pass') : 'stat-info';
+  document.getElementById('stats-strip').innerHTML =
+    '<div class="stat-box stat-info"><div class="sk">Observed agreement</div><div class="sv">' + (100*Po).toFixed(1) + '%</div><div class="ss">Po = (a+d)/n</div></div>' +
+    '<div class="stat-box ' + kc.cl + '"><div class="sk">Cohen\'s Kappa</div><div class="sv">' + kStr + '</div><div class="ss">' + kc.lbl + '</div></div>' +
+    '<div class="stat-box stat-info"><div class="sk">95% CI (κ)</div><div class="sv" style="font-size:12px;">[' + kLo + ', ' + kHi + ']</div><div class="ss">Asymptotic SE</div></div>' +
+    '<div class="stat-box ' + mcnCl + '"><div class="sk">McNemar p</div><div class="sv">' + pStr + '</div><div class="ss">' + (mcn ? (mcn.sig ? 'Significant bias' : 'No systematic bias') : 'b+c = 0') + '</div></div>';
+
+  // Kappa scale pin
+  if (kap) {
+    var kNorm = Math.max(0, Math.min(1, (kap.k - (-0.2)) / 1.2)); // map −0.2..1.0 to 0..100%
+    document.getElementById('kappa-pin').style.left = (kNorm * 100) + '%';
+  }
+
+  // Insight
+  var ins = '', insCl = 'insight-blue';
+  if (kap) {
+    var kc2 = kappaColour(kap.k);
+    if (kap.k >= 0.80) { ins = '<strong>' + kc2.lbl + ' agreement (κ = ' + kStr + ').</strong> Both methods classify samples consistently.'; insCl = 'insight-green'; }
+    else if (kap.k >= 0.60) { ins = '<strong>' + kc2.lbl + ' agreement (κ = ' + kStr + ').</strong> Methods agree reasonably well, but there is room for improvement.'; insCl = 'insight-blue'; }
+    else if (kap.k >= 0.40) { ins = '<strong>' + kc2.lbl + ' agreement (κ = ' + kStr + ').</strong> Disagreement is common. Review discordant cells carefully.'; insCl = 'insight-amber'; }
+    else { ins = '<strong>' + kc2.lbl + ' agreement (κ = ' + kStr + ').</strong> Methods show poor concordance. This level is usually not acceptable for clinical use.'; insCl = 'insight-red'; }
+    if (kap.Pe > 0.7) ins += ' Note: high expected chance agreement (Pe = ' + kap.Pe.toFixed(2) + ') — possible <em>Kappa paradox</em> due to low prevalence or high prevalence.';
+  }
+  document.getElementById('insight-area').innerHTML = '<div class="insight-box ' + insCl + '">' + ins + '</div>';
+
+  // McNemar detail
+  var discordant = b + c;
+  var mcnHtml = '';
+  if (discordant === 0) {
+    mcnHtml = '<p style="font-size:12px;color:var(--muted);margin:0;">No discordant pairs (b + c = 0). McNemar test is not applicable — perfect agreement on positive/negative calls.</p>';
+  } else {
+    var dirText, dirCl;
+    if (!mcn || !mcn.sig) {
+      dirText = 'No significant directional bias — discordances are roughly symmetric.'; dirCl = 'insight-green';
+    } else if (b > c) {
+      dirText = mA + ' calls significantly more positives than ' + mB + ' (b=' + b + ' > c=' + c + '). ' + mA + ' may be over-sensitive or ' + mB + ' may be missing positives.'; dirCl = 'insight-amber';
+    } else {
+      dirText = mB + ' calls significantly more positives than ' + mA + ' (c=' + c + ' > b=' + b + '). ' + mB + ' may be over-sensitive or ' + mA + ' may be missing positives.'; dirCl = 'insight-amber';
+    }
+    mcnHtml =
+      '<div style="font-size:12px;margin-bottom:8px;"><strong>Method:</strong> ' + (mcn ? mcn.method : '—') +
+      ' &nbsp;|&nbsp; <strong>Discordant pairs:</strong> b+c = ' + discordant +
+      ' &nbsp;|&nbsp; <strong>p = </strong>' + pStr + '</div>' +
+      '<div class="insight-box ' + dirCl + '">' + dirText + '</div>';
+  }
+  document.getElementById('mcnemar-detail').innerHTML = mcnHtml;
+
+  // Tilt bar
+  var tiltHtml = '<p style="font-size:12px;color:#374151;margin:0 0 8px;">Shows what proportion of discordant pairs go in each direction.</p>';
+  if (discordant === 0) {
+    tiltHtml += '<p style="font-size:12px;color:var(--muted);margin:0;">No discordant pairs.</p>';
+  } else {
+    var pctB = (100 * b / discordant).toFixed(1);
+    var pctC = (100 * c / discordant).toFixed(1);
+    tiltHtml +=
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+        '<div style="font-size:12px;font-weight:700;color:#374151;width:160px;flex-shrink:0;">' + mA + ' only positive (b=' + b + ')</div>' +
+        '<div style="flex:1;background:#f3f4f6;border-radius:999px;height:14px;overflow:hidden;">' +
+          '<div style="width:' + pctB + '%;height:14px;border-radius:999px;background:#7c3aed;"></div>' +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#374151;width:42px;text-align:right;">' + pctB + '%</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="font-size:12px;font-weight:700;color:#374151;width:160px;flex-shrink:0;">' + mB + ' only positive (c=' + c + ')</div>' +
+        '<div style="flex:1;background:#f3f4f6;border-radius:999px;height:14px;overflow:hidden;">' +
+          '<div style="width:' + pctC + '%;height:14px;border-radius:999px;background:#0891b2;"></div>' +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#374151;width:42px;text-align:right;">' + pctC + '%</div>' +
+      '</div>';
+  }
+  document.getElementById('tilt-area').innerHTML = tiltHtml;
+}
+
+// ── Exercises ───────────────────────────────────────────────────────────────
+var exerciseData = {
+  1: { a:45, b:0, c:0, d:55, mA:'Method A', mB:'Method B',
+       instructions:'<b>Exercise 1: Perfect agreement.</b><br>Every sample gave the same result in both methods. κ = 1, McNemar has no discordant pairs to test. In practice this never happens — but it sets the upper bound.' },
+  2: { a:3, b:1, c:1, d:95, mA:'New card', mB:'Old card',
+       instructions:'<b>Exercise 2: Kappa paradox.</b><br>Po = 98/100 = 98% — looks great! But most samples are negative (high prevalence of negative results), so chance agreement (Pe) is also very high. Kappa corrects for this and gives a much lower value. When prevalence is very low or very high, Po alone is misleading.' },
+  3: { a:42, b:15, c:2, d:41, mA:'New assay', mB:'Old assay',
+       instructions:'<b>Exercise 3: Systematic over-calling.</b><br>b (15) ≫ c (2): the new assay calls many more positives than the old one. McNemar is significant — this is a directional bias, not just random variation. Kappa is reduced because asymmetric discordances are "penalised" more.' },
+  4: { a:30, b:12, c:10, d:28, mA:'Method A', mB:'Method B',
+       instructions:'<b>Exercise 4: Balanced disagreement.</b><br>b ≈ c — discordances go roughly equally in both directions, so McNemar is not significant. But overall agreement is only ~73% and κ ≈ 0.45 (moderate). The methods just disagree a lot — on both sides. No systematic bias but poor agreement.' }
+};
+
+function loadExercise(n) {
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('exCard' + n).classList.add('active');
+  var d = exerciseData[n];
+  setCell('a', d.a); setCell('b', d.b); setCell('c', d.c); setCell('d', d.d);
+  document.getElementById('inp-mA').value = d.mA;
+  document.getElementById('inp-mB').value = d.mB;
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML = d.instructions;
+  instr.className = 'ex-instructions visible';
+  update();
+}
+
+function setCell(cell, val) {
+  document.getElementById('inp-' + cell).value = val;
+  document.getElementById('sl-' + cell).value = Math.min(val, 100);
+}
+
+function toggleExercises() {
+  var btn = document.getElementById('exToggle');
+  var panel = document.getElementById('exPanel');
+  btn.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+// Init
+update();
+</script>
+</body>
+</html>

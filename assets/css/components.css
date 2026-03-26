@@ -47,6 +47,38 @@ body {
 .tool-header h1 { color: white; margin: 0 0 4px; font-size: 20px; font-weight: 900; }
 .tool-header p   { color: rgba(255,255,255,0.82); margin: 0; font-size: 13px; line-height: 1.5; }
 
+/* ── Tool guide card ─────────────────────────────────────── */
+.tg-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.tg-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.tg-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 9px;
+  border-radius: 999px; white-space: nowrap;
+}
+.tg-type     { background: #1e3a5f; color: #fff; }
+.tg-material { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.tg-design   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.tg-std      { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+.tg-when { font-size: 12px; color: #374151; line-height: 1.5; margin-bottom: 6px; }
+.tg-details { border-top: 1px solid #e2e8f0; margin-top: 8px; padding-top: 8px; }
+.tg-details summary {
+  font-size: 11px; font-weight: 700; color: #6b7280;
+  cursor: pointer; text-transform: uppercase; letter-spacing: .04em;
+  list-style: none; user-select: none;
+}
+.tg-details summary::-webkit-details-marker { display: none; }
+.tg-details summary::before { content: '▶ '; font-size: 9px; }
+.tg-details[open] summary::before { content: '▼ '; }
+.tg-body { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.tg-row { display: grid; grid-template-columns: 72px 1fr; gap: 6px; font-size: 12px; line-height: 1.45; }
+.tg-label { font-weight: 700; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding-top: 1px; }
+
 /* ── Typography ──────────────────────────────────────────── */
 h1 {
   font-size: 22px;

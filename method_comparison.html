@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Method Comparison Analysis</title>
+  <title>Quantitative Method Comparison</title>
 
   <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -139,7 +139,7 @@
 
 <body>
 <div class="container">
-  <h1 style="margin-bottom:6px;">Method Comparison Analysis</h1>
+  <h1 style="margin-bottom:6px;">Quantitative Method Comparison</h1>
   <p class="subtitle">Bland-Altman Analysis &amp; Regression with Enhanced Visualization</p>
 
   <div class="tabs">
@@ -155,6 +155,38 @@
       <strong>Welcome to the Method Comparison Tool</strong><br>
       Enter paired measurements from two methods, configure analysis options, and generate comprehensive statistics including Bland-Altman plots, XY regression, and normality tests.
     </div>
+
+    <!-- Tool guide card -->
+    <div class="tg-card">
+      <div class="tg-badges">
+        <span class="tg-badge tg-type">Method Comparison</span>
+        <span class="tg-badge tg-material">Patient samples — paired</span>
+        <span class="tg-badge tg-design">Paired · n ≥ 40</span>
+        <span class="tg-badge tg-std">CLSI EP09-A3 · ISO 5725</span>
+      </div>
+      <div class="tg-when">Compare a new analytical method to a reference method before clinical use. Same patient sample measured on both methods — ideally same day to eliminate biological variation.</div>
+      <details class="tg-details">
+        <summary>Details</summary>
+        <div class="tg-body">
+          <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples — same aliquot measured on both methods the same day (or within 2 hours)</span></div>
+          <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 40 samples, cover low / normal / high concentrations across the full clinical range</span></div>
+          <div class="tg-row"><span class="tg-label">Output</span><span>Bland-Altman LoA, mean bias, Passing-Bablok regression, Deming regression, paired t-test, Lin's CCC</span></div>
+          <div class="tg-row"><span class="tg-label">Note</span><span>High Pearson r does NOT confirm agreement — always use Bland-Altman. See Understanding Method Comparison.</span></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- EFLM card — top -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">EFLM Performance Specifications</div>
+      <div class="note" style="margin-bottom:10px;">Select an analyte to auto-fill TAE and bias limits from the EFLM biological variation database (Ricos et al. 2014).</div>
+      <input type="hidden" id="eflm-tier" value="desirable">
+      <select id="eflm-analyte" onchange="updateEFLMSpecs()">
+        <option value="">— Select analyte —</option>
+      </select>
+      <div id="eflm-specs-display" style="display:none; margin-top:12px; font-size:13px;"></div>
+    </div>
+    <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:16px;"></div>
 
     <!-- Input method toggle -->
     <div class="card" style="margin-bottom:16px;">
@@ -276,50 +308,6 @@
       </div>
     </div>
 
-    <!-- EFLM Analyte Selector -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="section-title">EFLM Performance Specifications</div>
-      <div class="note" style="margin-bottom:10px;">Select an analyte to auto-fill TAE and bias limits based on EFLM biological variation database (Ricos et al. 2014).</div>
-      <input type="hidden" id="eflm-tier" value="desirable">
-      <div style="margin-bottom:10px;">
-        <label for="eflm-analyte">Analyte</label>
-        <select id="eflm-analyte" onchange="updateEFLMSpecs()">
-          <option value="">— Select analyte —</option>
-          <option value="albumin">Albumin</option>
-          <option value="alp">ALP</option>
-          <option value="alt">ALT</option>
-          <option value="amylase">Amylase</option>
-          <option value="ast">AST</option>
-          <option value="bilirubin">Bilirubin (total)</option>
-          <option value="calcium">Calcium</option>
-          <option value="chloride">Chloride</option>
-          <option value="cholesterol">Cholesterol (total)</option>
-          <option value="ck">CK</option>
-          <option value="creatinine">Creatinine</option>
-          <option value="crp">CRP</option>
-          <option value="ferritin">Ferritin</option>
-          <option value="freet4">Free T4</option>
-          <option value="ggт">GGT</option>
-          <option value="glucose">Glucose</option>
-          <option value="hba1c">HbA1c</option>
-          <option value="hdl">HDL cholesterol</option>
-          <option value="hemoglobin">Hemoglobin</option>
-          <option value="iron">Iron</option>
-          <option value="ldh">LDH</option>
-          <option value="ldl">LDL cholesterol</option>
-          <option value="magnesium">Magnesium</option>
-          <option value="phosphate">Phosphate</option>
-          <option value="potassium">Potassium</option>
-          <option value="protein">Protein (total)</option>
-          <option value="sodium">Sodium</option>
-          <option value="triglycerides">Triglycerides</option>
-          <option value="tsh">TSH</option>
-          <option value="urea">Urea</option>
-          <option value="uricacid">Uric acid</option>
-        </select>
-      </div>
-      <div id="eflm-specs-display" style="display:none; font-size:13px;"></div>
-    </div>
 
     <!-- Parameters -->
     <div class="card" style="margin-bottom:16px;">
@@ -337,6 +325,9 @@
         <div>
           <label for="varianceRatio">Variance Ratio (λ) for Deming</label>
           <input type="number" id="varianceRatio" value="1" step="0.1" min="0.1">
+          <label style="margin-top:10px;display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;">
+            <input type="checkbox" id="showCIBand" checked style="width:auto;accent-color:var(--accent);"> Show 95% CI band on XY plot (OLS &amp; Passing-Bablok)
+          </label>
         </div>
       </div>
 
@@ -602,6 +593,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Workflow: go to Total Error & Sigma -->
+    <div id="wf-mc-card" style="display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:14px 18px;margin-top:16px;display:none;flex-direction:column;gap:8px;"></div>
 
   </div><!-- /analysisTab -->
 
@@ -1062,7 +1056,19 @@
                 const den = x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0);
                 const slope = num / den;
                 const intercept = meanY - slope * meanX;
-                return { slope, intercept };
+                // 95% CI for slope and intercept (asymptotic z = 1.96)
+                const yHat = x.map((xi, i) => slope * xi + intercept);
+                const sse = y.reduce((sum, yi, i) => sum + Math.pow(yi - yHat[i], 2), 0);
+                const s2 = n > 2 ? sse / (n - 2) : 0;
+                const sSlope = Math.sqrt(s2 / den);
+                const sIntercept = Math.sqrt(s2 * (1 / n + (meanX * meanX) / den));
+                const z = 1.96;
+                const slopeLower = slope - z * sSlope;
+                const slopeUpper = slope + z * sSlope;
+                const interceptLower = intercept - z * sIntercept;
+                const interceptUpper = intercept + z * sIntercept;
+                return { slope, intercept, slopeLower, slopeUpper, interceptLower, interceptUpper,
+                         _s2: s2, _den: den, _meanX: meanX, _n: n };
             } else if (method === 'pb') {
                 // Passing-Bablok regression (1983)
                 const slopes = [];
@@ -1161,7 +1167,44 @@
             const cccStr = (ccc !== undefined && isFinite(ccc)) ? ccc.toFixed(4) : '—';
             const methodLabel = method === 'ols' ? 'Ordinary Least Squares' : method === 'pb' ? 'Passing-Bablok' : 'Deming Regression (λ=' + lambda + ')';
 
-            const fmtCI = (lo, hi) => (lo !== null && hi !== null) ? ` <span style="font-size:11px;color:#6b7280;">(95% CI: ${lo.toFixed(4)} – ${hi.toFixed(4)})</span>` : '';
+            const fmtCI = (lo, hi) => (lo !== null && hi !== null) ? ` <span style="font-size:11px;color:#6b7280;">[${lo.toFixed(4)}, ${hi.toFixed(4)}]</span>` : '';
+
+            // Slope / intercept verdict helper
+            function biasVerdict(label, value, lo, hi, target, targetLabel) {
+                if (lo == null || hi == null) return '';
+                const pass = lo <= target && target <= hi;
+                const badge = pass
+                    ? `<span style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:5px;padding:2px 9px;font-size:11px;font-weight:700;">No significant bias</span>`
+                    : `<span style="background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:5px;padding:2px 9px;font-size:11px;font-weight:700;">Significant bias detected</span>`;
+                const dir = !pass ? (value > target
+                    ? `<div style="font-size:11px;color:#6b7280;margin-top:3px;">${target === 1 ? 'Slope > 1: proportional over-estimation by the new method' : 'Positive constant offset at all concentrations'}</div>`
+                    : `<div style="font-size:11px;color:#6b7280;margin-top:3px;">${target === 1 ? 'Slope < 1: proportional under-estimation by the new method' : 'Negative constant offset at all concentrations'}</div>`) : '';
+                return `<tr>
+                    <td><strong>${label}</strong></td>
+                    <td>${value.toFixed(4)}&ensp;<span style="font-size:11px;color:#6b7280;">95% CI: [${lo.toFixed(4)}, ${hi.toFixed(4)}]</span></td>
+                    <td>H₀: ${targetLabel}</td>
+                    <td>${badge}${dir}</td>
+                </tr>`;
+            }
+
+            const slopeRow     = biasVerdict('Slope',     regression.slope,     regression.slopeLower     ?? null, regression.slopeUpper     ?? null, 1, 'slope = 1');
+            const interceptRow = biasVerdict('Intercept', regression.intercept, regression.interceptLower ?? null, regression.interceptUpper ?? null, 0, 'intercept = 0');
+            const analysisCard = (slopeRow || interceptRow) ? `
+                <div class="card" style="margin-top:12px;">
+                    <div class="section-title">Slope &amp; Intercept Analysis — Systematic Bias</div>
+                    <p class="note" style="margin-top:0;">If the 95% CI of the slope includes 1.0 → no proportional bias. If the CI of the intercept includes 0 → no constant bias.</p>
+                    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+                        <thead><tr style="background:#f1f5f9;">
+                            <th style="padding:6px 8px;border:1px solid var(--line);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Parameter</th>
+                            <th style="padding:6px 8px;border:1px solid var(--line);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Estimate &amp; 95% CI</th>
+                            <th style="padding:6px 8px;border:1px solid var(--line);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Null hypothesis</th>
+                            <th style="padding:6px 8px;border:1px solid var(--line);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Verdict</th>
+                        </tr></thead>
+                        <tbody style="font-size:12px;">
+                            <style>.bias-tbl td{padding:7px 8px;border:1px solid var(--line);vertical-align:top;}</style>
+                            <tbody class="bias-tbl">${slopeRow}${interceptRow}</tbody>
+                    </table></div>
+                </div>` : '';
 
             const html = `
                 <div class="card">
@@ -1176,6 +1219,7 @@
                         <tr><td><strong>Lin's CCC (ρc)</strong><button class="info-btn" onclick="document.getElementById('cccInfoModal').classList.add('open')" title="What is Lin's CCC?">i</button></td><td>${cccStr}</td></tr>
                     </tbody></table>
                 </div>
+                ${analysisCard}
                 <div id="classificationBox"></div>
             `;
 
@@ -1375,6 +1419,33 @@
 
             html += `</div>`;
             document.getElementById('interpretationContent').innerHTML = html;
+            updateWfMcCard(stats, useRelative);
+        }
+
+        function updateWfMcCard(stats, useRelative) {
+            const card = document.getElementById('wf-mc-card');
+            if (!card) return;
+            const analyte = document.getElementById('method1Name').value || '';
+            const biasPct = +Math.abs(stats.meanDiff).toFixed(2);
+
+            if (useRelative) {
+                try { localStorage.setItem('wf_bias', JSON.stringify({ bias: biasPct, analyte, unit: '%', source: 'method_comparison' })); } catch(e) {}
+                card.innerHTML = `
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                    <div>
+                      <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Method Comparison complete</div>
+                      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: Total Error &amp; Sigma</div>
+                      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">Mean bias% = ${biasPct}% saved · combine with your Precision CV%</div>
+                      <div style="font-size:11px;color:#6b7280;margin-top:3px;">⚠ Method comparison bias is an estimate — CRM/EQA is the gold standard for trueness</div>
+                    </div>
+                    <button onclick="try{window.parent.loadToolFromWorkflow('tae.html','Total Error &amp; Sigma')}catch(e){alert('Open Total Error &amp; Sigma from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open Total Error &amp; Sigma →</button>
+                  </div>`;
+            } else {
+                card.innerHTML = `
+                  <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Use results in Total Error &amp; Sigma</div>
+                  <div style="font-size:13px;color:#1e3a8a;">Mean difference = ${biasPct} (absolute units). To transfer bias% to TAE, tick <strong>"Use Relative Differences (%)"</strong> in the options above and re-run.</div>`;
+            }
+            card.style.display = 'flex';
         }
 
         function getConfidenceLevel(zValue) {
@@ -1627,6 +1698,38 @@
                     borderDash: [10, 5], pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false
                 }
             ];
+
+            // CI band for OLS and Passing-Bablok
+            const showCI = document.getElementById('showCIBand').checked;
+            const reg = regressionStats.regression;
+            if (showCI && (regressionMethod === 'ols' || regressionMethod === 'pb') &&
+                reg.slopeLower != null && reg.slopeUpper != null) {
+                const xStart = minX - padding, xEnd = maxX + padding;
+                const nPts = 60;
+                const xBand = Array.from({ length: nPts + 1 }, (_, i) => xStart + i * (xEnd - xStart) / nPts);
+                let upperPts, lowerPts;
+                if (regressionMethod === 'pb') {
+                    upperPts = xBand.map(xi => ({ x: xi, y: Math.max(
+                        reg.slopeLower * xi + reg.interceptUpper,
+                        reg.slopeUpper * xi + reg.interceptLower) }));
+                    lowerPts = xBand.map(xi => ({ x: xi, y: Math.min(
+                        reg.slopeLower * xi + reg.interceptUpper,
+                        reg.slopeUpper * xi + reg.interceptLower) }));
+                } else {
+                    const s = Math.sqrt(reg._s2);
+                    upperPts = xBand.map(xi => { const b = 1.96 * s * Math.sqrt(1/reg._n + Math.pow(xi - reg._meanX, 2)/reg._den); return { x: xi, y: reg.slope * xi + reg.intercept + b }; });
+                    lowerPts = xBand.map(xi => { const b = 1.96 * s * Math.sqrt(1/reg._n + Math.pow(xi - reg._meanX, 2)/reg._den); return { x: xi, y: reg.slope * xi + reg.intercept - b }; });
+                }
+                // Insert CI band datasets after regression line (index 2)
+                datasets.splice(2, 0,
+                    { label: '95% CI (upper)', data: upperPts, type: 'line',
+                      borderColor: 'rgba(231,76,60,0.25)', borderWidth: 1, borderDash: [4, 4],
+                      pointRadius: 0, fill: '+1', backgroundColor: 'rgba(231,76,60,0.09)' },
+                    { label: '95% CI (lower)', data: lowerPts, type: 'line',
+                      borderColor: 'rgba(231,76,60,0.25)', borderWidth: 1, borderDash: [4, 4],
+                      pointRadius: 0, fill: false }
+                );
+            }
 
             const showThresh = document.getElementById('showDiscriminationThreshold').checked;
             const threshX = parseFloat(document.getElementById('thresholdX')?.value);
@@ -1914,9 +2017,22 @@
         }
 
         // EFLM_DB and calcEFLMTiers loaded from shared file (assets/js/eflm_db.js)
+        (function buildEFLMDropdown() {
+          const sel = document.getElementById('eflm-analyte');
+          if (!sel || typeof EFLM_DB === 'undefined') return;
+          Object.entries(EFLM_DB)
+            .sort((a, b) => a[1].name.localeCompare(b[1].name))
+            .forEach(([key, a]) => {
+              const opt = document.createElement('option');
+              opt.value = key; opt.textContent = a.name;
+              sel.appendChild(opt);
+            });
+        })();
+        eflmRestoreSelection('eflm-analyte');
 
         function updateEFLMSpecs(selectedTier) {
           const key  = document.getElementById('eflm-analyte').value;
+          eflmPersistKey(key);
           const tierEl = document.getElementById('eflm-tier');
           if (selectedTier) tierEl.value = selectedTier;
           const tier = tierEl.value;
@@ -1943,9 +2059,6 @@
           }
           display.style.display = 'block';
           display.innerHTML = `
-            <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">
-              <strong>${a.name}</strong> &nbsp;·&nbsp; ${a.unit} &nbsp;·&nbsp; CVi: ${a.cvi}% &nbsp;·&nbsp; CVg: ${a.cvg}%
-            </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               ${['optimal','desirable','minimum'].map(tr=>`
                 <div onclick="updateEFLMSpecs('${tr}');applyEFLMSpecs();"
@@ -2015,6 +2128,13 @@
           document.getElementById('teaPercentage').value = t.tea;
           document.getElementById('maxBias').value = t.bias;
           document.getElementById('relativeBlandAltman').checked = true;
+          const mean = eflmRefMean(key);
+          if (mean !== null) {
+            const gm = document.getElementById('gen-mean');     if (gm) gm.value = mean;
+            const te = document.getElementById('gen-te-pct');   if (te) te.value = t.tea;
+            const bp = document.getElementById('gen-bias-pct'); if (bp) bp.value = +(t.bias / 2).toFixed(2);
+          }
+          renderEFLMInfoBar('eflm-info-bar', key, tier);
         }
 
         function generateSampleData() {

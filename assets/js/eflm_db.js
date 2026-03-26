@@ -85,3 +85,76 @@ function calcEFLMTiers(cvi, cvg) {
   }
   return tiers;
 }
+
+// Renders a compact summary bar inside the element with the given ID.
+// Shows analyte name, unit, reference interval, and the applied tier specs.
+function renderEFLMInfoBar(containerId, key, tier) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!key || typeof EFLM_DB === 'undefined' || !EFLM_DB[key]) { el.style.display = 'none'; return; }
+  var a  = EFLM_DB[key];
+  var tc = tier || 'desirable';
+  var t  = calcEFLMTiers(a.cvi, a.cvg)[tc];
+  var colors  = { optimal:'#059669', desirable:'#2563eb', minimum:'#d97706' };
+  var bgs     = { optimal:'#ecfdf5', desirable:'#eff6ff', minimum:'#fffbeb' };
+  var borders = { optimal:'#a7f3d0', desirable:'#bfdbfe', minimum:'#fde68a' };
+
+  var refStr = '';
+  if (a.ref) {
+    if (a.ref.lo != null && a.ref.hi != null) refStr = a.ref.lo + '–' + a.ref.hi + ' ' + a.unit;
+    else if (a.ref.hi != null) refStr = '< ' + a.ref.hi + ' ' + a.unit;
+    else if (a.ref.lo != null) refStr = '> ' + a.ref.lo + ' ' + a.unit;
+  }
+
+  el.style.background   = bgs[tc];
+  el.style.borderColor  = borders[tc];
+  el.style.display      = 'block';
+  el.innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;margin-bottom:4px;">' +
+      '<strong style="font-size:13px;">' + a.name + '</strong>' +
+      '<span style="color:#6b7280;font-size:12px;">' + a.unit + '</span>' +
+      (refStr ? '<span style="color:#6b7280;font-size:12px;">· Ref: ' + refStr + '</span>' : '') +
+      '<span style="color:#6b7280;font-size:12px;">· CV<sub>I</sub> ' + a.cvi + '% · CV<sub>G</sub> ' + a.cvg + '%</span>' +
+    '</div>' +
+    '<div style="font-size:12px;color:' + colors[tc] + ';">' +
+      '<strong>' + tc.charAt(0).toUpperCase() + tc.slice(1) + ':</strong> ' +
+      'CV ≤ ' + t.cv + '% &nbsp;·&nbsp; Bias ≤ ' + t.bias + '% &nbsp;·&nbsp; TEa ≤ ' + t.tea + '%' +
+    '</div>';
+}
+
+// ── Persistent analyte selection across tools ─────────────────────────────
+// Call eflmPersistKey(key) when the user selects an analyte.
+// Call eflmRestoreSelection(selectId) after building the dropdown.
+var _EFLM_LS_KEY = 'eflm_last_analyte';
+
+function eflmPersistKey(key) {
+  try {
+    if (key) localStorage.setItem(_EFLM_LS_KEY, key);
+    else localStorage.removeItem(_EFLM_LS_KEY);
+  } catch(e) {}
+}
+
+function eflmRestoreSelection(selectId) {
+  try {
+    var saved = localStorage.getItem(_EFLM_LS_KEY);
+    if (!saved) return;
+    var sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.value = saved;
+    if (sel.value === saved) sel.dispatchEvent(new Event('change'));
+  } catch(e) {}
+}
+
+// Returns a clinically typical value for the selected analyte based on
+// its reference interval: midpoint of lo+hi, or 60% of upper limit,
+// or 150% of lower limit. Returns null if no reference data.
+function eflmRefMean(key) {
+  var a = EFLM_DB[key];
+  if (!a || !a.ref) return null;
+  var lo = a.ref.lo != null ? a.ref.lo : null;
+  var hi = a.ref.hi != null ? a.ref.hi : null;
+  if (lo !== null && hi !== null) return +((lo + hi) / 2).toFixed(3);
+  if (hi !== null) return +(hi * 0.6).toFixed(3);
+  if (lo !== null) return +(lo * 1.5).toFixed(3);
+  return null;
+}

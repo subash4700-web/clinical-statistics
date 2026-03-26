@@ -1,0 +1,55 @@
+<div class="info-content">
+
+  <h2>Understanding Stability Studies</h2>
+
+  <h3>What is a stability study?</h3>
+  <p>
+    A stability study (holdbarhedsstudie) evaluates how long a stored sample, reagent, or calibrator maintains
+    acceptable analytical performance. You test the same material at multiple time points and compare results
+    against the fresh baseline (T0). The goal is to establish a <strong>functional expiry</strong> — the last
+    time point at which performance is still acceptable.
+  </p>
+  <p>
+    Stability studies are required under CLSI EP25-A and are commonly needed for: patient sample stability
+    for delayed testing, frozen panel storage, kit reagent stability after opening, and transport validation.
+  </p>
+
+  <h3>Quantitative stability (continuous data)</h3>
+  <p>
+    For measurable analytes, calculate the <strong>% change from T0</strong> at each time point. Compare
+    against a predefined acceptance criterion (often derived from biological variation or clinical decision
+    limits). A paired t-test can confirm whether the change is statistically significant, but clinical
+    acceptability (the % change criterion) is the primary decision:
+  </p>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    % change = ((Tn − T0) / T0) × 100
+  </p>
+
+  <h3>Qualitative stability (pos/neg data)</h3>
+  <p>
+    For qualitative assays, compare results at each time point against T0 using a <strong>2×2 contingency table</strong>.
+    Calculate <strong>Cohen's Kappa</strong> (overall agreement corrected for chance) and <strong>McNemar's test</strong>
+    (directional bias — are positives being lost or gained?). Functional expiry = last time point where
+    κ ≥ acceptance criterion AND McNemar is non-significant.
+  </p>
+
+  <h3>Common mistakes</h3>
+  <p class="note">
+    <strong>Only testing one time point.</strong> A single time point tells you whether the material
+    passes or fails at that point — not when it starts to fail. You need multiple time points to establish
+    where the functional expiry actually lies.
+  </p>
+  <p class="note" style="margin-top:6px;">
+    <strong>Confusing statistical significance with clinical significance.</strong> A statistically significant
+    % change (p &lt; 0.05) does not necessarily mean the change is clinically important. Always compare against
+    the predefined acceptance criterion, not just the p-value.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Simulate both quantitative drift and qualitative degradation over time. Adjust drift rate and noise,
+    and see how the % change chart, Bland-Altman, and Kappa results evolve. The exercises cover stable
+    material, gradual drift, and sudden failure scenarios.
+  </p>
+
+</div>

@@ -1,0 +1,61 @@
+<div class="info-content">
+
+  <h2>Understanding Total Error &amp; Sigma</h2>
+
+  <h3>What is total error?</h3>
+  <p>
+    Total error (TE) combines both sources of analytical error — <strong>imprecision</strong> (random scatter)
+    and <strong>bias</strong> (systematic offset) — into a single estimate of how far a patient result might
+    be from the true value in the worst case.
+  </p>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    TE% ≈ |Bias%| + 1.65 × CV%
+  </p>
+  <p>
+    The factor 1.65 captures the 95th percentile of random error (one-tailed). Some labs use 2× CV% for a
+    more conservative estimate.
+  </p>
+
+  <h3>Allowable total error (TEa)</h3>
+  <p>
+    TEa is the maximum total error a method is allowed to have before it affects clinical decisions. It is set
+    by biological variation (EFLM/Ricos) or regulatory bodies (e.g. CLIA). If TE &lt; TEa, the method meets
+    the performance goal.
+  </p>
+
+  <h3>The Sigma metric</h3>
+  <p>
+    The sigma metric tells you how many standard deviations of imprecision fit between zero bias and the
+    allowable error limit:
+  </p>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    σ = (TEa − |Bias%|) / CV%
+  </p>
+  <ul>
+    <li><strong>σ ≥ 6</strong> — world-class performance. Minimal QC needed.</li>
+    <li><strong>σ 4–6</strong> — good performance. Standard Westgard rules sufficient.</li>
+    <li><strong>σ 3–4</strong> — marginal. Tighter QC rules required.</li>
+    <li><strong>σ &lt; 3</strong> — poor. Method likely needs improvement before clinical use.</li>
+  </ul>
+
+  <h3>Why it matters</h3>
+  <p>
+    Sigma directly determines your QC strategy. A high-sigma method rarely produces false rejections and rarely
+    misses errors — you can run fewer QC samples. A low-sigma method requires more frequent QC and tighter rules
+    to catch errors before they reach patients.
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Calculating sigma without checking which TEa to use.</strong> EFLM biological variation goals,
+    CLIA limits, and manufacturer claims are all different targets. Always state which TEa you used and why.
+    Desirable biological variation goals are the most common starting point.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Enter CV% and Bias% (from your precision and bias studies) and see how sigma changes as you adjust
+    allowable error. Use the exercises to see why a 1% reduction in bias can move a method from σ 3 to σ 5.
+  </p>
+
+</div>

@@ -35,6 +35,38 @@
   <div id="tab-input" class="tab-content active">
     <div class="grid-2">
       <div>
+        <!-- Tool guide card -->
+        <div class="tg-card">
+          <div class="tg-badges">
+            <span class="tg-badge tg-type">Trueness Study</span>
+            <span class="tg-badge tg-material">CRM · EQA material</span>
+            <span class="tg-badge tg-design">Known reference value required</span>
+            <span class="tg-badge tg-std">CLSI EP15-A3 · ISO 17511</span>
+          </div>
+          <div class="tg-when">Quantify systematic error against a certified or consensus target value. Required for ISO 15189 accreditation. Use CRM or EQA material — do NOT use patient samples without a certified reference.</div>
+          <details class="tg-details">
+            <summary>Details</summary>
+            <div class="tg-body">
+              <div class="tg-row"><span class="tg-label">Material</span><span>Certified Reference Material (CRM), EQA sample with assigned value, or proficiency testing material</span></div>
+              <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 20 measurements against a known reference value (single or per-sample)</span></div>
+              <div class="tg-row"><span class="tg-label">Output</span><span>Mean % bias, 95% CI, one-sample t-test, individual pair table, outlier flags</span></div>
+              <div class="tg-row"><span class="tg-label">Note</span><span>Bias% feeds directly into the Total Error &amp; Sigma tool — run this first</span></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- EFLM card — top -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable bias from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <label class="field-label">Analyte</label>
+          <select id="bias-eflm-analyte" onchange="biasEFLMAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="bias-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+        </div>
+        <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
+
         <div class="card">
           <div class="section-title">Settings</div>
 
@@ -63,16 +95,6 @@
           <p class="note">Absolute value — e.g. enter 5 for ±5%. If blank, no pass/fail assessment.</p>
         </div>
 
-        <!-- EFLM card -->
-        <div class="card">
-          <div class="section-title">EFLM Performance Specifications</div>
-          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable bias from the EFLM biological variation database (Ricos et al. 2014).</p>
-          <label class="field-label">Analyte</label>
-          <select id="bias-eflm-analyte" onchange="biasEFLMAnalyteChange()">
-            <option value="">— Select analyte —</option>
-          </select>
-          <div id="bias-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
-        </div>
 
         <div class="card">
           <div class="section-title" id="hint-title">Format — Single Reference</div>
@@ -298,6 +320,17 @@ function _iqrOutliers(arr){
   return arr.map(v=>iqr>0&&(v<q1-1.5*iqr||v>q3+1.5*iqr));
 }
 
+function _wfNextCard(step, nextTool, savedMsg, page, title) {
+  return `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Step ${step} of 3 complete</div>
+      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ${nextTool}</div>
+      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">${savedMsg} · will auto-fill in Total Error &amp; Sigma</div>
+    </div>
+    <button onclick="try{window.parent.loadToolFromWorkflow('${page}','${title}')}catch(e){alert('Open ${title} from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ${nextTool} →</button>
+  </div>`;
+}
+
 function calculate(){
   showError('');
   const mode=document.getElementById('sel-mode').value;
@@ -435,6 +468,10 @@ function _doCalculateBias(pairs){
   });
   html+=`</tbody></table></div>`;
 
+  // Workflow: save result and show next-step card
+  try { localStorage.setItem('wf_bias', JSON.stringify({ bias: +Math.abs(meanBias).toFixed(2), analyte, unit })); } catch(e) {}
+  html+=_wfNextCard(2,'Total Error &amp; Sigma',`|Bias%| = ${Math.abs(meanBias).toFixed(2)}% saved`,'tae.html','Total Error &amp; Sigma');
+
   document.getElementById('results-body').innerHTML=html;
 
   // Draw chart
@@ -558,9 +595,11 @@ var biasEFLMTier = 'desirable';
       sel.appendChild(opt);
     });
 })();
+eflmRestoreSelection('bias-eflm-analyte');
 
 function biasEFLMAnalyteChange() {
   biasEFLMKey = document.getElementById('bias-eflm-analyte').value;
+  eflmPersistKey(biasEFLMKey);
   if (!biasEFLMKey) {
     document.getElementById('bias-eflm-tier-cards').style.display = 'none';
     return;
@@ -588,10 +627,6 @@ function biasRenderTierCards() {
 
   wrap.style.display = 'block';
   wrap.innerHTML =
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
-    '<strong>' + a.name + '</strong> &nbsp;·&nbsp; ' + a.unit +
-    ' &nbsp;·&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;·&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
-    '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
     ['optimal','desirable','minimum'].map(tr => {
       const active = tr === biasEFLMTier;
@@ -619,6 +654,13 @@ function biasApplyEFLM() {
   const unitEl    = document.getElementById('inp-unit');
   if (!analyteEl.value) analyteEl.value = a.name;
   if (!unitEl.value)    unitEl.value    = a.unit;
+  const mean = eflmRefMean(biasEFLMKey);
+  if (mean !== null) {
+    const gm = document.getElementById('gen-ref'); if (gm) gm.value = mean;
+    const sd = document.getElementById('gen-sd'); if (sd) sd.value = t.cv;
+    const bp = document.getElementById('gen-bias-pct'); if (bp) bp.value = +(t.bias / 2).toFixed(2);
+  }
+  renderEFLMInfoBar('eflm-info-bar', biasEFLMKey, biasEFLMTier);
 }
 </script>
 </body>

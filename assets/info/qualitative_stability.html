@@ -1,0 +1,54 @@
+<div class="info-content">
+
+  <h2>Qualitative Stability Study</h2>
+
+  <h3>What is a qualitative stability study?</h3>
+  <p>
+    A qualitative stability study determines how long a pos/neg assay produces reliable results when samples
+    are stored under defined conditions. The same panel of samples is tested fresh (T0) and again at each
+    subsequent time point. Results at each time point are compared against T0 using a 2×2 contingency table.
+  </p>
+  <p>
+    The outcome is a <strong>functional expiry</strong> — the last time point at which the assay still meets
+    both the Kappa acceptance criterion and the McNemar non-significance criterion.
+  </p>
+
+  <h3>The 2×2 table (Tx vs T0)</h3>
+  <p>Rows = T0 result (reference). Columns = Tx result (stored).</p>
+  <ul>
+    <li><strong>a</strong> — T0 positive, Tx positive (concordant — stable)</li>
+    <li><strong>b</strong> — T0 negative, Tx positive (overcall at Tx)</li>
+    <li><strong>c</strong> — T0 positive, Tx negative (<strong>degradation</strong> — lost positive)</li>
+    <li><strong>d</strong> — T0 negative, Tx negative (concordant — stable)</li>
+  </ul>
+  <p>
+    In most degradation scenarios you expect <strong>c &gt; b</strong> — positive samples gradually lose
+    reactivity as the material degrades. McNemar's test will detect this as significant directional bias.
+  </p>
+
+  <h3>Pass / Fail criteria</h3>
+  <p>A time point PASSES when both conditions are met:</p>
+  <ul>
+    <li>κ ≥ acceptance criterion (commonly 0.80 for substantial agreement)</li>
+    <li>McNemar p ≥ α (no statistically significant directional bias)</li>
+  </ul>
+  <p>
+    Functional expiry = the <strong>last consecutive passing time point</strong>. If all time points pass,
+    expiry extends beyond the last tested point — further testing is needed.
+  </p>
+
+  <h3>Sample panel requirements</h3>
+  <p>
+    Include a mix of true positives and true negatives. Too few positives (a + c) makes Kappa unstable and
+    the McNemar test insensitive. Aim for at least 30–50 samples with a realistic prevalence of positives
+    (typically 30–50%).
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Using percentage agreement instead of Kappa.</strong> If only 10% of samples are positive,
+    a method that always reports negative would have 90% agreement. Kappa corrects for this — always use
+    Kappa as the primary measure of agreement in qualitative stability studies.
+  </p>
+
+</div>

@@ -108,6 +108,9 @@
       <li><a href="#ep15">EP15 — Precision verification protocol</a></li>
       <li><a href="#ep09">EP09 — Method comparison and bias estimation</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
+      <li><a href="#categorical-mc">Categorical Method Comparison — Kappa and McNemar</a></li>
+      <li><a href="#stability">Stability Studies — EP25-A</a></li>
+      <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#summary">Summary table</a></li>
 
     </ol>
@@ -514,7 +517,7 @@
       <tr><th>Factor</th><th>Question to ask</th><th>Effect on TAE</th></tr>
       <tr><td><strong>Clinical decision limits</strong></td><td>At what concentration does clinical action change? How large an error at that point is acceptable?</td><td>Tighter TAE if the decision limit is clinically critical</td></tr>
       <tr><td><strong>Concentration level</strong></td><td>Is the error requirement the same across the measurement range, or does it vary?</td><td>May need separate TAE at low, medium, high concentrations</td></tr>
-      <tr><td><strong>Within-patient monitoring</strong></td><td>Are results used to detect trends over time in the same patient?</td><td>TAE should be ≤ Reference Change Value (RCV = 2.77 × CVi × √2) to detect real change</td></tr>
+      <tr><td><strong>Within-patient monitoring</strong></td><td>Are results used to detect trends over time in the same patient?</td><td>TAE should be ≤ Reference Change Value (RCV = 2.77 × √(CVa² + CVi²)) to detect real change</td></tr>
       <tr><td><strong>Method capability</strong></td><td>What is the best CV% achievable with available instruments?</td><td>TAE must be achievable — unachievable goals are not useful</td></tr>
       <tr><td><strong>Available reference materials</strong></td><td>Can bias be verified against a certified reference? Or is EQA the only option?</td><td>Affects certainty of bias estimate; uncertainty propagates to TAE</td></tr>
       <tr><td><strong>Regulatory floor</strong></td><td>What is the mandatory minimum? Local goals cannot be looser than this.</td><td>TAE ≥ regulatory minimum; can be stricter</td></tr>
@@ -768,9 +771,162 @@
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
-  <!-- 19 -->
+  <!-- 20 -->
+  <div class="section" id="categorical-mc">
+    <h2>20. Categorical Method Comparison — Kappa and McNemar</h2>
+    <p>
+      When two methods report a <strong>qualitative (pos/neg) result</strong> rather than a measured value,
+      you cannot use Bland-Altman or regression. Instead, agreement is evaluated using a <strong>2×2 contingency table</strong>
+      and two complementary statistics: Cohen's Kappa and McNemar's test.
+    </p>
+
+    <h3>The 2×2 table</h3>
+    <table>
+      <tr><th></th><th>Method B: Positive</th><th>Method B: Negative</th></tr>
+      <tr><td><b>Method A: Positive</b></td><td><b>a</b> — both positive (agree)</td><td><b>b</b> — A+, B− (discordant)</td></tr>
+      <tr><td><b>Method A: Negative</b></td><td><b>c</b> — A−, B+ (discordant)</td><td><b>d</b> — both negative (agree)</td></tr>
+    </table>
+    <ul>
+      <li><b>a + d</b> = concordant pairs — used by Kappa</li>
+      <li><b>b + c</b> = discordant pairs — used by McNemar</li>
+    </ul>
+
+    <h3>Cohen's Kappa — overall concordance</h3>
+    <p>
+      Kappa measures agreement <strong>corrected for chance</strong>. Two methods with very different positive rates
+      can agree frequently by chance alone — Kappa removes that component.
+    </p>
+    <p><b>κ = (P<sub>o</sub> − P<sub>e</sub>) / (1 − P<sub>e</sub>)</b></p>
+    <ul>
+      <li><b>P<sub>o</sub></b> = observed agreement = (a + d) / N</li>
+      <li><b>P<sub>e</sub></b> = expected agreement by chance = [(a+b)(a+c) + (c+d)(b+d)] / N²</li>
+    </ul>
+    <table>
+      <tr><th>κ value</th><th>Interpretation (Landis &amp; Koch 1977)</th></tr>
+      <tr><td>&lt; 0.00</td><td>Poor — less than chance</td></tr>
+      <tr><td>0.00–0.20</td><td>Slight</td></tr>
+      <tr><td>0.21–0.40</td><td>Fair</td></tr>
+      <tr><td>0.41–0.60</td><td>Moderate</td></tr>
+      <tr><td>0.61–0.80</td><td>Substantial</td></tr>
+      <tr><td>0.81–1.00</td><td>Almost perfect</td></tr>
+    </table>
+    <div class="callout">
+      <b>Important:</b> Kappa is sensitive to prevalence. A low proportion of positives can produce a low κ even with high observed agreement.
+      Always report P<sub>o</sub> (observed agreement %) alongside κ.
+    </div>
+
+    <h3>McNemar's test — systematic tilt</h3>
+    <p>
+      McNemar's test uses <strong>only the discordant pairs</strong> (b and c) to ask:
+      are disagreements symmetric, or does one method systematically call more positives than the other?
+    </p>
+    <p><b>H₀: b = c</b> (no systematic bias) &nbsp;|&nbsp; <b>H₁: b ≠ c</b> (one method biased)</p>
+    <ul>
+      <li>When b + c ≥ 25: χ² = (|b − c| − 1)² / (b + c) with continuity correction</li>
+      <li>When b + c &lt; 25: exact binomial test (more accurate for small discordant counts)</li>
+      <li><b>p ≥ α</b>: no systematic bias — disagreements are random</li>
+      <li><b>p &lt; α, b &gt; c</b>: Method A calls more positives — may indicate lower specificity or genuine over-detection</li>
+      <li><b>p &lt; α, c &gt; b</b>: Method B calls more positives</li>
+    </ul>
+    <div class="callout">
+      <b>Key principle:</b> Kappa and McNemar answer different questions and must be read together.
+      High κ + significant McNemar = systematic but small bias.
+      Low κ + non-significant McNemar = random but frequent disagreement.
+    </div>
+
+    <h3>Application: qualitative holdbarhedsforsøg (stability studies)</h3>
+    <p>
+      For qualitative stability studies, the same panel of known samples is tested at T0 (fresh reference) and at each storage time point
+      (T1, T3, T6, T12 months). Each time point produces one 2×2 table — run the full Kappa + McNemar analysis at each.
+    </p>
+    <ul>
+      <li>Plot κ vs time — a declining κ indicates degrading agreement as material ages</li>
+      <li>Track McNemar direction — significant tilt usually means the aged material misses positives (loss of sensitivity)</li>
+      <li>The <b>functional expiry</b> is the last time point at which κ ≥ your pre-defined criterion AND McNemar p ≥ α</li>
+      <li>Pre-define acceptance criteria before the study (e.g. κ ≥ 0.80 and McNemar p ≥ 0.05)</li>
+    </ul>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 21 -->
+  <div class="section" id="stability">
+    <h2>21. Stability Studies — CLSI EP25-A</h2>
+    <p>
+      A stability study (holdbarhedsforsøg) evaluates whether a reagent, test kit, or biological material
+      maintains its intended performance over time under defined storage conditions.
+      The goal is to <strong>determine functional expiry</strong> — the point at which performance is no longer acceptable.
+    </p>
+
+    <h3>Study design principles</h3>
+    <ul>
+      <li><b>Panel of samples:</b> use a fixed panel covering the clinically relevant range (typically 10–20 samples for quantitative; 20–60 for qualitative)</li>
+      <li><b>T0 = fresh reference:</b> all samples are measured at baseline before any aging begins</li>
+      <li><b>Time points:</b> typically T0, T1, T3, T6, T9, T12 months — select based on the intended shelf life</li>
+      <li><b>Same panel at each time point:</b> paired design maximises sensitivity to detect real changes</li>
+      <li><b>Pre-define acceptance criteria:</b> decide the criterion before collecting data — do not change it after seeing results</li>
+    </ul>
+
+    <h3>Quantitative stability — % change from T0</h3>
+    <p>
+      For analytes that produce a measured value, performance is tracked as <strong>% change from the T0 baseline</strong>.
+    </p>
+    <p><b>% change at T<sub>i</sub> for sample j</b> = (T<sub>i,j</sub> − T0<sub>j</sub>) / T0<sub>j</sub> × 100</p>
+    <p>For the full sample panel at each time point:</p>
+    <ul>
+      <li>Calculate mean % change and its 95% CI (paired t-test against 0)</li>
+      <li>Apply acceptance criterion: commonly <b>±10%</b> (CLSI EP25-A general recommendation) or ±5% for high-precision analytes</li>
+      <li>A time point <b>passes</b> if the mean % change is within the criterion</li>
+      <li>The <b>functional expiry</b> is the last passing time point</li>
+    </ul>
+    <h3>Trend analysis</h3>
+    <p>
+      Regression of mean % change vs time (months) gives the drift rate (% per month).
+      A significant slope indicates progressive degradation. Use the regression to <em>extrapolate</em>
+      when the material would cross the acceptance limit — but note this is indicative only beyond measured time points.
+    </p>
+    <table>
+      <tr><th>Drift direction</th><th>Meaning</th><th>Typical cause</th></tr>
+      <tr><td>Negative (reading lower)</td><td>Loss of reactivity</td><td>Antibody degradation, enzyme denaturation, pH shift</td></tr>
+      <tr><td>Positive (reading higher)</td><td>Overcall / false elevation</td><td>Degradation products cross-reacting, contamination</td></tr>
+    </table>
+
+    <h3>Qualitative stability — Kappa + McNemar over time</h3>
+    <p>
+      For pos/neg methods, each time point generates a 2×2 table (T0 vs T<sub>i</sub> results).
+      Apply Cohen's Kappa and McNemar's test at each time point (see Section 20).
+    </p>
+    <ul>
+      <li>Pass criterion example: κ ≥ 0.80 <em>and</em> McNemar p ≥ 0.05</li>
+      <li>Functional expiry = last time point meeting both criteria</li>
+      <li>Declining κ without systematic tilt = random degradation (reagent becoming inconsistent)</li>
+      <li>Significant McNemar (usually c &gt; b) = aged material systematically missing positives — loss of sensitivity</li>
+    </ul>
+
+    <h3>Acceptance criteria sources</h3>
+    <table>
+      <tr><th>Source</th><th>Criterion</th><th>Notes</th></tr>
+      <tr><td>CLSI EP25-A</td><td>±10% for most analytes</td><td>General recommendation</td></tr>
+      <tr><td>Biological variation (EFLM)</td><td>Based on desirable bias (0.25 × √(CVi² + CVg²))</td><td>Analyte-specific</td></tr>
+      <tr><td>Clinical decision limit</td><td>Based on clinical impact of shift</td><td>Requires clinical input</td></tr>
+      <tr><td>Manufacturer specification</td><td>As stated in IFU/package insert</td><td>Minimum requirement</td></tr>
+      <tr><td>ISO 15189 / regulatory</td><td>As required by accreditation body</td><td>Document rationale</td></tr>
+    </table>
+
+    <div class="callout">
+      <b>CLSI EP25-A key principle:</b> Stability is a pass/fail decision based on pre-defined criteria.
+      The study design, acceptance criteria, and number of time points must all be documented in the protocol
+      before testing begins. Post-hoc changes to criteria are not acceptable.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 22 -->
   <div class="section" id="summary">
-    <h2>19. Summary table</h2>
+    <h2>22. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
@@ -779,8 +935,84 @@
       <tr><td><b>Bias</b></td><td>Systematic error vs true value</td><td>Absolute, %</td><td>Bias — CRM / EQA</td></tr>
       <tr><td><b>Total Error (TE)</b></td><td>Bias + random error combined</td><td>TE = |Bias| + 1.65 × SD</td><td>—</td></tr>
       <tr><td><b>TAE</b></td><td>Maximum acceptable total error</td><td>% (from EFLM / regulatory)</td><td>All tools</td></tr>
-      <tr><td><b>Sigma</b></td><td>Quality relative to error budget</td><td>Sigma = (TAE − |Bias|) / CV</td><td>Method Comparison</td></tr>
+      <tr><td><b>Sigma</b></td><td>Quality relative to error budget</td><td>Sigma = (TAE − |Bias|) / CV</td><td>Total Error &amp; Sigma</td></tr>
+      <tr><td><b>Quantitative method comparison</b></td><td>Systematic and random differences between two quantitative methods</td><td>Bland-Altman bias, LoA; Passing-Bablok slope &amp; intercept</td><td>Quantitative Method Comparison</td></tr>
+      <tr><td><b>Cohen's Kappa (κ)</b></td><td>Overall agreement between two pos/neg methods, corrected for chance</td><td>κ (0–1), 95% CI, Landis &amp; Koch scale</td><td>Categorical Method Comparison</td></tr>
+      <tr><td><b>McNemar's test</b></td><td>Systematic tilt — whether one method calls more positives than the other</td><td>p-value; direction (b vs c)</td><td>Categorical Method Comparison</td></tr>
+      <tr><td><b>Quantitative stability</b></td><td>% change from baseline over time (EP25-A)</td><td>Mean % change, 95% CI, drift rate, functional expiry</td><td>Quantitative Stability Study</td></tr>
+      <tr><td><b>Qualitative stability</b></td><td>Agreement between fresh (T0) and aged material at each time point</td><td>κ vs time, McNemar p-value, functional expiry</td><td>Categorical Method Comparison</td></tr>
     </table>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- Workflow -->
+  <div class="section" id="workflow">
+    <h2>Typical validation workflow</h2>
+    <p>
+      In practice, analytical performance validation follows a standard three-step sequence. Each step builds on the previous one — you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
+    </p>
+
+    <div style="display:flex;flex-direction:column;gap:0;margin:24px 0;">
+
+      <!-- Step 1 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div style="width:2px;background:#bfdbfe;flex:1;margin-top:4px;"></div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:8px;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Precision study — measure CV%</div>
+          <p style="margin:0 0 6px 0;">Run your method repeatedly under controlled conditions to quantify random error. Use <strong>intermediate precision</strong> (day-to-day) rather than repeatability for a realistic CV%.</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>Quick study</strong> — 20+ patient samples or QC material over multiple days → use the <em>Precision — Quick</em> tool</li>
+            <li><strong>Full validation</strong> — CLSI EP05 design (5 days × 2 runs × 2 replicates minimum) → use the <em>EP05 — Validation</em> tool</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% (total intermediate precision)</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div style="width:2px;background:#bfdbfe;flex:1;margin-top:4px;"></div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:8px;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Bias study — measure systematic error</div>
+          <p style="margin:0 0 6px 0;">Compare your method against a known reference to quantify systematic error (trueness).</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>CRM (gold standard)</strong> — measure a certified reference material with a known assigned value. Most reliable estimate of true bias.</li>
+            <li><strong>EQA</strong> — compare your result against peer group mean. Less reliable: peer consensus is not a true reference value.</li>
+            <li><strong>Method comparison</strong> — compare your method against a reference method using patient samples (CLSI EP09). Gives a method-derived bias estimate.</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> Mean Bias% (absolute value)</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#16a34a;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div style="width:2px;background:#bbf7d0;flex:1;margin-top:4px;margin-bottom:0;"></div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:0;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Total Error &amp; Sigma — combine and evaluate</div>
+          <p style="margin:0 0 6px 0;">Enter CV% + Bias% + TAE% (from EFLM or your specification) to calculate:</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>TE</strong> = |Bias%| + 1.65 × CV% — does total error fit within the allowable limit?</li>
+            <li><strong>Sigma metric</strong> = (TAE% − |Bias%|) / CV% — how much margin does your method have?</li>
+            <li><strong>QC strategy</strong> — sigma ≥ 6: minimal QC needed; sigma 4–6: standard Westgard rules; sigma &lt; 4: tighten QC or improve method.</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> TE%, sigma metric, QC rule recommendation</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;">
+      <strong>In the app:</strong> After you calculate results in the Precision tool, a blue card appears at the bottom guiding you to the Bias tool — and from Bias to Total Error &amp; Sigma. Your CV% and Bias% are automatically transferred so you do not need to re-enter them.
+    </div>
+
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 

@@ -68,7 +68,7 @@
     .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
     .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
     .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
-    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
     .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
     .ex-card:hover{border-color:#5eead4;box-shadow:0 2px 10px rgba(13,148,136,.1);}
     .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
@@ -148,6 +148,30 @@
             <span class="ex-param">r ≈ 0.99</span>
             <span class="ex-param">Intercept = +15</span>
             <span class="ex-param">Range 5–60</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Small n — CI too wide to conclude</div>
+          <div class="ex-obj">Real proportional bias exists (slope = 1.12) but with only 20 samples the 95% CI of the slope still includes 1.0. Statistically inconclusive — not the same as no bias.</div>
+          <div class="ex-params">
+            <span class="ex-param">n = 20</span>
+            <span class="ex-param">Slope = 1.12</span>
+            <span class="ex-param">Wide CI band</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard6" onclick="loadExercise(6)">
+          <div class="ex-num">Exercise 6</div>
+          <div class="ex-title">Confirmed proportional bias</div>
+          <div class="ex-obj">Same 12% proportional bias but with n = 80. The CI of the slope now excludes 1.0 — bias is statistically confirmed. The CI band on the scatter plot no longer overlaps the identity line.</div>
+          <div class="ex-params">
+            <span class="ex-param">n = 80</span>
+            <span class="ex-param">Slope = 1.12</span>
+            <span class="ex-param">CI excludes 1.0</span>
           </div>
           <button class="ex-btn">Load exercise</button>
         </div>
@@ -270,6 +294,12 @@
 
       <div id="insightBox" class="insight-box insight-blue"></div>
 
+      <!-- Slope / intercept CI analysis -->
+      <div class="chart-panel" style="margin-top:0;">
+        <div class="chart-hd">Slope &amp; Intercept — Systematic Bias Analysis</div>
+        <div class="chart-bd" id="ciAnalysis" style="font-size:12px;"></div>
+      </div>
+
       <div class="chart-panel">
         <div class="chart-hd">
           Scatter plot — Method A vs Method B
@@ -317,11 +347,18 @@ function pearson(x,y){
   return den===0?0:num/den;
 }
 function ols(x,y){
-  const mx=mean(x),my=mean(y);
+  const n=x.length, mx=mean(x), my=mean(y);
   const Sxy=x.reduce((s,xi,i)=>s+(xi-mx)*(y[i]-my),0);
   const Sxx=x.reduce((s,xi)=>s+(xi-mx)**2,0);
   const m=Sxx===0?1:Sxy/Sxx;
-  return {m, b:my-m*mx};
+  const b=my-m*mx;
+  // 95% CI (z=1.96 asymptotic)
+  const yHat=x.map((xi,i)=>m*xi+b);
+  const sse=y.reduce((s,yi,i)=>s+(yi-yHat[i])**2,0);
+  const s2=n>2?sse/(n-2):0;
+  const sm=Math.sqrt(s2/Sxx);
+  const sb=Math.sqrt(s2*(1/n+mx*mx/Sxx));
+  return {m, b, mLo:m-1.96*sm, mHi:m+1.96*sm, bLo:b-1.96*sb, bHi:b+1.96*sb, s2, Sxx, mx, n};
 }
 function f2(v){ return isNaN(v)?'—':v.toFixed(2); }
 function f1(v){ return isNaN(v)?'—':v.toFixed(1); }
@@ -364,6 +401,35 @@ function simulate(){
   document.getElementById('sv-intercept').textContent=f1(reg.b);
   const ri=Math.abs(reg.b)/range*100;
   icpEl.className='stat '+(ri<=2?'pass':ri<=5?'warn':'fail');
+
+  // CI analysis panel
+  function ciRow(label, val, lo, hi, target, tLabel){
+    const pass = lo<=target && target<=hi;
+    const badge = pass
+      ? `<span style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:5px;padding:1px 8px;font-size:11px;font-weight:700;">No significant bias</span>`
+      : `<span style="background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:5px;padding:1px 8px;font-size:11px;font-weight:700;">Bias detected</span>`;
+    const dir = !pass ? `<span style="font-size:11px;color:#6b7280;margin-left:6px;">${target===1?(val>1?'over-estimation':'under-estimation'):(val>0?'positive constant offset':'negative constant offset')}</span>` : '';
+    return `<tr>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;font-weight:700;">${label}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${val.toFixed(3)}&ensp;<span style="font-size:11px;color:#6b7280;">95% CI: [${lo.toFixed(3)}, ${hi.toFixed(3)}]</span></td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">H₀: ${tLabel}</td>
+      <td style="padding:6px 8px;border:1px solid #e5e7eb;">${badge}${dir}</td>
+    </tr>`;
+  }
+  document.getElementById('ciAnalysis').innerHTML=`
+    <p style="margin:0 0 8px;color:#6b7280;">If the 95% CI of the slope includes 1.0 → no significant proportional bias. If the CI of the intercept includes 0 → no significant constant bias.</p>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="background:#f1f5f9;">
+        <th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Parameter</th>
+        <th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Estimate &amp; 95% CI</th>
+        <th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Null hypothesis</th>
+        <th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">Verdict</th>
+      </tr></thead>
+      <tbody>
+        ${ciRow('Slope',reg.m,reg.mLo,reg.mHi,1,'slope = 1')}
+        ${ciRow('Intercept',reg.b,reg.bLo,reg.bHi,0,'intercept = 0')}
+      </tbody>
+    </table></div>`;
 
   const biasEl=document.getElementById('s-bias');
   document.getElementById('sv-bias').textContent=f1(mb);
@@ -411,13 +477,20 @@ function simulate(){
   const nB=document.getElementById('nameB').value||'Method B';
   const pts=mB.map((x,i)=>({x,y:mA[i]}));
   const xMin=Math.min(...mB)*0.97, xMax=Math.max(...mB)*1.03;
+  // OLS CI band (hyperbolic)
+  const nBand=50, s=Math.sqrt(reg.s2);
+  const bandX=Array.from({length:nBand+1},(_,i)=>xMin+i*(xMax-xMin)/nBand);
+  const ciUp=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b+1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
+  const ciDn=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b-1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
   if(scatterChart) scatterChart.destroy();
   scatterChart=new Chart(document.getElementById('scatterChart'),{
     type:'scatter',
     data:{datasets:[
       {label:'Samples',data:pts,backgroundColor:'rgba(13,148,136,.35)',borderColor:'rgba(13,148,136,.7)',pointRadius:4,borderWidth:1},
       {label:'Identity (y=x)',data:[{x:xMin,y:xMin},{x:xMax,y:xMax}],type:'line',borderColor:'#94a3b8',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
-      {label:'OLS regression',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'#ef4444',borderWidth:2,pointRadius:0,fill:false}
+      {label:'OLS regression',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'#ef4444',borderWidth:2,pointRadius:0,fill:false},
+      {label:'95% CI (upper)',data:ciUp,type:'line',borderColor:'rgba(239,68,68,.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:'+1',backgroundColor:'rgba(239,68,68,.07)'},
+      {label:'95% CI (lower)',data:ciDn,type:'line',borderColor:'rgba(239,68,68,.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
     ]},
     options:{animation:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:p=>`(${p.parsed.x.toFixed(1)}, ${p.parsed.y.toFixed(1)})`}}},
       scales:{x:{title:{display:true,text:nB,font:{size:12}},grid:{color:'#f3f4f6'}},y:{title:{display:true,text:nA,font:{size:12}},grid:{color:'#f3f4f6'}}}}
@@ -465,10 +538,22 @@ const EX={
      inst:`<b>What to observe:</b><ol>
      <li>Note r — it is likely 0.98 or higher. The scatter looks excellent.</li>
      <li>But the Bland-Altman shows mean bias ≈ +15 units consistently across the whole range.</li>
-     <li>The insight box flags "The r trap" — high r with real bias.</li>
+     <li>The intercept CI analysis shows the CI clearly excludes 0 — constant bias confirmed.</li>
      </ol><b>Key lesson:</b> Pearson r measures <em>correlation</em>, not <em>agreement</em>.
      Two methods can track each other perfectly while one is systematically wrong.
-     In method comparison, r should never be used alone.`}
+     In method comparison, r should never be used alone.`},
+  5:{n:20,lo:5,hi:50,slope:1.12,icp:0,cvA:2,cvB:2,title:'Small n — CI too wide to conclude',
+     inst:`<b>What to observe:</b><ol>
+     <li>The true slope is 1.12 — a real 12% proportional bias. But with only 20 samples the 95% CI of the slope likely still includes 1.0.</li>
+     <li>The CI band on the scatter plot is wide and overlaps the identity line.</li>
+     <li>The verdict says "No significant bias" — but this is a statistical power problem, not proof of no bias.</li>
+     </ol><b>Key lesson:</b> A non-significant result does not mean no bias exists. With small n, the study may simply lack the power to detect it. Compare with Exercise 6.`},
+  6:{n:80,lo:5,hi:50,slope:1.12,icp:0,cvA:2,cvB:2,title:'Confirmed proportional bias (n=80)',
+     inst:`<b>What to observe:</b><ol>
+     <li>Same 12% proportional bias as Exercise 5, but now n = 80. The slope CI now clearly excludes 1.0.</li>
+     <li>The CI band on the scatter plot is narrow and pulls away from the identity line at higher concentrations.</li>
+     <li>The verdict says "Bias detected" — the Bland-Altman confirms the sloping differences.</li>
+     </ol><b>Key lesson:</b> More samples narrow the CI and give statistical power to detect real bias. For method comparison studies, n ≥ 40 is typically recommended (CLSI EP09).`}
 };
 
 function loadExercise(n){

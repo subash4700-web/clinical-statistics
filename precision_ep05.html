@@ -97,6 +97,38 @@
 
       <!-- Left column: Settings -->
       <div>
+        <!-- Tool guide card -->
+        <div class="tg-card">
+          <div class="tg-badges">
+            <span class="tg-badge tg-type">Precision Validation</span>
+            <span class="tg-badge tg-material">Patient samples · 2 levels</span>
+            <span class="tg-badge tg-design">Repeated measures</span>
+            <span class="tg-badge tg-std">CLSI EP05-A3 · EP15-A3</span>
+          </div>
+          <div class="tg-when">Full precision validation (EP05) before clinical implementation, or verification of manufacturer claims (EP15). Required for ISO 15189 accreditation and new method introduction.</div>
+          <details class="tg-details">
+            <summary>Details</summary>
+            <div class="tg-body">
+              <div class="tg-row"><span class="tg-label">Material</span><span>Stable patient pools at 2 concentration levels covering clinical decision points (e.g. normal + elevated)</span></div>
+              <div class="tg-row"><span class="tg-label">EP05</span><span>20 days × 2 runs/day × 2 replicates = 80 results per level — full validation</span></div>
+              <div class="tg-row"><span class="tg-label">EP15</span><span>5 days × 2 runs/day × 2 replicates = 20 results per level — manufacturer claim verification</span></div>
+              <div class="tg-row"><span class="tg-label">Output</span><span>CVw (within-run), CVb (between-run), CVt (total precision), ANOVA variance decomposition</span></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- EFLM card — top -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable imprecision from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <label class="field-label">Analyte</label>
+          <select id="ep05-eflm-analyte" onchange="ep05OnAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="ep05-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+        </div>
+        <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
+
         <div class="card">
           <div class="section-title">Study Design</div>
 
@@ -131,16 +163,6 @@
           <div id="level-configs" style="margin-top:10px;"></div>
         </div>
 
-        <!-- EFLM analyte selector -->
-        <div class="card">
-          <div class="section-title">EFLM Performance Specifications</div>
-          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable imprecision from the EFLM biological variation database (Ricos et al. 2014).</p>
-          <label class="field-label">Analyte</label>
-          <select id="ep05-eflm-analyte" onchange="ep05OnAnalyteChange()">
-            <option value="">— Select analyte —</option>
-          </select>
-          <div id="ep05-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
-        </div>
 
         <div class="card">
           <div class="section-title">Format</div>
@@ -736,6 +758,17 @@ function clearEPOutliers(lvl) {
   calculateEP();
 }
 
+function _wfNextCard(step, nextTool, savedMsg, page, title) {
+  return '<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">'
+    + '<div>'
+    + '<div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Step ' + step + ' of 3 complete</div>'
+    + '<div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ' + nextTool + '</div>'
+    + '<div style="font-size:12px;color:#3b82f6;margin-top:2px;">' + savedMsg + ' · will auto-fill in Total Error &amp; Sigma</div>'
+    + '</div>'
+    + '<button onclick="try{window.parent.loadToolFromWorkflow(\'' + page + '\',\'' + title + '\')}catch(e){alert(\'Open ' + title + ' from the sidebar\')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ' + nextTool + ' \u2192</button>'
+    + '</div>';
+}
+
 function calculateEP() {
   showEPError('');
 
@@ -762,6 +795,17 @@ function calculateEP() {
   for (var lvl = 0; lvl < d.levels; lvl++) {
     html += renderLevelResults(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl, d.levels);
   }
+
+  // Workflow: save first-level CVt and show next-step card
+  try {
+    var ld0 = _levelsData[0];
+    var wfCv = +ld0.stats.CVt.toFixed(2);
+    var wfAnalyte = ld0.cfg.analyte || '';
+    var wfUnit = ld0.cfg.unit || '';
+    localStorage.setItem('wf_precision', JSON.stringify({ cv: wfCv, analyte: wfAnalyte, unit: wfUnit, type: 'EP05' + (d.levels > 1 ? ' Level 1' : '') }));
+    html += _wfNextCard(1, 'Bias', 'CV% = ' + wfCv + '% (EP05' + (d.levels > 1 ? ', Level 1' : '') + ') saved', 'bias.html', 'Bias');
+  } catch(e) {}
+
   document.getElementById('ep-results').innerHTML = html;
 
   // Build charts after DOM update
@@ -1414,9 +1458,11 @@ var ep05EFLMTier = 'desirable';
       sel.appendChild(opt);
     });
 })();
+eflmRestoreSelection('ep05-eflm-analyte');
 
 function ep05OnAnalyteChange() {
   ep05EFLMKey = document.getElementById('ep05-eflm-analyte').value;
+  eflmPersistKey(ep05EFLMKey);
   if (!ep05EFLMKey) {
     ep05ClearAllowCV();
     document.getElementById('ep05-eflm-tier-cards').style.display = 'none';
@@ -1440,10 +1486,6 @@ function ep05RenderTierCards() {
 
   wrap.style.display = 'block';
   wrap.innerHTML =
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
-    '<strong>' + escHtml(a.name) + '</strong> &nbsp;·&nbsp; ' + escHtml(a.unit) +
-    ' &nbsp;·&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;·&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
-    '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
     ['optimal','desirable','minimum'].map(function(tr) {
       var active = tr === ep05EFLMTier;
@@ -1468,12 +1510,29 @@ function ep05SelectTier(tier) {
 
 function ep05ApplyAllowCV() {
   if (!ep05EFLMKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[ep05EFLMKey]) return;
-  var t   = calcEFLMTiers(EFLM_DB[ep05EFLMKey].cvi, EFLM_DB[ep05EFLMKey].cvg)[ep05EFLMTier];
+  var a   = EFLM_DB[ep05EFLMKey];
+  var t   = calcEFLMTiers(a.cvi, a.cvg)[ep05EFLMTier];
   var d   = getDesign();
   for (var li = 0; li < d.levels; li++) {
     var inp = document.getElementById('lc-allowcv-' + li);
     if (inp) { inp.value = t.cv; inp.dataset.eflmFilled = '1'; }
   }
+  // Fill generate-sample means: level 0 = ref.lo or 0.7×mid, level 1 = ref.hi or 1.5×mid
+  var mid = eflmRefMean(ep05EFLMKey);
+  if (mid !== null) {
+    var lo = (a.ref && a.ref.lo != null) ? a.ref.lo : +(mid * 0.7).toFixed(3);
+    var hi = (a.ref && a.ref.hi != null) ? a.ref.hi : +(mid * 1.5).toFixed(3);
+    var m0 = document.getElementById('gen-mean-0'); if (m0) m0.value = lo;
+    var m1 = document.getElementById('gen-mean-1'); if (m1) m1.value = hi;
+    // within-run CV ≈ 60% of desirable, between-run ≈ 80% of desirable
+    var cvw = +(t.cv * 0.6).toFixed(2);
+    var cvb = +(t.cv * 0.8).toFixed(2);
+    ['0','1'].forEach(function(i) {
+      var cw = document.getElementById('gen-cvw-' + i); if (cw) cw.value = cvw;
+      var cb = document.getElementById('gen-cvb-' + i); if (cb) cb.value = cvb;
+    });
+  }
+  renderEFLMInfoBar('eflm-info-bar', ep05EFLMKey, ep05EFLMTier);
 }
 
 function ep05ClearAllowCV() {

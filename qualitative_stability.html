@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qualitative Stability Study</title>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .tp-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+    .tp-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .tp-label-inp { font-size:14px; font-weight:800; color:#1e3a5f; border:none; background:transparent; padding:2px 4px; border-bottom:2px solid #e2e8f0; width:120px; }
+    .tp-label-inp:focus { outline:none; border-color:var(--accent); }
+    .tp-remove { font-size:11px; color:#9ca3af; background:none; border:none; cursor:pointer; padding:2px 6px; border-radius:5px; }
+    .tp-remove:hover { background:#fee2e2; color:#dc2626; }
+
+    /* 2×2 grid */
+    .cg { display:grid; grid-template-columns:auto 1fr 1fr; gap:6px; }
+    .cg-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7280; padding:4px 0; text-align:center; }
+    .cg-row-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#6b7280; padding:4px 8px; display:flex; align-items:center; justify-content:flex-end; text-align:right; }
+    .cg-cell { display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .cg-cell input { width:70px; padding:8px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-weight:700; text-align:center; background:#fff; }
+    .cg-cell-lbl { font-size:9px; color:#9ca3af; text-align:center; line-height:1.3; font-weight:600; text-transform:uppercase; letter-spacing:.03em; }
+    .cg-cell-agree input { background:#eff6ff; border-color:#93c5fd; }
+    .cg-cell-disagree input { background:#fff7ed; border-color:#fdba74; }
+
+    /* result table */
+    .res-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+    .res-table th { background:#f1f5f9; padding:6px 8px; border:1px solid var(--line); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); text-align:left; }
+    .res-table td { padding:7px 8px; border:1px solid var(--line); }
+    .res-table tr:nth-child(even) td { background:#f9fafb; }
+    .badge-pass { display:inline-block; background:#f0fdf4; border:1px solid #86efac; color:#166534; border-radius:5px; padding:1px 7px; font-size:11px; font-weight:700; }
+    .badge-fail { display:inline-block; background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; border-radius:5px; padding:1px 7px; font-size:11px; font-weight:700; }
+    .badge-info { display:inline-block; background:#eff6ff; border:1px solid #93c5fd; color:#1e40af; border-radius:5px; padding:1px 7px; font-size:11px; font-weight:700; }
+
+    .expiry-box { background:#f0fdf4; border:2px solid #86efac; border-radius:14px; padding:16px 20px; margin:14px 0; }
+    .expiry-box.fail { background:#fef2f2; border-color:#fca5a5; }
+    .expiry-box .ex-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; margin-bottom:4px; }
+    .expiry-box .ex-val { font-size:22px; font-weight:900; color:#166534; }
+    .expiry-box.fail .ex-val { color:#991b1b; }
+    .expiry-box .ex-note { font-size:12px; color:#374151; margin-top:5px; line-height:1.5; }
+
+    .insight-box { padding:10px 13px; border-radius:8px; font-size:12px; line-height:1.6; margin-top:10px; }
+    .ib-green { background:#ecfdf5; border:1px solid #a7f3d0; color:#064e3b; }
+    .ib-amber { background:#fffbeb; border:1px solid #fcd34d; color:#78350f; }
+    .ib-red { background:#fef2f2; border:1px solid #fecaca; color:#7f1d1d; }
+    .ib-blue { background:#f0fdfa; border:1px solid #99f6e4; color:#134e4a; }
+
+    .tp-time-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Tool guide card -->
+  <div class="tg-card">
+    <div class="tg-badges">
+      <span class="tg-badge tg-type">Stability Study</span>
+      <span class="tg-badge tg-material">Stored patient panel</span>
+      <span class="tg-badge tg-design">Longitudinal · vs T0</span>
+      <span class="tg-badge tg-std">CLSI EP25-A · Kappa · McNemar</span>
+    </div>
+    <div class="tg-when">Use when validating the stability of a qualitative (pos/neg) assay over time — testing a frozen panel of samples at multiple time points and comparing agreement with T0 (fresh).</div>
+    <details class="tg-details">
+      <summary>▶ Details</summary>
+      <div class="tg-body">
+        <div class="tg-row"><span class="tg-label">Material</span><span>Stored patient panel (e.g. frozen aliquots) tested fresh at T0 and re-tested at each subsequent time point</span></div>
+        <div class="tg-row"><span class="tg-label">Design</span><span>Same samples at each time point. Enter 2×2 table (Tx vs T0) per time point. T0 is the reference.</span></div>
+        <div class="tg-row"><span class="tg-label">Outputs</span><span>Cohen's Kappa + 95% CI per time point; McNemar p-value; direction (degradation vs overcall); functional expiry</span></div>
+        <div class="tg-row"><span class="tg-label">Decision</span><span>Pass = κ ≥ criterion AND McNemar p ≥ α (no systematic bias). Functional expiry = last passing time point.</span></div>
+        <div class="tg-row"><span class="tg-label">Quantitative?</span><span>For measurable analytes use <strong>Quantitative Stability Study</strong> — % change from T0 and paired t-test</span></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Settings</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
+
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="tab-content active">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Study Settings</div>
+        <label class="field-label">Analyte / test name</label>
+        <input type="text" id="inp-analyte" value="Analyte" placeholder="e.g. Hepatitis B sAg">
+        <label class="field-label" style="margin-top:10px;">Positive category label</label>
+        <input type="text" id="inp-pos-label" value="Positive" placeholder="e.g. Positive, Reactive">
+        <label class="field-label" style="margin-top:10px;">Negative category label</label>
+        <input type="text" id="inp-neg-label" value="Negative" placeholder="e.g. Negative, Non-reactive">
+      </div>
+
+      <div class="card">
+        <div class="section-title">Acceptance Criteria</div>
+        <label class="field-label">Minimum Kappa (κ) criterion</label>
+        <select id="inp-kappa-crit">
+          <option value="0.90">0.90 — Almost perfect (strict)</option>
+          <option value="0.80" selected>0.80 — Substantial (recommended)</option>
+          <option value="0.70">0.70 — Substantial (relaxed)</option>
+          <option value="0.60">0.60 — Moderate</option>
+        </select>
+        <label class="field-label" style="margin-top:10px;">Significance level (α)</label>
+        <select id="inp-alpha">
+          <option value="0.05" selected>0.05 (95% confidence)</option>
+          <option value="0.01">0.01 (99% confidence)</option>
+          <option value="0.10">0.10 (90% confidence)</option>
+        </select>
+        <label class="field-label" style="margin-top:10px;">McNemar method</label>
+        <select id="inp-mcnemar-method">
+          <option value="auto" selected>Auto (exact if b+c &lt; 25, χ² otherwise)</option>
+          <option value="exact">Always exact binomial</option>
+          <option value="chi2">Always χ² with continuity correction</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Time point cards -->
+    <div class="card">
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Time Points (2×2 tables vs T0)</span>
+        <button class="btn-ghost" style="font-size:12px;padding:5px 12px;" onclick="addTimePoint()">+ Add time point</button>
+      </div>
+      <p class="note" style="margin-top:0;margin-bottom:14px;">
+        Enter the 2×2 contingency table comparing <strong>T0 (rows)</strong> vs <strong>each time point (columns)</strong> for the same stored samples.
+        <strong>a (blue) = concordant positive</strong> · <strong>d (blue) = concordant negative</strong> · <strong>b, c (amber) = discordant pairs</strong>.
+      </p>
+
+      <!-- Cell legend -->
+      <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <span style="font-size:11px;"><span style="font-weight:700;color:#1e40af;">a</span> — T0 pos, Tx pos (stable positive)</span>
+        <span style="font-size:11px;"><span style="font-weight:700;color:#92400e;">b</span> — T0 neg, Tx pos (overcall at Tx)</span>
+        <span style="font-size:11px;"><span style="font-weight:700;color:#92400e;">c</span> — T0 pos, Tx neg (degradation — lost positive)</span>
+        <span style="font-size:11px;"><span style="font-weight:700;color:#1e40af;">d</span> — T0 neg, Tx neg (stable negative)</span>
+      </div>
+
+      <div class="tp-time-grid" id="tp-container"></div>
+
+      <div id="tp-error" class="alert bad" style="display:none;margin-top:10px;"></div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn-primary" onclick="runStability()">Run Analysis</button>
+        <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Generate sample data -->
+    <div class="card">
+      <div class="section-title" style="cursor:pointer;" onclick="toggleGen(this)">▶ Generate Sample Data</div>
+      <div id="gen-body" style="display:none;margin-top:12px;">
+        <p class="note" style="margin-top:0;">Generates realistic 2×2 tables for each time point. Useful for exploring the tool before entering your own data.</p>
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Samples per time point (n)</label>
+            <input type="number" id="gen-n" value="40" min="10" max="200">
+          </div>
+          <div>
+            <label class="field-label">Prevalence of positives at T0</label>
+            <input type="number" id="gen-prev" value="0.40" min="0.05" max="0.95" step="0.05">
+          </div>
+          <div>
+            <label class="field-label">Scenario</label>
+            <select id="gen-scenario">
+              <option value="stable">Stable — all time points pass</option>
+              <option value="gradual">Gradual degradation — fails at last time point</option>
+              <option value="early">Early failure — fails from time point 2</option>
+              <option value="overcall">Overcall — systematic positive shift over time</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn-primary" onclick="generateData()">Generate &amp; Fill</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /input tab -->
+
+  <!-- RESULTS TAB -->
+  <div id="tab-results" class="tab-content">
+    <div id="results-body">
+      <p class="note" style="padding:20px 0;text-align:center;">Run the analysis to see results.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── Tab switching ───────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Time point management ───────────────────────────────────────────────────
+var tpCount = 0;
+var tpIds = [];
+
+var defaultLabels = ['T1', 'T2', 'T3', 'T6', 'T9', 'T12'];
+
+function addTimePoint(label) {
+  var lbl = label || defaultLabels[tpIds.length] || ('T' + (tpIds.length + 1));
+  var id = 'tp' + (++tpCount);
+  tpIds.push(id);
+  var div = document.createElement('div');
+  div.className = 'tp-card';
+  div.id = 'tpcard-' + id;
+  div.innerHTML =
+    '<div class="tp-card-header">' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<span style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;">T0 vs</span>' +
+        '<input class="tp-label-inp" id="tplbl-' + id + '" value="' + lbl + '" />' +
+      '</div>' +
+      '<button class="tp-remove" onclick="removeTimePoint(\'' + id + '\')">✕ Remove</button>' +
+    '</div>' +
+    '<div class="cg">' +
+      '<div></div>' +
+      '<div class="cg-hdr" id="tphdr-tx-' + id + '">Tx: Positive</div>' +
+      '<div class="cg-hdr" id="tphdr-txn-' + id + '">Tx: Negative</div>' +
+      '<div class="cg-row-hdr">T0: Positive</div>' +
+      '<div class="cg-cell cg-cell-agree"><input type="number" id="a-' + id + '" value="0" min="0" /><div class="cg-cell-lbl">a<br>concordant pos</div></div>' +
+      '<div class="cg-cell cg-cell-disagree"><input type="number" id="c-' + id + '" value="0" min="0" /><div class="cg-cell-lbl">c<br>lost positive</div></div>' +
+      '<div class="cg-row-hdr">T0: Negative</div>' +
+      '<div class="cg-cell cg-cell-disagree"><input type="number" id="b-' + id + '" value="0" min="0" /><div class="cg-cell-lbl">b<br>overcall at Tx</div></div>' +
+      '<div class="cg-cell cg-cell-agree"><input type="number" id="d-' + id + '" value="0" min="0" /><div class="cg-cell-lbl">d<br>concordant neg</div></div>' +
+    '</div>';
+  document.getElementById('tp-container').appendChild(div);
+  // Update column headers when label changes
+  document.getElementById('tplbl-' + id).addEventListener('input', function() {
+    var v = this.value || 'Tx';
+    document.getElementById('tphdr-tx-' + id).textContent = v + ': Positive';
+    document.getElementById('tphdr-txn-' + id).textContent = v + ': Negative';
+  });
+}
+
+function removeTimePoint(id) {
+  tpIds = tpIds.filter(function(x){ return x !== id; });
+  var el = document.getElementById('tpcard-' + id);
+  if (el) el.remove();
+}
+
+// Initialise with 3 time points
+addTimePoint('T1 week');
+addTimePoint('T2 weeks');
+addTimePoint('T4 weeks');
+
+function clearAll() {
+  tpIds.forEach(function(id) {
+    ['a','b','c','d'].forEach(function(cell) {
+      var el = document.getElementById(cell + '-' + id);
+      if (el) el.value = 0;
+    });
+  });
+  document.getElementById('results-body').innerHTML =
+    '<p class="note" style="padding:20px 0;text-align:center;">Run the analysis to see results.</p>';
+  document.getElementById('tp-error').style.display = 'none';
+}
+
+// ── Statistics ──────────────────────────────────────────────────────────────
+function calcKappa(a, b, c, d) {
+  var N = a + b + c + d;
+  if (N === 0) return null;
+  var Po = (a + d) / N;
+  var Pe = ((a + b) * (a + c) + (c + d) * (b + d)) / (N * N);
+  if (Pe === 1) return null;
+  var k = (Po - Pe) / (1 - Pe);
+  var se = Math.sqrt(Po * (1 - Po) / (N * (1 - Pe) * (1 - Pe)));
+  return { k: k, Po: Po, Pe: Pe, se: se, N: N };
+}
+
+function kappaInterp(k) {
+  if (k < 0)    return { text: 'Poor (less than chance)',   cls: 'ib-red' };
+  if (k < 0.20) return { text: 'Slight agreement',          cls: 'ib-red' };
+  if (k < 0.40) return { text: 'Fair agreement',            cls: 'ib-amber' };
+  if (k < 0.60) return { text: 'Moderate agreement',        cls: 'ib-amber' };
+  if (k < 0.80) return { text: 'Substantial agreement',     cls: 'ib-blue' };
+  return               { text: 'Almost perfect agreement',  cls: 'ib-green' };
+}
+
+function binomCoeff(n, k) {
+  if (k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  var c = 1;
+  for (var i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+  return c;
+}
+
+function chi2pvalue(x) {
+  // df=1: p = erfc(sqrt(x/2))
+  return 1 - erf(Math.sqrt(x / 2));
+}
+
+function erf(x) {
+  var sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+  var t = 1 / (1 + 0.3275911 * x);
+  var y = 1 - (((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));
+  return sign * y;
+}
+
+function calcMcNemar(b, c, method, alpha) {
+  var n = b + c;
+  if (n === 0) return null;
+  var useExact = method === 'exact' || (method === 'auto' && n < 25);
+  var p, stat, statLabel;
+  if (useExact) {
+    var m = Math.min(b, c);
+    var cumP = 0;
+    for (var k = 0; k <= m; k++) cumP += binomCoeff(n, k) * Math.pow(0.5, n);
+    p = Math.min(1, 2 * cumP);
+    stat = null;
+    statLabel = 'Exact binomial';
+  } else {
+    stat = Math.pow(Math.abs(b - c) - 1, 2) / n;
+    p = chi2pvalue(stat);
+    statLabel = 'χ² (cc)';
+  }
+  var sig = p < alpha;
+  var direction, dirClass;
+  if (!sig || b === c) {
+    direction = 'Symmetric — no systematic bias';
+    dirClass = 'badge-info';
+  } else if (c > b) {
+    direction = '⬇ Degradation — losing positives (c > b)';
+    dirClass = 'badge-fail';
+  } else {
+    direction = '⬆ Overcall — gaining positives (b > c)';
+    dirClass = 'badge-fail';
+  }
+  return { p: p, stat: stat, statLabel: statLabel, sig: sig, direction: direction, dirClass: dirClass, n: n };
+}
+
+// ── Chart instance ──────────────────────────────────────────────────────────
+var kappaChart = null;
+
+// ── Main analysis ───────────────────────────────────────────────────────────
+function runStability() {
+  var err = document.getElementById('tp-error');
+  if (tpIds.length === 0) {
+    err.style.display = 'block';
+    err.textContent = 'Add at least one time point.';
+    return;
+  }
+  err.style.display = 'none';
+
+  var alpha     = parseFloat(document.getElementById('inp-alpha').value);
+  var kappaCrit = parseFloat(document.getElementById('inp-kappa-crit').value);
+  var mcMethod  = document.getElementById('inp-mcnemar-method').value;
+  var analyte   = document.getElementById('inp-analyte').value || 'Analyte';
+  var posLbl    = document.getElementById('inp-pos-label').value || 'Positive';
+  var negLbl    = document.getElementById('inp-neg-label').value || 'Negative';
+  var zCrit     = alpha === 0.01 ? 2.576 : alpha === 0.10 ? 1.645 : 1.960;
+  var ciPct     = alpha === 0.01 ? 99 : alpha === 0.10 ? 90 : 95;
+
+  var results = [];
+  var allEmpty = true;
+
+  tpIds.forEach(function(id) {
+    var a = parseInt(document.getElementById('a-' + id).value) || 0;
+    var b = parseInt(document.getElementById('b-' + id).value) || 0;
+    var c = parseInt(document.getElementById('c-' + id).value) || 0;
+    var d = parseInt(document.getElementById('d-' + id).value) || 0;
+    var N = a + b + c + d;
+    var lbl = document.getElementById('tplbl-' + id).value || id;
+    if (N > 0) allEmpty = false;
+    var kap = calcKappa(a, b, c, d);
+    var mcn = calcMcNemar(b, c, mcMethod, alpha);
+    var pass = kap && kap.k >= kappaCrit && (!mcn || !mcn.sig);
+    results.push({ id: id, lbl: lbl, a: a, b: b, c: c, d: d, N: N, kap: kap, mcn: mcn, pass: pass });
+  });
+
+  if (allEmpty) {
+    err.style.display = 'block';
+    err.textContent = 'Please enter data for at least one time point.';
+    return;
+  }
+
+  // Functional expiry: last consecutive passing time point
+  var lastPass = null;
+  var allPass = true;
+  for (var i = 0; i < results.length; i++) {
+    if (results[i].N > 0 && results[i].pass) {
+      lastPass = results[i].lbl;
+    } else if (results[i].N > 0) {
+      allPass = false;
+    }
+  }
+
+  // Build results HTML
+  var html = '';
+
+  // Summary table
+  html += '<div class="card"><div class="section-title">Results Summary — ' + analyte + '</div>';
+  html += '<div style="overflow-x:auto;"><table class="res-table">';
+  html += '<thead><tr>' +
+    '<th>Time Point</th><th>n</th><th>κ (Kappa)</th><th>' + ciPct + '% CI</th>' +
+    '<th>McNemar p</th><th>Direction</th><th>Status</th>' +
+    '</tr></thead><tbody>';
+
+  results.forEach(function(r) {
+    if (r.N === 0) return;
+    var kStr = r.kap ? r.kap.k.toFixed(3) : '—';
+    var kLo = r.kap ? (r.kap.k - zCrit * r.kap.se).toFixed(3) : '—';
+    var kHi = r.kap ? (r.kap.k + zCrit * r.kap.se).toFixed(3) : '—';
+    var ciStr = r.kap ? '[' + kLo + ', ' + kHi + ']' : '—';
+    var pStr = r.mcn ? (r.mcn.p < 0.001 ? '< 0.001' : r.mcn.p.toFixed(3)) : 'n/a (b+c=0)';
+    var dirStr = r.mcn ? r.mcn.direction : 'No discordant pairs';
+    var dirCls = r.mcn ? r.mcn.dirClass : 'badge-info';
+    var passBadge = r.pass
+      ? '<span class="badge-pass">PASS</span>'
+      : '<span class="badge-fail">FAIL</span>';
+    html += '<tr>' +
+      '<td><strong>' + r.lbl + '</strong></td>' +
+      '<td>' + r.N + '</td>' +
+      '<td><strong>' + kStr + '</strong></td>' +
+      '<td>' + ciStr + '</td>' +
+      '<td>' + pStr + '</td>' +
+      '<td><span class="' + dirCls + '" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;display:inline-block;">' + dirStr + '</span></td>' +
+      '<td>' + passBadge + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Kappa chart
+  html += '<div class="card"><div class="section-title">κ Over Time</div>';
+  html += '<canvas id="kappaChart" height="220"></canvas>';
+  html += '<p class="note" style="margin-top:8px;">Dashed line = κ acceptance criterion (' + kappaCrit.toFixed(2) + '). ' +
+    'Error bars = ' + ciPct + '% CI. Orange = FAIL, teal = PASS.</p></div>';
+
+  // Functional expiry
+  if (lastPass) {
+    html += '<div class="expiry-box' + (allPass ? '' : '') + '">' +
+      '<div class="ex-label">Functional Expiry</div>' +
+      '<div class="ex-val">' + lastPass + '</div>' +
+      '<div class="ex-note">The last time point where κ ≥ ' + kappaCrit.toFixed(2) +
+        ' and McNemar p ≥ ' + alpha + '. ' +
+        (allPass ? 'All tested time points passed — expiry may extend beyond the last tested point.'
+                 : 'Material is stable up to ' + lastPass + '. Tests at subsequent time points failed.') +
+      '</div>' +
+    '</div>';
+  } else {
+    html += '<div class="expiry-box fail">' +
+      '<div class="ex-label">Functional Expiry</div>' +
+      '<div class="ex-val">No passing time point</div>' +
+      '<div class="ex-note">No time point met both κ ≥ ' + kappaCrit.toFixed(2) +
+        ' and McNemar p ≥ ' + alpha + '. Review your material or acceptance criteria.</div>' +
+    '</div>';
+  }
+
+  // Insight box
+  var insight = buildInsight(results, kappaCrit, alpha, analyte, posLbl);
+  html += insight;
+
+  document.getElementById('results-body').innerHTML = html;
+
+  // Switch to results tab
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+  document.querySelector('[data-tab="tab-results"]').classList.add('active');
+  document.getElementById('tab-results').classList.add('active');
+
+  // Draw chart after render
+  requestAnimationFrame(function(){ drawKappaChart(results, kappaCrit, ciPct, zCrit, alpha); });
+}
+
+function drawKappaChart(results, kappaCrit, ciPct, zCrit, alpha) {
+  var ctx = document.getElementById('kappaChart');
+  if (!ctx) return;
+  if (kappaChart) { kappaChart.destroy(); kappaChart = null; }
+
+  var labels = [], kappas = [], errors = [], colors = [];
+  results.forEach(function(r) {
+    if (r.N === 0) return;
+    labels.push(r.lbl);
+    var k = r.kap ? r.kap.k : 0;
+    var se = r.kap ? r.kap.se : 0;
+    kappas.push(k);
+    errors.push(zCrit * se);
+    colors.push(r.pass ? 'rgba(13,148,136,0.85)' : 'rgba(220,38,38,0.85)');
+  });
+
+  kappaChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'κ',
+          data: kappas,
+          backgroundColor: colors,
+          borderColor: colors,
+          borderWidth: 1,
+          errorBars: errors // custom, drawn below
+        },
+        {
+          label: 'κ criterion',
+          data: Array(labels.length).fill(kappaCrit),
+          type: 'line',
+          borderColor: '#f59e0b',
+          borderWidth: 2,
+          borderDash: [6,4],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.datasetIndex === 0) {
+                var r = results.filter(function(r){ return r.N > 0; })[ctx.dataIndex];
+                var lo = r.kap ? (r.kap.k - zCrit * r.kap.se).toFixed(3) : '—';
+                var hi = r.kap ? (r.kap.k + zCrit * r.kap.se).toFixed(3) : '—';
+                return 'κ = ' + (r.kap ? r.kap.k.toFixed(3) : '—') + '  [' + lo + ', ' + hi + ']';
+              }
+              return 'Criterion: ' + kappaCrit.toFixed(2);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 1.05,
+          title: { display: true, text: 'Cohen\'s Kappa (κ)', font: { size: 11 } },
+          ticks: { font: { size: 11 } },
+          grid: { color: '#f3f4f6' }
+        },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    },
+    plugins: [{
+      afterDraw: function(chart) {
+        // Draw error bars
+        var ctx2 = chart.ctx;
+        var ds = chart.data.datasets[0];
+        var meta = chart.getDatasetMeta(0);
+        ctx2.save();
+        ctx2.strokeStyle = '#374151';
+        ctx2.lineWidth = 1.5;
+        meta.data.forEach(function(bar, i) {
+          var err = errors[i];
+          if (err == null) return;
+          var x = bar.x;
+          var yMid = chart.scales.y.getPixelForValue(kappas[i]);
+          var yLo  = chart.scales.y.getPixelForValue(Math.max(0, kappas[i] - err));
+          var yHi  = chart.scales.y.getPixelForValue(Math.min(1, kappas[i] + err));
+          var capW = 5;
+          ctx2.beginPath();
+          ctx2.moveTo(x, yLo); ctx2.lineTo(x, yHi);
+          ctx2.moveTo(x - capW, yLo); ctx2.lineTo(x + capW, yLo);
+          ctx2.moveTo(x - capW, yHi); ctx2.lineTo(x + capW, yHi);
+          ctx2.stroke();
+        });
+        ctx2.restore();
+      }
+    }]
+  });
+}
+
+function buildInsight(results, kappaCrit, alpha, analyte, posLbl) {
+  var passing = results.filter(function(r){ return r.N > 0 && r.pass; });
+  var failing  = results.filter(function(r){ return r.N > 0 && !r.pass; });
+  var degrading = failing.filter(function(r){ return r.mcn && r.mcn.sig && r.c > r.b; });
+  var overcalling = failing.filter(function(r){ return r.mcn && r.mcn.sig && r.b > r.c; });
+
+  if (failing.length === 0) {
+    return '<div class="insight-box ib-green"><strong>All time points passed.</strong> ' + analyte +
+      ' shows stable pos/neg agreement across all tested time points. ' +
+      'κ ≥ ' + kappaCrit.toFixed(2) + ' and no systematic McNemar bias at any point.</div>';
+  }
+  var msg = '<div class="insight-box ' + (passing.length > 0 ? 'ib-amber' : 'ib-red') + '">';
+  msg += '<strong>' + failing.length + ' of ' + (passing.length + failing.length) + ' time point(s) failed.</strong> ';
+  if (degrading.length > 0) {
+    msg += 'Evidence of <strong>degradation</strong> at ' +
+      degrading.map(function(r){ return r.lbl; }).join(', ') +
+      ' — stored samples are losing positive reactivity over time. ';
+  }
+  if (overcalling.length > 0) {
+    msg += 'Evidence of <strong>overcalling</strong> at ' +
+      overcalling.map(function(r){ return r.lbl; }).join(', ') +
+      ' — stored samples show increased positivity (possible non-specific reactivity). ';
+  }
+  var kappaFails = failing.filter(function(r){ return r.kap && r.kap.k < kappaCrit; });
+  if (kappaFails.length > 0) {
+    msg += 'Kappa fell below ' + kappaCrit.toFixed(2) + ' at: ' +
+      kappaFails.map(function(r){ return r.lbl + ' (κ=' + (r.kap ? r.kap.k.toFixed(2) : '—') + ')'; }).join(', ') + '. ';
+  }
+  msg += '</div>';
+  return msg;
+}
+
+// ── Generate sample data ────────────────────────────────────────────────────
+function toggleGen(el) {
+  var body = document.getElementById('gen-body');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  el.textContent = (open ? '▶' : '▼') + ' Generate Sample Data';
+}
+
+function generateData() {
+  var n       = parseInt(document.getElementById('gen-n').value) || 40;
+  var prev    = parseFloat(document.getElementById('gen-prev').value) || 0.40;
+  var scenario = document.getElementById('gen-scenario').value;
+
+  // For each time point build a table depending on scenario
+  // nPos = expected positives at T0
+  var nPos = Math.round(n * prev);
+  var nNeg = n - nPos;
+
+  // degradation profiles: [κ_target, c_extra_pct] per time point index (0-based)
+  // c = lost positives, b = overcall
+  var profiles = {
+    stable:   function(i) { return { c: Math.round(nPos * 0.03), b: Math.round(nNeg * 0.02) }; },
+    gradual:  function(i) { var frac = [0.02, 0.05, 0.10, 0.18, 0.28]; var f = frac[Math.min(i, frac.length-1)]; return { c: Math.round(nPos * f), b: Math.round(nNeg * 0.02) }; },
+    early:    function(i) { var frac = [0.05, 0.22, 0.32, 0.40, 0.48]; var f = frac[Math.min(i, frac.length-1)]; return { c: Math.round(nPos * f), b: Math.round(nNeg * 0.02) }; },
+    overcall: function(i) { var frac = [0.02, 0.06, 0.12, 0.20, 0.30]; var f = frac[Math.min(i, frac.length-1)]; return { c: Math.round(nPos * 0.02), b: Math.round(nNeg * f) }; }
+  };
+  var profile = profiles[scenario];
+
+  tpIds.forEach(function(id, i) {
+    var disc = profile(i);
+    var c = Math.min(disc.c, nPos);
+    var b = Math.min(disc.b, nNeg);
+    var a = nPos - c;
+    var d = nNeg - b;
+    document.getElementById('a-' + id).value = Math.max(0, a);
+    document.getElementById('b-' + id).value = Math.max(0, b);
+    document.getElementById('c-' + id).value = Math.max(0, c);
+    document.getElementById('d-' + id).value = Math.max(0, d);
+  });
+}
+
+// ── Save / Load ─────────────────────────────────────────────────────────────
+window.getSaveData = function() {
+  var tps = tpIds.map(function(id) {
+    return {
+      id: id,
+      lbl: document.getElementById('tplbl-' + id).value,
+      a: document.getElementById('a-' + id).value,
+      b: document.getElementById('b-' + id).value,
+      c: document.getElementById('c-' + id).value,
+      d: document.getElementById('d-' + id).value
+    };
+  });
+  return {
+    analyte:    document.getElementById('inp-analyte').value,
+    posLabel:   document.getElementById('inp-pos-label').value,
+    negLabel:   document.getElementById('inp-neg-label').value,
+    kappaCrit:  document.getElementById('inp-kappa-crit').value,
+    alpha:      document.getElementById('inp-alpha').value,
+    mcMethod:   document.getElementById('inp-mcnemar-method').value,
+    timePoints: tps
+  };
+};
+
+window.loadSaveData = function(data) {
+  if (!data) return;
+  if (data.analyte)   document.getElementById('inp-analyte').value   = data.analyte;
+  if (data.posLabel)  document.getElementById('inp-pos-label').value = data.posLabel;
+  if (data.negLabel)  document.getElementById('inp-neg-label').value = data.negLabel;
+  if (data.kappaCrit) document.getElementById('inp-kappa-crit').value = data.kappaCrit;
+  if (data.alpha)     document.getElementById('inp-alpha').value     = data.alpha;
+  if (data.mcMethod)  document.getElementById('inp-mcnemar-method').value = data.mcMethod;
+  if (data.timePoints && data.timePoints.length > 0) {
+    // Remove defaults
+    var cont = document.getElementById('tp-container');
+    cont.innerHTML = '';
+    tpIds = [];
+    tpCount = 0;
+    data.timePoints.forEach(function(tp) {
+      addTimePoint(tp.lbl);
+      var newId = tpIds[tpIds.length - 1];
+      document.getElementById('a-' + newId).value = tp.a;
+      document.getElementById('b-' + newId).value = tp.b;
+      document.getElementById('c-' + newId).value = tp.c;
+      document.getElementById('d-' + newId).value = tp.d;
+    });
+  }
+};
+</script>
+</body>
+</html>

@@ -61,8 +61,50 @@
 
     <!-- LEFT: INPUTS -->
     <div>
+      <!-- Tool guide card -->
+      <div class="tg-card">
+        <div class="tg-badges">
+          <span class="tg-badge tg-type">Total Error · Sigma Metric</span>
+          <span class="tg-badge tg-material">Calculated — no raw samples</span>
+          <span class="tg-badge tg-design">Enter CV% + Bias%</span>
+          <span class="tg-badge tg-std">CLSI EP23-A · Six Sigma</span>
+        </div>
+        <div class="tg-when">Use after completing Precision and Bias studies. Combines both results into a sigma metric to guide QC strategy design. No raw data entry — enter the summary statistics from your studies.</div>
+        <details class="tg-details">
+          <summary>Details</summary>
+          <div class="tg-body">
+            <div class="tg-row"><span class="tg-label">Input</span><span>CV% from precision study + Bias% from trueness study + TEa from EFLM, CLIA, or your specification</span></div>
+            <div class="tg-row"><span class="tg-label">Formula</span><span>TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; Sigma = (TEa − |Bias%|) / CV%</span></div>
+            <div class="tg-row"><span class="tg-label">Output</span><span>TE%, sigma metric, QC rule recommendation (Westgard), patient result distribution chart</span></div>
+            <div class="tg-row"><span class="tg-label">Note</span><span>Sigma ≥ 6 = world class · Sigma 4–6 = acceptable · Sigma &lt; 4 = method needs improvement</span></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- EFLM card — top -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-title">EFLM Performance Specifications</div>
+        <p class="note" style="margin-bottom:10px;">Select an analyte to look up allowable bias and TAE from the EFLM biological variation database (Ricos et al. 2014).</p>
+        <label class="field-label">Analyte</label>
+        <select id="eflm-analyte" onchange="eflmAnalyteChange()">
+          <option value="">— Select analyte —</option>
+        </select>
+        <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+      </div>
+      <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
+
+      <!-- Workflow import banner -->
+      <div id="wf-import-banner" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Step 3 of 3 — Import your results</div>
+        <div id="wf-import-details" style="font-size:13px;color:#15803d;line-height:1.7;margin-bottom:8px;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="importWorkflowData()" style="background:#16a34a;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;">Import values</button>
+          <button onclick="document.getElementById('wf-import-banner').style.display='none'" style="background:none;border:1px solid #d1fae5;border-radius:6px;padding:6px 12px;font-size:12px;color:#6b7280;cursor:pointer;">Dismiss</button>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="section-title">Method Details</div>
+        <div class="section-title">Performance Parameters</div>
 
         <label class="field-label">Analyte</label>
         <input type="text" id="inp-analyte" placeholder="e.g. Glucose, HbA1c">
@@ -70,29 +112,24 @@
         <label class="field-label">Unit</label>
         <input type="text" id="inp-unit" placeholder="e.g. mmol/L, %">
 
-        <div style="height:12px;"></div>
-        <div class="section-title">Performance Parameters</div>
-
-        <label class="field-label">Bias% (absolute value)</label>
+        <label class="field-label" style="margin-top:10px;">Bias% <span style="font-weight:400;color:var(--muted);">(absolute value)</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-bias" min="0" step="0.1" placeholder="e.g. 2.0" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
-        <p class="note">Enter the absolute % bias (always positive). E.g. if measured is 2% above target, enter 2.</p>
 
-        <label class="field-label">CV% (imprecision)</label>
+        <label class="field-label">CV% <span style="font-weight:400;color:var(--muted);">(imprecision)</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-cv" min="0" step="0.1" placeholder="e.g. 1.5" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
-        <p class="note">Coefficient of variation from your precision study (intermediate or total CV).</p>
 
         <label class="field-label">Total Allowable Error — TAE%</label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-tae" min="0" step="0.5" placeholder="e.g. 8.0" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
-        <p class="note">The maximum permissible total error for this analyte (e.g. from EFLM, CLIA, or your lab's specification). Or use the EFLM lookup below.</p>
+        <p class="note">From EFLM, CLIA, or your lab's specification. Or use the analyte lookup above.</p>
 
         <div class="error-msg" id="input-error"></div>
 
@@ -102,16 +139,6 @@
         </div>
       </div>
 
-      <!-- EFLM card -->
-      <div class="card" style="margin-top:12px;">
-        <div class="section-title">EFLM Performance Specifications</div>
-        <p class="note" style="margin-bottom:10px;">Select an analyte to look up allowable bias and TAE from the EFLM biological variation database (Ricos et al. 2014).</p>
-        <label class="field-label">Analyte</label>
-        <select id="eflm-analyte" onchange="eflmAnalyteChange()">
-          <option value="">— Select analyte —</option>
-        </select>
-        <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
-      </div>
 
       <details style="margin-bottom:0;margin-top:12px;">
       <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
@@ -582,6 +609,40 @@ function exportExcel() {
   XLSX.writeFile(wb, 'tae_sigma_' + (r.analyte || 'results') + '.xlsx');
 }
 
+// ── Workflow import ─────────────────────────────────────────────────────────
+(function checkWorkflowImport() {
+  try {
+    const prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    const bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
+    if (!prec && !bias) return;
+
+    let details = '';
+    if (prec) details += `<strong>CV% = ${prec.cv}%</strong> from Precision (${prec.type})${prec.analyte ? ' · ' + prec.analyte : ''}<br>`;
+    if (bias) details += `<strong>|Bias%| = ${bias.bias}%</strong> from Bias study${bias.analyte ? ' · ' + bias.analyte : ''}`;
+
+    document.getElementById('wf-import-details').innerHTML = details;
+    document.getElementById('wf-import-banner').style.display = 'block';
+  } catch(e) {}
+})();
+
+function importWorkflowData() {
+  try {
+    const prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    const bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
+    if (prec) {
+      document.getElementById('inp-cv').value = prec.cv;
+      if (prec.analyte) document.getElementById('inp-analyte').value = prec.analyte;
+      if (prec.unit) document.getElementById('inp-unit').value = prec.unit;
+    }
+    if (bias) {
+      document.getElementById('inp-bias').value = bias.bias;
+      if (!prec && bias.analyte) document.getElementById('inp-analyte').value = bias.analyte;
+      if (!prec && bias.unit) document.getElementById('inp-unit').value = bias.unit;
+    }
+    document.getElementById('wf-import-banner').style.display = 'none';
+  } catch(e) {}
+}
+
 // ── EFLM integration ────────────────────────────────────────────────────────
 var eflmKey  = '';
 var eflmTier = 'desirable';
@@ -598,9 +659,11 @@ var eflmTier = 'desirable';
       sel.appendChild(opt);
     });
 })();
+eflmRestoreSelection('eflm-analyte');
 
 function eflmAnalyteChange() {
   eflmKey = document.getElementById('eflm-analyte').value;
+  eflmPersistKey(eflmKey);
   if (!eflmKey) {
     document.getElementById('eflm-tier-cards').style.display = 'none';
     return;
@@ -628,10 +691,6 @@ function renderEFLMTierCards() {
 
   wrap.style.display = 'block';
   wrap.innerHTML =
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
-    '<strong>' + a.name + '</strong> &nbsp;&middot;&nbsp; ' + a.unit +
-    ' &nbsp;&middot;&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;&middot;&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
-    '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
     ['optimal', 'desirable', 'minimum'].map(function(tr) {
       var active = tr === eflmTier;
@@ -657,6 +716,13 @@ function applyEFLM() {
   var unitEl    = document.getElementById('inp-unit');
   if (!analyteEl.value) analyteEl.value = a.name;
   if (!unitEl.value)    unitEl.value    = a.unit;
+  var mean = eflmRefMean(eflmKey);
+  if (mean !== null) {
+    var gm = document.getElementById('gen-mean'); if (gm) gm.value = mean;
+    var cv = document.getElementById('gen-cv');   if (cv) cv.value = t.cv;
+    var gb = document.getElementById('gen-bias'); if (gb) gb.value = +(t.bias / 2).toFixed(2);
+  }
+  renderEFLMInfoBar('eflm-info-bar', eflmKey, eflmTier);
 }
 </script>
 </body>

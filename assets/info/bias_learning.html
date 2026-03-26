@@ -1,0 +1,54 @@
+<div class="info-content">
+
+  <h2>Understanding Bias</h2>
+
+  <h3>What is bias?</h3>
+  <p>
+    Bias is <strong>systematic error</strong> — the consistent tendency of a method to measure higher or lower
+    than the true value. Unlike precision (random scatter), bias shifts every result in the same direction.
+    A biased method is <em>inaccurate</em> even if it is very reproducible.
+  </p>
+
+  <h3>Two types of bias</h3>
+  <ul>
+    <li><strong>Constant bias</strong> — a fixed offset at all concentrations. Example: every haemoglobin result is 0.5 g/dL too high regardless of concentration. Seen when there is matrix interference.</li>
+    <li><strong>Proportional bias</strong> — the error grows with concentration. Example: results are 5% too high across the range. Seen with calibration slope differences.</li>
+  </ul>
+  <p>
+    In practice, bias is rarely purely one type — Passing-Bablok regression in method comparison separates both components simultaneously.
+  </p>
+
+  <h3>How bias is measured</h3>
+  <p>
+    Compare your method against a <strong>reference</strong>:
+  </p>
+  <ul>
+    <li><strong>Certified Reference Material (CRM)</strong> — a sample with a known, traceable true value. Gives the most direct estimate of absolute bias.</li>
+    <li><strong>External Quality Assurance (EQA)</strong> — peer group comparison. Tells you how your method compares to others, not necessarily to the true value.</li>
+    <li><strong>Method comparison</strong> — paired patient samples on two methods. Estimates the difference between methods, not against truth.</li>
+  </ul>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    Bias% = ((your result − reference) / reference) × 100
+  </p>
+
+  <h3>Why it matters</h3>
+  <p>
+    Allowable bias is set by biological variation (EFLM/Ricos). If the allowable bias for Glucose is 2.2%
+    and your method has a bias of 4%, some patients near the diagnostic threshold of 7.0 mmol/L will be
+    misclassified. Bias directly affects diagnostic accuracy.
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Trusting EQA peer group comparison as a measure of true bias.</strong> If everyone in your peer group
+    uses the same biased method, you will appear to be in excellent agreement — but the whole group may be wrong.
+    CRM-based validation is the only way to establish traceability to the true value.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust bias and imprecision, choose a reference type (CRM or EQA), and see how the resulting bias estimate,
+    t-test, and total error picture change. Load the exercises to explore constant vs proportional bias scenarios.
+  </p>
+
+</div>

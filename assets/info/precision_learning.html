@@ -1,0 +1,56 @@
+<div class="info-content">
+
+  <h2>Understanding Precision</h2>
+
+  <h3>What is precision?</h3>
+  <p>
+    Precision describes how <strong>reproducible</strong> a measurement is — how close repeated measurements
+    of the same sample are to each other. It says nothing about whether the result is correct (that is trueness).
+    Precision is about <em>consistency</em>, not accuracy.
+  </p>
+  <p>
+    Imagine weighing the same sample five times. If you get 10.1, 10.2, 10.0, 10.1, 10.2 — the method is precise.
+    If you get 9.8, 10.5, 9.3, 10.9, 10.1 — it is imprecise. Neither tells you whether 10.0 is the true weight.
+  </p>
+
+  <h3>Three levels of precision</h3>
+  <ul>
+    <li><strong>Repeatability (within-run, Sw)</strong> — same sample, same operator, same run. The tightest precision you will ever see.</li>
+    <li><strong>Intermediate precision (between-day, Si)</strong> — same sample, different days. Includes day-to-day variation in calibration, reagent lots, operators. This is the most clinically relevant number.</li>
+    <li><strong>Reproducibility</strong> — across different laboratories or sites. Used in external quality assurance (EQA) schemes.</li>
+  </ul>
+
+  <h3>How it is expressed</h3>
+  <p>
+    Precision is reported as <strong>standard deviation (SD)</strong> or <strong>coefficient of variation (CV%)</strong>:
+  </p>
+  <p style="margin-left:16px;font-family:monospace;font-size:13px;">
+    CV% = (SD / mean) × 100
+  </p>
+  <p>
+    CV% is preferred because it is independent of the concentration level, making it easier to compare across methods and analytes.
+  </p>
+
+  <h3>Why it matters in the lab</h3>
+  <p>
+    Imprecision adds noise to every patient result. If CV% is 10% and the glucose decision limit is 7.0 mmol/L,
+    a true value of 7.0 could appear anywhere from ~6.3 to ~7.7. This uncertainty directly affects clinical decisions.
+    Allowable imprecision is set by biological variation: the goal is that analytical imprecision does not meaningfully
+    add to the natural variation already seen between patients.
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Confusing precision with accuracy.</strong> A method can be highly precise (very reproducible)
+    but consistently wrong — all results are tightly grouped around the wrong value. Precision and bias must
+    always be evaluated together.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust the within-run (Sw) and between-day (Sb) components and watch how the Levey-Jennings chart and
+    CV% change across different numbers of days and replicates. Load the guided exercises to step through
+    specific scenarios.
+  </p>
+
+</div>

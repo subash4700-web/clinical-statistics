@@ -1,0 +1,49 @@
+<div class="info-content">
+
+  <h2>Understanding Correlation</h2>
+
+  <h3>What is correlation?</h3>
+  <p>
+    Correlation measures the <strong>strength and direction of a linear relationship</strong> between two
+    continuous variables. Pearson's r ranges from −1 (perfect negative relationship) through 0 (no relationship)
+    to +1 (perfect positive relationship). The square of r (R²) tells you the proportion of variance in one
+    variable explained by the other.
+  </p>
+
+  <h3>Pearson r vs Spearman ρ</h3>
+  <ul>
+    <li><strong>Pearson r</strong> — assumes both variables are normally distributed and the relationship is linear. Sensitive to outliers.</li>
+    <li><strong>Spearman ρ</strong> — rank-based, non-parametric. Use when data is skewed, ordinal, or contains outliers. More robust in clinical data.</li>
+  </ul>
+
+  <h3>Why correlation does NOT mean agreement</h3>
+  <p>
+    This is the most important concept in this section:
+  </p>
+  <ul>
+    <li>Two methods can have r = 0.99 but one always reads 20% higher — they correlate perfectly but do not agree.</li>
+    <li>Correlation is about the <em>shape</em> of the relationship. Agreement is about the <em>size</em> of the differences.</li>
+    <li>For method comparison, always use Bland-Altman (not r) to evaluate whether two methods can be used interchangeably.</li>
+  </ul>
+
+  <h3>Interpreting r</h3>
+  <p>
+    In clinical lab work, high r (&gt;0.95) between two methods tells you the methods are measuring the same
+    analyte. It does NOT tell you they give the same numbers. A well-designed method comparison will always
+    have high r — the interesting question is the Bland-Altman plot.
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Reporting r as evidence of method agreement.</strong> "r = 0.98, therefore the methods agree" is
+    incorrect and a common error in lab validation reports. r only tells you the relationship is strong and
+    linear — not that the values are interchangeable.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust the true correlation, sample size, and outlier rate and see how r, R², and the scatter plot change.
+    Exercises show how outliers inflate or deflate r and why R² is a better measure of explained variance.
+  </p>
+
+</div>

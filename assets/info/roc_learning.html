@@ -1,0 +1,66 @@
+<div class="info-content">
+
+  <h2>Understanding ROC &amp; Diagnostic Performance</h2>
+
+  <h3>What is a ROC curve?</h3>
+  <p>
+    A <strong>Receiver Operating Characteristic (ROC)</strong> curve shows how a continuous test's diagnostic
+    performance changes as you move the decision threshold. At each threshold, you get a specific
+    <strong>sensitivity</strong> (true positive rate) and <strong>specificity</strong> (true negative rate).
+    The ROC curve plots sensitivity (y-axis) vs (1 − specificity) (x-axis) for all possible thresholds.
+  </p>
+
+  <h3>Key concepts</h3>
+  <ul>
+    <li>
+      <strong>Sensitivity</strong> — proportion of true positives correctly identified. High sensitivity
+      minimises false negatives. Use when missing a disease is dangerous (e.g. screening for sepsis).
+    </li>
+    <li>
+      <strong>Specificity</strong> — proportion of true negatives correctly identified. High specificity
+      minimises false positives. Use when a false positive causes significant harm (e.g. unnecessary surgery).
+    </li>
+    <li>
+      <strong>AUC (Area Under the Curve)</strong> — a single number summarising overall discriminatory
+      ability. AUC = 0.5 is no better than chance; AUC = 1.0 is perfect.
+    </li>
+  </ul>
+
+  <h3>AUC interpretation</h3>
+  <ul>
+    <li>0.90–1.00 — Excellent</li>
+    <li>0.80–0.90 — Good</li>
+    <li>0.70–0.80 — Fair</li>
+    <li>0.60–0.70 — Poor</li>
+    <li>0.50–0.60 — Fail (no better than chance)</li>
+  </ul>
+
+  <h3>Choosing the threshold</h3>
+  <p>
+    The optimal threshold depends on the clinical question. The Youden index (sensitivity + specificity − 1)
+    maximises the sum of both. But clinical context often overrides statistics — if missing a disease is
+    dangerous, you accept lower specificity to maximise sensitivity.
+  </p>
+
+  <h3>Positive and negative predictive value (PPV/NPV)</h3>
+  <p>
+    PPV and NPV depend on disease prevalence in your population, not just sensitivity and specificity.
+    A test with 95% sensitivity has a much lower PPV in a low-prevalence screening population than in a
+    high-prevalence referral population. AUC and the ROC curve are prevalence-independent.
+  </p>
+
+  <h3>Common mistake</h3>
+  <p class="note">
+    <strong>Choosing the threshold after seeing the data.</strong> If you test many thresholds and pick
+    the best-performing one retrospectively, you will overfit to your sample. Pre-specify the threshold or
+    validate it in an independent dataset.
+  </p>
+
+  <h3>This learning tool</h3>
+  <p>
+    Adjust the true AUC, sample size, and prevalence and watch how the ROC curve, optimal threshold,
+    sensitivity, specificity, PPV, and NPV respond. Use the exercises to see how prevalence dramatically
+    changes PPV even when sensitivity and specificity are fixed.
+  </p>
+
+</div>

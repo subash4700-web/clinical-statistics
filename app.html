@@ -23,11 +23,34 @@
     /* ---------- SIDEBAR ---------- */
     .sidebar {
       width: 260px;
+      min-width: 260px;
       background: #1F2937;
       color: white;
       padding: 20px;
       box-sizing: border-box;
       overflow-y: auto;
+      overflow-x: hidden;
+      transition: width 0.22s ease, min-width 0.22s ease, padding 0.22s ease;
+    }
+    .app-shell.sidebar-collapsed .sidebar {
+      width: 0;
+      min-width: 0;
+      padding: 0;
+    }
+    .sidebar-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 8px;
+      margin-right: 8px;
+      border-radius: 6px;
+      color: #374151;
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .sidebar-toggle:hover {
+      background: #F3F4F6;
     }
 
     .sidebar h2 {
@@ -99,16 +122,27 @@
     }
 
     .btn-hint {
-      display: block;
+      display: none;
       font-size: 11px;
       font-weight: 400;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.55);
       margin-top: 1px;
       line-height: 1.3;
     }
     .sidebar button:hover .btn-hint,
     .sidebar button.active .btn-hint {
-      color: rgba(255,255,255,0.6);
+      display: block;
+    }
+    .sidebar-sep {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 6px 0;
+    }
+    .learn-btn {
+      opacity: 0.82;
+    }
+    .learn-btn:hover, .learn-btn.active {
+      opacity: 1;
     }
 
     .collapsible-content.child-nav {
@@ -847,150 +881,86 @@
       <button onclick="loadTool('test_guide.html','Statistical Test Guide', this)" data-i18n="nav.testGuide" class="guide-button">🧭 Test Guide</button>
       <button onclick="loadTool('dictionary.html','Clinical Terms — Glossary', this)" class="guide-button">📖 Glossary</button>
 
-      <!-- Collapsible Hypothesis Tests Section -->
+      <!-- Inferential Statistics -->
       <div class="collapsible-section">
-        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.hypothesisTests">
-          Inferential Statistics
-        </button>
-
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.hypothesisTests">Inferential Statistics</button>
         <div class="collapsible-content child-nav">
-
-          <!-- Learning subsection -->
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.learning">📚 Learning</button>
-            <div class="collapsible-content child-nav">
-              <div class="sub-category" data-i18n="cat.inferential">Inferential Statistics</div>
-              <button onclick="loadTool('inferential_statistics.html','Inferential Statistics', this)" data-i18n="tool.inferential">Concepts &amp; Theory</button>
-              <div class="sub-category" data-i18n="cat.learningTools">Learning Tools</div>
-              <button onclick="loadTool('dance_of_p.html','Dance of the p-values', this)" data-i18n="tool.danceP">Dance of the p-values</button>
-              <button onclick="loadTool('normal_distribution.html','Normal Distribution Explorer', this)" data-i18n="tool.normalDist">Normal Distribution</button>
-              <button onclick="loadTool('f_distribution.html','F Distribution Explorer', this)" data-i18n="tool.fDist">F Distribution</button>
-              <button onclick="loadTool('chi_distribution.html','Chi-Square Distribution', this)" data-i18n="tool.chiDist">Chi-Square Distribution</button>
-            </div>
-          </div>
-
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.quantitativeTests">Quantitative Tests</button>
-            <div class="collapsible-content child-nav">
-              <div class="sub-category" data-i18n="sub.parametric">Parametric Tests</div>
-              <button onclick="loadTool('t_one_sample.html','One-Sample T-Test', this)" data-i18n="tool.oneSampleT">One-Sample T-Test<span class="btn-hint">Sample mean vs known value</span></button>
-              <button onclick="loadTool('paired_t_test.html','Paired T-Test', this)" data-i18n="tool.pairedT">Paired T-Test<span class="btn-hint">Same subjects, two conditions</span></button>
-              <button onclick="loadTool('two_sample_t_test_independent.html','Independent T-Test', this)" data-i18n="tool.independentT">Independent T-Test<span class="btn-hint">Two separate groups</span></button>
-              <button onclick="loadTool('anova.html','One-Way ANOVA', this)" data-i18n="tool.oneWayAnova">One-Way ANOVA<span class="btn-hint">3+ groups, one factor</span></button>
-              <button onclick="loadTool('two_way_anova.html','Two-Way ANOVA', this)" data-i18n="tool.twoWayAnova">Two-Way ANOVA<span class="btn-hint">3+ groups, two factors</span></button>
-              <div class="sub-category" data-i18n="cat.nonparametric">Nonparametric Tests</div>
-              <button onclick="loadTool('mann_whitney.html','Mann–Whitney U', this)" data-i18n="tool.mannWhitney">Mann–Whitney U<span class="btn-hint">Two independent groups · non-normal</span></button>
-              <button onclick="loadTool('wilcoxon.html','Wilcoxon signed-rank', this)" data-i18n="tool.wilcoxon">Wilcoxon signed-rank<span class="btn-hint">Paired data · non-normal</span></button>
-            </div>
-          </div>
-
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.qualitative">Categorical Tests</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('Chi_GOF.html','Chi-Square GOF', this)" data-i18n="tool.chiGOF">Chi-Square GOF<span class="btn-hint">Observed vs expected frequencies</span></button>
-              <button onclick="loadTool('Chi_independence.html','Chi-Square Independence', this)" data-i18n="tool.chiIndep">Chi-Square Independence<span class="btn-hint">Association between two categories</span></button>
-              <button onclick="loadTool('mcnemar.html','McNemar Test', this)" data-i18n="tool.mcnemar">McNemar Test<span class="btn-hint">Paired binary data · before/after</span></button>
-              <button onclick="loadTool('fisher_exact.html','Fisher\'s Exact Test', this)" data-i18n="tool.fisher">Fisher's Exact Test<span class="btn-hint">Small samples · 2×2 table</span></button>
-              <button onclick="loadTool('kappa.html','Kappa', this)" data-i18n="tool.kappa">Kappa<span class="btn-hint">Inter-rater agreement · nominal</span></button>
-              <button onclick="loadTool('weighted_kappa.html','Weighted Kappa', this)" data-i18n="tool.weightedKappa">Weighted Kappa<span class="btn-hint">Inter-rater agreement · ordinal</span></button>
-            </div>
-          </div>
+          <button class="learn-btn" onclick="loadTool('inferential_statistics.html','Inferential Statistics', this)">📚 Concepts &amp; Theory<span class="btn-hint">Hypothesis testing · p-values · test selection</span></button>
+          <button class="learn-btn" onclick="loadTool('dance_of_p.html','Dance of the p-values', this)">📚 Dance of p-values<span class="btn-hint">p-value simulation · type I &amp; II errors</span></button>
+          <button class="learn-btn" onclick="loadTool('normal_distribution.html','Normal Distribution Explorer', this)">📚 Normal Distribution<span class="btn-hint">Shape · z-scores · tail probabilities</span></button>
+          <button class="learn-btn" onclick="loadTool('f_distribution.html','F Distribution Explorer', this)">📚 F Distribution<span class="btn-hint">ANOVA · F-statistic · critical values</span></button>
+          <button class="learn-btn" onclick="loadTool('chi_distribution.html','Chi-Square Distribution', this)">📚 Chi-Square Distribution<span class="btn-hint">Goodness-of-fit · independence · critical values</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('t_one_sample.html','One-Sample T-Test', this)">One-Sample T-Test<span class="btn-hint">Sample mean vs known value</span></button>
+          <button onclick="loadTool('paired_t_test.html','Paired T-Test', this)">Paired T-Test<span class="btn-hint">Same subjects, two conditions</span></button>
+          <button onclick="loadTool('two_sample_t_test_independent.html','Independent T-Test', this)">Independent T-Test<span class="btn-hint">Two separate groups</span></button>
+          <button onclick="loadTool('anova.html','One-Way ANOVA', this)">One-Way ANOVA<span class="btn-hint">3+ groups, one factor</span></button>
+          <button onclick="loadTool('two_way_anova.html','Two-Way ANOVA', this)">Two-Way ANOVA<span class="btn-hint">3+ groups, two factors</span></button>
+          <button onclick="loadTool('mann_whitney.html','Mann–Whitney U', this)">Mann–Whitney U<span class="btn-hint">Two independent groups · non-normal</span></button>
+          <button onclick="loadTool('wilcoxon.html','Wilcoxon signed-rank', this)">Wilcoxon signed-rank<span class="btn-hint">Paired data · non-normal</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('Chi_GOF.html','Chi-Square GOF', this)">Chi-Square GOF<span class="btn-hint">Observed vs expected frequencies</span></button>
+          <button onclick="loadTool('Chi_independence.html','Chi-Square Independence', this)">Chi-Square Independence<span class="btn-hint">Association between two categories</span></button>
+          <button onclick="loadTool('mcnemar.html','McNemar Test', this)">McNemar Test<span class="btn-hint">Paired binary data · before/after</span></button>
+          <button onclick="loadTool('fisher_exact.html','Fisher\'s Exact Test', this)">Fisher's Exact Test<span class="btn-hint">Small samples · 2×2 table</span></button>
+          <button onclick="loadTool('kappa.html','Kappa', this)">Kappa<span class="btn-hint">Inter-rater agreement · nominal</span></button>
+          <button onclick="loadTool('weighted_kappa.html','Weighted Kappa', this)">Weighted Kappa<span class="btn-hint">Inter-rater agreement · ordinal</span></button>
         </div>
       </div>
 
+      <!-- Analytical Performance -->
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.analytical">Analytical Performance</button>
         <div class="collapsible-content child-nav">
-
-          <!-- Learning subsection -->
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">📚 Learning</button>
-            <div class="collapsible-content child-nav">
-              <div class="sub-category">Analytical Performance</div>
-              <button onclick="loadTool('analytical_performance_theory.html','Analytical Performance — Concepts &amp; Theory', this)">Concepts &amp; Theory<span class="btn-hint">Precision · bias · TAE · sigma metric</span></button>
-              <div class="sub-category">Learning Tools</div>
-              <button onclick="loadTool('precision_learning.html','Understanding Precision', this)">Understanding Precision<span class="btn-hint">Repeatability · intermediate precision · reproducibility</span></button>
-              <button onclick="loadTool('bias_learning.html','Understanding Bias', this)">Understanding Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
-              <button onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">Understanding Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
-              <button onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">Understanding Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
-              <button onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">Understanding Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
-              <button onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">Understanding Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
-            </div>
-          </div>
-
-          <!-- Quantitative subsection -->
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Quantitative</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
-              <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol · patient samples</span></button>
-              <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
-              <button onclick="loadTool('tae.html','Total Error & Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
-              <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)" data-i18n="tool.methodComp">Quantitative Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
-              <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability Study<span class="btn-hint">% change from T0 · functional expiry · stored patient panel</span></button>
-            </div>
-          </div>
-
-          <!-- Categorical subsection -->
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Categorical</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
-              <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability Study<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
-            </div>
-          </div>
-
+          <button class="learn-btn" onclick="loadTool('analytical_performance_theory.html','Analytical Performance — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">Precision · bias · TAE · sigma metric</span></button>
+          <button class="learn-btn" onclick="loadTool('precision_learning.html','Understanding Precision', this)">📚 Precision<span class="btn-hint">Repeatability · intermediate precision · reproducibility</span></button>
+          <button class="learn-btn" onclick="loadTool('bias_learning.html','Understanding Bias', this)">📚 Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
+          <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
+          <button class="learn-btn" onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">📚 Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
+          <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
+          <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('precision.html','Precision', this)">Precision — Quick<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
+          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)">EP05 — Validation<span class="btn-hint">Full validation study · CLSI protocol · patient samples</span></button>
+          <button onclick="loadTool('bias.html','Bias', this)">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
+          <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
+          <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)">Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
+          <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Stability Study<span class="btn-hint">% change from T0 · functional expiry · stored patient panel</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
+          <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability Study<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
         </div>
       </div>
 
+      <!-- Correlation & Regression -->
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression</button>
         <div class="collapsible-content child-nav">
-
-          <!-- Learning subsection -->
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">📚 Learning</button>
-            <div class="collapsible-content child-nav">
-              <div class="sub-category">Correlation &amp; Regression</div>
-              <button onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">Concepts &amp; Theory<span class="btn-hint">r · R² · regression · ROC · AUC</span></button>
-              <div class="sub-category">Learning Tools</div>
-              <button onclick="loadTool('correlation_learning.html','Understanding Correlation &amp; Linear Regression', this)">Understanding Correlation<span class="btn-hint">r · R² · scatter · residuals · outliers</span></button>
-              <button onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">Understanding ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
-            </div>
-          </div>
-
-          <button onclick="loadTool('linear_regression.html','Correlation &amp; Linear Regression', this)" data-i18n="tool.linReg">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
-          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)" data-i18n="tool.logReg">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
+          <button class="learn-btn" onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">r · R² · regression · ROC · AUC</span></button>
+          <button class="learn-btn" onclick="loadTool('correlation_learning.html','Understanding Correlation &amp; Linear Regression', this)">📚 Correlation<span class="btn-hint">r · R² · scatter · residuals · outliers</span></button>
+          <button class="learn-btn" onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">📚 ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('linear_regression.html','Correlation &amp; Linear Regression', this)">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
+          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
         </div>
       </div>
 
+      <!-- Lab Tools -->
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.lab">Lab Tools</button>
         <div class="collapsible-content child-nav">
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="ui.pcr">PCR</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('PCR.html','In Silico PCR', this)" data-i18n="tool.pcr">In Silico PCR<span class="btn-hint">Primer design · simulation · melt curves</span></button>
-              <!-- hidden: PCR-RFLP HFE C282Y (learning exercise, not ready) -->
-              <!-- <button onclick="loadTool('pcr_rflp_hfe.html','PCR-RFLP: HFE C282Y', this)">PCR-RFLP: HFE C282Y ✦<span class="btn-hint">Learning exercise · rs1800562 genotyping</span></button> -->
-              <button onclick="loadTool('dilution_calculator.html#tab-reactions','PCR Setup', this, 'pcr_setup.html')" data-i18n="tool.pcrSetup">PCR Setup<span class="btn-hint">Master mix · reagent volumes</span></button>
-              <button onclick="loadTool('dilution_calculator.html#tab-primers','Primer Dilution', this, 'primer_dilution.html')" data-i18n="tool.primerDil">Primer Dilution<span class="btn-hint">Stock → working concentration</span></button>
-            </div>
-          </div>
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Prepare Solution</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('dilution_calculator.html#tab-simple','Dilution Calculator', this)" data-i18n="tool.dilution">Dilution Calculator<span class="btn-hint">Serial & simple dilutions</span></button>
-              <button onclick="loadTool('molarity_solution_prep.html','Molarity & Solution Prep', this)" data-i18n="tool.molarity">Molarity &amp; Solution Prep<span class="btn-hint">Solid → molar solution · g to prepare</span></button>
-            </div>
-          </div>
-          <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.quantTools">Quantification Tools</button>
-            <div class="collapsible-content child-nav">
-              <button onclick="loadTool('lambert_beer.html','Photometry', this)" data-i18n="tool.photometry">Photometry<span class="btn-hint">Beer-Lambert · absorbance · concentration</span></button>
-              <button onclick="loadTool('nernst_ise.html','Potentiometry', this)" data-i18n="tool.potentiometry">Potentiometry<span class="btn-hint">Nernst equation · ISE · mV → concentration</span></button>
-            </div>
-          </div>
+          <div class="sub-category">PCR</div>
+          <button onclick="loadTool('PCR.html','In Silico PCR', this)">In Silico PCR<span class="btn-hint">Primer design · simulation · melt curves</span></button>
+          <!-- hidden: PCR-RFLP HFE C282Y (learning exercise, not ready) -->
+          <!-- <button onclick="loadTool('pcr_rflp_hfe.html','PCR-RFLP: HFE C282Y', this)">PCR-RFLP: HFE C282Y ✦<span class="btn-hint">Learning exercise · rs1800562 genotyping</span></button> -->
+          <button onclick="loadTool('dilution_calculator.html#tab-reactions','PCR Setup', this, 'pcr_setup.html')">PCR Setup<span class="btn-hint">Master mix · reagent volumes</span></button>
+          <button onclick="loadTool('dilution_calculator.html#tab-primers','Primer Dilution', this, 'primer_dilution.html')">Primer Dilution<span class="btn-hint">Stock → working concentration</span></button>
+          <div class="sub-category">Prepare Solution</div>
+          <button onclick="loadTool('dilution_calculator.html#tab-simple','Dilution Calculator', this)">Dilution Calculator<span class="btn-hint">Serial &amp; simple dilutions</span></button>
+          <button onclick="loadTool('molarity_solution_prep.html','Molarity &amp; Solution Prep', this)">Molarity &amp; Solution Prep<span class="btn-hint">Solid → molar solution · g to prepare</span></button>
+          <div class="sub-category">Quantification</div>
+          <button onclick="loadTool('lambert_beer.html','Photometry', this)">Photometry<span class="btn-hint">Beer-Lambert · absorbance · concentration</span></button>
+          <button onclick="loadTool('nernst_ise.html','Potentiometry', this)">Potentiometry<span class="btn-hint">Nernst equation · ISE · mV → concentration</span></button>
         </div>
       </div>
     </div>
@@ -998,6 +968,7 @@
     <!-- WORKSPACE -->
     <div class="workspace">
       <div class="workspace-header">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
         <span id="toolTitle"></span>
         <div>
           <button class="report-issue-btn" onclick="reportIssue()" style="display:none;" id="reportIssueBtn" data-i18n="ui.reportIssue">Report Issue</button>
@@ -1202,8 +1173,41 @@
     if (btn) btn.classList.add("active");
   }
 
+  // ── UX: dirty tracking ────────────────────────────────────────────────────
+  let _toolDirty = false;
+
+  function _autoSaveCurrentTool() {
+    try {
+      const iframe = document.getElementById('toolIframe');
+      if (!iframe || !currentToolPage) return;
+      const win = iframe.contentWindow;
+      if (typeof win?.getSaveData === 'function') {
+        const data = win.getSaveData();
+        if (data) localStorage.setItem('autosave_' + currentToolPage, JSON.stringify(data));
+      }
+    } catch(e) {}
+  }
+
   function loadTool(page, title, btn, infoFile) {
+    // Auto-save current tool before leaving (if dirty or it has getSaveData)
+    if (currentToolPage && _toolDirty) _autoSaveCurrentTool();
+
+    // Unsaved warning for tools without getSaveData (can't auto-save)
+    if (currentToolPage && _toolDirty) {
+      try {
+        const win = document.getElementById('toolIframe')?.contentWindow;
+        if (typeof win?.getSaveData !== 'function') {
+          if (!confirm('You have unsaved data. Switch tools anyway?')) return;
+        }
+      } catch(e) {}
+    }
+
+    _toolDirty = false;
     currentToolPage = page;
+
+    // Remember last opened tool for next startup
+    localStorage.setItem('lastOpenedTool', JSON.stringify({ page, title }));
+
     const displayTitle = (btn && btn.dataset.i18n) ? T(btn.dataset.i18n) : title;
     document.getElementById("toolTitle").innerText = (page === 'PCR.html') ? '' : displayTitle;
     setActiveButton(btn);
@@ -1220,10 +1224,27 @@
     document.getElementById("loadDataBtn").style.display = "inline-block";
     document.getElementById("exportPdfBtn").style.display = "inline-block";
 
-    // Show Excel button only after iframe has loaded and tool exposes exportToExcel
+    // After iframe loads: check Excel support, restore auto-saved data, attach dirty tracking
     document.getElementById("toolIframe").addEventListener("load", function() {
-      const hasExcel = typeof this.contentWindow?.exportToExcel === "function";
-      document.getElementById("exportExcelBtn").style.display = hasExcel ? "inline-block" : "none";
+      const win = this.contentWindow;
+
+      // Excel support
+      document.getElementById("exportExcelBtn").style.display =
+        typeof win?.exportToExcel === "function" ? "inline-block" : "none";
+
+      // Auto-restore last session for this tool
+      try {
+        const saved = localStorage.getItem('autosave_' + page);
+        if (saved && typeof win?.loadSaveData === 'function') {
+          win.loadSaveData(JSON.parse(saved));
+        }
+      } catch(e) {}
+
+      // Dirty tracking — mark dirty on any input change
+      try {
+        this.contentDocument.addEventListener('input', () => { _toolDirty = true; }, true);
+        this.contentDocument.addEventListener('change', () => { _toolDirty = true; }, true);
+      } catch(e) {}
     });
 
     // Load info panel HTML — use explicit infoFile if provided, otherwise derive from page name
@@ -1240,6 +1261,17 @@
         document.getElementById("infoContent").innerHTML =
           "<p style='color:#6B7280;'>No educational content available yet.</p>";
       });
+  }
+
+  // Called by workflow navigation buttons inside iframes — skips dirty check
+  function loadToolFromWorkflow(page, title) {
+    _autoSaveCurrentTool();
+    _toolDirty = false;
+    loadTool(page, title, null);
+  }
+
+  function toggleSidebar() {
+    document.querySelector('.app-shell').classList.toggle('sidebar-collapsed');
   }
 
   function toggleInfo() {
@@ -2117,6 +2149,45 @@
   // ── WHAT'S NEW ────────────────────────────────────────────────────────────
 
   const CHANGELOG = {
+    '2.0.8': {
+      highlights: [
+        {
+          icon: '🗂️',
+          title: 'Sidebar redesigned',
+          detail: 'Flat navigation with 📚 learning tools at top, collapsible with ☰ toggle button. No more nested sub-menus.'
+        },
+        {
+          icon: '🔁',
+          title: 'Precision → Bias → Total Error & Sigma workflow',
+          detail: 'Step-by-step guidance with one-click navigation between tools. CV% and Bias% transfer automatically — no re-entry needed.'
+        },
+        {
+          icon: '📊',
+          title: 'Method Comparison → Total Error & Sigma',
+          detail: 'Mean bias% from Bland-Altman transfers directly to the TAE tool with one click.'
+        },
+        {
+          icon: '🧬',
+          title: 'Persistent EFLM analyte selection',
+          detail: 'The analyte you select is remembered across all quantitative tools — no need to re-select when switching between Precision, Bias, TAE, and Method Comparison.'
+        },
+        {
+          icon: '⌨️',
+          title: 'Keyboard shortcut & session restore',
+          detail: '⌘K / Ctrl+K focuses search instantly. Last opened tool is restored on startup. Tool data is auto-saved and restored when you return.'
+        },
+        {
+          icon: '📚',
+          title: 'Validation workflow guide',
+          detail: 'New section in Analytical Performance Concepts & Theory explains the standard 3-step validation workflow with step-by-step guidance.'
+        },
+        {
+          icon: '🐛',
+          title: 'RCV formula corrected',
+          detail: 'Reference Change Value formula in the theory page was incorrect. Now correctly shown as RCV = 2.77 × √(CVa² + CVi²).'
+        }
+      ]
+    },
     '2.0.5': {
       highlights: [
         {
@@ -2562,6 +2633,26 @@
   if (window.appAPI) {
     window.appAPI.onShowLicenseModal(openLicenseModal);
   }
+
+  // ── #1: Cmd+K / Ctrl+K — focus search ────────────────────────────────────
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      const input = document.getElementById('searchInput');
+      input.focus();
+      input.select();
+    }
+  });
+
+  // ── #2: Restore last opened tool on startup ───────────────────────────────
+  (function restoreLastTool() {
+    try {
+      const saved = localStorage.getItem('lastOpenedTool');
+      if (!saved) return;
+      const { page, title } = JSON.parse(saved);
+      if (page && title) loadTool(page, title, null);
+    } catch(e) {}
+  })();
 </script>
 
 </body>

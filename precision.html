@@ -73,6 +73,37 @@
   <div id="tab-input" class="tab-content active">
     <div class="grid-2">
       <div>
+        <!-- Tool guide card -->
+        <div class="tg-card">
+          <div class="tg-badges">
+            <span class="tg-badge tg-type">Precision Monitoring</span>
+            <span class="tg-badge tg-material">Patient samples · QC material</span>
+            <span class="tg-badge tg-design">Unpaired</span>
+            <span class="tg-badge tg-std">CLSI EP15-A3</span>
+          </div>
+          <div class="tg-when">Monitor run-to-run variability and confirm your method stays within acceptable imprecision limits. Use for routine QC or informal checks — not for full validation (use EP05 for that).</div>
+          <details class="tg-details">
+            <summary>Details</summary>
+            <div class="tg-body">
+              <div class="tg-row"><span class="tg-label">Material</span><span>Fresh patient samples or stable QC material (same lot across all runs)</span></div>
+              <div class="tg-row"><span class="tg-label">Design</span><span>Repeatability: 1 run, n ≥ 10 · Intermediate: multiple days/runs, n ≥ 20</span></div>
+              <div class="tg-row"><span class="tg-label">Output</span><span>CV%, SD, 95% CI, Levey-Jennings chart, Westgard rules, variance components</span></div>
+              <div class="tg-row"><span class="tg-label">Note</span><span>For full method validation use EP05/EP15 — this tool is for ongoing monitoring</span></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- EFLM card — top -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to auto-fill the allowable CV% from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <select id="eflm-analyte" onchange="eflmAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+        </div>
+        <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
+
         <div class="card">
           <div class="section-title">Settings</div>
 
@@ -114,15 +145,6 @@
           </div>
         </div>
 
-        <!-- EFLM card -->
-        <div class="card">
-          <div class="section-title">EFLM Performance Specifications</div>
-          <p class="note" style="margin-bottom:10px;">Select an analyte to auto-fill the allowable CV% from the EFLM biological variation database (Ricos et al. 2014).</p>
-          <select id="eflm-analyte" onchange="eflmAnalyteChange()">
-            <option value="">— Select analyte —</option>
-          </select>
-          <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
-        </div>
 
         <div class="card">
           <div class="section-title" id="hint-title">Format — Repeatability</div>
@@ -461,6 +483,17 @@ let lastCharts  = [];
 
 function destroyCharts(){ lastCharts.forEach(c=>c.destroy()); lastCharts=[]; _dotChartInst=null; }
 
+function _wfNextCard(step, nextTool, savedMsg, page, title) {
+  return `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Step ${step} of 3 complete</div>
+      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ${nextTool}</div>
+      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">${savedMsg} · will auto-fill in Total Error &amp; Sigma</div>
+    </div>
+    <button onclick="try{window.parent.loadToolFromWorkflow('${page}','${title}')}catch(e){alert('Open ${title} from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ${nextTool} →</button>
+  </div>`;
+}
+
 function calculate(){
   showError('');
   destroyCharts();
@@ -586,6 +619,10 @@ function renderRepeatability(){
     </tr>`;
   });
   html+=`</tbody></table></div>`;
+
+  // Workflow: save result and show next-step card
+  try { localStorage.setItem('wf_precision', JSON.stringify({ cv: +fmt(cv,2), analyte, unit, type:'repeatability' })); } catch(e) {}
+  html+=_wfNextCard(1,'Bias',`CV% = ${fmt(cv,2)}% saved`,'bias.html','Bias');
 
   document.getElementById('results-body').innerHTML=html;
 
@@ -796,6 +833,10 @@ function renderIntermediate(){
     <div class="card" style="padding:12px;"><canvas id="ip-dist-chart" style="height:200px;"></canvas></div>
     <div class="card" style="padding:12px;"><canvas id="ip-cv-chart" style="height:200px;"></canvas></div>
   </div>`;
+
+  // Workflow: save result and show next-step card
+  try { localStorage.setItem('wf_precision', JSON.stringify({ cv: +fmt(cvT,2), analyte, unit, type:'intermediate' })); } catch(e) {}
+  html+=_wfNextCard(1,'Bias',`CV% = ${fmt(cvT,2)}% (intermediate precision) saved`,'bias.html','Bias');
 
   document.getElementById('results-body').innerHTML=html;
 
@@ -1172,9 +1213,11 @@ var eflmTier = 'desirable';
       sel.appendChild(opt);
     });
 })();
+eflmRestoreSelection('eflm-analyte');
 
 function eflmAnalyteChange() {
   eflmKey = document.getElementById('eflm-analyte').value;
+  eflmPersistKey(eflmKey);
   if (!eflmKey) {
     document.getElementById('eflm-tier-cards').style.display = 'none';
     return;
@@ -1202,10 +1245,6 @@ function renderEFLMTierCards() {
 
   wrap.style.display = 'block';
   wrap.innerHTML =
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
-    '<strong>' + a.name + '</strong> &nbsp;&middot;&nbsp; ' + a.unit +
-    ' &nbsp;&middot;&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;&middot;&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
-    '</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
     ['optimal', 'desirable', 'minimum'].map(function(tr) {
       var active = tr === eflmTier;
@@ -1231,6 +1270,13 @@ function applyEFLM() {
   var unitEl    = document.getElementById('inp-unit');
   if (!analyteEl.value) analyteEl.value = a.name;
   if (!unitEl.value)    unitEl.value    = a.unit;
+  var mean = eflmRefMean(eflmKey);
+  if (mean !== null) {
+    var gm = document.getElementById('gen-mean'); if (gm) gm.value = mean;
+    var sw = document.getElementById('gen-sw');
+    if (sw) sw.value = +(mean * t.cv / 100).toFixed(4);
+  }
+  renderEFLMInfoBar('eflm-info-bar', eflmKey, eflmTier);
 }
 </script>
 </body>

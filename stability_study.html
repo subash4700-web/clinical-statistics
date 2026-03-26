@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Quantitative Stability Study</title>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     .layout { display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start; }
@@ -72,18 +73,43 @@
   </style>
 </head>
 <body>
-<div class="tool-header">
-  <div>
-    <div class="tool-title">Quantitative Stability Study</div>
-    <div class="tool-subtitle">% change from baseline · paired analysis · CLSI EP25-A · functional expiry</div>
-  </div>
-</div>
 
 <div class="tool-body">
   <div class="layout">
 
     <!-- LEFT: Setup -->
     <div>
+      <!-- Tool guide card -->
+      <div class="tg-card">
+        <div class="tg-badges">
+          <span class="tg-badge tg-type">Stability Study</span>
+          <span class="tg-badge tg-material">Stored patient panel</span>
+          <span class="tg-badge tg-design">Paired to T0 · over time</span>
+          <span class="tg-badge tg-std">CLSI EP25-A</span>
+        </div>
+        <div class="tg-when">Determine how long patient material remains stable at defined storage conditions. Used for pooled QC material, residual samples, or biobank validation. All time points are compared back to T0.</div>
+        <details class="tg-details">
+          <summary>Details</summary>
+          <div class="tg-body">
+            <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples stored under defined conditions: −80°C, −20°C, 2–8°C, or room temperature</span></div>
+            <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 10 samples measured at T0 (fresh), then at T1, T3, T6, T9, T12 months (or custom intervals)</span></div>
+            <div class="tg-row"><span class="tg-label">Output</span><span>% change from T0 per time point, paired t-test, trend regression, functional expiry date</span></div>
+            <div class="tg-row"><span class="tg-label">Note</span><span>Functional expiry = last time point where all samples pass the acceptance criterion (e.g. ±10% change)</span></div>
+            <div class="tg-row"><span class="tg-label">Qualitative?</span><span>For pos/neg methods use <strong>Categorical Method Comparison</strong> — enter Kappa + McNemar results per time point</span></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- EFLM card — top -->
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-title">EFLM Performance Specifications</div>
+        <p class="note" style="margin-bottom:10px;">Select an analyte to auto-fill the name and unit from the EFLM biological variation database (Ricos et al. 2014).</p>
+        <select id="stab-eflm-analyte" onchange="stabEFLMChange()" style="width:100%;">
+          <option value="">— Select analyte —</option>
+        </select>
+      </div>
+      <div id="eflm-info-bar"></div>
+
       <div class="card">
         <div class="section-title">Study parameters</div>
 
@@ -538,6 +564,32 @@ window.loadSaveData = d => {
   rebuildGrid();
   if(d.data) Object.entries(d.data).forEach(([k,v])=>{ const el=document.getElementById(k); if(el)el.value=v; });
 };
+
+// ── EFLM integration ──────────────────────────────────────────────────────
+(function buildStabEFLMDropdown() {
+  const sel = document.getElementById('stab-eflm-analyte');
+  if (!sel || typeof EFLM_DB === 'undefined') return;
+  Object.entries(EFLM_DB)
+    .sort((a, b) => a[1].name.localeCompare(b[1].name))
+    .forEach(([key, a]) => {
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = a.name;
+      sel.appendChild(opt);
+    });
+})();
+eflmRestoreSelection('stab-eflm-analyte');
+
+function stabEFLMChange() {
+  const key = document.getElementById('stab-eflm-analyte').value;
+  eflmPersistKey(key);
+  if (!key || typeof EFLM_DB === 'undefined' || !EFLM_DB[key]) return;
+  const a = EFLM_DB[key];
+  const nameEl = document.getElementById('analyteName');
+  const unitEl = document.getElementById('analyteUnit');
+  if (!nameEl.value || nameEl.value === 'Analyte') nameEl.value = a.name;
+  if (!unitEl.value) unitEl.value = a.unit;
+  renderEFLMInfoBar('eflm-info-bar', key, 'desirable');
+}
 </script>
 </body>
 </html>
