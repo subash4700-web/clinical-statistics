@@ -913,32 +913,30 @@
               <button onclick="loadTool('bias_learning.html','Understanding Bias', this)">Understanding Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
               <button onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">Understanding Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
               <button onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">Understanding Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
-              <button onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">Understanding Stability Studies<span class="btn-hint">Holdbarhedsforsøg · % change · Kappa over time</span></button>
+              <button onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">Understanding Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
+              <button onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">Understanding Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
             </div>
           </div>
 
-          <!-- Precision subsection -->
+          <!-- Quantitative subsection -->
           <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Precision</button>
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Quantitative</button>
             <div class="collapsible-content child-nav">
-              <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run statistics</span></button>
-              <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol</span></button>
+              <button onclick="loadTool('precision.html','Precision', this)" data-i18n="tool.precision">Precision — Quick / QC<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
+              <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)" data-i18n="tool.ep05">EP05/EP15 — Validation<span class="btn-hint">Full validation study · CLSI protocol · patient samples</span></button>
+              <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
+              <button onclick="loadTool('tae.html','Total Error & Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
+              <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)" data-i18n="tool.methodComp">Quantitative Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
+              <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability Study<span class="btn-hint">% change from T0 · functional expiry · stored patient panel</span></button>
             </div>
           </div>
 
-          <!-- Bias — direct link -->
-          <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias" style="margin-top:0;">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
-
-          <!-- Total Error & Sigma — direct link -->
-          <button onclick="loadTool('tae.html','Total Error & Sigma', this)" style="margin-top:0;">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications</span></button>
-
-          <!-- Method Comparison & Stability subsection -->
+          <!-- Categorical subsection -->
           <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Method Comparison &amp; Stability</button>
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Categorical</button>
             <div class="collapsible-content child-nav">
-              <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Quantitative · paired patient samples</span></button>
-              <button onclick="loadTool('qualitative_agreement.html','Qualitative Method Agreement', this)">Qualitative Method Agreement<span class="btn-hint">Kappa · McNemar · pos/neg methods</span></button>
-              <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability Study<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
+              <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
+              <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability Study<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
             </div>
           </div>
 
@@ -1660,22 +1658,20 @@
             tc('bias_learning.html', 'Understanding Bias', 'Systematic error · CRM vs EQA · total error'),
             tc('tae_learning.html', 'Understanding Total Error &amp; Sigma', 'TE · TAE · sigma metric · QC design'),
             tc('method_comparison_learning.html', 'Understanding Method Comparison', 'Bland-Altman · bias types · r trap · paired methods'),
-            tc('stability_learning.html', 'Understanding Stability Studies', 'Holdbarhedsforsøg · % change · Kappa over time'),
+            tc('stability_learning.html', 'Understanding Stability Studies', 'Reagent stability · % change · Kappa over time'),
+            tc('categorical_method_comparison_learning.html', 'Understanding Categorical Method Comparison', 'Kappa paradox · McNemar bias direction · pos/neg methods'),
           ]),
-          grp('Precision', [
-            tc('precision.html',         'Precision — Quick / QC',  'Daily monitoring · run-to-run statistics'),
-            tc('precision_ep05.html',    'EP05/EP15 — Validation',  'Full validation study · CLSI protocol'),
+          grp('Quantitative', [
+            tc('precision.html',         'Precision — Quick / QC',            'Daily monitoring · run-to-run statistics'),
+            tc('precision_ep05.html',    'EP05/EP15 — Validation',             'Full validation study · CLSI protocol'),
+            tc('bias.html',              'Bias — CRM / EQA',                   'Known reference value vs your method'),
+            tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
+            tc('method_comparison.html', 'Quantitative Method Comparison',     'Bland-Altman · Passing-Bablok · Deming · paired samples'),
+            tc('stability_study.html',   'Quantitative Stability Study',       '% change from T0 · functional expiry · CLSI EP25-A'),
           ]),
-          grp('Bias', [
-            tc('bias.html', 'Bias — CRM / EQA', 'Known reference value vs your method'),
-          ]),
-          grp('Total Error &amp; Sigma', [
-            tc('tae.html', 'Total Error &amp; Sigma', 'Sigma metric · QC implications'),
-          ]),
-          grp('Method Comparison &amp; Stability', [
-            tc('method_comparison.html',     'Method Comparison',            'Quantitative · paired patient samples'),
-            tc('qualitative_agreement.html', 'Qualitative Method Agreement', 'Kappa · McNemar · pos/neg methods'),
-            tc('stability_study.html',       'Quantitative Stability Study', '% change from T0 · functional expiry · CLSI EP25-A'),
+          grp('Categorical', [
+            tc('qualitative_agreement.html', 'Categorical Method Comparison',  'Kappa · McNemar · pos/neg methods · 2×2 table'),
+            tc('qualitative_stability.html', 'Qualitative Stability Study',    'Kappa over time · functional expiry · stored panel'),
           ]),
         ].join(''),
       },
@@ -1781,14 +1777,16 @@
     { file:'bias_learning.html',                 name:'Understanding Bias',               section:'Analytical Performance › Learning' },
     { file:'tae_learning.html',                  name:'Understanding Total Error & Sigma',section:'Analytical Performance › Learning' },
     { file:'method_comparison_learning.html',    name:'Understanding Method Comparison',          section:'Analytical Performance › Learning' },
-    { file:'stability_learning.html',            name:'Understanding Stability Studies',           section:'Analytical Performance › Learning' },
-    { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Precision' },
-    { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Precision' },
-    { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Bias' },
-    { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Bias' },
-    { file:'method_comparison.html',             name:'Method Comparison',                section:'Analytical Performance › Bias' },
-    { file:'qualitative_agreement.html',         name:'Qualitative Method Agreement',     section:'Analytical Performance › Method Comparison & Stability' },
-    { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Analytical Performance › Method Comparison & Stability' },
+    { file:'stability_learning.html',                         name:'Understanding Stability Studies',                 section:'Analytical Performance › Learning' },
+    { file:'categorical_method_comparison_learning.html',   name:'Understanding Categorical Method Comparison',      section:'Analytical Performance › Learning' },
+    { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Quantitative' },
+    { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Quantitative' },
+    { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Quantitative' },
+    { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Quantitative' },
+    { file:'method_comparison.html',             name:'Quantitative Method Comparison',   section:'Analytical Performance › Quantitative' },
+    { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Analytical Performance › Quantitative' },
+    { file:'qualitative_agreement.html',         name:'Categorical Method Comparison',    section:'Analytical Performance › Categorical' },
+    { file:'qualitative_stability.html',         name:'Qualitative Stability Study',      section:'Analytical Performance › Categorical' },
     { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
     { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
     { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Correlation & Regression › Learning' },
@@ -1992,7 +1990,7 @@
       'tool.chiGOF':'Chi-Square GOF','tool.chiIndep':'Chi-Square Independence',
       'tool.mcnemar':'McNemar Test','tool.fisher':"Fisher's Exact Test",
       'tool.kappa':'Kappa','tool.weightedKappa':'Weighted Kappa',
-      'tool.precision':'Precision — Quick / QC','tool.ep05':'EP05/EP15 Precision — Validation','tool.bias':'Bias','tool.methodComp':'Method Comparison',
+      'tool.precision':'Precision — Quick / QC','tool.ep05':'EP05/EP15 Precision — Validation','tool.bias':'Bias','tool.methodComp':'Quantitative Method Comparison',
       'tool.linReg':'Linear Regression','tool.logReg':'ROC & Diagnostic Performance','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Setup','tool.primerDil':'Primer Dilution',
       'tool.dilution':'Dilution Calculator','tool.molarity':'Molarity & Solution Prep',
@@ -2312,11 +2310,17 @@
       pdf.setFont(undefined, "normal");
 
       // Capture iframe body
+      // Clamp scale so canvas height stays within browser limit (~32767px).
+      // Lower scale also drastically reduces file size.
+      const bodyH = iframe.contentDocument.body.scrollHeight;
+      const maxScale = Math.min(1.8, Math.floor(32000 / bodyH * 10) / 10);
+      const renderScale = Math.max(1.0, maxScale);
+
       const canvas = await html2canvas(iframe.contentDocument.body, {
-        scale: 1.8, useCORS: true, allowTaint: true,
+        scale: renderScale, useCORS: true, allowTaint: true,
         backgroundColor: "#f4f6f8",
         windowWidth: iframe.contentDocument.body.scrollWidth,
-        windowHeight: iframe.contentDocument.body.scrollHeight
+        windowHeight: bodyH
       });
 
       const contentW = pw - 2 * margin;
@@ -2337,7 +2341,7 @@
         slice.getContext("2d").drawImage(canvas, 0, srcY, canvas.width, slicePX, 0, 0, canvas.width, slicePX);
 
         const yPos = isFirst ? 26 : margin;
-        pdf.addImage(slice.toDataURL("image/png"), "PNG", margin, yPos, contentW, sliceMM);
+        pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", margin, yPos, contentW, sliceMM);
         srcY += slicePX;
         if (srcY < canvas.height) pdf.addPage();
         isFirst = false;
