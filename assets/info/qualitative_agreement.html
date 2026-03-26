@@ -1,0 +1,196 @@
+<div class="info-content">
+
+  <h2>Qualitative Method Agreement</h2>
+
+  <!-- Index -->
+  <div style="background:#f1f5f9; border-radius:8px; padding:10px 14px; margin-bottom:16px;">
+    <div style="font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;">Contents</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
+      <a href="#qa-purpose"     style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
+      <a href="#qa-when"        style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
+      <a href="#qa-table"       style="color:var(--accent); text-decoration:none; padding:2px 0;">The 2×2 Table</a>
+      <a href="#qa-kappa"       style="color:var(--accent); text-decoration:none; padding:2px 0;">Cohen's Kappa</a>
+      <a href="#qa-mcnemar"     style="color:var(--accent); text-decoration:none; padding:2px 0;">McNemar's Test</a>
+      <a href="#qa-together"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Using Both Together</a>
+      <a href="#qa-interpret"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Interpretation Scale</a>
+      <a href="#qa-stability"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Stability Studies</a>
+      <a href="#qa-assumptions" style="color:var(--accent); text-decoration:none; padding:2px 0;">Assumptions</a>
+      <a href="#qa-reporting"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Reporting Example</a>
+    </div>
+  </div>
+
+  <h3 id="qa-purpose">Purpose</h3>
+  <p>
+    This tool evaluates <strong>agreement between two qualitative (pos/neg) methods</strong> applied to the same samples.
+    It answers two questions simultaneously:
+  </p>
+  <ul>
+    <li><strong>How much do the methods agree overall?</strong> — Cohen's Kappa (concordance)</li>
+    <li><strong>When they disagree, is the disagreement random or systematic?</strong> — McNemar's test (tilt)</li>
+  </ul>
+  <p>
+    Together they give a complete picture of method performance that neither test provides alone.
+  </p>
+
+  <h3 id="qa-when">When to Use</h3>
+  <ul>
+    <li>Comparison of two qualitative laboratory methods (e.g. two immunoassays, two agglutination tests)</li>
+    <li>Validation or verification of a new pos/neg method against a reference method</li>
+    <li><strong>Stability studies (holdbarhedsforsøg)</strong> — comparing fresh vs aged reagents or test cards</li>
+    <li>Inter-rater or inter-laboratory agreement studies</li>
+    <li>Point-of-care vs central laboratory qualitative comparison</li>
+    <li>Blood bank: comparing card generations, lot changes, or storage conditions</li>
+  </ul>
+
+  <h3 id="qa-table">The 2×2 Contingency Table</h3>
+  <p>
+    Each sample is classified by both methods, producing four counts:
+  </p>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;">
+      <th style="padding:6px 10px; border:1px solid #e2e8f0;"></th>
+      <th style="padding:6px 10px; border:1px solid #e2e8f0;">Method B: Positive</th>
+      <th style="padding:6px 10px; border:1px solid #e2e8f0;">Method B: Negative</th>
+    </tr>
+    <tr>
+      <th style="padding:6px 10px; border:1px solid #e2e8f0; background:#f1f5f9;">Method A: Positive</th>
+      <td style="padding:6px 10px; border:1px solid #e2e8f0; background:#dbeafe; text-align:center;"><strong>a</strong> — both positive (agree)</td>
+      <td style="padding:6px 10px; border:1px solid #e2e8f0; background:#fff7ed; text-align:center;"><strong>b</strong> — A+, B− (discordant)</td>
+    </tr>
+    <tr>
+      <th style="padding:6px 10px; border:1px solid #e2e8f0; background:#f1f5f9;">Method A: Negative</th>
+      <td style="padding:6px 10px; border:1px solid #e2e8f0; background:#fff7ed; text-align:center;"><strong>c</strong> — A−, B+ (discordant)</td>
+      <td style="padding:6px 10px; border:1px solid #e2e8f0; background:#dbeafe; text-align:center;"><strong>d</strong> — both negative (agree)</td>
+    </tr>
+  </table>
+  <ul>
+    <li><strong>a + d</strong> = concordant pairs (agreement) — used by Kappa</li>
+    <li><strong>b + c</strong> = discordant pairs (disagreement) — used by McNemar</li>
+    <li><strong>b</strong> = Method A calls positive, Method B calls negative</li>
+    <li><strong>c</strong> = Method A calls negative, Method B calls positive</li>
+  </ul>
+
+  <h3 id="qa-kappa">Cohen's Kappa — Concordance</h3>
+  <p>
+    Kappa measures agreement <strong>corrected for chance</strong>. Two methods with very different positive rates
+    might agree often by chance alone — Kappa removes that chance component.
+  </p>
+  <p><strong>κ = (Pₒ − Pₑ) / (1 − Pₑ)</strong></p>
+  <ul>
+    <li><strong>Pₒ</strong> = observed agreement = (a + d) / N</li>
+    <li><strong>Pₑ</strong> = expected agreement by chance = [(a+b)(a+c) + (c+d)(b+d)] / N²</li>
+    <li>κ = 1: perfect agreement</li>
+    <li>κ = 0: agreement no better than chance</li>
+    <li>κ &lt; 0: agreement worse than chance</li>
+  </ul>
+  <p class="note">
+    Kappa is sensitive to prevalence — a very low or very high proportion of positives can produce
+    a low κ even with high observed agreement. Always report Pₒ alongside κ.
+  </p>
+
+  <h3 id="qa-mcnemar">McNemar's Test — Systematic Tilt</h3>
+  <p>
+    McNemar's test uses <strong>only the discordant pairs</strong> (b and c) to ask:
+    are the disagreements symmetric, or does one method systematically call more positives than the other?
+  </p>
+  <p><strong>H₀: b = c</strong> (discordances are random — no systematic bias)</p>
+  <p><strong>H₁: b ≠ c</strong> (one method consistently calls more positives)</p>
+  <p>
+    When b + c ≥ 25: χ² = (|b − c| − 1)² / (b + c) with continuity correction<br>
+    When b + c &lt; 25: exact binomial test (more accurate for small numbers of discordant pairs)
+  </p>
+  <ul>
+    <li><strong>p ≥ α</strong>: no systematic bias — disagreements are random</li>
+    <li><strong>p &lt; α and b &gt; c</strong>: Method A calls more positives than Method B</li>
+    <li><strong>p &lt; α and c &gt; b</strong>: Method B calls more positives than Method A</li>
+  </ul>
+  <p class="note">
+    McNemar does NOT measure how much the methods agree — only whether the direction of disagreement
+    is symmetric. A significant McNemar with a high Kappa means systematic but small bias.
+    A non-significant McNemar with a low Kappa means random but frequent disagreement.
+  </p>
+
+  <h3 id="qa-together">Using Both Together</h3>
+  <p>The two tests answer different questions and must be read together:</p>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;">
+      <th style="padding:6px 8px; border:1px solid #e2e8f0; text-align:left;">Kappa</th>
+      <th style="padding:6px 8px; border:1px solid #e2e8f0; text-align:left;">McNemar</th>
+      <th style="padding:6px 8px; border:1px solid #e2e8f0; text-align:left;">Interpretation</th>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">High (≥ 0.80)</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Not significant</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#059669;"><strong>Ideal.</strong> Methods agree well, no systematic bias.</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">High (≥ 0.80)</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Significant</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#d97706;"><strong>Systematic but small bias.</strong> One method consistently over- or under-calls. Clinically relevant only if the positive rate difference matters.</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Moderate (0.40–0.79)</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Not significant</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#d97706;"><strong>Random disagreement.</strong> Methods differ, but neither is systematically biased — investigate analytical imprecision or sample handling.</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Low (&lt; 0.40)</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0;">Significant</td>
+      <td style="padding:6px 8px; border:1px solid #e2e8f0; color:#dc2626;"><strong>Poor agreement with systematic bias.</strong> Methods should not be used interchangeably.</td>
+    </tr>
+  </table>
+
+  <h3 id="qa-interpret">Kappa Interpretation Scale</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:12px; margin:8px 0;">
+    <tr style="background:#f1f5f9;">
+      <th style="padding:5px 8px; border:1px solid #e2e8f0; text-align:left;">κ</th>
+      <th style="padding:5px 8px; border:1px solid #e2e8f0; text-align:left;">Agreement</th>
+    </tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">&lt; 0.00</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Poor (less than chance)</td></tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">0.00 – 0.20</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Slight</td></tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">0.21 – 0.40</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Fair</td></tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">0.41 – 0.60</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Moderate</td></tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">0.61 – 0.80</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Substantial</td></tr>
+    <tr><td style="padding:5px 8px; border:1px solid #e2e8f0;">0.81 – 1.00</td><td style="padding:5px 8px; border:1px solid #e2e8f0;">Almost perfect</td></tr>
+  </table>
+  <p class="note">Landis & Koch (1977). No universal threshold for "acceptable" — define your criterion before running the study.</p>
+
+  <h3 id="qa-stability">Stability Studies (Holdbarhedsforsøg) — Qualitative</h3>
+  <p>
+    For qualitative stability studies, the same panel of known samples is tested with a fresh reference
+    (T0) and with aged/stored material at each time point (T1, T3, T6 months, etc.).
+    Each time point produces one 2×2 table — run the full Kappa + McNemar analysis at each.
+  </p>
+  <ul>
+    <li>Plot κ vs time — a declining κ indicates degrading agreement as the material ages</li>
+    <li>Track McNemar p-value and direction — a significant tilt indicates the aged material is
+        systematically missing positives (most common) or generating false positives</li>
+    <li>The <strong>functional expiry</strong> is the time point at which κ falls below your
+        pre-defined acceptance criterion or McNemar becomes significant</li>
+    <li>Pre-define acceptance criteria before the study (e.g. κ ≥ 0.80 and McNemar p ≥ 0.05)</li>
+  </ul>
+  <p class="note">
+    For quantitative stability studies (where the outcome is a measured value rather than pos/neg),
+    use a bias/drift approach: % change from baseline, paired comparison at each time point,
+    and regression of result vs time — aligned with CLSI EP25-A.
+  </p>
+
+  <h3 id="qa-assumptions">Assumptions</h3>
+  <ul>
+    <li><strong>Paired observations</strong> — the same samples are tested by both methods</li>
+    <li><strong>Dichotomous outcome</strong> — each result is strictly positive or negative</li>
+    <li><strong>Independent pairs</strong> — each sample contributes one pair of results</li>
+    <li><strong>McNemar requires b + c ≥ 5</strong> for meaningful results (exact binomial preferred when b + c &lt; 25)</li>
+    <li>Kappa is <strong>not appropriate for ordinal categories</strong> (e.g. reaction strength 0–4+) — use Weighted Kappa instead</li>
+  </ul>
+
+  <h3 id="qa-reporting">Reporting Example</h3>
+  <p>
+    Qualitative agreement between new and aged DAT cards was assessed on 60 paired samples.
+    Cohen's κ = 0.78 (95% CI: 0.63–0.93), indicating substantial agreement (Pₒ = 91.7%).
+    McNemar's test was not significant (p = 0.18), confirming that the discordances were symmetric
+    with no evidence of systematic bias. The aged cards met the pre-defined acceptance criterion
+    of κ ≥ 0.70 and McNemar p ≥ 0.05.
+  </p>
+
+</div>

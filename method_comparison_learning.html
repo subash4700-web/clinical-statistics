@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Method Comparison</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#0d9488;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select,input[type=text]{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=number]:focus,select:focus,input[type=text]:focus{border-color:var(--accent);}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 56px;gap:7px;align-items:center;}
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;display:flex;justify-content:space-between;align-items:center;}
+    .chart-hd span{font-weight:500;text-transform:none;color:var(--muted);font-size:11px;letter-spacing:0;}
+    .chart-bd{padding:12px 14px;}
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px;}
+    .stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+    .stat-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .stat-v{font-size:16px;font-weight:800;margin-top:2px;}
+    .stat-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+    .stat.pass{border-color:#16a34a;background:#f0fdf4;}
+    .stat.pass .stat-v{color:#15803d;}
+    .stat.fail{border-color:#dc2626;background:#fef2f2;}
+    .stat.fail .stat-v{color:#b91c1c;}
+    .stat.neutral{border-color:#0d9488;background:#f0fdfa;}
+    .stat.neutral .stat-v{color:#0f766e;}
+    .stat.warn{border-color:#d97706;background:#fffbeb;}
+    .stat.warn .stat-v{color:#b45309;}
+
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:0;}
+    .insight-blue{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;}
+    .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .insight-red{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+
+    .divider-soft{height:1px;background:var(--line);margin:12px 0;}
+
+    /* exercises */
+    .exercises{margin-bottom:16px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#5eead4;box-shadow:0 2px 10px rgba(13,148,136,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#134e4a;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#0f766e;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(2,1fr);}.stats-grid{grid-template-columns:1fr 1fr 1fr;}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>📈 Understanding Method Comparison</h1>
+  <p>Simulate paired measurements — explore bias types, Bland-Altman analysis, and the correlation trap.</p>
+</div>
+<div class="wrap">
+
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">Methods agree — ideal result</div>
+          <div class="ex-obj">Both methods return similar values with good precision. Scatter clusters along the identity line. Bland-Altman is flat around zero.</div>
+          <div class="ex-params">
+            <span class="ex-param">Slope = 1.00</span>
+            <span class="ex-param">Intercept = 0</span>
+            <span class="ex-param">CV = 2%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Constant bias — fixed offset</div>
+          <div class="ex-obj">Method B reads consistently higher by a fixed amount at all concentrations. r is still near 1.0 — but the methods are NOT interchangeable.</div>
+          <div class="ex-params">
+            <span class="ex-param">Slope = 1.00</span>
+            <span class="ex-param">Intercept = +8</span>
+            <span class="ex-param">CV = 2%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Proportional bias — fanning</div>
+          <div class="ex-obj">Method B reads ~10% higher and the gap grows with concentration. Bland-Altman differences slope upward — they are not flat.</div>
+          <div class="ex-params">
+            <span class="ex-param">Slope = 1.10</span>
+            <span class="ex-param">Intercept = 0</span>
+            <span class="ex-param">CV = 2%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">The r trap — high r, real bias</div>
+          <div class="ex-obj">Pearson r looks excellent (~0.99). But there is a large constant bias. Correlation measures association, not agreement. Always use Bland-Altman.</div>
+          <div class="ex-params">
+            <span class="ex-param">r ≈ 0.99</span>
+            <span class="ex-param">Intercept = +15</span>
+            <span class="ex-param">Range 5–60</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT: Parameters -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">Simulation parameters</div>
+        <div class="panel-bd">
+
+          <label>Method A (Y axis) — your method</label>
+          <input type="text" id="nameA" value="Method A" oninput="simulate()">
+          <label>Method B (X axis) — comparator / reference</label>
+          <input type="text" id="nameB" value="Method B" oninput="simulate()" style="margin-bottom:10px;">
+
+          <div class="divider-soft"></div>
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">
+            True population — unknown in real life
+          </div>
+
+          <label>Number of samples (n)</label>
+          <select id="nMeas" onchange="simulate()">
+            <option value="20">20</option>
+            <option value="40" selected>40</option>
+            <option value="80">80</option>
+          </select>
+
+          <label>Reference range — low</label>
+          <input type="number" id="rangeMin" value="5" step="1" oninput="simulate()">
+          <label>Reference range — high</label>
+          <input type="number" id="rangeMax" value="50" step="1" oninput="simulate()">
+
+          <div class="divider-soft"></div>
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">
+            Bias components (Method B vs Method A)
+          </div>
+
+          <label>Slope (proportional bias factor)</label>
+          <div class="range-row">
+            <input type="range" id="slope" min="0.80" max="1.20" step="0.01" value="1.00"
+              oninput="document.getElementById('slopeVal').value=parseFloat(this.value).toFixed(2);simulate()">
+            <input type="number" id="slopeVal" value="1.00" step="0.01" min="0.80" max="1.20"
+              oninput="document.getElementById('slope').value=this.value;simulate()">
+          </div>
+
+          <label>Intercept (constant bias, original units)</label>
+          <div class="range-row">
+            <input type="range" id="intercept" min="-15" max="15" step="0.5" value="0"
+              oninput="document.getElementById('interceptVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="interceptVal" value="0.0" step="0.5" min="-15" max="15"
+              oninput="document.getElementById('intercept').value=this.value;simulate()">
+          </div>
+
+          <div class="divider-soft"></div>
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">
+            Imprecision
+          </div>
+
+          <label>CV% — Method A</label>
+          <div class="range-row">
+            <input type="range" id="cvA" min="0.5" max="10" step="0.5" value="2"
+              oninput="document.getElementById('cvAVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="cvAVal" value="2.0" step="0.5" min="0.5" max="10"
+              oninput="document.getElementById('cvA').value=this.value;simulate()">
+          </div>
+
+          <label>CV% — Method B</label>
+          <div class="range-row">
+            <input type="range" id="cvB" min="0.5" max="10" step="0.5" value="2"
+              oninput="document.getElementById('cvBVal').value=parseFloat(this.value).toFixed(1);simulate()">
+            <input type="number" id="cvBVal" value="2.0" step="0.5" min="0.5" max="10"
+              oninput="document.getElementById('cvB').value=this.value;simulate()">
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="simulate()">Re-simulate</button>
+            <button class="btn" onclick="resetAll()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Charts + Stats -->
+    <div class="charts-col">
+
+      <div class="stats-grid">
+        <div class="stat neutral" id="s-r">
+          <div class="stat-k">Pearson r</div>
+          <div class="stat-v" id="sv-r">—</div>
+          <div class="stat-sub">Correlation</div>
+        </div>
+        <div class="stat" id="s-slope">
+          <div class="stat-k">OLS Slope</div>
+          <div class="stat-v" id="sv-slope">—</div>
+          <div class="stat-sub">Proportional</div>
+        </div>
+        <div class="stat" id="s-intercept">
+          <div class="stat-k">OLS Intercept</div>
+          <div class="stat-v" id="sv-intercept">—</div>
+          <div class="stat-sub">Constant</div>
+        </div>
+        <div class="stat" id="s-bias">
+          <div class="stat-k">Mean Bias (A−B)</div>
+          <div class="stat-v" id="sv-bias">—</div>
+          <div class="stat-sub">B-A mean</div>
+        </div>
+        <div class="stat" id="s-loa">
+          <div class="stat-k">Limits of Agreement</div>
+          <div class="stat-v" id="sv-loa" style="font-size:12px;margin-top:4px;">—</div>
+          <div class="stat-sub">±1.96 SD</div>
+        </div>
+      </div>
+
+      <div id="insightBox" class="insight-box insight-blue"></div>
+
+      <div class="chart-panel">
+        <div class="chart-hd">
+          Scatter plot — Method A vs Method B
+          <span id="scatterSub"></span>
+        </div>
+        <div class="chart-bd">
+          <canvas id="scatterChart" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-hd">
+          Bland-Altman — difference vs mean
+        </div>
+        <div class="chart-bd">
+          <canvas id="baChart" height="220"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+let scatterChart, baChart;
+
+function srand(seed){ rngState = seed >>> 0; }
+let rngState = 42;
+function rand(){
+  rngState ^= rngState << 13; rngState ^= rngState >> 17; rngState ^= rngState << 5;
+  return (rngState >>> 0) / 4294967296;
+}
+function randn(){
+  let u=0,v=0;
+  while(u===0)u=rand(); while(v===0)v=rand();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function mean(a){ return a.reduce((s,x)=>s+x,0)/a.length; }
+function std(a){ const m=mean(a); return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)); }
+function pearson(x,y){
+  const mx=mean(x),my=mean(y);
+  const num=x.reduce((s,xi,i)=>s+(xi-mx)*(y[i]-my),0);
+  const den=Math.sqrt(x.reduce((s,xi)=>s+(xi-mx)**2,0)*y.reduce((s,yi)=>s+(yi-my)**2,0));
+  return den===0?0:num/den;
+}
+function ols(x,y){
+  const mx=mean(x),my=mean(y);
+  const Sxy=x.reduce((s,xi,i)=>s+(xi-mx)*(y[i]-my),0);
+  const Sxx=x.reduce((s,xi)=>s+(xi-mx)**2,0);
+  const m=Sxx===0?1:Sxy/Sxx;
+  return {m, b:my-m*mx};
+}
+function f2(v){ return isNaN(v)?'—':v.toFixed(2); }
+function f1(v){ return isNaN(v)?'—':v.toFixed(1); }
+
+function simulate(){
+  srand(Math.floor(Date.now()/500));
+  const n    = parseInt(document.getElementById('nMeas').value);
+  const lo   = parseFloat(document.getElementById('rangeMin').value);
+  const hi   = parseFloat(document.getElementById('rangeMax').value);
+  const cvA  = parseFloat(document.getElementById('cvAVal').value)/100;
+  const cvB  = parseFloat(document.getElementById('cvBVal').value)/100;
+  const slp  = parseFloat(document.getElementById('slopeVal').value);
+  const icp  = parseFloat(document.getElementById('interceptVal').value);
+  if(lo>=hi||isNaN(lo)||isNaN(hi)) return;
+
+  const trueV = Array.from({length:n},()=>lo+rand()*(hi-lo));
+  const mA    = trueV.map(t=>t+t*cvA*randn());
+  const mB    = trueV.map(t=>slp*t+icp+t*cvB*randn());
+
+  const r     = pearson(mA, mB);
+  const reg   = ols(mB, mA);
+  const diffs = mA.map((a,i)=>a-mB[i]);
+  const baMeans= mA.map((a,i)=>(a+mB[i])/2);
+  const mb    = mean(diffs);
+  const sd    = std(diffs);
+  const loaUp = mb+1.96*sd;
+  const loaDn = mb-1.96*sd;
+  const range = hi-lo;
+
+  // stats
+  const rEl=document.getElementById('s-r');
+  document.getElementById('sv-r').textContent=f2(r);
+  rEl.className='stat '+(Math.abs(r)>=0.95?'pass':Math.abs(r)>=0.80?'warn':'fail');
+
+  const slpEl=document.getElementById('s-slope');
+  document.getElementById('sv-slope').textContent=f2(reg.m);
+  slpEl.className='stat '+(Math.abs(reg.m-1)<=0.05?'pass':Math.abs(reg.m-1)<=0.10?'warn':'fail');
+
+  const icpEl=document.getElementById('s-intercept');
+  document.getElementById('sv-intercept').textContent=f1(reg.b);
+  const ri=Math.abs(reg.b)/range*100;
+  icpEl.className='stat '+(ri<=2?'pass':ri<=5?'warn':'fail');
+
+  const biasEl=document.getElementById('s-bias');
+  document.getElementById('sv-bias').textContent=f1(mb);
+  const rb=Math.abs(mb)/range*100;
+  biasEl.className='stat '+(rb<=2?'pass':rb<=5?'warn':'fail');
+
+  document.getElementById('sv-loa').textContent=f1(loaDn)+' to '+f1(loaUp);
+  document.getElementById('scatterSub').textContent='r = '+f2(r)+' | y = '+f2(reg.m)+'x + '+f1(reg.b);
+
+  // insight
+  const box=document.getElementById('insightBox');
+  const propBig=Math.abs(reg.m-1)>0.07;
+  const constBig=Math.abs(mb)>range*0.05;
+  const loaWide=(loaUp-loaDn)>range*0.30;
+  let cls='insight-green', msg='';
+  if(r>0.95&&constBig){
+    cls='insight-amber';
+    msg=`<strong>⚠ The r trap:</strong> Pearson r = ${f2(r)} looks excellent, but mean bias = ${f1(mb)} units.
+    High correlation does not mean agreement — r measures how well values track each other, not whether they are equal.
+    Always evaluate Bland-Altman alongside r.`;
+  } else if(propBig&&constBig){
+    cls='insight-red';
+    msg=`<strong>Combined bias:</strong> Proportional (slope ${f2(reg.m)}) and constant (intercept ${f1(reg.b)}) bias both present. Methods should not be used interchangeably.`;
+  } else if(propBig){
+    cls='insight-amber';
+    msg=`<strong>Proportional bias:</strong> Slope = ${f2(reg.m)} — one method reads ${reg.m>1?'higher':'lower'} at higher concentrations.
+    The Bland-Altman differences are not flat — they slope with concentration.`;
+  } else if(constBig){
+    cls='insight-amber';
+    msg=`<strong>Constant bias:</strong> Method A reads ${f1(Math.abs(mb))} units ${mb>0?'higher':'lower'} than Method B at all concentrations.
+    Bland-Altman is flat but offset from zero.`;
+  } else if(loaWide){
+    cls='insight-amber';
+    msg=`<strong>Wide limits of agreement:</strong> LoA span is large relative to the reference range.
+    Even with good mean agreement, individual samples can differ substantially. Check imprecision.`;
+  } else {
+    msg=`<strong>Good agreement:</strong> r = ${f2(r)}, mean bias = ${f1(mb)}, and the LoA are narrow.
+    Bland-Altman is flat near zero. Both methods perform equivalently.`;
+  }
+  box.className='insight-box '+cls;
+  box.innerHTML=msg;
+
+  // scatter chart
+  const nA=document.getElementById('nameA').value||'Method A';
+  const nB=document.getElementById('nameB').value||'Method B';
+  const pts=mB.map((x,i)=>({x,y:mA[i]}));
+  const xMin=Math.min(...mB)*0.97, xMax=Math.max(...mB)*1.03;
+  if(scatterChart) scatterChart.destroy();
+  scatterChart=new Chart(document.getElementById('scatterChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Samples',data:pts,backgroundColor:'rgba(13,148,136,.35)',borderColor:'rgba(13,148,136,.7)',pointRadius:4,borderWidth:1},
+      {label:'Identity (y=x)',data:[{x:xMin,y:xMin},{x:xMax,y:xMax}],type:'line',borderColor:'#94a3b8',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:'OLS regression',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'#ef4444',borderWidth:2,pointRadius:0,fill:false}
+    ]},
+    options:{animation:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:p=>`(${p.parsed.x.toFixed(1)}, ${p.parsed.y.toFixed(1)})`}}},
+      scales:{x:{title:{display:true,text:nB,font:{size:12}},grid:{color:'#f3f4f6'}},y:{title:{display:true,text:nA,font:{size:12}},grid:{color:'#f3f4f6'}}}}
+  });
+
+  // BA chart
+  const baPts=baMeans.map((x,i)=>({x,y:diffs[i]}));
+  const bxMin=Math.min(...baMeans)*0.97, bxMax=Math.max(...baMeans)*1.03;
+  if(baChart) baChart.destroy();
+  baChart=new Chart(document.getElementById('baChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Difference (A−B)',data:baPts,backgroundColor:'rgba(59,130,246,.35)',borderColor:'rgba(59,130,246,.7)',pointRadius:4,borderWidth:1},
+      {label:`Mean bias (${mb>=0?'+':''}${f1(mb)})`,data:[{x:bxMin,y:mb},{x:bxMax,y:mb}],type:'line',borderColor:'#f59e0b',borderWidth:2,pointRadius:0,fill:false},
+      {label:`LoA upper (${f1(loaUp)})`,data:[{x:bxMin,y:loaUp},{x:bxMax,y:loaUp}],type:'line',borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:`LoA lower (${f1(loaDn)})`,data:[{x:bxMin,y:loaDn},{x:bxMax,y:loaDn}],type:'line',borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:'Zero',data:[{x:bxMin,y:0},{x:bxMax,y:0}],type:'line',borderColor:'#94a3b8',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false}
+    ]},
+    options:{animation:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:p=>`Mean=${p.parsed.x.toFixed(1)}, Diff=${p.parsed.y.toFixed(2)}`}}},
+      scales:{x:{title:{display:true,text:`Mean of ${nA} and ${nB}`,font:{size:12}},grid:{color:'#f3f4f6'}},y:{title:{display:true,text:`${nA} − ${nB}`,font:{size:12}},grid:{color:'#f3f4f6'}}}}
+  });
+}
+
+// exercises
+const EX={
+  1:{n:40,lo:5,hi:50,slope:1.00,icp:0,cvA:2,cvB:2,title:'Methods agree — ideal result',
+     inst:`<b>What to observe:</b><ol>
+     <li>Scatter: points cluster tightly along the identity line (grey dashes). Regression (red) overlaps it.</li>
+     <li>Bland-Altman: differences are scattered randomly around zero. No pattern, no trend.</li>
+     <li>Stats: r near 1.0, slope near 1.0, intercept near 0, mean bias near 0.</li>
+     </ol>This is what good method agreement looks like. Both plots must be checked — not just r.`},
+  2:{n:40,lo:5,hi:50,slope:1.00,icp:8,cvA:2,cvB:2,title:'Constant bias — fixed offset',
+     inst:`<b>What to observe:</b><ol>
+     <li>Scatter: regression line runs parallel to the identity line but shifted above it.</li>
+     <li>Bland-Altman: differences cluster flat around +8 at all concentrations — a constant positive offset.</li>
+     <li>Stats: r is still ~0.99 — but the methods are NOT interchangeable.</li>
+     </ol><b>Key lesson:</b> High r alone cannot detect a constant offset. Bland-Altman is required.`},
+  3:{n:40,lo:5,hi:50,slope:1.10,icp:0,cvA:2,cvB:2,title:'Proportional bias — fanning',
+     inst:`<b>What to observe:</b><ol>
+     <li>Scatter: regression fans away from the identity line at higher values.</li>
+     <li>Bland-Altman: differences slope upward. The higher the concentration, the larger the gap.</li>
+     <li>Stats: slope > 1.0. Mean bias increases with concentration.</li>
+     </ol>Proportional bias is harder to detect visually in the scatter plot — the sloping Bland-Altman is the key indicator.`},
+  4:{n:80,lo:5,hi:60,slope:1.00,icp:15,cvA:3,cvB:3,title:'The r trap',
+     inst:`<b>What to observe:</b><ol>
+     <li>Note r — it is likely 0.98 or higher. The scatter looks excellent.</li>
+     <li>But the Bland-Altman shows mean bias ≈ +15 units consistently across the whole range.</li>
+     <li>The insight box flags "The r trap" — high r with real bias.</li>
+     </ol><b>Key lesson:</b> Pearson r measures <em>correlation</em>, not <em>agreement</em>.
+     Two methods can track each other perfectly while one is systematically wrong.
+     In method comparison, r should never be used alone.`}
+};
+
+function loadExercise(n){
+  const ex=EX[n]; if(!ex) return;
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('exCard'+n).classList.add('active');
+  document.getElementById('nMeas').value=ex.n;
+  document.getElementById('rangeMin').value=ex.lo;
+  document.getElementById('rangeMax').value=ex.hi;
+  document.getElementById('slope').value=ex.slope;
+  document.getElementById('slopeVal').value=ex.slope.toFixed(2);
+  document.getElementById('intercept').value=ex.icp;
+  document.getElementById('interceptVal').value=ex.icp.toFixed(1);
+  document.getElementById('cvA').value=ex.cvA;
+  document.getElementById('cvAVal').value=ex.cvA.toFixed(1);
+  document.getElementById('cvB').value=ex.cvB;
+  document.getElementById('cvBVal').value=ex.cvB.toFixed(1);
+  const ins=document.getElementById('exInstructions');
+  ins.innerHTML=`<strong>${ex.title}</strong><br>${ex.inst}`;
+  ins.classList.add('visible');
+  simulate();
+}
+
+function toggleExercises(){
+  const btn=document.getElementById('exToggle');
+  const panel=document.getElementById('exPanel');
+  btn.classList.toggle('open');
+  panel.style.display=btn.classList.contains('open')?'':'none';
+}
+
+function resetAll(){
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('exInstructions').classList.remove('visible');
+  ['nMeas','rangeMin','rangeMax'].forEach(id=>document.getElementById(id).value={'nMeas':40,'rangeMin':5,'rangeMax':50}[id]);
+  document.getElementById('slope').value=1; document.getElementById('slopeVal').value='1.00';
+  document.getElementById('intercept').value=0; document.getElementById('interceptVal').value='0.0';
+  document.getElementById('cvA').value=2; document.getElementById('cvAVal').value='2.0';
+  document.getElementById('cvB').value=2; document.getElementById('cvBVal').value='2.0';
+  document.getElementById('nameA').value='Method A';
+  document.getElementById('nameB').value='Method B';
+  simulate();
+}
+
+window.addEventListener('load',()=>simulate());
+</script>
+</body>
+</html>

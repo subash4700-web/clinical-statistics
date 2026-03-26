@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qualitative Method Agreement</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    .ctable { border-collapse: separate; border-spacing: 0; }
+    .ctable th { background: #f9fafb; }
+    .ctable th input[type="text"] {
+      background: transparent; border: none; font-weight: 700;
+      font-size: 13px; color: #374151; padding: 4px; width: 130px;
+    }
+    .ctable td input[type="number"] {
+      width: 80px; padding: 6px 8px; border: 1px solid var(--line);
+      border-radius: 8px; font-size: 14px; text-align: center; background: #fff;
+    }
+    .ctable td { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+    .ctable tr:last-child td, .ctable tr:last-child th { border-bottom: none; }
+
+    /* 2×2 visual */
+    .vis-table { display: grid; grid-template-columns: auto 1fr 1fr; gap: 4px; margin: 12px 0; }
+    .vis-cell {
+      border-radius: 10px; padding: 14px 10px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .vis-cell .vc-val { font-size: 26px; font-weight: 900; line-height: 1; }
+    .vis-cell .vc-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; margin-top: 4px; }
+    .vis-cell .vc-pct { font-size: 11px; margin-top: 2px; opacity: .75; }
+    .vis-cell-agree  { background: #dbeafe; border: 2px solid #93c5fd; }
+    .vis-cell-disagree { background: #fff7ed; border: 2px solid #fdba74; }
+    .vis-header { font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; display: flex;
+      align-items: center; justify-content: center; padding: 4px; }
+    .vis-row-header { font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; display: flex;
+      align-items: center; justify-content: flex-end; padding-right: 8px; text-align:right; }
+
+    /* Tilt bar */
+    .tilt-wrap { margin-top: 14px; }
+    .tilt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .tilt-label { font-size: 12px; font-weight: 700; color: #374151; width: 110px; flex-shrink: 0; }
+    .tilt-track { flex: 1; background: #f3f4f6; border-radius: 999px; height: 12px; overflow: hidden; }
+    .tilt-fill { height: 12px; border-radius: 999px; }
+    .tilt-pct { font-size: 12px; font-weight: 700; color: #374151; width: 42px; text-align: right; }
+    .tilt-fill-a { background: #3b82f6; }
+    .tilt-fill-b { background: #10b981; }
+
+    /* Import panel */
+    .import-drop { border: 2px dashed var(--line); border-radius: 12px; padding: 24px;
+      text-align: center; cursor: pointer; transition: all .2s; background: #fafafa; }
+    .import-drop:hover, .import-drop.drag-over { border-color: var(--accent); background: #eff6ff; }
+    .import-drop svg { display: block; margin: 0 auto 8px; }
+    .import-drop p { font-size: 13px; color: var(--muted); margin: 0; }
+    .import-drop strong { color: var(--ink); }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    .preview-table th { background: #f3f4f6; padding: 5px 8px; border: 1px solid var(--line);
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .preview-table td { padding: 4px 8px; border: 1px solid var(--line); }
+    .preview-table tr:nth-child(even) td { background: #f9fafb; }
+    .map-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .map-val-chip { display: inline-block; background: #f1f5f9; border: 1px solid var(--line);
+      border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all .15s; }
+    .map-val-chip.chip-pos { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+    .map-val-chip.chip-neg { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .map-val-chip.chip-ignore { background: #f3f4f6; border-color: #d1d5db; color: #9ca3af; text-decoration: line-through; }
+
+    /* Result KPIs */
+    .kpi-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .kpi-box { border-radius: 12px; padding: 14px 16px; }
+    .kpi-box-blue  { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .kpi-box-orange{ background: #fff7ed; border: 1px solid #fdba74; }
+    .kpi-box .kb-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
+    .kpi-box .kb-val { font-size: 24px; font-weight: 900; color: var(--ink); line-height: 1; }
+    .kpi-box .kb-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .kpi-box .kb-interp { font-size: 12px; font-weight: 700; margin-top: 6px; }
+    .interp-green { color: #059669; }
+    .interp-yellow { color: #d97706; }
+    .interp-red    { color: #dc2626; }
+
+    .direction-pill {
+      display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 999px; margin-top: 6px;
+    }
+    .pill-up   { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .pill-down { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .pill-sym  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+    <h1 style="margin:0;">Qualitative Method Agreement</h1>
+    <span style="display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">
+      Kappa · McNemar
+    </span>
+  </div>
+  <p class="subtitle">Agreement between two qualitative methods — concordance (Kappa) and systematic bias direction (McNemar)</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Settings</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
+
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="tab-content active">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Method Names</div>
+        <label class="field-label">Method A (reference / new card)</label>
+        <input type="text" id="inp-method-a" value="Method A" placeholder="e.g. New DAT card">
+        <label class="field-label" style="margin-top:10px;">Method B (comparator / old card)</label>
+        <input type="text" id="inp-method-b" value="Method B" placeholder="e.g. Old DAT card">
+        <label class="field-label" style="margin-top:10px;">Positive category label</label>
+        <input type="text" id="inp-pos-label" value="Positive" placeholder="e.g. Positive, Reactive, Yes">
+        <label class="field-label" style="margin-top:10px;">Negative category label</label>
+        <input type="text" id="inp-neg-label" value="Negative" placeholder="e.g. Negative, Non-reactive, No">
+      </div>
+
+      <div class="card">
+        <div class="section-title">Settings</div>
+        <label class="field-label">Significance level (α)</label>
+        <select id="inp-alpha">
+          <option value="0.05" selected>0.05 (95% confidence)</option>
+          <option value="0.01">0.01 (99% confidence)</option>
+          <option value="0.10">0.10 (90% confidence)</option>
+        </select>
+        <p class="note" style="margin-top:6px;">Used for McNemar hypothesis test and Kappa 95% CI.</p>
+
+        <label class="field-label" style="margin-top:12px;">McNemar method</label>
+        <select id="inp-mcnemar-method">
+          <option value="auto" selected>Auto (exact if b+c &lt; 25, otherwise χ²)</option>
+          <option value="exact">Always exact binomial</option>
+          <option value="chi2">Always χ² with continuity correction</option>
+        </select>
+        <p class="note" style="margin-top:6px;">The exact binomial is preferred for small numbers of discordant pairs.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">2×2 Contingency Table</div>
+      <p class="note" style="margin-top:0;margin-bottom:12px;">
+        Enter counts for each cell. <strong>a and d are concordant pairs</strong> (both methods agree).
+        <strong>b and c are discordant pairs</strong> — these drive McNemar's test and the "tilt".
+      </p>
+      <div class="table-wrap">
+        <table class="ctable">
+          <thead>
+            <tr>
+              <th></th>
+              <th><input type="text" id="lbl-b-pos" value="Method B: Positive" /></th>
+              <th><input type="text" id="lbl-b-neg" value="Method B: Negative" /></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th><input type="text" id="lbl-a-pos" value="Method A: Positive" /></th>
+              <td><input type="number" id="cell-a" value="0" min="0" /></td>
+              <td><input type="number" id="cell-b" value="0" min="0" /></td>
+            </tr>
+            <tr>
+              <th><input type="text" id="lbl-a-neg" value="Method A: Negative" /></th>
+              <td><input type="number" id="cell-c" value="0" min="0" /></td>
+              <td><input type="number" id="cell-d" value="0" min="0" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="inp-error" class="alert bad" style="display:none;margin-top:10px;"></div>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-primary" onclick="runAnalysis()">Run Analysis</button>
+        <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Import from Excel / CSV -->
+    <div class="card">
+      <div class="section-title" style="cursor:pointer;" onclick="toggleImport(this)">▶ Import from Excel / CSV</div>
+      <div id="import-body" style="display:none;margin-top:12px;">
+
+        <div class="import-drop" id="import-drop" onclick="document.getElementById('file-input').click()">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p><strong>Click to upload</strong> or drag and drop</p>
+          <p style="margin-top:4px;font-size:11px;">Excel (.xlsx, .xls) or CSV — two columns of paired results</p>
+        </div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="loadFile(this.files[0])">
+
+        <!-- Column mapping — shown after file loads -->
+        <div id="import-config" style="display:none;margin-top:16px;">
+
+          <div class="section-title" style="font-size:13px;margin-bottom:10px;">Column mapping</div>
+          <div class="grid-2">
+            <div>
+              <label class="field-label">Method A column</label>
+              <select id="col-a-sel" onchange="updateValueMap()"></select>
+            </div>
+            <div>
+              <label class="field-label">Method B column</label>
+              <select id="col-b-sel" onchange="updateValueMap()"></select>
+            </div>
+          </div>
+
+          <div class="section-title" style="font-size:13px;margin:12px 0 6px;">Value mapping</div>
+          <p class="note" style="margin-bottom:8px;">Click each value to mark it as <span style="color:#1e40af;font-weight:700;">Positive</span>, <span style="color:#166534;font-weight:700;">Negative</span>, or leave as Ignore. Values from both columns are pooled.</p>
+          <div id="value-map-wrap"></div>
+
+          <!-- Data preview -->
+          <div class="section-title" style="font-size:13px;margin:12px 0 6px;">Preview <span id="preview-count" style="font-weight:400;color:var(--muted);"></span></div>
+          <div style="overflow-x:auto;max-height:180px;overflow-y:auto;">
+            <table class="preview-table" id="preview-table"></table>
+          </div>
+
+          <div id="import-error" class="alert bad" style="display:none;margin-top:10px;"></div>
+
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn-primary" onclick="applyImport()">Build 2×2 table</button>
+            <button class="btn-ghost" onclick="clearImport()">Clear</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Generate sample data -->
+    <div class="card">
+      <div class="section-title" style="cursor:pointer;" onclick="toggleGen(this)">▶ Generate Sample Data</div>
+      <div id="gen-body" style="display:none;margin-top:12px;">
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Number of samples (n)</label>
+            <input type="number" id="gen-n" value="60" min="10" max="500">
+          </div>
+          <div>
+            <label class="field-label">True positive rate (prevalence)</label>
+            <input type="number" id="gen-prev" value="0.4" min="0.05" max="0.95" step="0.05">
+          </div>
+          <div>
+            <label class="field-label">Overall agreement</label>
+            <select id="gen-agree">
+              <option value="high">High (κ ≈ 0.80)</option>
+              <option value="moderate" selected>Moderate (κ ≈ 0.55)</option>
+              <option value="low">Low (κ ≈ 0.25)</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Systematic bias (tilt)</label>
+            <select id="gen-tilt">
+              <option value="none" selected>None — symmetric discordance</option>
+              <option value="a_more_pos">Method A detects more positives</option>
+              <option value="b_more_pos">Method B detects more positives</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn-primary" onclick="generateData()">Generate &amp; Use</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /input tab -->
+
+  <!-- RESULTS TAB -->
+  <div id="tab-results" class="tab-content">
+    <div id="results-body">
+      <p class="note" style="padding:20px 0;text-align:center;">Run the analysis to see results.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+function toggleGen(el) {
+  const body = document.getElementById('gen-body');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  el.textContent = (open ? '▶' : '▼') + ' Generate Sample Data';
+}
+
+function clearAll() {
+  ['cell-a','cell-b','cell-c','cell-d'].forEach(id => document.getElementById(id).value = 0);
+  document.getElementById('results-body').innerHTML = '<p class="note" style="padding:20px 0;text-align:center;">Run the analysis to see results.</p>';
+  document.getElementById('inp-error').style.display = 'none';
+}
+
+// ── Core statistics ────────────────────────────────────────────────────────
+function calcKappa(a, b, c, d) {
+  const N = a + b + c + d;
+  if (N === 0) return null;
+  const Po = (a + d) / N;
+  const Pe = ((a + b) * (a + c) + (c + d) * (b + d)) / (N * N);
+  if (Pe === 1) return null;
+  const k = (Po - Pe) / (1 - Pe);
+  // Asymptotic SE (Fleiss approximation)
+  const se = Math.sqrt(Po * (1 - Po) / (N * (1 - Pe) * (1 - Pe)));
+  return { k, Po, Pe, se, N };
+}
+
+function kappaInterp(k) {
+  if (k < 0)    return { text: 'Poor (less than chance)', cls: 'interp-red' };
+  if (k < 0.20) return { text: 'Slight agreement', cls: 'interp-red' };
+  if (k < 0.40) return { text: 'Fair agreement', cls: 'interp-yellow' };
+  if (k < 0.60) return { text: 'Moderate agreement', cls: 'interp-yellow' };
+  if (k < 0.80) return { text: 'Substantial agreement', cls: 'interp-green' };
+  return            { text: 'Almost perfect agreement', cls: 'interp-green' };
+}
+
+function calcMcNemar(b, c, method, alpha) {
+  const n = b + c;
+  if (n === 0) return null;
+  const useExact = method === 'exact' || (method === 'auto' && n < 25);
+
+  let p, stat, statLabel;
+  if (useExact) {
+    // Exact binomial two-sided: P(X ≤ min(b,c)) * 2, X ~ Bin(n, 0.5)
+    const m = Math.min(b, c);
+    let cumP = 0;
+    for (let k = 0; k <= m; k++) {
+      cumP += binomCoeff(n, k) * Math.pow(0.5, n);
+    }
+    p = Math.min(1, 2 * cumP);
+    stat = null;
+    statLabel = 'Exact binomial';
+  } else {
+    // Chi-squared with continuity correction
+    stat = Math.pow(Math.abs(b - c) - 1, 2) / n;
+    p = chi2pvalue(stat, 1);
+    statLabel = 'χ² (cc)';
+  }
+
+  const zCrit = alpha === 0.01 ? 2.576 : alpha === 0.10 ? 1.645 : 1.960;
+  const sig = p < alpha;
+
+  // Direction
+  let direction, dirPill;
+  if (!sig || b === c) {
+    direction = 'No systematic bias — discordances are symmetric';
+    dirPill = 'pill-sym';
+  } else if (b > c) {
+    direction = 'Method A calls more positives than Method B';
+    dirPill = 'pill-up';
+  } else {
+    direction = 'Method B calls more positives than Method A';
+    dirPill = 'pill-down';
+  }
+
+  return { p, stat, statLabel, sig, direction, dirPill, n };
+}
+
+function binomCoeff(n, k) {
+  if (k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  let c = 1;
+  for (let i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+  return c;
+}
+
+function chi2pvalue(x, df) {
+  // df=1 only
+  return 1 - erf(Math.sqrt(x / 2));
+}
+
+function erf(x) {
+  const sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));
+  return sign * y;
+}
+
+// ── Main analysis ──────────────────────────────────────────────────────────
+function runAnalysis() {
+  const a = parseInt(document.getElementById('cell-a').value) || 0;
+  const b = parseInt(document.getElementById('cell-b').value) || 0;
+  const c = parseInt(document.getElementById('cell-c').value) || 0;
+  const d = parseInt(document.getElementById('cell-d').value) || 0;
+  const N = a + b + c + d;
+  const err = document.getElementById('inp-error');
+
+  if (N === 0) {
+    err.style.display = 'block';
+    err.textContent = 'Please enter at least one observation.';
+    return;
+  }
+  err.style.display = 'none';
+
+  const alpha  = parseFloat(document.getElementById('inp-alpha').value);
+  const mcMethod = document.getElementById('inp-mcnemar-method').value;
+  const mA = document.getElementById('inp-method-a').value || 'Method A';
+  const mB = document.getElementById('inp-method-b').value || 'Method B';
+  const posLbl = document.getElementById('inp-pos-label').value || 'Positive';
+  const negLbl = document.getElementById('inp-neg-label').value || 'Negative';
+
+  const kap  = calcKappa(a, b, c, d);
+  const mcn  = calcMcNemar(b, c, mcMethod, alpha);
+  const zCrit = alpha === 0.01 ? 2.576 : alpha === 0.10 ? 1.645 : 1.960;
+
+  const Po = (a + d) / N;
+  const posA = (a + b) / N;
+  const posB = (a + c) / N;
+
+  // Kappa interp
+  const ki = kap ? kappaInterp(kap.k) : { text: 'Undefined', cls: 'interp-red' };
+  const kapLo = kap ? kap.k - zCrit * kap.se : 0;
+  const kapHi = kap ? kap.k + zCrit * kap.se : 0;
+  const ciPct  = alpha === 0.01 ? 99 : alpha === 0.10 ? 90 : 95;
+
+  // Kappa badge colour
+  const kapBadge = !kap ? 'bad' : kap.k >= 0.6 ? 'good' : kap.k >= 0.4 ? 'warn' : 'bad';
+  const mcnBadge = !mcn ? 'good' : mcn.sig ? 'warn' : 'good';
+
+  let html = '';
+
+  // ── Summary KPI row ──
+  html += `<div class="card">
+    <div class="section-title">Summary</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">n (total pairs)</div><div class="value">${N}</div></div>
+      <div class="kpi"><div class="label">Observed agreement</div><div class="value">${(Po*100).toFixed(1)}%</div></div>
+      <div class="kpi"><div class="label">Cohen's κ</div><div class="value">${kap ? kap.k.toFixed(3) : '—'}</div></div>
+      <div class="kpi"><div class="label">McNemar p</div><div class="value">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div></div>
+    </div>
+  </div>`;
+
+  // ── Kappa + McNemar side by side ──
+  html += `<div class="kpi-pair">
+
+    <div class="kpi-box kpi-box-blue">
+      <div class="kb-label">Cohen's Kappa — Concordance</div>
+      <div class="kb-val">${kap ? kap.k.toFixed(3) : '—'}</div>
+      <div class="kb-sub">${ciPct}% CI: ${kap ? kapLo.toFixed(3) : '—'} to ${kap ? kapHi.toFixed(3) : '—'}</div>
+      <div class="kb-sub">Pₒ = ${(Po*100).toFixed(1)}% &nbsp;·&nbsp; Pₑ = ${kap ? (kap.Pe*100).toFixed(1) : '—'}%</div>
+      <div class="kb-interp ${ki.cls}">${ki.text}</div>
+    </div>
+
+    <div class="kpi-box kpi-box-orange">
+      <div class="kb-label">McNemar — Discordance Tilt</div>
+      <div class="kb-val">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div>
+      <div class="kb-sub">
+        ${mcn && mcn.stat !== null ? `${mcn.statLabel} = ${mcn.stat.toFixed(3)} &nbsp;·&nbsp; ` : `${mcn ? mcn.statLabel : ''} &nbsp;·&nbsp; `}
+        b = ${b}, c = ${c} &nbsp;·&nbsp; b+c = ${b+c}
+      </div>
+      <div class="kb-sub">${mcn && mcn.sig ? `p < α (${alpha}) — significant tilt` : `p ≥ α (${alpha}) — no systematic tilt`}</div>
+      ${mcn ? `<span class="direction-pill ${mcn.dirPill}">${mcn.direction}</span>` : ''}
+    </div>
+
+  </div>`;
+
+  // ── 2×2 visual table ──
+  html += `<div class="card">
+    <div class="section-title">2×2 Agreement Table</div>
+    <p class="note" style="margin-top:0;margin-bottom:10px;">
+      Blue = concordant pairs (agreement). Orange = discordant pairs (McNemar's test uses only these).
+    </p>
+    <div class="vis-table" style="grid-template-columns: 100px 1fr 1fr;">
+      <div></div>
+      <div class="vis-header">${mB}: ${posLbl}</div>
+      <div class="vis-header">${mB}: ${negLbl}</div>
+
+      <div class="vis-row-header">${mA}: ${posLbl}</div>
+      <div class="vis-cell vis-cell-agree">
+        <div class="vc-val">${a}</div>
+        <div class="vc-lbl">a — agree</div>
+        <div class="vc-pct">${(a/N*100).toFixed(1)}%</div>
+      </div>
+      <div class="vis-cell vis-cell-disagree">
+        <div class="vc-val">${b}</div>
+        <div class="vc-lbl">b — A+, B−</div>
+        <div class="vc-pct">${(b/N*100).toFixed(1)}%</div>
+      </div>
+
+      <div class="vis-row-header">${mA}: ${negLbl}</div>
+      <div class="vis-cell vis-cell-disagree">
+        <div class="vc-val">${c}</div>
+        <div class="vc-lbl">c — A−, B+</div>
+        <div class="vc-pct">${(c/N*100).toFixed(1)}%</div>
+      </div>
+      <div class="vis-cell vis-cell-agree">
+        <div class="vc-val">${d}</div>
+        <div class="vc-lbl">d — agree</div>
+        <div class="vc-pct">${(d/N*100).toFixed(1)}%</div>
+      </div>
+    </div>
+
+    <!-- Positive rate comparison (tilt bar) -->
+    <div class="section-title" style="margin-top:16px;">Positive Rate Comparison</div>
+    <p class="note" style="margin-top:0;margin-bottom:8px;">
+      A difference here shows the "tilt" — one method calling more positives than the other.
+    </p>
+    <div class="tilt-wrap">
+      <div class="tilt-row">
+        <div class="tilt-label">${mA}</div>
+        <div class="tilt-track"><div class="tilt-fill tilt-fill-a" style="width:${(posA*100).toFixed(1)}%"></div></div>
+        <div class="tilt-pct">${(posA*100).toFixed(1)}%</div>
+      </div>
+      <div class="tilt-row">
+        <div class="tilt-label">${mB}</div>
+        <div class="tilt-track"><div class="tilt-fill tilt-fill-b" style="width:${(posB*100).toFixed(1)}%"></div></div>
+        <div class="tilt-pct">${(posB*100).toFixed(1)}%</div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:6px;">
+      Difference in positive rate: <strong>${Math.abs((posA-posB)*100).toFixed(1)} percentage points</strong>
+      ${posA > posB ? `(${mA} calls more positives)` : posA < posB ? `(${mB} calls more positives)` : '(identical positive rate)'}.
+    </p>
+  </div>`;
+
+  // ── Interpretation ──
+  const kapSig = kap && kap.k > 0;
+  html += `<div class="card">
+    <div class="section-title">Interpretation</div>
+    <div class="alert ${kapBadge}">
+      <strong>Concordance (Kappa):</strong> κ = ${kap ? kap.k.toFixed(3) : '—'} — ${ki.text}.
+      ${(100*Po).toFixed(1)}% of paired results agree. Expected agreement by chance alone: ${kap ? (kap.Pe*100).toFixed(1) : '—'}%.
+    </div>
+    <div class="alert ${mcnBadge}" style="margin-top:8px;">
+      <strong>Systematic tilt (McNemar):</strong>
+      ${mcn ? (mcn.sig
+        ? `p = ${mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)} — significant. The disagreements are not symmetric. ${mcn.direction}. b = ${b}, c = ${c}.`
+        : `p = ${mcn.p.toFixed(3)} — not significant. Discordances are symmetric (b = ${b}, c = ${c}). No evidence of systematic bias between the two methods.`)
+      : 'No discordant pairs — McNemar cannot be computed.'}
+    </div>
+  </div>`;
+
+  document.getElementById('results-body').innerHTML = html;
+
+  // Switch to results tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-tab="tab-results"]').classList.add('active');
+  document.getElementById('tab-results').classList.add('active');
+}
+
+// ── Generate sample data ───────────────────────────────────────────────────
+function generateData() {
+  const n    = parseInt(document.getElementById('gen-n').value) || 60;
+  const prev = parseFloat(document.getElementById('gen-prev').value) || 0.4;
+  const agree = document.getElementById('gen-agree').value;
+  const tilt  = document.getElementById('gen-tilt').value;
+
+  // Agreement probability (P(B agrees | same truth))
+  const pAgree = agree === 'high' ? 0.92 : agree === 'moderate' ? 0.75 : 0.55;
+
+  // Tilt: ratio b:c of discordant pairs
+  let bRatio = 0.5; // symmetric
+  if (tilt === 'a_more_pos') bRatio = 0.75; // b > c: A+/B− more common
+  if (tilt === 'b_more_pos') bRatio = 0.25; // c > b: A−/B+ more common
+
+  let a = 0, b = 0, c = 0, d = 0;
+  for (let i = 0; i < n; i++) {
+    const truePos = Math.random() < prev;
+    if (truePos) {
+      if (Math.random() < pAgree) a++;
+      else if (Math.random() < bRatio) b++; else c++;
+    } else {
+      if (Math.random() < pAgree) d++;
+      else if (Math.random() < bRatio) b++; else c++;
+    }
+  }
+
+  document.getElementById('cell-a').value = a;
+  document.getElementById('cell-b').value = b;
+  document.getElementById('cell-c').value = c;
+  document.getElementById('cell-d').value = d;
+  runAnalysis();
+}
+
+// ── Sync header labels when method names change ────────────────────────────
+function syncLabels() {
+  const mA = document.getElementById('inp-method-a').value || 'Method A';
+  const mB = document.getElementById('inp-method-b').value || 'Method B';
+  const pos = document.getElementById('inp-pos-label').value || 'Positive';
+  const neg = document.getElementById('inp-neg-label').value || 'Negative';
+  document.getElementById('lbl-a-pos').value = mA + ': ' + pos;
+  document.getElementById('lbl-a-neg').value = mA + ': ' + neg;
+  document.getElementById('lbl-b-pos').value = mB + ': ' + pos;
+  document.getElementById('lbl-b-neg').value = mB + ': ' + neg;
+}
+['inp-method-a','inp-method-b','inp-pos-label','inp-neg-label'].forEach(id => {
+  document.getElementById(id).addEventListener('input', syncLabels);
+});
+
+// ── Import from Excel / CSV ────────────────────────────────────────────────
+var importRows   = [];   // array of objects {colA: val, colB: val}
+var importCols   = [];   // column header names
+var valueMapping = {};   // { 'POS': 'pos', 'NEG': 'neg', '1': 'pos', ... }
+
+function toggleImport(el) {
+  const body = document.getElementById('import-body');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  el.textContent = (open ? '▶' : '▼') + ' Import from Excel / CSV';
+}
+
+// Drag and drop
+const drop = document.getElementById('import-drop');
+drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('drag-over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) loadFile(f);
+});
+
+function loadFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  const isCsv = file.name.toLowerCase().endsWith('.csv');
+  reader.onload = e => {
+    try {
+      let wb;
+      if (isCsv) {
+        wb = XLSX.read(e.target.result, { type: 'string' });
+      } else {
+        wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      }
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      if (!data.length) { showImportError('File appears empty.'); return; }
+
+      importRows = data;
+      importCols = Object.keys(data[0]);
+      valueMapping = {};
+      populateColumnSelectors();
+      updateValueMap();
+      renderPreview();
+      document.getElementById('import-config').style.display = 'block';
+      document.getElementById('import-error').style.display = 'none';
+    } catch(err) {
+      showImportError('Could not read file: ' + err.message);
+    }
+  };
+  if (isCsv) reader.readAsText(file);
+  else        reader.readAsArrayBuffer(file);
+}
+
+function populateColumnSelectors() {
+  ['col-a-sel','col-b-sel'].forEach((id, idx) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = importCols.map((c,i) =>
+      `<option value="${c}" ${i===idx?'selected':''}>${c}</option>`
+    ).join('');
+  });
+}
+
+function updateValueMap() {
+  const colA = document.getElementById('col-a-sel').value;
+  const colB = document.getElementById('col-b-sel').value;
+
+  // Collect all unique values from both columns
+  const vals = new Set();
+  importRows.forEach(r => {
+    if (r[colA] !== undefined && r[colA] !== '') vals.add(String(r[colA]).trim());
+    if (r[colB] !== undefined && r[colB] !== '') vals.add(String(r[colB]).trim());
+  });
+
+  // Auto-detect common positive/negative patterns
+  const posPatterns = /^(pos|positive|yes|1|true|reactive|detected|\+|pos\.|react|ja|positiv$|reaktiv|påvist|detekteret)/i;
+  const negPatterns = /^(neg|negative|no|0|false|non.?reactive|not.?detected|non.?detect|-|neg\.|nej|negativ$|ikke|ikke.?reaktiv|ikke.?påvist|ikke.?detekteret)/i;
+
+  vals.forEach(v => {
+    if (!(v in valueMapping)) {
+      if (posPatterns.test(v)) valueMapping[v] = 'pos';
+      else if (negPatterns.test(v)) valueMapping[v] = 'neg';
+      else valueMapping[v] = 'ignore';
+    }
+  });
+
+  // Remove stale keys
+  Object.keys(valueMapping).forEach(k => { if (!vals.has(k)) delete valueMapping[k]; });
+
+  renderValueMap(vals);
+  renderPreview();
+}
+
+function renderValueMap(vals) {
+  const wrap = document.getElementById('value-map-wrap');
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">';
+  vals.forEach(v => {
+    const state = valueMapping[v] || 'ignore';
+    const cls   = state === 'pos' ? 'chip-pos' : state === 'neg' ? 'chip-neg' : 'chip-ignore';
+    const lbl   = state === 'pos' ? '✓ Positive' : state === 'neg' ? '✓ Negative' : 'Ignore';
+    html += `<div style="text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">"${v}"</div>
+      <span class="map-val-chip ${cls}" onclick="cycleMapping('${v.replace(/'/g,"\\'")}')">
+        ${lbl}
+      </span>
+    </div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function cycleMapping(val) {
+  const cur = valueMapping[val] || 'ignore';
+  valueMapping[val] = cur === 'ignore' ? 'pos' : cur === 'pos' ? 'neg' : 'ignore';
+  // Re-render with current vals
+  const colA = document.getElementById('col-a-sel').value;
+  const colB = document.getElementById('col-b-sel').value;
+  const vals = new Set();
+  importRows.forEach(r => {
+    if (r[colA] !== undefined && r[colA] !== '') vals.add(String(r[colA]).trim());
+    if (r[colB] !== undefined && r[colB] !== '') vals.add(String(r[colB]).trim());
+  });
+  renderValueMap(vals);
+  renderPreview();
+}
+
+function renderPreview() {
+  const colA = document.getElementById('col-a-sel').value;
+  const colB = document.getElementById('col-b-sel').value;
+  const preview = importRows.slice(0, 8);
+  const mA = document.getElementById('inp-method-a').value || 'Method A';
+  const mB = document.getElementById('inp-method-b').value || 'Method B';
+
+  let html = `<thead><tr>
+    <th>#</th><th>${colA} (${mA})</th><th>${colB} (${mB})</th>
+    <th>Mapped A</th><th>Mapped B</th>
+  </tr></thead><tbody>`;
+
+  preview.forEach((r, i) => {
+    const vA = String(r[colA] ?? '').trim();
+    const vB = String(r[colB] ?? '').trim();
+    const mA_ = valueMapping[vA] || 'ignore';
+    const mB_ = valueMapping[vB] || 'ignore';
+    const fmtA = mA_ === 'pos' ? `<span style="color:#1e40af;font-weight:700;">Positive</span>`
+               : mA_ === 'neg' ? `<span style="color:#166534;font-weight:700;">Negative</span>`
+               : `<span style="color:#9ca3af;">—</span>`;
+    const fmtB = mB_ === 'pos' ? `<span style="color:#1e40af;font-weight:700;">Positive</span>`
+               : mB_ === 'neg' ? `<span style="color:#166534;font-weight:700;">Negative</span>`
+               : `<span style="color:#9ca3af;">—</span>`;
+    html += `<tr><td>${i+1}</td><td>${vA}</td><td>${vB}</td><td>${fmtA}</td><td>${fmtB}</td></tr>`;
+  });
+
+  if (importRows.length > 8) {
+    html += `<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic;">… ${importRows.length - 8} more rows</td></tr>`;
+  }
+  html += '</tbody>';
+  document.getElementById('preview-table').innerHTML = html;
+  document.getElementById('preview-count').textContent = `(${importRows.length} rows total)`;
+}
+
+function applyImport() {
+  const colA = document.getElementById('col-a-sel').value;
+  const colB = document.getElementById('col-b-sel').value;
+  let a = 0, b = 0, c = 0, d = 0, skipped = 0;
+
+  importRows.forEach(r => {
+    const vA = String(r[colA] ?? '').trim();
+    const vB = String(r[colB] ?? '').trim();
+    const mA_ = valueMapping[vA] || 'ignore';
+    const mB_ = valueMapping[vB] || 'ignore';
+    if (mA_ === 'ignore' || mB_ === 'ignore') { skipped++; return; }
+    if      (mA_ === 'pos' && mB_ === 'pos') a++;
+    else if (mA_ === 'pos' && mB_ === 'neg') b++;
+    else if (mA_ === 'neg' && mB_ === 'pos') c++;
+    else                                      d++;
+  });
+
+  if (a + b + c + d === 0) {
+    showImportError('No valid pairs found. Check your column selection and value mapping.');
+    return;
+  }
+
+  document.getElementById('cell-a').value = a;
+  document.getElementById('cell-b').value = b;
+  document.getElementById('cell-c').value = c;
+  document.getElementById('cell-d').value = d;
+
+  // Auto-fill method names from column headers if fields are still default
+  const mAEl = document.getElementById('inp-method-a');
+  const mBEl = document.getElementById('inp-method-b');
+  if (mAEl.value === 'Method A') { mAEl.value = colA; syncLabels(); }
+  if (mBEl.value === 'Method B') { mBEl.value = colB; syncLabels(); }
+
+  document.getElementById('import-error').style.display = 'none';
+  const note = skipped > 0 ? ` (${skipped} rows skipped — ignored values)` : '';
+  const el = document.getElementById('inp-error');
+  el.style.display = 'none';
+
+  // Show confirmation and run
+  runAnalysis();
+}
+
+function clearImport() {
+  importRows = []; importCols = []; valueMapping = {};
+  document.getElementById('import-config').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('import-error').style.display = 'none';
+}
+
+function showImportError(msg) {
+  const el = document.getElementById('import-error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+</script>
+</body>
+</html>

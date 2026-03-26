@@ -912,6 +912,8 @@
               <button onclick="loadTool('precision_learning.html','Understanding Precision', this)">Understanding Precision<span class="btn-hint">Repeatability · intermediate precision · reproducibility</span></button>
               <button onclick="loadTool('bias_learning.html','Understanding Bias', this)">Understanding Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
               <button onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">Understanding Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
+              <button onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">Understanding Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
+              <button onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">Understanding Stability Studies<span class="btn-hint">Holdbarhedsforsøg · % change · Kappa over time</span></button>
             </div>
           </div>
 
@@ -924,13 +926,19 @@
             </div>
           </div>
 
-          <!-- Bias & Method Comparison subsection -->
+          <!-- Bias — direct link -->
+          <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias" style="margin-top:0;">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
+
+          <!-- Total Error & Sigma — direct link -->
+          <button onclick="loadTool('tae.html','Total Error & Sigma', this)" style="margin-top:0;">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications</span></button>
+
+          <!-- Method Comparison & Stability subsection -->
           <div class="collapsible-section" style="margin-top:0;">
-            <button class="collapsible-header" onclick="toggleCollapsible(this)">Bias &amp; Method Comparison</button>
+            <button class="collapsible-header" onclick="toggleCollapsible(this)">Method Comparison &amp; Stability</button>
             <div class="collapsible-content child-nav">
-              <button onclick="loadTool('bias.html','Bias', this)" data-i18n="tool.bias">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method</span></button>
-              <button onclick="loadTool('tae.html','Total Error & Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications</span></button>
-              <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Two methods · paired patient samples</span></button>
+              <button onclick="loadTool('method_comparison.html','Method Comparison', this)" data-i18n="tool.methodComp">Method Comparison<span class="btn-hint">Quantitative · paired patient samples</span></button>
+              <button onclick="loadTool('qualitative_agreement.html','Qualitative Method Agreement', this)">Qualitative Method Agreement<span class="btn-hint">Kappa · McNemar · pos/neg methods</span></button>
+              <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability Study<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
             </div>
           </div>
 
@@ -1089,9 +1097,9 @@
               </div>
               <div class="htc-body">
                 <h3>Analytical Performance</h3>
-                <p>CLSI/EP5-A3 precision studies, trueness vs reference, Bland-Altman method comparison, and regression with diagnostic thresholds.</p>
+                <p>Precision studies, bias evaluation, total error and sigma metric, and method comparison — both quantitative (Bland-Altman, Passing-Bablok) and qualitative (Kappa, McNemar).</p>
                 <div class="htc-tags">
-                  <span>Precision (EP5-A3)</span><span>Bias</span><span>Bland-Altman</span><span>Linear Regression</span>
+                  <span>Precision · EP05/EP15</span><span>Bias</span><span>Total Error · Sigma</span><span>Method Comparison</span><span>Kappa · McNemar</span>
                 </div>
               </div>
             </div>
@@ -1651,15 +1659,23 @@
             tc('precision_learning.html', 'Understanding Precision', 'Repeatability · intermediate precision · reproducibility'),
             tc('bias_learning.html', 'Understanding Bias', 'Systematic error · CRM vs EQA · total error'),
             tc('tae_learning.html', 'Understanding Total Error &amp; Sigma', 'TE · TAE · sigma metric · QC design'),
+            tc('method_comparison_learning.html', 'Understanding Method Comparison', 'Bland-Altman · bias types · r trap · paired methods'),
+            tc('stability_learning.html', 'Understanding Stability Studies', 'Holdbarhedsforsøg · % change · Kappa over time'),
           ]),
           grp('Precision', [
             tc('precision.html',         'Precision — Quick / QC',  'Daily monitoring · run-to-run statistics'),
             tc('precision_ep05.html',    'EP05/EP15 — Validation',  'Full validation study · CLSI protocol'),
           ]),
-          grp('Bias &amp; Method Comparison', [
-            tc('bias.html',              'Bias — CRM / EQA',        'Known reference value vs your method'),
-            tc('tae.html',               'Total Error &amp; Sigma', 'Sigma metric · QC implications'),
-            tc('method_comparison.html', 'Method Comparison',       'Two methods · paired patient samples'),
+          grp('Bias', [
+            tc('bias.html', 'Bias — CRM / EQA', 'Known reference value vs your method'),
+          ]),
+          grp('Total Error &amp; Sigma', [
+            tc('tae.html', 'Total Error &amp; Sigma', 'Sigma metric · QC implications'),
+          ]),
+          grp('Method Comparison &amp; Stability', [
+            tc('method_comparison.html',     'Method Comparison',            'Quantitative · paired patient samples'),
+            tc('qualitative_agreement.html', 'Qualitative Method Agreement', 'Kappa · McNemar · pos/neg methods'),
+            tc('stability_study.html',       'Quantitative Stability Study', '% change from T0 · functional expiry · CLSI EP25-A'),
           ]),
         ].join(''),
       },
@@ -1764,11 +1780,15 @@
     { file:'precision_learning.html',            name:'Understanding Precision',          section:'Analytical Performance › Learning' },
     { file:'bias_learning.html',                 name:'Understanding Bias',               section:'Analytical Performance › Learning' },
     { file:'tae_learning.html',                  name:'Understanding Total Error & Sigma',section:'Analytical Performance › Learning' },
+    { file:'method_comparison_learning.html',    name:'Understanding Method Comparison',          section:'Analytical Performance › Learning' },
+    { file:'stability_learning.html',            name:'Understanding Stability Studies',           section:'Analytical Performance › Learning' },
     { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Precision' },
     { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Precision' },
     { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Bias' },
     { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Bias' },
     { file:'method_comparison.html',             name:'Method Comparison',                section:'Analytical Performance › Bias' },
+    { file:'qualitative_agreement.html',         name:'Qualitative Method Agreement',     section:'Analytical Performance › Method Comparison & Stability' },
+    { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Analytical Performance › Method Comparison & Stability' },
     { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
     { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
     { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Correlation & Regression › Learning' },

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Stability Studies</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;--accent:#0d9488;--shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1340px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:12px 14px;}
+    label{display:block;font-size:11px;font-weight:700;color:#344054;margin:10px 0 3px;}
+    label:first-child{margin-top:0;}
+    input[type=number],select{width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;}
+    input[type=number]:focus,select:focus{border-color:var(--accent);}
+    input[type=range]{width:100%;accent-color:var(--accent);}
+    .range-row{display:grid;grid-template-columns:1fr 56px;gap:7px;align-items:center;}
+    .btn-row{display:flex;gap:7px;margin-top:11px;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font-weight:700;font-size:13px;font-family:inherit;color:var(--ink);transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+    .chart-hd{padding:9px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .chart-bd{padding:12px 14px;}
+    .charts-col{display:flex;flex-direction:column;gap:14px;}
+    .divider-soft{height:1px;background:var(--line);margin:12px 0;}
+    .mode-tabs{display:flex;gap:0;margin-bottom:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+    .mode-tab{flex:1;padding:7px 10px;font-size:12px;font-weight:700;background:#f9fafb;border:none;cursor:pointer;font-family:inherit;color:#6b7280;transition:all .15s;}
+    .mode-tab.active{background:var(--accent);color:#fff;}
+    .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;}
+    .ib-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
+    .ib-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
+    .ib-red{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+    .ib-blue{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;}
+
+    /* summary table */
+    .tp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+    .tp-table th{background:#f1f5f9;padding:6px 8px;border:1px solid var(--line);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;}
+    .tp-table td{padding:6px 8px;border:1px solid var(--line);}
+    .tp-table tr:nth-child(even) td{background:#f9fafb;}
+    .badge-pass{display:inline-block;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;}
+    .badge-fail{display:inline-block;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;}
+
+    /* exercises */
+    .exercises{margin-bottom:16px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#5eead4;}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:5px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-btn{width:100%;padding:6px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-instructions{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:13px;line-height:1.7;color:#134e4a;display:none;}
+    .ex-instructions.visible{display:block;}
+    .ex-instructions b{color:#0f766e;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:4px;}
+    @media(max-width:1100px){.ex-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>🧪 Understanding Stability Studies (Holdbarhedsforsøg)</h1>
+  <p>Simulate reagent degradation over time — learn how to detect drift, interpret Bland-Altman and Kappa+McNemar results, and determine functional expiry.</p>
+</div>
+<div class="wrap">
+
+  <!-- Exercises -->
+  <div class="exercises">
+    <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+      <span>📋 Guided Exercises</span>
+      <span class="ex-arrow">▶</span>
+    </button>
+    <div id="exPanel">
+      <div class="ex-grid">
+
+        <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+          <div class="ex-num">Exercise 1</div>
+          <div class="ex-title">Stable material — all time points pass</div>
+          <div class="ex-obj">No degradation. % change stays within the acceptance criterion at all time points.</div>
+          <div class="ex-params">
+            <span class="ex-param">Mode: Quantitative</span>
+            <span class="ex-param">Drift = 0%/mo</span>
+            <span class="ex-param">Limit = ±10%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+          <div class="ex-num">Exercise 2</div>
+          <div class="ex-title">Gradual degradation — fails at T6</div>
+          <div class="ex-obj">Slow linear drift. T1 and T3 pass. By T6 the material has drifted too far. Functional expiry = T3 months.</div>
+          <div class="ex-params">
+            <span class="ex-param">Mode: Quantitative</span>
+            <span class="ex-param">Drift = −2%/mo</span>
+            <span class="ex-param">Limit = ±10%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+          <div class="ex-num">Exercise 3</div>
+          <div class="ex-title">Overcall — reagent reads higher</div>
+          <div class="ex-obj">Positive drift — aged material over-detects. Common with some immunoassay reagents. Still a stability failure.</div>
+          <div class="ex-params">
+            <span class="ex-param">Mode: Quantitative</span>
+            <span class="ex-param">Drift = +2%/mo</span>
+            <span class="ex-param">Limit = ±10%</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+          <div class="ex-num">Exercise 4</div>
+          <div class="ex-title">Qualitative: stable Kappa</div>
+          <div class="ex-obj">Pos/neg agreement stays high across all time points. Kappa ≥ 0.80 and McNemar non-significant at each point.</div>
+          <div class="ex-params">
+            <span class="ex-param">Mode: Qualitative</span>
+            <span class="ex-param">κ drops slowly</span>
+            <span class="ex-param">κ limit = 0.80</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
+          <div class="ex-num">Exercise 5</div>
+          <div class="ex-title">Qualitative: kappa failing at T6</div>
+          <div class="ex-obj">Aged material starts missing positives. Kappa drops and McNemar becomes significant. Functional expiry is reached.</div>
+          <div class="ex-params">
+            <span class="ex-param">Mode: Qualitative</span>
+            <span class="ex-param">κ drops sharply</span>
+            <span class="ex-param">McNemar sig.</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+      </div>
+      <div class="ex-instructions" id="exInstructions"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT: Parameters -->
+    <div>
+      <div class="panel">
+        <div class="panel-hd">Simulation parameters</div>
+        <div class="panel-bd">
+
+          <div style="font-size:11px;font-weight:700;color:#344054;margin-bottom:5px;">Study type</div>
+          <div class="mode-tabs">
+            <button class="mode-tab active" id="tabQ" onclick="setMode('quant')">Quantitative</button>
+            <button class="mode-tab" id="tabQL" onclick="setMode('qual')">Qualitative</button>
+          </div>
+
+          <label>N samples per time point</label>
+          <select id="nSamp" onchange="simulate()">
+            <option value="8">8</option>
+            <option value="12" selected>12</option>
+            <option value="20">20</option>
+          </select>
+
+          <label>Acceptance criterion</label>
+          <div id="quantCrit">
+            <div class="range-row">
+              <input type="range" id="limitPct" min="5" max="25" step="1" value="10"
+                oninput="document.getElementById('limitPctVal').value=this.value;simulate()">
+              <input type="number" id="limitPctVal" value="10" step="1" min="5" max="25"
+                oninput="document.getElementById('limitPct').value=this.value;simulate()">
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">Max % change from T0</div>
+          </div>
+          <div id="qualCrit" style="display:none;">
+            <div class="range-row">
+              <input type="range" id="kappaLimit" min="0.60" max="0.90" step="0.05" value="0.80"
+                oninput="document.getElementById('kappaLimitVal').value=parseFloat(this.value).toFixed(2);simulate()">
+              <input type="number" id="kappaLimitVal" value="0.80" step="0.05" min="0.60" max="0.90"
+                oninput="document.getElementById('kappaLimit').value=this.value;simulate()">
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">Minimum acceptable κ</div>
+          </div>
+
+          <div class="divider-soft"></div>
+          <div id="quantParams">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">Degradation model</div>
+
+            <label>Drift rate (% change per month)</label>
+            <div class="range-row">
+              <input type="range" id="driftRate" min="-5" max="5" step="0.25" value="0"
+                oninput="document.getElementById('driftRateVal').value=parseFloat(this.value).toFixed(2);simulate()">
+              <input type="number" id="driftRateVal" value="0.00" step="0.25" min="-5" max="5"
+                oninput="document.getElementById('driftRate').value=this.value;simulate()">
+            </div>
+
+            <label>CV% (analytical imprecision)</label>
+            <div class="range-row">
+              <input type="range" id="cvPct" min="1" max="12" step="0.5" value="3"
+                oninput="document.getElementById('cvPctVal').value=parseFloat(this.value).toFixed(1);simulate()">
+              <input type="number" id="cvPctVal" value="3.0" step="0.5" min="1" max="12"
+                oninput="document.getElementById('cvPct').value=this.value;simulate()">
+            </div>
+          </div>
+
+          <div id="qualParams" style="display:none;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;padding:5px 8px;background:#f3f4f6;border-radius:6px;margin-bottom:10px;">Qualitative degradation</div>
+
+            <label>Kappa drop per month</label>
+            <div class="range-row">
+              <input type="range" id="kappaDrop" min="0" max="0.10" step="0.01" value="0.02"
+                oninput="document.getElementById('kappaDropVal').value=parseFloat(this.value).toFixed(2);simulate()">
+              <input type="number" id="kappaDropVal" value="0.02" step="0.01" min="0" max="0.10"
+                oninput="document.getElementById('kappaDrop').value=this.value;simulate()">
+            </div>
+
+            <label>Positive rate of panel (T0)</label>
+            <div class="range-row">
+              <input type="range" id="posRate" min="0.2" max="0.8" step="0.05" value="0.5"
+                oninput="document.getElementById('posRateVal').value=parseFloat(this.value).toFixed(2);simulate()">
+              <input type="number" id="posRateVal" value="0.50" step="0.05" min="0.2" max="0.8"
+                oninput="document.getElementById('posRate').value=this.value;simulate()">
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="simulate()">Re-simulate</button>
+            <button class="btn" onclick="resetAll()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="charts-col">
+      <div id="insightBox" class="insight-box ib-blue"></div>
+
+      <div class="chart-panel">
+        <div class="chart-hd" id="chartTitle">% Change from T0 at each time point</div>
+        <div class="chart-bd">
+          <canvas id="mainChart" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-hd">Time point summary</div>
+        <div class="chart-bd">
+          <table class="tp-table" id="tpTable">
+            <thead><tr><th>Time point</th><th id="col2hdr">Mean % change</th><th>95% CI</th><th>Result</th></tr></thead>
+            <tbody id="tpBody"></tbody>
+          </table>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;" id="expiryNote"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// time points in months
+const TIME_PTS = [0, 1, 3, 6, 9, 12];
+let mode = 'quant';
+let mainChart;
+let rngState = 42;
+
+function srand(s){ rngState = s>>>0; }
+function rand(){ rngState^=rngState<<13;rngState^=rngState>>17;rngState^=rngState<<5;return(rngState>>>0)/4294967296; }
+function randn(){ let u=0,v=0;while(!u)u=rand();while(!v)v=rand();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function mean(a){ return a.reduce((s,x)=>s+x,0)/a.length; }
+function std(a){ const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)); }
+function f2(v){ return isNaN(v)?'—':v.toFixed(2); }
+function f1(v){ return isNaN(v)?'—':v.toFixed(1); }
+
+// t critical value (approximate)
+function tCrit(df){ const t=[12.71,4.30,3.18,2.78,2.57,2.45,2.37,2.31,2.26,2.23,2.20,2.18,2.16,2.14,2.13,2.12,2.11,2.10,2.09,2.09];return df<=20?t[df-1]:df<=30?2.04:df<=60?2.00:1.96; }
+
+function setMode(m){
+  mode=m;
+  document.getElementById('tabQ').classList.toggle('active',m==='quant');
+  document.getElementById('tabQL').classList.toggle('active',m==='qual');
+  document.getElementById('quantParams').style.display=m==='quant'?'':'none';
+  document.getElementById('qualParams').style.display=m==='qual'?'':'none';
+  document.getElementById('quantCrit').style.display=m==='quant'?'':'none';
+  document.getElementById('qualCrit').style.display=m==='qual'?'':'none';
+  document.getElementById('col2hdr').textContent=m==='quant'?'Mean % change':'κ (Kappa)';
+  document.getElementById('chartTitle').textContent=m==='quant'?'% Change from T0 at each time point':'Kappa over time (qualitative stability)';
+  simulate();
+}
+
+// ── Quantitative simulation ───────────────────────────────────────────────────
+function simQuant(){
+  srand(Math.floor(Date.now()/500));
+  const n     = parseInt(document.getElementById('nSamp').value);
+  const drift = parseFloat(document.getElementById('driftRateVal').value)/100; // per month
+  const cv    = parseFloat(document.getElementById('cvPctVal').value)/100;
+  const limit = parseFloat(document.getElementById('limitPctVal').value);
+
+  // T0 values for each sample (fixed true values, uniform 20–80)
+  const trueV = Array.from({length:n},()=>20+rand()*60);
+  // T0 measurements
+  const t0    = trueV.map(t=>t*(1+cv*randn()));
+
+  const tpStats = TIME_PTS.map(tp=>{
+    if(tp===0) return {tp,mean:0,ci:0,lo:0,hi:0,pass:true,label:0};
+    const meas  = trueV.map(t=>t*(1+drift*tp+cv*randn()));
+    const pctCh = meas.map((v,i)=>(v-t0[i])/t0[i]*100);
+    const m     = mean(pctCh);
+    const s     = std(pctCh);
+    const tc    = tCrit(n-1);
+    const ci    = tc*s/Math.sqrt(n);
+    const pass  = Math.abs(m)<=limit;
+    return {tp,mean:m,ci,lo:m-ci,hi:m+ci,pass,label:m};
+  });
+  return tpStats;
+}
+
+// ── Qualitative simulation ────────────────────────────────────────────────────
+function simKappa(kappa0, fp_rate){
+  // Simulate a 2×2 table at this kappa level
+  // Using the model: positive rate p, kappa k → generate a,b,c,d
+  const n = parseInt(document.getElementById('nSamp').value)*5; // bigger panel for kappa
+  const p = parseFloat(document.getElementById('posRateVal').value);
+  // Under kappa k: Po = k + Pe*(1-k)
+  // Pe = p^2 + (1-p)^2
+  const Pe   = p*p+(1-p)*(1-p);
+  const Po   = Math.min(0.999,kappa0*(1-Pe)+Pe);
+  const a    = Math.round(p*p*n*Po/Pe + p*(1-p)*n*(1-Po)/(1-Pe)*0  + p*p*n); // approx
+  // Simpler: generate sample-level agreement
+  let aa=0,bb=0,cc=0,dd=0;
+  for(let i=0;i<n;i++){
+    const truePos = rand()<p;
+    const resA    = truePos ? (rand()<(1-fp_rate)) : (rand()<0.04); // TP rate / FP rate
+    const resB    = truePos ? (rand()<(1-fp_rate)) : (rand()<0.04);
+    if(resA&&resB)       aa++;
+    else if(resA&&!resB) bb++;
+    else if(!resA&&resB) cc++;
+    else                 dd++;
+  }
+  const N   = aa+bb+cc+dd;
+  const Po2 = (aa+dd)/N;
+  const Pe2 = ((aa+bb)*(aa+cc)+(cc+dd)*(bb+dd))/(N*N);
+  const k   = Pe2===1?1:(Po2-Pe2)/(1-Pe2);
+  // McNemar p-value
+  const disc= bb+cc;
+  let mcnP=1;
+  if(disc>0){
+    const stat= disc<25 ? null : Math.pow(Math.abs(bb-cc)-1,2)/(bb+cc);
+    if(stat!==null) mcnP=Math.exp(-stat/2)*0.5; // approx for df=1 one-sided → two-tailed
+    else { // exact binomial
+      let p2=0;
+      for(let x=0;x<=Math.min(bb,cc);x++) p2+=binomP(disc,x,0.5);
+      mcnP=2*p2;
+    }
+    mcnP=Math.min(1,mcnP);
+  }
+  const sig=mcnP<0.05;
+  return {k:Math.max(0,k),mcnP,sig,a:aa,b:bb,c:cc,d:dd,N};
+}
+function binomP(n,k,p){
+  if(k<0||k>n)return 0;
+  let lc=0;
+  for(let i=1;i<=k;i++) lc+=Math.log(n-k+i)-Math.log(i);
+  return Math.exp(lc+k*Math.log(p)+(n-k)*Math.log(1-p));
+}
+
+function simulate(){
+  if(mode==='quant') runQuant();
+  else runQual();
+}
+
+function runQuant(){
+  const limit = parseFloat(document.getElementById('limitPctVal').value);
+  const tpStats = simQuant();
+
+  // chart
+  const labels = TIME_PTS.map(t=>'T'+t);
+  const dotData = [];
+  const meanData= [];
+  const loData  = [];
+  const hiData  = [];
+  tpStats.forEach(s=>{
+    meanData.push({x:s.tp,y:s.mean});
+    loData.push({x:s.tp,y:s.lo});
+    hiData.push({x:s.tp,y:s.hi});
+  });
+  const tmax=12;
+  if(mainChart) mainChart.destroy();
+  mainChart=new Chart(document.getElementById('mainChart'),{
+    type:'line',
+    data:{datasets:[
+      {label:'Mean % change',data:meanData,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',borderWidth:2,pointRadius:5,fill:false,tension:.3},
+      {label:'95% CI lower',data:loData,borderColor:'rgba(59,130,246,.3)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:.3},
+      {label:'95% CI upper',data:hiData,borderColor:'rgba(59,130,246,.3)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:'between',tension:.3},
+      {label:`+${limit}% limit`,data:[{x:0,y:limit},{x:tmax,y:limit}],borderColor:'#16a34a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:`−${limit}% limit`,data:[{x:0,y:-limit},{x:tmax,y:-limit}],borderColor:'#16a34a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:'Zero',data:[{x:0,y:0},{x:tmax,y:0}],borderColor:'#94a3b8',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false}
+    ]},
+    options:{animation:false,parsing:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{
+        x:{type:'linear',min:0,max:tmax,title:{display:true,text:'Months (time point)',font:{size:12}},ticks:{stepSize:1}},
+        y:{title:{display:true,text:'% change from T0',font:{size:12}},grid:{color:'#f3f4f6'}}
+      }}
+  });
+
+  // table
+  const tbody=document.getElementById('tpBody');
+  tbody.innerHTML='';
+  let expiry=null;
+  tpStats.forEach(s=>{
+    const tr=document.createElement('tr');
+    const badge=s.pass?'<span class="badge-pass">PASS</span>':'<span class="badge-fail">FAIL</span>';
+    tr.innerHTML=`<td>T${s.tp} months</td><td>${s.tp===0?'—':f1(s.mean)+'%'}</td><td>${s.tp===0?'—':f1(s.lo)+'% to '+f1(s.hi)+'%'}</td><td>${badge}</td>`;
+    tbody.appendChild(tr);
+    if(!s.pass&&expiry===null) expiry=s.tp;
+  });
+  const exEl=document.getElementById('expiryNote');
+  exEl.innerHTML=expiry
+    ? `⚠ <strong>Functional expiry:</strong> First failure at T${expiry} months. Material should not be used beyond T${TIME_PTS[TIME_PTS.indexOf(expiry)-1]} months.`
+    : `✓ <strong>Material stable:</strong> All time points pass the ±${limit}% acceptance criterion.`;
+
+  // insight
+  const drift=parseFloat(document.getElementById('driftRateVal').value);
+  const box=document.getElementById('insightBox');
+  const allPass=tpStats.every(s=>s.pass);
+  if(allPass){
+    box.className='insight-box ib-green';
+    box.innerHTML=`<strong>✓ Stable:</strong> All time points pass the ±${limit}% criterion. The material is stable for the full study period (12 months in this simulation).`;
+  } else {
+    box.className='insight-box ib-red';
+    const dir=drift<0?'losing reactivity (reading lower)':'over-reacting (reading higher)';
+    box.innerHTML=`<strong>⚠ Stability failure at T${expiry}:</strong> Material is ${dir}. Functional expiry = T${TIME_PTS[TIME_PTS.indexOf(expiry)-1]} months.
+    Drift rate = ${drift>0?'+':''}${drift}%/month. Pre-define acceptance criteria before the study — do not change them after seeing data.`;
+  }
+}
+
+function runQual(){
+  const kappaLimit= parseFloat(document.getElementById('kappaLimitVal').value);
+  const drop      = parseFloat(document.getElementById('kappaDropVal').value);
+  const posRate   = parseFloat(document.getElementById('posRateVal').value);
+
+  srand(Math.floor(Date.now()/500));
+  // fp_rate at T0 is low; increases with time (material misses positives)
+  const tpResults = TIME_PTS.map(tp=>{
+    const fp_rate_now = Math.min(0.9, drop * tp);
+    const res = simKappa(1-drop*tp*0.5, fp_rate_now);
+    res.tp=tp;
+    return res;
+  });
+
+  // chart: kappa over time
+  const kData=tpResults.map(r=>({x:r.tp,y:Math.max(0,r.k)}));
+  if(mainChart) mainChart.destroy();
+  const tmax=12;
+  mainChart=new Chart(document.getElementById('mainChart'),{
+    type:'line',
+    data:{datasets:[
+      {label:'Cohen\'s κ',data:kData,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.1)',borderWidth:2,pointRadius:5,fill:false,tension:.3},
+      {label:`κ limit (${kappaLimit})`,data:[{x:0,y:kappaLimit},{x:tmax,y:kappaLimit}],borderColor:'#16a34a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+      {label:'κ = 0.80 (Landis & Koch)',data:[{x:0,y:0.80},{x:tmax,y:0.80}],borderColor:'#94a3b8',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false}
+    ]},
+    options:{animation:false,parsing:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{
+        x:{type:'linear',min:0,max:tmax,title:{display:true,text:'Months (time point)',font:{size:12}},ticks:{stepSize:1}},
+        y:{min:0,max:1,title:{display:true,text:'Cohen\'s κ',font:{size:12}},grid:{color:'#f3f4f6'}}
+      }}
+  });
+
+  // table
+  const tbody=document.getElementById('tpBody');
+  tbody.innerHTML='';
+  let expiry=null;
+  tpResults.forEach(r=>{
+    const kPass=r.k>=kappaLimit;
+    const mcnPass=!r.sig;
+    const overallPass=kPass&&mcnPass;
+    if(!overallPass&&expiry===null) expiry=r.tp;
+    const badge=overallPass?'<span class="badge-pass">PASS</span>':'<span class="badge-fail">FAIL</span>';
+    tbody.appendChild(Object.assign(document.createElement('tr'),{
+      innerHTML:`<td>T${r.tp} months</td><td>${f2(r.k)}</td><td>McNemar p = ${r.mcnP<0.001?'<0.001':r.mcnP.toFixed(3)} ${r.sig?'⚠':''}</td><td>${badge}</td>`
+    }));
+  });
+  document.getElementById('expiryNote').innerHTML=expiry
+    ?`⚠ <strong>Functional expiry:</strong> First failure at T${expiry} months. Kappa dropped below the criterion (κ < ${kappaLimit}) or McNemar became significant.`
+    :`✓ <strong>Qualitative stability acceptable:</strong> κ ≥ ${kappaLimit} and McNemar non-significant at all time points.`;
+
+  // insight
+  const box=document.getElementById('insightBox');
+  const allPass=tpResults.every(r=>r.k>=kappaLimit&&!r.sig);
+  if(allPass){
+    box.className='insight-box ib-green';
+    box.innerHTML=`<strong>✓ Qualitative stability acceptable:</strong> κ ≥ ${kappaLimit} and McNemar non-significant at all time points.
+    The aged material agrees well with T0 throughout the study period.`;
+  } else {
+    box.className='insight-box ib-red';
+    box.innerHTML=`<strong>⚠ Qualitative stability failure at T${expiry}:</strong> Aged material starts missing positives (or generating false positives).
+    Kappa drops below the acceptance criterion and/or McNemar becomes significant.
+    Check: is the tilt in one direction? A significant McNemar with b > c means the aged material misses positives — typical of reagent degradation.`;
+  }
+}
+
+// ── Exercises ─────────────────────────────────────────────────────────────────
+const EX={
+  1:{mode:'quant',n:12,drift:0,cv:3,limit:10,kDrop:0.02,posR:0.5,kLimit:0.80,
+     title:'Stable material',
+     inst:`<b>What to observe:</b><ol>
+     <li>% change line stays flat near zero at all time points — no drift.</li>
+     <li>All time points marked PASS in the table.</li>
+     <li>The insight confirms stability. This is the ideal outcome.</li>
+     </ol>Pre-define your acceptance criterion before the study (e.g. ±10%) and document it in your protocol. Do not change it after seeing results.`},
+  2:{mode:'quant',n:12,drift:-2,cv:3,limit:10,kDrop:0.02,posR:0.5,kLimit:0.80,
+     title:'Gradual degradation',
+     inst:`<b>What to observe:</b><ol>
+     <li>% change line drifts downward at −2%/month. T1 and T3 are within ±10%, but T6 fails.</li>
+     <li>The functional expiry is T3 months — the last passing time point.</li>
+     <li>The insight identifies the direction: the material is losing reactivity (reading lower).</li>
+     </ol>In stability studies, the <strong>functional expiry</strong> = the last time point that passes your pre-defined criterion.`},
+  3:{mode:'quant',n:12,drift:2,cv:3,limit:10,kDrop:0.02,posR:0.5,kLimit:0.80,
+     title:'Overcall — positive drift',
+     inst:`<b>What to observe:</b><ol>
+     <li>% change line drifts upward. Material reads higher than T0 over time.</li>
+     <li>This is a stability failure even though values are not decreasing.</li>
+     <li>Common causes: degradation products cross-reacting with antibody, pH shift, or contamination.</li>
+     </ol>Stability failures can go in either direction — always use a two-sided criterion (e.g. ±10%, not just −10%).`},
+  4:{mode:'qual',n:12,drift:0,cv:3,limit:10,kDrop:0.01,posR:0.5,kLimit:0.80,
+     title:'Qualitative: stable Kappa',
+     inst:`<b>What to observe:</b><ol>
+     <li>κ stays above 0.80 at all time points — excellent concordance with T0.</li>
+     <li>McNemar p-value is non-significant throughout — discordances are random, not systematic.</li>
+     <li>All time points pass. Functional expiry not reached in the study period.</li>
+     </ol><b>Both tests must pass:</b> high κ <em>and</em> non-significant McNemar = stable qualitative method.`},
+  5:{mode:'qual',n:12,drift:-2,cv:3,limit:10,kDrop:0.05,posR:0.5,kLimit:0.80,
+     title:'Qualitative: failure at T6',
+     inst:`<b>What to observe:</b><ol>
+     <li>κ drops progressively. At T6, κ falls below the acceptance criterion (0.80).</li>
+     <li>McNemar becomes significant at the same time — the aged material starts missing positives (b > c).</li>
+     <li>Functional expiry = T3 months (last passing time point).</li>
+     </ol><b>What this means clinically:</b> the aged reagent is losing sensitivity. Truly positive samples are being called negative by the aged material — a dangerous failure mode for blood bank or infectious disease testing.`}
+};
+
+function loadExercise(n){
+  const ex=EX[n]; if(!ex) return;
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('exCard'+n).classList.add('active');
+  if(ex.mode!==mode) setMode(ex.mode);
+  document.getElementById('nSamp').value=ex.n;
+  document.getElementById('limitPct').value=ex.limit; document.getElementById('limitPctVal').value=ex.limit;
+  document.getElementById('kappaLimit').value=ex.kLimit; document.getElementById('kappaLimitVal').value=ex.kLimit.toFixed(2);
+  document.getElementById('driftRate').value=ex.drift; document.getElementById('driftRateVal').value=ex.drift.toFixed(2);
+  document.getElementById('cvPct').value=ex.cv; document.getElementById('cvPctVal').value=ex.cv.toFixed(1);
+  document.getElementById('kappaDrop').value=ex.kDrop; document.getElementById('kappaDropVal').value=ex.kDrop.toFixed(2);
+  document.getElementById('posRate').value=ex.posR; document.getElementById('posRateVal').value=ex.posR.toFixed(2);
+  const ins=document.getElementById('exInstructions');
+  ins.innerHTML=`<strong>${ex.title}</strong><br>${ex.inst}`;
+  ins.classList.add('visible');
+  simulate();
+}
+
+function toggleExercises(){
+  const btn=document.getElementById('exToggle');
+  btn.classList.toggle('open');
+  document.getElementById('exPanel').style.display=btn.classList.contains('open')?'':'none';
+}
+
+function resetAll(){
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('exInstructions').classList.remove('visible');
+  if(mode!=='quant') setMode('quant');
+  document.getElementById('nSamp').value=12;
+  document.getElementById('limitPct').value=10; document.getElementById('limitPctVal').value=10;
+  document.getElementById('driftRate').value=0; document.getElementById('driftRateVal').value='0.00';
+  document.getElementById('cvPct').value=3; document.getElementById('cvPctVal').value='3.0';
+  simulate();
+}
+
+window.addEventListener('load',()=>simulate());
+</script>
+</body>
+</html>

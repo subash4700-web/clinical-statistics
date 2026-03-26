@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Quantitative Stability Study</title>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .layout { display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start; }
+    .section-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#344054; margin:14px 0 6px; }
+    .section-title:first-child { margin-top:0; }
+
+    /* time point selector */
+    .tp-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+    .tp-chip { display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; border:1.5px solid #e2e8f0;
+      border-radius:6px; padding:4px 10px; font-size:12px; font-weight:700; cursor:pointer; color:#374151; user-select:none; }
+    .tp-chip input[type=checkbox]{ accent-color:var(--accent); margin:0; cursor:pointer; }
+    .tp-chip.active { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+
+    /* data grid */
+    .grid-wrap { overflow-x:auto; }
+    .data-grid { border-collapse:separate; border-spacing:0; font-size:13px; min-width:500px; }
+    .data-grid th { background:#f9fafb; padding:7px 10px; border:1px solid var(--line);
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);
+      text-align:center; white-space:nowrap; }
+    .data-grid th.t0-hdr { background:#dbeafe; color:#1e40af; }
+    .data-grid td { padding:4px 6px; border:1px solid var(--line); }
+    .data-grid td:first-child { background:#f9fafb; font-size:11px; font-weight:700; color:var(--muted);
+      text-align:center; padding:4px 8px; }
+    .data-grid input[type=number] { width:72px; padding:5px 6px; border:1px solid var(--line);
+      border-radius:6px; font-size:13px; text-align:center; background:#fff; outline:none; }
+    .data-grid input[type=number]:focus { border-color:var(--accent); }
+    .data-grid td.t0-cell input { background:#eff6ff; border-color:#bfdbfe; }
+
+    /* results */
+    .res-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+    .res-table th { background:#f1f5f9; padding:6px 10px; border:1px solid var(--line);
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); text-align:left; }
+    .res-table td { padding:6px 10px; border:1px solid var(--line); }
+    .res-table tr:nth-child(even) td { background:#f9fafb; }
+    .badge-pass { display:inline-block; background:#f0fdf4; border:1px solid #86efac; color:#166534; border-radius:5px; padding:1px 8px; font-size:11px; font-weight:700; }
+    .badge-fail { display:inline-block; background:#fef2f2; border:1px solid #fca5a5; color:#991b1b; border-radius:5px; padding:1px 8px; font-size:11px; font-weight:700; }
+    .badge-ref  { display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; border-radius:5px; padding:1px 8px; font-size:11px; font-weight:700; }
+
+    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .kpi { border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+    .kpi-k { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .kpi-v { font-size:18px; font-weight:900; margin-top:2px; }
+    .kpi-sub { font-size:10px; color:var(--muted); margin-top:1px; }
+    .kpi.pass { border-color:#16a34a; background:#f0fdf4; }
+    .kpi.pass .kpi-v { color:#15803d; }
+    .kpi.fail { border-color:#dc2626; background:#fef2f2; }
+    .kpi.fail .kpi-v { color:#b91c1c; }
+    .kpi.neutral { border-color:#0d9488; background:#f0fdfa; }
+    .kpi.neutral .kpi-v { color:#0f766e; }
+    .kpi.warn { border-color:#d97706; background:#fffbeb; }
+    .kpi.warn .kpi-v { color:#b45309; }
+
+    .expiry-box { border-radius:10px; padding:12px 16px; font-size:13px; line-height:1.6; margin-top:12px; }
+    .expiry-pass { background:#ecfdf5; border:1px solid #a7f3d0; color:#064e3b; }
+    .expiry-fail { background:#fef2f2; border:1px solid #fecaca; color:#7f1d1d; }
+    .note { font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; }
+
+    .chart-wrap { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:14px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+    .chart-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#344054; margin-bottom:10px; }
+
+    .trend-box { background:#f8fafc; border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:12px; margin-top:10px; }
+    .trend-box strong { color:#1e3a5f; }
+
+    @media(max-width:900px){ .layout{grid-template-columns:1fr;} .kpi-row{grid-template-columns:1fr 1fr;} }
+  </style>
+</head>
+<body>
+<div class="tool-header">
+  <div>
+    <div class="tool-title">Quantitative Stability Study</div>
+    <div class="tool-subtitle">% change from baseline · paired analysis · CLSI EP25-A · functional expiry</div>
+  </div>
+</div>
+
+<div class="tool-body">
+  <div class="layout">
+
+    <!-- LEFT: Setup -->
+    <div>
+      <div class="card">
+        <div class="section-title">Study parameters</div>
+
+        <label class="field-label">Analyte name</label>
+        <input type="text" id="analyteName" class="field-input" value="Analyte" placeholder="e.g. Troponin I">
+
+        <label class="field-label" style="margin-top:8px;">Unit</label>
+        <input type="text" id="analyteUnit" class="field-input" value="" placeholder="e.g. µg/L">
+
+        <label class="field-label" style="margin-top:8px;">Acceptance criterion (max |% change|)</label>
+        <div style="display:grid;grid-template-columns:1fr 60px;gap:6px;align-items:center;">
+          <input type="range" id="limitSlider" min="5" max="25" step="1" value="10"
+            oninput="document.getElementById('limitVal').value=this.value" style="accent-color:var(--accent);">
+          <input type="number" id="limitVal" class="field-input" value="10" min="5" max="25" step="1"
+            oninput="document.getElementById('limitSlider').value=this.value">
+        </div>
+        <p class="note">Common: ±10% (CLSI EP25-A general), ±5% (high-precision analytes)</p>
+
+        <label class="field-label" style="margin-top:8px;">Significance level (α)</label>
+        <select id="alpha" class="field-input">
+          <option value="0.05" selected>0.05</option>
+          <option value="0.01">0.01</option>
+        </select>
+
+        <div class="section-title">Number of samples</div>
+        <select id="nSamples" class="field-input" onchange="rebuildGrid()">
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+
+        <div class="section-title">Time points</div>
+        <p class="note" style="margin-bottom:6px;">T0 is always the baseline. Select additional time points (months).</p>
+        <div class="tp-chips" id="tpChips"></div>
+
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="runAnalysis()">Run analysis</button>
+          <button class="btn btn-secondary" onclick="generateData()">Sample data</button>
+          <button class="btn btn-secondary" onclick="clearData()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Grid + Results -->
+    <div>
+      <div class="card">
+        <div class="section-title">Measurements</div>
+        <p class="note" style="margin-bottom:10px;">Enter measured values for each sample at each time point. T0 = fresh reference.</p>
+        <div class="grid-wrap">
+          <table class="data-grid" id="dataGrid"></table>
+        </div>
+      </div>
+
+      <div id="results" style="display:none;">
+
+        <div class="card" style="margin-top:0;">
+          <div class="section-title">Results</div>
+
+          <div class="kpi-row" id="kpiRow"></div>
+
+          <table class="res-table" id="resTable">
+            <thead>
+              <tr>
+                <th>Time point</th>
+                <th>N</th>
+                <th>Mean % change</th>
+                <th>SD</th>
+                <th>95% CI</th>
+                <th>p-value</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="resBody"></tbody>
+          </table>
+
+          <div id="expiryBox"></div>
+
+          <div class="chart-wrap">
+            <div class="chart-title">% Change from T0 over time</div>
+            <canvas id="stabilityChart" height="220"></canvas>
+          </div>
+
+          <div class="trend-box" id="trendBox"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Available time points (months)
+const ALL_TP = [0, 1, 2, 3, 6, 9, 12];
+let activeTP = [0, 1, 3, 6, 12]; // default
+let stabilityChart;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildTPChips();
+  rebuildGrid();
+});
+
+function buildTPChips() {
+  const wrap = document.getElementById('tpChips');
+  wrap.innerHTML = '';
+  ALL_TP.forEach(t => {
+    const chip = document.createElement('label');
+    chip.className = 'tp-chip' + (activeTP.includes(t) ? ' active' : '');
+    chip.innerHTML = `<input type="checkbox" ${activeTP.includes(t)?'checked':''} ${t===0?'disabled':''} onchange="toggleTP(${t},this)"> T${t}`;
+    wrap.appendChild(chip);
+  });
+}
+
+function toggleTP(t, el) {
+  if (t === 0) return;
+  if (el.checked) { if (!activeTP.includes(t)) activeTP.push(t); }
+  else { activeTP = activeTP.filter(x => x !== t); }
+  activeTP.sort((a,b)=>a-b);
+  buildTPChips();
+  rebuildGrid();
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+function rebuildGrid() {
+  const n = parseInt(document.getElementById('nSamples').value);
+  const tbl = document.getElementById('dataGrid');
+  tbl.innerHTML = '';
+
+  // Header
+  const hdr = document.createElement('tr');
+  hdr.innerHTML = '<th>Sample</th>';
+  activeTP.forEach(t => {
+    hdr.innerHTML += `<th ${t===0?'class="t0-hdr"':''}>T${t} months</th>`;
+  });
+  tbl.appendChild(hdr);
+
+  // Data rows
+  for (let r = 1; r <= n; r++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r}</td>`;
+    activeTP.forEach(t => {
+      const existing = document.getElementById(`c_${r}_${t}`);
+      const val = existing ? existing.value : '';
+      tr.innerHTML += `<td ${t===0?'class="t0-cell"':''}><input type="number" id="c_${r}_${t}" value="${val}" step="any" placeholder="—"></td>`;
+    });
+    tbl.appendChild(tr);
+  }
+}
+
+// ── Statistics helpers ─────────────────────────────────────────────────────
+function mean(a) { return a.reduce((s,x)=>s+x,0)/a.length; }
+function std(a) {
+  if(a.length<2) return 0;
+  const m=mean(a);
+  return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1));
+}
+function tCrit(df, alpha) {
+  // Two-tailed t critical value
+  const t95=[12.706,4.303,3.182,2.776,2.571,2.447,2.365,2.306,2.262,2.228,
+              2.201,2.179,2.160,2.145,2.131,2.120,2.110,2.101,2.093,2.086,
+              2.080,2.074,2.069,2.064,2.060,2.056,2.052,2.048,2.045,2.042];
+  const t99=[63.657,9.925,5.841,4.604,4.032,3.707,3.499,3.355,3.250,3.169,
+              3.106,3.055,3.012,2.977,2.947,2.921,2.898,2.878,2.861,2.845,
+              2.831,2.819,2.807,2.797,2.787,2.779,2.771,2.763,2.756,2.750];
+  const tbl = alpha<=0.01 ? t99 : t95;
+  if(df<=0) return 12.706;
+  if(df<=30) return tbl[df-1];
+  return alpha<=0.01 ? 2.576 : 1.960;
+}
+function tPvalue(t, df) {
+  // Approximation using regularized incomplete beta function
+  if(df<=0) return 1;
+  const x = df / (df + t*t);
+  // Use continued fraction approximation for incomplete beta
+  const a = df/2, b = 0.5;
+  const p = 1 - incompleteBeta(x, a, b);
+  return Math.min(1, 2*p);
+}
+function incompleteBeta(x, a, b) {
+  if(x<0||x>1) return 0;
+  if(x===0) return 0;
+  if(x===1) return 1;
+  // Continued fraction (Lentz)
+  const lbeta = lgamma(a+b)-lgamma(a)-lgamma(b);
+  const front = Math.exp(lbeta + a*Math.log(x) + b*Math.log(1-x)) / a;
+  let f=1,C=1,D=0;
+  for(let m=0;m<=100;m++){
+    const d1 = m===0 ? 1 : (m*(b-m)*x)/((a+2*m-1)*(a+2*m));
+    const d2 = -((a+m)*(a+b+m)*x)/((a+2*m)*(a+2*m+1));
+    D = 1+d1*D; if(Math.abs(D)<1e-30)D=1e-30; D=1/D;
+    C = 1+d1/C; if(Math.abs(C)<1e-30)C=1e-30;
+    f *= C*D;
+    D = 1+d2*D; if(Math.abs(D)<1e-30)D=1e-30; D=1/D;
+    C = 1+d2/C; if(Math.abs(C)<1e-30)C=1e-30;
+    const delta = C*D; f *= delta;
+    if(Math.abs(delta-1)<3e-7) break;
+  }
+  return front*f;
+}
+function lgamma(z) {
+  // Stirling approximation
+  if(z<0.5) return Math.log(Math.PI/Math.sin(Math.PI*z))-lgamma(1-z);
+  z--;
+  const g=7;
+  const c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,
+           -176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  let x=c[0];
+  for(let i=1;i<g+2;i++) x+=c[i]/(z+i);
+  const t=z+g+0.5;
+  return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);
+}
+function fmt2(v){ return isNaN(v)?'—':v.toFixed(2); }
+function fmt1(v){ return isNaN(v)?'—':v.toFixed(1); }
+function fmtP(p){ if(isNaN(p))return'—'; return p<0.001?'< 0.001':p.toFixed(3); }
+
+// ── Analysis ──────────────────────────────────────────────────────────────────
+function runAnalysis() {
+  const n      = parseInt(document.getElementById('nSamples').value);
+  const limit  = parseFloat(document.getElementById('limitVal').value);
+  const alpha  = parseFloat(document.getElementById('alpha').value);
+  const analyte= document.getElementById('analyteName').value || 'Analyte';
+  const unit   = document.getElementById('analyteUnit').value;
+
+  // Read grid
+  const rows = [];
+  for(let r=1;r<=n;r++){
+    const row = {};
+    activeTP.forEach(t => {
+      const v = parseFloat(document.getElementById(`c_${r}_${t}`)?.value);
+      row[t] = isNaN(v) ? null : v;
+    });
+    rows.push(row);
+  }
+
+  // Compute per-time-point stats
+  const tpStats = [];
+  activeTP.forEach(t => {
+    if(t===0){ tpStats.push({t,n:0,mean:0,sd:0,ci:0,p:1,pass:true,ref:true,pctChanges:[]}); return; }
+    const pctChanges = rows
+      .filter(r => r[0]!==null && r[0]>0 && r[t]!==null)
+      .map(r => (r[t]-r[0])/r[0]*100);
+    if(pctChanges.length===0){ tpStats.push({t,n:0,mean:NaN,sd:NaN,ci:NaN,p:NaN,pass:false,ref:false,pctChanges:[]}); return; }
+    const m   = mean(pctChanges);
+    const s   = std(pctChanges);
+    const tc  = tCrit(pctChanges.length-1, alpha);
+    const se  = s/Math.sqrt(pctChanges.length);
+    const ci  = tc*se;
+    const tStat = se>0 ? Math.abs(m)/se : 0;
+    const p   = tPvalue(tStat, pctChanges.length-1);
+    const pass= Math.abs(m)<=limit;
+    tpStats.push({t, n:pctChanges.length, mean:m, sd:s, ci, ciLo:m-ci, ciHi:m+ci, p, tStat, pass, ref:false, pctChanges});
+  });
+
+  renderResults(tpStats, limit, alpha, analyte, unit);
+}
+
+function renderResults(tpStats, limit, alpha, analyte, unit) {
+  document.getElementById('results').style.display='';
+
+  const nonRef = tpStats.filter(s=>!s.ref&&!isNaN(s.mean));
+  const allPass = nonRef.every(s=>s.pass);
+  const firstFail = nonRef.find(s=>!s.pass);
+  const lastPass  = [...nonRef].reverse().find(s=>s.pass);
+  const maxAbs = nonRef.reduce((mx,s)=>Math.max(mx,Math.abs(s.mean)),0);
+  const driftDir = nonRef.length>0 ? (nonRef[nonRef.length-1].mean<0?'negative (reading lower)':'positive (reading higher)') : '—';
+
+  // KPI row
+  const kpiRow = document.getElementById('kpiRow');
+  kpiRow.innerHTML = `
+    <div class="kpi ${allPass?'pass':'fail'}">
+      <div class="kpi-k">Stability</div>
+      <div class="kpi-v">${allPass?'STABLE':'FAILING'}</div>
+      <div class="kpi-sub">${allPass?'All time points pass':'See results below'}</div>
+    </div>
+    <div class="kpi ${maxAbs<=limit?'pass':maxAbs<=limit*1.5?'warn':'fail'}">
+      <div class="kpi-k">Max |% change|</div>
+      <div class="kpi-v">${fmt1(maxAbs)}%</div>
+      <div class="kpi-sub">Limit: ±${limit}%</div>
+    </div>
+    <div class="kpi neutral">
+      <div class="kpi-k">Last passing TP</div>
+      <div class="kpi-v">${lastPass?'T'+lastPass.t+' mo':'—'}</div>
+      <div class="kpi-sub">Functional expiry</div>
+    </div>
+    <div class="kpi neutral">
+      <div class="kpi-k">Drift direction</div>
+      <div class="kpi-v" style="font-size:13px;margin-top:4px;">${nonRef.length>0?(nonRef[nonRef.length-1].mean<0?'▼ Negative':'▲ Positive'):'—'}</div>
+      <div class="kpi-sub">At last time point</div>
+    </div>`;
+
+  // Results table
+  const tbody = document.getElementById('resBody');
+  tbody.innerHTML = '';
+  tpStats.forEach(s => {
+    const tr = document.createElement('tr');
+    if(s.ref){
+      tr.innerHTML = `<td><strong>T0</strong> (baseline)</td><td>—</td><td>0 (reference)</td><td>—</td><td>—</td><td>—</td><td><span class="badge-ref">REF</span></td>`;
+    } else if(isNaN(s.mean)){
+      tr.innerHTML = `<td>T${s.t} months</td><td>0</td><td colspan="4" style="color:var(--muted);font-style:italic;">No data</td><td>—</td>`;
+    } else {
+      const badge = s.pass ? '<span class="badge-pass">PASS</span>' : '<span class="badge-fail">FAIL</span>';
+      const pSig  = s.p < alpha ? `<strong>${fmtP(s.p)}</strong>` : fmtP(s.p);
+      tr.innerHTML = `<td>T${s.t} months</td><td>${s.n}</td>
+        <td>${(s.mean>=0?'+':'')+fmt1(s.mean)}%</td>
+        <td>${fmt1(s.sd)}%</td>
+        <td>${(s.ciLo>=0?'+':'')+fmt1(s.ciLo)}% to ${(s.ciHi>=0?'+':'')+fmt1(s.ciHi)}%</td>
+        <td>${pSig}</td><td>${badge}</td>`;
+    }
+    tbody.appendChild(tr);
+  });
+
+  // Expiry box
+  const exBox = document.getElementById('expiryBox');
+  if(allPass){
+    exBox.className='expiry-box expiry-pass';
+    exBox.innerHTML=`<strong>✓ Material stable:</strong> All time points pass the ±${limit}% acceptance criterion.
+    The material is stable for the full study period tested (T${activeTP[activeTP.length-1]} months).`;
+  } else {
+    const expM = firstFail?.t;
+    const lastM = lastPass?.t;
+    exBox.className='expiry-box expiry-fail';
+    exBox.innerHTML=`<strong>⚠ Stability failure at T${expM} months.</strong>
+    Functional expiry = T${lastM??0} months — the last time point that passed the ±${limit}% criterion.<br>
+    Drift direction: ${driftDir}. Investigate root cause before extending or assigning expiry.`;
+  }
+
+  // Chart
+  buildChart(tpStats, limit, analyte);
+
+  // Trend regression (% change vs time, excluding T0)
+  const trendData = nonRef.filter(s=>!isNaN(s.mean));
+  if(trendData.length>=2){
+    const xs=trendData.map(s=>s.t), ys=trendData.map(s=>s.mean);
+    const mx=mean(xs),my=mean(ys);
+    const Sxy=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+    const Sxx=xs.reduce((s,x)=>s+(x-mx)**2,0);
+    const slope=Sxx===0?0:Sxy/Sxx;
+    const intercept=my-slope*mx;
+    const yHat=xs.map(x=>slope*x+intercept);
+    const SS_res=ys.reduce((s,y,i)=>s+(y-yHat[i])**2,0);
+    const SS_tot=ys.reduce((s,y)=>s+(y-my)**2,0);
+    const r2=SS_tot===0?1:1-SS_res/SS_tot;
+    const extrapExpiry=slope!==0?Math.abs(limit/slope).toFixed(1):null;
+    document.getElementById('trendBox').innerHTML=`<strong>Trend analysis:</strong>
+    Slope = ${(slope>=0?'+':'')+fmt2(slope)}% per month | Intercept = ${fmt1(intercept)}% | R² = ${fmt2(r2)}.
+    ${Math.abs(slope)>0.1?`At this drift rate, the material would cross the ±${limit}% limit at approximately <strong>${extrapExpiry} months</strong> (extrapolated).`:'Drift rate is very low — no significant trend detected.'}
+    <span class="note">Note: extrapolation beyond measured time points is indicative only. CLSI EP25-A recommends pre-defining acceptance criteria and study design before testing.</span>`;
+  } else {
+    document.getElementById('trendBox').innerHTML='<span style="color:var(--muted);font-size:12px;">Trend analysis requires at least 2 non-reference time points.</span>';
+  }
+}
+
+function buildChart(tpStats, limit, analyte) {
+  const nonRef = tpStats.filter(s=>!s.ref);
+  const labels = nonRef.map(s=>'T'+s.t);
+  const means  = nonRef.map(s=>isNaN(s.mean)?null:s.mean);
+  const ciUp   = nonRef.map(s=>isNaN(s.mean)?null:s.ciHi);
+  const ciDn   = nonRef.map(s=>isNaN(s.mean)?null:s.ciLo);
+  const tMax   = activeTP[activeTP.length-1];
+
+  if(stabilityChart) stabilityChart.destroy();
+  stabilityChart = new Chart(document.getElementById('stabilityChart'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Mean % change',data:means,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:means.map(v=>v===null?'#9ca3af':Math.abs(v)>limit?'#ef4444':'#3b82f6'),fill:false,tension:.3,spanGaps:true},
+        {label:'95% CI upper',data:ciUp,borderColor:'rgba(59,130,246,.3)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false,tension:.3,spanGaps:true},
+        {label:'95% CI lower',data:ciDn,borderColor:'rgba(59,130,246,.3)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:'-1',backgroundColor:'rgba(59,130,246,.05)',tension:.3,spanGaps:true},
+        {label:`+${limit}% limit`,data:Array(labels.length).fill(limit),borderColor:'#16a34a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+        {label:`−${limit}% limit`,data:Array(labels.length).fill(-limit),borderColor:'#16a34a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
+        {label:'Zero',data:Array(labels.length).fill(0),borderColor:'#94a3b8',borderWidth:1,borderDash:[3,2],pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      animation:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{
+        x:{title:{display:true,text:'Time point',font:{size:12}},grid:{color:'#f3f4f6'}},
+        y:{title:{display:true,text:`% change from T0${document.getElementById('analyteUnit').value?' ('+document.getElementById('analyteUnit').value+')':''}`,font:{size:12}},grid:{color:'#f3f4f6'}}
+      }
+    }
+  });
+}
+
+// ── Sample data ───────────────────────────────────────────────────────────────
+function generateData() {
+  const n     = parseInt(document.getElementById('nSamples').value);
+  const drift = -1.5; // % per month — gradual degradation example
+  const cv    = 0.03;
+  // T0 values: panel spanning 10–80 (arbitrary units)
+  const trueV = Array.from({length:n},(_,i)=>10+(i/(n-1))*70);
+
+  let seed = 42;
+  function rng(){ seed^=seed<<13;seed^=seed>>17;seed^=seed<<5;return(seed>>>0)/4294967296; }
+  function rndn(){ let u=0,v=0;while(!u)u=rng();while(!v)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  activeTP.forEach(t => {
+    for(let r=1;r<=n;r++){
+      const el=document.getElementById(`c_${r}_${t}`);
+      if(el){
+        const bias = t===0 ? 0 : drift*t/100;
+        el.value = (trueV[r-1]*(1+bias+cv*rndn())).toFixed(2);
+      }
+    }
+  });
+}
+
+function clearData() {
+  const n = parseInt(document.getElementById('nSamples').value);
+  activeTP.forEach(t => {
+    for(let r=1;r<=n;r++){
+      const el=document.getElementById(`c_${r}_${t}`);
+      if(el) el.value='';
+    }
+  });
+  document.getElementById('results').style.display='none';
+}
+
+// Save/Load support
+window.getSaveData = () => {
+  const n = parseInt(document.getElementById('nSamples').value);
+  const data = {};
+  activeTP.forEach(t=>{
+    for(let r=1;r<=n;r++){
+      const el=document.getElementById(`c_${r}_${t}`);
+      if(el) data[`c_${r}_${t}`]=el.value;
+    }
+  });
+  return {
+    analyteName:document.getElementById('analyteName').value,
+    analyteUnit:document.getElementById('analyteUnit').value,
+    limitVal:document.getElementById('limitVal').value,
+    alpha:document.getElementById('alpha').value,
+    nSamples:document.getElementById('nSamples').value,
+    activeTP:[...activeTP],
+    data
+  };
+};
+window.loadSaveData = d => {
+  if(!d) return;
+  document.getElementById('analyteName').value=d.analyteName||'';
+  document.getElementById('analyteUnit').value=d.analyteUnit||'';
+  document.getElementById('limitVal').value=d.limitVal||10;
+  document.getElementById('limitSlider').value=d.limitVal||10;
+  document.getElementById('alpha').value=d.alpha||'0.05';
+  document.getElementById('nSamples').value=d.nSamples||10;
+  if(d.activeTP) activeTP=[...d.activeTP];
+  buildTPChips();
+  rebuildGrid();
+  if(d.data) Object.entries(d.data).forEach(([k,v])=>{ const el=document.getElementById(k); if(el)el.value=v; });
+};
+</script>
+</body>
+</html>

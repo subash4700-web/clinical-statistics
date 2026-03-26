@@ -7,6 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="assets/js/eflm_db.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <style>
     /* Module-specific styles only */
@@ -92,7 +93,7 @@
             <input type="number" id="inp-allowable" min="0" step="0.1" placeholder="e.g. 5.0" style="flex:1;">
             <span style="font-size:13px;color:var(--muted);">%</span>
           </div>
-          <p class="note">If set, results are assessed against this threshold.</p>
+          <p class="note">If set, results are assessed against this threshold. Or use the EFLM lookup below.</p>
 
           <div class="fixed-limits">
             <div class="fixed-limits-title">
@@ -111,6 +112,16 @@
             </div>
             <p class="note">When set, Westgard rules and Levey-Jennings control lines use these fixed values. Leave blank to use values calculated from data.</p>
           </div>
+        </div>
+
+        <!-- EFLM card -->
+        <div class="card">
+          <div class="section-title">EFLM Performance Specifications</div>
+          <p class="note" style="margin-bottom:10px;">Select an analyte to auto-fill the allowable CV% from the EFLM biological variation database (Ricos et al. 2014).</p>
+          <select id="eflm-analyte" onchange="eflmAnalyteChange()">
+            <option value="">— Select analyte —</option>
+          </select>
+          <div id="eflm-tier-cards" style="display:none;margin-top:12px;"></div>
         </div>
 
         <div class="card">
@@ -1144,6 +1155,83 @@ function exportExcel(){
 
 // ── Init ──
 buildPrecTable();
+
+// ── EFLM integration ────────────────────────────────────────────────────────
+var eflmKey  = '';
+var eflmTier = 'desirable';
+
+(function buildEFLMDropdown() {
+  var sel = document.getElementById('eflm-analyte');
+  if (!sel || typeof EFLM_DB === 'undefined') return;
+  Object.entries(EFLM_DB)
+    .sort(function(a, b) { return a[1].name.localeCompare(b[1].name); })
+    .forEach(function(entry) {
+      var opt = document.createElement('option');
+      opt.value = entry[0];
+      opt.textContent = entry[1].name + ' (' + entry[1].unit + ')';
+      sel.appendChild(opt);
+    });
+})();
+
+function eflmAnalyteChange() {
+  eflmKey = document.getElementById('eflm-analyte').value;
+  if (!eflmKey) {
+    document.getElementById('eflm-tier-cards').style.display = 'none';
+    return;
+  }
+  renderEFLMTierCards();
+  applyEFLM();
+}
+
+function selectEFLMTier(tier) {
+  eflmTier = tier;
+  renderEFLMTierCards();
+  applyEFLM();
+}
+
+function renderEFLMTierCards() {
+  var wrap = document.getElementById('eflm-tier-cards');
+  if (!eflmKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[eflmKey]) {
+    wrap.style.display = 'none'; return;
+  }
+  var a      = EFLM_DB[eflmKey];
+  var tiers  = calcEFLMTiers(a.cvi, a.cvg);
+  var colors = { optimal: '#059669', desirable: '#2563eb', minimum: '#d97706' };
+  var bgs    = { optimal: '#ecfdf5', desirable: '#eff6ff', minimum: '#fffbeb' };
+  var bords  = { optimal: '#6ee7b7', desirable: '#bfdbfe', minimum: '#fde68a' };
+
+  wrap.style.display = 'block';
+  wrap.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+    '<strong>' + a.name + '</strong> &nbsp;&middot;&nbsp; ' + a.unit +
+    ' &nbsp;&middot;&nbsp; CV<sub>I</sub> = ' + a.cvi + '% &nbsp;&middot;&nbsp; CV<sub>G</sub> = ' + a.cvg + '%' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    ['optimal', 'desirable', 'minimum'].map(function(tr) {
+      var active = tr === eflmTier;
+      return '<div onclick="selectEFLMTier(\'' + tr + '\')" style="cursor:pointer;flex:1;min-width:90px;' +
+        'background:' + (active ? bgs[tr] : '#fff') + ';' +
+        'border:2px solid ' + (active ? bords[tr] : '#e5e7eb') + ';' +
+        'border-radius:10px;padding:10px 12px;transition:all .12s;' +
+        (active ? 'box-shadow:0 0 0 3px ' + bords[tr] + '80;' : '') + '">' +
+        '<div style="font-weight:700;font-size:11px;text-transform:uppercase;color:' + colors[tr] + ';margin-bottom:5px;">' + tr + '</div>' +
+        '<div style="font-size:11px;line-height:1.8;">Bias \u2264 <strong>' + tiers[tr].bias + '%</strong><br>CV \u2264 <strong>' + tiers[tr].cv + '%</strong><br>TAE \u2264 <strong>' + tiers[tr].tea + '%</strong></div>' +
+        (active ? '<div style="font-size:10px;color:' + colors[tr] + ';margin-top:4px;font-weight:700;">&#10003; Applied</div>' : '') +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
+function applyEFLM() {
+  if (!eflmKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[eflmKey]) return;
+  var a = EFLM_DB[eflmKey];
+  var t = calcEFLMTiers(a.cvi, a.cvg)[eflmTier];
+  document.getElementById('inp-allowable').value = t.cv;
+  var analyteEl = document.getElementById('inp-analyte');
+  var unitEl    = document.getElementById('inp-unit');
+  if (!analyteEl.value) analyteEl.value = a.name;
+  if (!unitEl.value)    unitEl.value    = a.unit;
+}
 </script>
 </body>
 </html>
