@@ -1347,8 +1347,6 @@
     _toolDirty = false;
     currentToolPage = page;
 
-    // Remember last opened tool for next startup
-    localStorage.setItem('lastOpenedTool', JSON.stringify({ page, title }));
 
     const displayTitle = (btn && btn.dataset.i18n) ? T(btn.dataset.i18n) : title;
     document.getElementById("toolTitle").innerText = (page === 'PCR.html') ? '' : displayTitle;
@@ -2291,6 +2289,44 @@
   // ── WHAT'S NEW ────────────────────────────────────────────────────────────
 
   const CHANGELOG = {
+    '2.0.10': {
+      highlights: [
+        {
+          icon: '📊',
+          title: 'Two-level charts — Total Error & Sigma',
+          detail: 'When two CV% levels are entered, both the distribution chart and error budget chart now show Level 1 and Level 2 side by side — compare how imprecision at different concentrations consumes the TAE budget.'
+        },
+        {
+          icon: '📋',
+          title: 'Report section control',
+          detail: 'All result sections in TAE, Bias, and Method Comparison now show an "In report / Excluded" badge. Collapse any section to exclude it — only expanded sections are included when you click Add to Report.'
+        },
+        {
+          icon: '🏠',
+          title: 'Always opens at home screen',
+          detail: 'The app now always opens at the home screen on startup instead of restoring the last opened tool.'
+        }
+      ]
+    },
+    '2.0.9': {
+      highlights: [
+        {
+          icon: '📋',
+          title: 'Scenario library',
+          detail: 'All 8 analytical performance tools now include 3 clinical scenarios each — load realistic data in one click and explore the results immediately.'
+        },
+        {
+          icon: '🗂️',
+          title: 'Total Error & Sigma — tabs',
+          detail: 'Data & Options and Results tabs added — now consistent with all other analytical performance tools.'
+        },
+        {
+          icon: '🏠',
+          title: 'Home button when sidebar is collapsed',
+          detail: 'A home button appears next to the ☰ toggle when the sidebar is collapsed — navigate back to the home screen with one click.'
+        }
+      ]
+    },
     '2.0.8': {
       highlights: [
         {
@@ -2786,15 +2822,7 @@
     }
   });
 
-  // ── #2: Restore last opened tool on startup ───────────────────────────────
-  (function restoreLastTool() {
-    try {
-      const saved = localStorage.getItem('lastOpenedTool');
-      if (!saved) return;
-      const { page, title } = JSON.parse(saved);
-      if (page && title) loadTool(page, title, null);
-    } catch(e) {}
-  })();
+  // Session restore removed — app always opens at home screen on startup.
 </script>
 
 <script>
