@@ -90,6 +90,23 @@
     .pill-up   { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .pill-down { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .pill-sym  { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+
+    /* Scenario cards */
+    .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-param.pass{background:#dcfce7;color:#15803d;}
+    .ex-param.fail{background:#fee2e2;color:#b91c1c;}
+    .ex-param.warn{background:#fef9c3;color:#854d0e;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
   </style>
 </head>
 <body>
@@ -229,6 +246,47 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Scenario cards -->
+    <div class="card">
+      <div class="section-title">Example Scenarios</div>
+      <p class="note" style="margin-top:4px;margin-bottom:12px;">Click a scenario to instantly load data and run the analysis — useful for exploring the tool or demonstrating expected outputs.</p>
+      <div class="ex-grid">
+        <div class="ex-card" id="qa-sc1">
+          <div class="ex-num">Scenario 1</div>
+          <div class="ex-title">Rapid test — good agreement</div>
+          <div class="ex-obj">POCT rapid test vs laboratory reference. High concordance with minimal discordant results. Kappa indicates strong agreement.</div>
+          <div class="ex-params">
+            <span class="ex-param">POCT vs Lab</span>
+            <span class="ex-param">n = 60</span>
+            <span class="ex-param pass">Kappa ≈ 0.85</span>
+          </div>
+          <button class="ex-btn" onclick="qaLoadScenario(1)">Load scenario</button>
+        </div>
+        <div class="ex-card" id="qa-sc2">
+          <div class="ex-num">Scenario 2</div>
+          <div class="ex-title">New analyser — moderate agreement</div>
+          <div class="ex-obj">New instrument vs existing method. Moderate concordance — acceptable for some applications but borderline for clinical decision-making.</div>
+          <div class="ex-params">
+            <span class="ex-param">Method A vs B</span>
+            <span class="ex-param">n = 80</span>
+            <span class="ex-param warn">Kappa ≈ 0.62</span>
+          </div>
+          <button class="ex-btn" onclick="qaLoadScenario(2)">Load scenario</button>
+        </div>
+        <div class="ex-card" id="qa-sc3">
+          <div class="ex-num">Scenario 3</div>
+          <div class="ex-title">Culture vs PCR — poor agreement</div>
+          <div class="ex-obj">Culture method vs PCR for infectious agent. Substantial discordance — methods are not interchangeable. PCR is more sensitive.</div>
+          <div class="ex-params">
+            <span class="ex-param">Culture vs PCR</span>
+            <span class="ex-param">n = 70</span>
+            <span class="ex-param fail">Kappa ≈ 0.31</span>
+          </div>
+          <button class="ex-btn" onclick="qaLoadScenario(3)">Load scenario</button>
+        </div>
       </div>
     </div>
 
@@ -813,6 +871,29 @@ function showImportError(msg) {
   const el = document.getElementById('import-error');
   el.style.display = 'block';
   el.textContent = msg;
+}
+
+// ── Scenario cards ──────────────────────────────────────────────────────────
+function qaLoadScenario(n) {
+  const scenarios = {
+    1: { a: 32, b: 2, c: 3, d: 23 },
+    2: { a: 28, b: 7, c: 8, d: 37 },
+    3: { a: 18, b: 5, c: 22, d: 25 }
+  };
+  const s = scenarios[n];
+  document.getElementById('cell-a').value = s.a;
+  document.getElementById('cell-b').value = s.b;
+  document.getElementById('cell-c').value = s.c;
+  document.getElementById('cell-d').value = s.d;
+  // Highlight active card
+  document.querySelectorAll('#qa-sc1,#qa-sc2,#qa-sc3').forEach(el => el.classList.remove('active'));
+  document.getElementById('qa-sc' + n).classList.add('active');
+  // Switch to input tab if not already there
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab[data-tab="tab-input"]').classList.add('active');
+  document.getElementById('tab-input').classList.add('active');
+  runAnalysis();
 }
 </script>
 </body>

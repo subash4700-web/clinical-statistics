@@ -70,6 +70,23 @@
     .trend-box strong { color:#1e3a5f; }
 
     @media(max-width:900px){ .layout{grid-template-columns:1fr;} .kpi-row{grid-template-columns:1fr 1fr;} }
+
+    /* Scenario cards */
+    .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-param.pass{background:#dcfce7;color:#15803d;}
+    .ex-param.fail{background:#fee2e2;color:#b91c1c;}
+    .ex-param.warn{background:#fef9c3;color:#854d0e;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
   </style>
 </head>
 <body>
@@ -146,6 +163,50 @@
         <div class="section-title">Time points</div>
         <p class="note" style="margin-bottom:6px;">T0 is always the baseline. Select additional time points (months).</p>
         <div class="tp-chips" id="tpChips"></div>
+
+        <div class="section-title" style="margin-top:14px;">Example scenarios</div>
+        <div class="ex-grid">
+
+          <!-- Scenario 1 — Stable -->
+          <div class="ex-card" id="stab-sc1">
+            <div class="ex-num">Scenario 1</div>
+            <div class="ex-title">Glucose — stable to expiry</div>
+            <div class="ex-obj">20 samples measured at T0, 1, 2, 4, 8 weeks. % change from baseline stays well within the allowable limit throughout storage.</div>
+            <div class="ex-params">
+              <span class="ex-param">Glucose · mmol/L</span>
+              <span class="ex-param">Stable drift</span>
+              <span class="ex-param pass">% change &lt; 5%</span>
+            </div>
+            <button class="ex-btn" onclick="loadScenario(1)">Load scenario</button>
+          </div>
+
+          <!-- Scenario 2 — Borderline -->
+          <div class="ex-card" id="stab-sc2">
+            <div class="ex-num">Scenario 2</div>
+            <div class="ex-title">Troponin — borderline at 8 weeks</div>
+            <div class="ex-obj">Gradual drift in measured values over 8 weeks. % change approaches the allowable limit at the final time point — functional expiry may be earlier than stated.</div>
+            <div class="ex-params">
+              <span class="ex-param">Troponin · ng/L</span>
+              <span class="ex-param">Gradual decline</span>
+              <span class="ex-param warn">% change ≈ limit</span>
+            </div>
+            <button class="ex-btn" onclick="loadScenario(2)">Load scenario</button>
+          </div>
+
+          <!-- Scenario 3 — Early failure -->
+          <div class="ex-card" id="stab-sc3">
+            <div class="ex-num">Scenario 3</div>
+            <div class="ex-title">Glucose — fails at 4 weeks</div>
+            <div class="ex-obj">Rapid drift detected from week 2 onwards. % change exceeds the allowable limit before the stated expiry — reagent is not stable to claimed date.</div>
+            <div class="ex-params">
+              <span class="ex-param">Glucose · mmol/L</span>
+              <span class="ex-param">Early failure</span>
+              <span class="ex-param fail">% change &gt; limit</span>
+            </div>
+            <button class="ex-btn" onclick="loadScenario(3)">Load scenario</button>
+          </div>
+
+        </div>
 
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="runAnalysis()">Run analysis</button>
@@ -564,6 +625,64 @@ window.loadSaveData = d => {
   rebuildGrid();
   if(d.data) Object.entries(d.data).forEach(([k,v])=>{ const el=document.getElementById(k); if(el)el.value=v; });
 };
+
+// ── Scenario loader ───────────────────────────────────────────────────────
+function loadScenario(num) {
+  // Highlight active card
+  [1,2,3].forEach(i => {
+    const c = document.getElementById('stab-sc'+i);
+    if(c) c.classList.toggle('active', i===num);
+  });
+
+  // Scenario definitions
+  // Each scenario uses months 0,1,2,4,8 as time points and n=20 samples
+  // driftPerMonth: % per month applied to T0 value
+  // cv: measurement noise (coefficient of variation)
+  // The acceptance limit is set to 10% for all scenarios
+  const scenarios = {
+    1: { analyte:'Glucose', unit:'mmol/L', limit:10, driftPerMonth:-0.3,  cv:0.015, seed:101 },
+    2: { analyte:'Troponin', unit:'ng/L',  limit:10, driftPerMonth:-1.15, cv:0.025, seed:202 },
+    3: { analyte:'Glucose', unit:'mmol/L', limit:10, driftPerMonth:-3.2,  cv:0.020, seed:303 }
+  };
+
+  const sc = scenarios[num];
+  const targetTP = [0,1,2,4,8];
+  const n = 20;
+
+  // Update study parameters
+  document.getElementById('analyteName').value = sc.analyte;
+  document.getElementById('analyteUnit').value  = sc.unit;
+  document.getElementById('limitVal').value     = sc.limit;
+  document.getElementById('limitSlider').value  = sc.limit;
+  document.getElementById('nSamples').value     = n;
+
+  // Set active time points to match scenario
+  activeTP = [...targetTP];
+  buildTPChips();
+  rebuildGrid();
+
+  // Seed-able RNG (xorshift32)
+  let seed = sc.seed;
+  function rng(){ seed^=seed<<13; seed^=seed>>17; seed^=seed<<5; return (seed>>>0)/4294967296; }
+  function rndn(){ let u=0,v=0; while(!u)u=rng(); while(!v)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  // T0 panel: 20 samples spanning a realistic range for the analyte
+  const trueV = Array.from({length:n},(_,i)=>10+(i/(n-1))*70);
+
+  // Fill grid
+  activeTP.forEach(t => {
+    for(let r=1;r<=n;r++){
+      const el = document.getElementById(`c_${r}_${t}`);
+      if(el){
+        const bias = t===0 ? 0 : sc.driftPerMonth*t/100;
+        el.value = (trueV[r-1]*(1+bias+sc.cv*rndn())).toFixed(2);
+      }
+    }
+  });
+
+  // Auto-run analysis
+  runAnalysis();
+}
 
 // ── EFLM integration ──────────────────────────────────────────────────────
 (function buildStabEFLMDropdown() {

@@ -48,8 +48,24 @@
     .stat-item.fail{border-color:#dc2626;background:#fef2f2;} .stat-item.fail .sv{color:#b91c1c;}
     .stat-item.warn{border-color:#f59e0b;background:#fffbeb;} .stat-item.warn .sv{color:#b45309;}
 
-    #results-area{display:none;}
-    @media(max-width:900px){.tae-layout{grid-template-columns:1fr;}.charts-row{grid-template-columns:1fr;}}
+    @media(max-width:700px){.charts-row{grid-template-columns:1fr;}}
+
+    /* Scenario cards */
+    .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px;}
+    @media(max-width:700px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#93c5fd;box-shadow:0 2px 10px rgba(43,108,176,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,108,176,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;}
+    .ex-param.pass{background:#dcfce7;color:#15803d;}
+    .ex-param.fail{background:#fee2e2;color:#b91c1c;}
+    .ex-param.warn{background:#fef9c3;color:#854d0e;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
   </style>
 </head>
 <body>
@@ -57,9 +73,13 @@
   <h1>Total Error &amp; Sigma</h1>
   <p class="subtitle">Enter your method's bias and imprecision to calculate total error, sigma metric, and QC strategy recommendation.</p>
 
-  <div class="tae-layout">
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Options</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
 
-    <!-- LEFT: INPUTS -->
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="tab-content active">
     <div>
       <!-- Tool guide card -->
       <div class="tg-card">
@@ -76,7 +96,7 @@
             <div class="tg-row"><span class="tg-label">Input</span><span>CV% from precision study + Bias% from trueness study + TEa from EFLM, CLIA, or your specification</span></div>
             <div class="tg-row"><span class="tg-label">Formula</span><span>TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; Sigma = (TEa − |Bias%|) / CV%</span></div>
             <div class="tg-row"><span class="tg-label">Output</span><span>TE%, sigma metric, QC rule recommendation (Westgard), patient result distribution chart</span></div>
-            <div class="tg-row"><span class="tg-label">Note</span><span>Sigma ≥ 6 = world class · Sigma 4–6 = acceptable · Sigma &lt; 4 = method needs improvement</span></div>
+            <div class="tg-row"><span class="tg-label">Note</span><span>Sigma ≥ 6 · Sigma 4–6 · Sigma 3–4 · Sigma &lt; 3</span></div>
           </div>
         </details>
       </div>
@@ -134,11 +154,47 @@
         <div class="error-msg" id="input-error"></div>
 
         <div class="btn-row" style="margin-top:12px;">
-          <button class="btn-ghost" onclick="loadExample()">Load Example</button>
           <button class="btn-primary" onclick="calculate()">Calculate</button>
         </div>
       </div>
 
+
+      <!-- Scenario cards -->
+      <div class="card" style="margin-top:12px;">
+        <div class="section-title">Load a scenario</div>
+        <div class="ex-grid">
+          <div class="ex-card" id="tae-sc1" onclick="loadScenario(1)">
+            <div class="ex-num">Scenario 1</div>
+            <div class="ex-title">Glucose — sigma ≥ 6</div>
+            <div class="ex-obj">Tight imprecision and minimal bias against a generous TAE. Sigma well above 6 — minimal QC burden — basic monitoring may be sufficient.</div>
+            <div class="ex-params">
+              <span class="ex-param">Glucose · mmol/L</span>
+              <span class="ex-param pass">Sigma ≈ 12.5</span>
+            </div>
+            <button class="ex-btn">Load</button>
+          </div>
+          <div class="ex-card" id="tae-sc2" onclick="loadScenario(2)">
+            <div class="ex-num">Scenario 2</div>
+            <div class="ex-title">HbA1c — sigma 4–6</div>
+            <div class="ex-obj">Moderate CV and bias leave a sigma in the acceptable range. QC rules suggested — Westgard multi-rule recommended.</div>
+            <div class="ex-params">
+              <span class="ex-param">HbA1c · mmol/mol</span>
+              <span class="ex-param warn">Sigma ≈ 4.1</span>
+            </div>
+            <button class="ex-btn">Load</button>
+          </div>
+          <div class="ex-card" id="tae-sc3" onclick="loadScenario(3)">
+            <div class="ex-num">Scenario 3</div>
+            <div class="ex-title">Troponin — sigma < 3</div>
+            <div class="ex-obj">High CV and significant bias consume most of the TAE budget. Sigma below 3 — method needs improvement before clinical use.</div>
+            <div class="ex-params">
+              <span class="ex-param">Troponin · ng/L</span>
+              <span class="ex-param fail">Sigma ≈ 2.9</span>
+            </div>
+            <button class="ex-btn">Load</button>
+          </div>
+        </div>
+      </div>
 
       <details style="margin-bottom:0;margin-top:12px;">
       <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
@@ -177,8 +233,10 @@
       </div>
       </details>
     </div>
+  </div><!-- /tab-input -->
 
-    <!-- RIGHT: RESULTS -->
+  <!-- RESULTS TAB -->
+  <div id="tab-results" class="tab-content">
     <div id="results-area">
 
       <!-- Sigma badge -->
@@ -211,6 +269,7 @@
             </div>
           </div>
           <div id="insight-box" class="insight-box insight-blue"></div>
+          <p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>
         </div>
 
         <!-- Formula -->
@@ -246,14 +305,13 @@
           <canvas id="budget-chart" style="height:160px;"></canvas>
         </div>
 
-      </div>
+      </div><!-- /results-col -->
+    </div><!-- /results-area -->
+    <div class="btn-row" id="export-row" style="display:none;margin-top:16px;">
+      <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
     </div>
-  </div>
-
-  <div class="btn-row" id="export-row" style="display:none;margin-top:16px;">
-    <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
-  </div>
-</div>
+  </div><!-- /tab-results -->
+</div><!-- /container -->
 
 <script>
 var distChart = null, budgetChart = null;
@@ -282,10 +340,10 @@ function getSigmaClass(sigma) {
 }
 
 function getSigmaLevel(sigma) {
-  if (sigma >= 6) return '🏆 World class';
-  if (sigma >= 4) return '✅ Excellent';
-  if (sigma >= 3) return '⚠️ Acceptable';
-  return '❌ Poor — improvement needed';
+  if (sigma >= 6) return 'Sigma ≥ 6';
+  if (sigma >= 4) return 'Sigma 4–6';
+  if (sigma >= 3) return 'Sigma 3–4';
+  return 'Sigma < 3';
 }
 
 function showError(msg) {
@@ -379,8 +437,12 @@ function calculate() {
   var pctOut = Math.max(0, 100 - pctInside);
 
   // Show results panel
-  document.getElementById('results-area').style.display = 'block';
   document.getElementById('export-row').style.display = 'flex';
+  // Switch to results tab
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelector('[data-tab="tab-results"]').classList.add('active');
+  document.getElementById('tab-results').classList.add('active');
 
   // Sigma badge
   var badge = document.getElementById('sigmaBadge');
@@ -399,7 +461,7 @@ function calculate() {
   document.getElementById('stat-te-sub').textContent = 'TAE = ' + fmt(taePct, 1) + '%';
 
   document.getElementById('stat-verdict-box').className = 'stat-item ' + (passes ? 'pass' : 'fail');
-  document.getElementById('stat-verdict-val').textContent = passes ? 'PASS' : 'FAIL';
+  document.getElementById('stat-verdict-val').textContent = passes ? 'Meets specification' : 'Exceeds TAE';
   document.getElementById('stat-verdict-sub').textContent = fmt(pctOut, 3) + '% of results exceed TAE';
 
   // Formula values
@@ -407,8 +469,8 @@ function calculate() {
     'TE = ' + fmt(absBias,1) + ' + 1.65 \u00d7 ' + fmt(cvPct,1) + ' = <b>' + fmt(te,2) + '%</b><br>' +
     '\u03c3 = (' + fmt(taePct,1) + ' \u2212 ' + fmt(absBias,1) + ') / ' + fmt(cvPct,1) + ' = <b>' + fmt(sigma,2) + '</b><br>' +
     (passes
-      ? '<span style="color:#15803d;font-weight:700;">\u2713 ' + fmt(te,2) + '% \u2264 TAE ' + fmt(taePct,1) + '% \u2014 PASS</span>'
-      : '<span style="color:#b91c1c;font-weight:700;">\u2717 ' + fmt(te,2) + '% > TAE ' + fmt(taePct,1) + '% \u2014 FAIL</span>');
+      ? '<span style="color:#15803d;font-weight:700;">\u2713 ' + fmt(te,2) + '% \u2264 TAE ' + fmt(taePct,1) + '% \u2014 Meets specification</span>'
+      : '<span style="color:#b91c1c;font-weight:700;">\u2717 ' + fmt(te,2) + '% > TAE ' + fmt(taePct,1) + '% \u2014 Exceeds TAE</span>');
 
   // QC box
   updateQCBox(sigma);
@@ -433,16 +495,16 @@ function updateQCBox(sigma) {
   var msg = '', cls = '';
   if (sigma >= 6) {
     cls = 'qc-wc';
-    msg = '<b>Sigma \u2265 6 \u2014 Minimal QC required.</b> One QC level, run once per day. Simple 1-2s warning rule. Patient results are extremely unlikely to exceed TAE even if QC misses an error.';
+    msg = '<b>Sigma \u2265 6 \u2014 Minimal QC burden.</b> One QC level, run once per day. Simple 1-2s warning rule suggested. Patient results are extremely unlikely to exceed TAE even if QC misses an error.';
   } else if (sigma >= 4) {
     cls = 'qc-ex';
     msg = '<b>Sigma 4\u20136 \u2014 Standard QC sufficient.</b> Two QC levels, Westgard 1-3s/2-2s rules. Daily QC runs are adequate to detect clinically important errors before patients are affected.';
   } else if (sigma >= 3) {
     cls = 'qc-ok';
-    msg = '<b>Sigma 3\u20134 \u2014 Intensive QC needed.</b> Two or more QC levels, Westgard multirule. More frequent runs. The narrow error budget means errors can reach patients between QC checks.';
+    msg = '<b>Sigma 3\u20134 \u2014 Intensive QC suggested.</b> Two or more QC levels, Westgard multirule. More frequent runs suggested. The narrow error budget means errors can reach patients between QC checks.';
   } else {
     cls = 'qc-poor';
-    msg = '<b>Sigma &lt; 3 \u2014 QC cannot rescue this method.</b> Even running QC before every patient will not prevent a significant proportion of unacceptable results. The method itself needs improvement \u2014 recalibrate, change reagents, or investigate the bias source.';
+    msg = '<b>Sigma &lt; 3 \u2014 QC alone may not be sufficient to protect patients at this sigma level.</b> Consider reviewing calibration, reagent lots, or investigating potential bias sources. Increasing QC frequency may help reduce risk while the root cause is explored.';
   }
   box.className = 'qc-box ' + cls;
   box.innerHTML = msg;
@@ -603,7 +665,7 @@ function exportExcel() {
     ['Total Error (TE%)', r.te],
     ['Sigma metric', r.sigma],
     ['% results outside TAE', r.pctOut],
-    ['Verdict', r.passes ? 'PASS' : 'FAIL'],
+    ['Verdict', r.passes ? 'Meets specification' : 'Exceeds TAE'],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'TAE & Sigma');
   XLSX.writeFile(wb, 'tae_sigma_' + (r.analyte || 'results') + '.xlsx');
@@ -724,6 +786,35 @@ function applyEFLM() {
   }
   renderEFLMInfoBar('eflm-info-bar', eflmKey, eflmTier);
 }
+
+function loadScenario(n) {
+  document.querySelectorAll('.ex-card').forEach(function(c){ c.classList.remove('active'); });
+  document.getElementById('tae-sc' + n).classList.add('active');
+  var analyte, unit, bias, cv, tae;
+  if (n === 1) {
+    analyte = 'Glucose'; unit = 'mmol/L'; bias = '0.5'; cv = '0.6'; tae = '8.0';
+  } else if (n === 2) {
+    analyte = 'HbA1c'; unit = 'mmol/mol'; bias = '1.8'; cv = '2.0'; tae = '10.0';
+  } else {
+    analyte = 'Troponin I'; unit = 'ng/L'; bias = '4.2'; cv = '5.5'; tae = '20.0';
+  }
+  document.getElementById('inp-analyte').value = analyte;
+  document.getElementById('inp-unit').value    = unit;
+  document.getElementById('inp-bias').value    = bias;
+  document.getElementById('inp-cv').value      = cv;
+  document.getElementById('inp-tae').value     = tae;
+  calculate();
+}
+
+// Tab switching
+document.querySelectorAll('.tab[data-tab]').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
 </script>
 </body>
 </html>

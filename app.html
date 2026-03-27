@@ -52,6 +52,20 @@
     .sidebar-toggle:hover {
       background: #F3F4F6;
     }
+    .sidebar-home-btn {
+      display: none;
+      background: #2563eb;
+      border: none;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .sidebar-home-btn:hover { background: #1d4ed8; }
+    .app-shell.sidebar-collapsed .sidebar-home-btn { display: inline-flex; align-items: center; }
 
     .sidebar h2 {
       margin-top: 0;
@@ -968,7 +982,10 @@
     <!-- WORKSPACE -->
     <div class="workspace">
       <div class="workspace-header">
-        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0;">
+          <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+          <button class="sidebar-home-btn" onclick="loadHome()" title="Home">⌂</button>
+        </div>
         <span id="toolTitle"></span>
         <div>
           <button class="report-issue-btn" onclick="reportIssue()" style="display:none;" id="reportIssueBtn" data-i18n="ui.reportIssue">Report Issue</button>
