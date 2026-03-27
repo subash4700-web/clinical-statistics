@@ -53,6 +53,15 @@
     .coll-arrow{display:inline-block;transition:transform .2s;font-size:12px;color:var(--muted);}
     .coll-arrow.open{transform:rotate(90deg);}
     .coll-body{display:none;}
+    .ep-rpt-section{margin-bottom:4px;}
+    .ep-rpt-hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;user-select:none;margin-bottom:4px;}
+    .ep-rpt-hdr-left{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#374151;}
+    .ep-rpt-hdr-arrow{font-size:11px;color:#9ca3af;transition:transform .15s;}
+    .ep-rpt-section[data-open="false"] .ep-rpt-hdr-arrow{transform:rotate(-90deg);}
+    .ep-rpt-section[data-open="false"] .ep-rpt-hdr{background:#f1f5f9;color:#9ca3af;}
+    .ep-rpt-section[data-open="false"] .ep-rpt-hdr-left{color:#9ca3af;}
+    .ep-rpt-badge{font-size:10px;padding:1px 7px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:600;}
+    .ep-rpt-section[data-open="false"] .ep-rpt-badge{background:#f1f5f9;color:#9ca3af;}
 
     /* Row highlight in run means table */
     tr.wg-warn-row td{background:#fffbeb;}
@@ -815,6 +824,36 @@ function clearEPOutliers(lvl) {
   calculateEP();
 }
 
+function _wfBiasChoiceCard(wfLevels) {
+  var levelSummary = wfLevels.map(function(l, i) {
+    return (wfLevels.length > 1 ? 'Level ' + (i + 1) + ': ' : '') + (l.analyte || 'Sample') + ' CV = ' + l.cv + '%';
+  }).join(' &nbsp;·&nbsp; ');
+
+  return '<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:16px;margin-top:16px;">'
+    + '<div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step 1 of 3 complete — Precision saved</div>'
+    + '<div style="font-size:13px;color:#1e3a8a;margin-bottom:2px;font-weight:600;">Next: Bias assessment</div>'
+    + '<div style="font-size:12px;color:#3b82f6;margin-bottom:12px;">' + levelSummary + '</div>'
+    + '<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;">How will you assess bias? Choose a method:</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+
+    // Option A: CRM / EQA
+    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">'
+    + '<div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">CRM / EQA Bias</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;">You have a sample with a known assigned value (certified reference material or EQA material).</div>'
+    + '<button onclick="try{window.parent.loadToolFromWorkflow(\'bias.html\',\'Bias\')}catch(e){alert(\'Open Bias from the sidebar\')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Bias tool \u2192</button>'
+    + '</div>'
+
+    // Option B: Method Comparison
+    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">'
+    + '<div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">Method Comparison</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;">You are comparing your method against a reference method using patient samples (EP09 / Passing-Bablok).</div>'
+    + '<button onclick="try{window.parent.loadToolFromWorkflow(\'method_comparison.html\',\'Method Comparison\')}catch(e){alert(\'Open Method Comparison from the sidebar\')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Method Comparison \u2192</button>'
+    + '</div>'
+
+    + '</div>'
+    + '</div>';
+}
+
 function _wfNextCard(step, nextTool, savedMsg, page, title) {
   return '<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">'
     + '<div>'
@@ -853,22 +892,41 @@ function calculateEP() {
     html += renderLevelResults(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl, d.levels);
   }
 
-  // Workflow: save first-level CVt and show next-step card
+  // Workflow: save all levels' CVt and show next-step choice card
   try {
-    var ld0 = _levelsData[0];
-    var wfCv = +ld0.stats.CVt.toFixed(2);
-    var wfAnalyte = ld0.cfg.analyte || '';
-    var wfUnit = ld0.cfg.unit || '';
-    localStorage.setItem('wf_precision', JSON.stringify({ cv: wfCv, analyte: wfAnalyte, unit: wfUnit, type: 'EP05' + (d.levels > 1 ? ' Level 1' : '') }));
-    html += _wfNextCard(1, 'Bias', 'CV% = ' + wfCv + '% (EP05' + (d.levels > 1 ? ', Level 1' : '') + ') saved', 'bias.html', 'Bias');
+    var wfLevels = _levelsData.map(function(ld, li) {
+      var allowCVEl = document.getElementById('lc-allowcv-' + li);
+      var allowCV = allowCVEl ? parseFloat(allowCVEl.value) : NaN;
+      var tae = null;
+      if (ep05EFLMKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[ep05EFLMKey]) {
+        var a = EFLM_DB[ep05EFLMKey];
+        var t = calcEFLMTiers(a.cvi, a.cvg)[ep05EFLMTier];
+        tae = +t.tea.toFixed(2);
+      }
+      return {
+        cv:      +ld.stats.CVt.toFixed(2),
+        analyte: ld.cfg.analyte || '',
+        unit:    ld.cfg.unit || '',
+        mean:    +ld.stats.grandMean.toFixed(4),
+        allowCV: (!isNaN(allowCV) && allowCV > 0) ? +allowCV.toFixed(2) : undefined,
+        tae:     tae !== null ? tae : undefined
+      };
+    });
+    localStorage.setItem('wf_precision', JSON.stringify({ levels: wfLevels, type: 'EP05' }));
+    html += _wfBiasChoiceCard(wfLevels);
   } catch(e) {}
+
+  // Add to Report button
+  html += '<button id="ep05-add-report-btn" onclick="addEP05ToReport()" style="margin-top:20px;width:100%;padding:12px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;">+ Add to Report</button>';
+  html += '<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">Expanded sections are included — collapse any section to exclude it.</p>';
 
   document.getElementById('ep-results').innerHTML = html;
 
   // Build charts after DOM update
   for (var lvl = 0; lvl < d.levels; lvl++) {
     buildLJChart(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl);
-    buildPrecisionCharts(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl);
+    buildDotChart(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl);
+    buildDistCVCharts(_levelsData[lvl].stats, _levelsData[lvl].cfg, lvl);
   }
 
   // Highlight outlier cells in data grid
@@ -884,6 +942,31 @@ function calculateEP() {
 
   // Switch to results tab
   document.querySelector('[data-tab="tab-results"]').click();
+}
+
+// ─────────────────────────────────────────────
+// Report section wrappers
+// ─────────────────────────────────────────────
+function epSection(title, content, openByDefault) {
+  var open = openByDefault !== false;
+  return '<div class="ep-rpt-section" data-open="' + open + '">'
+    + '<div class="ep-rpt-hdr" onclick="epToggleSection(this)">'
+    + '<div class="ep-rpt-hdr-left"><span class="ep-rpt-hdr-arrow">&#9660;</span><span>' + title + '</span></div>'
+    + '<span class="ep-rpt-badge">' + (open ? 'In report' : 'Excluded') + '</span>'
+    + '</div>'
+    + '<div class="ep-rpt-body"' + (open ? '' : ' style="display:none;"') + '>'
+    + content
+    + '</div>'
+    + '</div>';
+}
+
+function epToggleSection(hdr) {
+  var section = hdr.parentElement;
+  var body = hdr.nextElementSibling;
+  var isOpen = section.dataset.open === 'true';
+  section.dataset.open = isOpen ? 'false' : 'true';
+  body.style.display = isOpen ? 'none' : '';
+  hdr.querySelector('.ep-rpt-badge').textContent = isOpen ? 'Excluded' : 'In report';
 }
 
 // ─────────────────────────────────────────────
@@ -913,7 +996,8 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     ? 'Level ' + (lvl + 1) + (analyte ? ' — ' + analyte : '')
     : (analyte || 'Results');
 
-  var html = '<div class="card">';
+  var html = '<div class="card" id="ep-card-lvl-' + lvl + '">';
+  html += '<div id="ep-stats-lvl-' + lvl + '">';
   html += '<div class="section-title" style="font-size:16px;">' + escHtml(cardTitle) + (unit ? ' <span style="font-size:12px;font-weight:400;color:var(--muted);">(' + escHtml(unit) + ')</span>' : '') + '</div>';
 
   // Fixed limits note
@@ -938,6 +1022,13 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     });
     html += '</tbody></table>';
     html += '<button onclick="clearEPOutliers(' + lvl + ')" style="font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid #fca5a5;background:#fff;color:#b91c1c;font-weight:700;cursor:pointer;">Clear outlier values &amp; recalculate</button>';
+    html += '</div>';
+  }
+
+  // Single-day warning
+  if (stats._singleDayWarning) {
+    html += '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400e;">';
+    html += '<strong>&#9888; Only 1 day selected</strong> — Intermediate precision (St, Sb) cannot be meaningfully estimated from a single day. Sb reflects run-to-run variation within that day only, not day-to-day variation. Select at least 2 days for a valid intermediate precision estimate.';
     html += '</div>';
   }
 
@@ -1024,20 +1115,24 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   html += '<div class="section-header">Westgard Rules</div>';
   html += wgPanelHtml(wgVio);
 
+  html += '</div>'; // close ep-stats-lvl
+
   // Levey-Jennings chart
-  html += '<div class="section-header">Levey-Jennings Chart</div>';
-  html += '<div class="card" style="padding:12px;"><canvas id="lj-chart-' + lvl + '"></canvas></div>';
+  html += epSection('Levey-Jennings Chart',
+    '<div class="card" style="padding:12px;"><canvas id="lj-chart-' + lvl + '"></canvas></div>');
 
   // Individual measurements by day
-  html += '<div class="section-header">Individual Measurements by Day</div>';
-  html += '<div class="card" style="padding:12px;"><canvas id="dot-chart-' + lvl + '" style="height:250px;"></canvas></div>';
+  html += epSection('Individual Measurements by Day',
+    '<div class="card" style="padding:12px;"><canvas id="dot-chart-' + lvl + '" style="height:250px;"></canvas></div>');
 
   // Distribution + CV bar side by side
-  html += '<div class="section-header">Repeatability vs Intermediate Precision</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">';
-  html += '<div class="card" style="padding:12px;"><canvas id="dist-chart-' + lvl + '" style="height:200px;"></canvas></div>';
-  html += '<div class="card" style="padding:12px;"><canvas id="cv-chart-' + lvl + '" style="height:200px;"></canvas></div>';
-  html += '</div>';
+  html += epSection('Repeatability vs Intermediate Precision',
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'
+    + '<div class="card" style="padding:12px;"><canvas id="dist-chart-' + lvl + '" style="height:200px;"></canvas></div>'
+    + '<div class="card" style="padding:12px;"><canvas id="cv-chart-' + lvl + '" style="height:200px;"></canvas></div>'
+    + '</div>');
+
+  html += '<div id="ep-collaps-lvl-' + lvl + '">';
 
   // Collapsible: Run Means & Westgard
   html += '<div class="card" style="padding:10px 14px;">';
@@ -1099,20 +1194,19 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   html += summaryText(stats, cfg, wgVio, usingFixed, ctrlMu, ctrlS, hasAllowCV, pass);
   html += '</div>';
 
+  html += '</div>'; // close ep-collaps-lvl
   html += '</div>'; // main card
   return html;
 }
 
 // ─────────────────────────────────────────────
+// Dot chart
 // ─────────────────────────────────────────────
-// Dot, distribution, CV charts
-// ─────────────────────────────────────────────
-function buildPrecisionCharts(stats, cfg, lvl) {
+function buildDotChart(stats, cfg, lvl) {
   var unit = cfg.unit || 'Value';
   var grpColors = ['#2b6cb0','#e05c2e','#118a4b','#7c3aed','#b42318',
                    '#0891b2','#d97706','#059669','#9333ea','#dc2626'];
 
-  // Group complete runs by day
   var dayMap = {};
   stats.completeRuns.forEach(function(r) {
     if (!dayMap[r.day]) dayMap[r.day] = [];
@@ -1120,65 +1214,88 @@ function buildPrecisionCharts(stats, cfg, lvl) {
   });
   var days = Object.keys(dayMap).sort(function(a,b){ return +a - +b; });
 
-  // ── Dot chart ──────────────────────────────
   var dotId = 'dot-chart-' + lvl;
   destroyChart(dotId);
   var dotCanvas = document.getElementById(dotId);
-  if (dotCanvas) {
-    var dotDatasets = [];
-    var xPos = 0;
-    var xTicks = [], xTickLabels = [];
+  if (!dotCanvas) return;
 
-    days.forEach(function(day, di) {
-      var runs = dayMap[day];
-      var col = grpColors[di % grpColors.length];
-      var dayPts = [];
+  var dotDatasets = [];
+  var xPos = 0;
+  var xTicks = [], xTickLabels = [];
 
-      runs.forEach(function(r, ri) {
-        r.reps.forEach(function(v, repI) {
-          var x = xPos + repI * 0.12 + ri * (r.reps.length * 0.14 + 0.1);
-          dayPts.push({ x: x, y: v });
-        });
-        xPos += r.reps.length * 0.14 + 0.2;
+  days.forEach(function(day, di) {
+    var runs = dayMap[day];
+    var col = grpColors[di % grpColors.length];
+    var dayPts = [];
+
+    runs.forEach(function(r, ri) {
+      r.reps.forEach(function(v, repI) {
+        var x = xPos + repI * 0.12 + ri * (r.reps.length * 0.14 + 0.1);
+        dayPts.push({ x: x, y: v });
       });
-
-      // Day mean line
-      var dayVals = runs.reduce(function(acc,r){ return acc.concat(r.reps); }, []);
-      var dayMean = dayVals.reduce(function(s,v){return s+v;},0) / dayVals.length;
-      var xs = dayPts.map(function(p){return p.x;});
-      var minX = Math.min.apply(null,xs) - 0.05;
-      var maxX = Math.max.apply(null,xs) + 0.05;
-
-      dotDatasets.push({ label: 'Day ' + day, data: dayPts, backgroundColor: col, pointRadius: 5, pointHoverRadius: 7, showLine: false });
-      dotDatasets.push({ label: '_m' + di, data: [{x:minX,y:dayMean},{x:maxX,y:dayMean}], borderColor: col, borderWidth: 1.5, borderDash:[4,3], pointRadius:0, showLine:true, fill:false });
-
-      // Tick at midpoint of day
-      var midX = (minX + maxX) / 2;
-      xTicks.push(midX);
-      xTickLabels.push('Day ' + day);
-      xPos += 0.3;
+      xPos += r.reps.length * 0.14 + 0.2;
     });
 
-    // Grand mean
-    dotDatasets.push({ label: 'Grand mean', data:[{x:-0.3,y:stats.grandMean},{x:xPos,y:stats.grandMean}],
-      borderColor:'#334155', borderWidth:2, borderDash:[6,4], pointRadius:0, showLine:true, fill:false });
+    var dayVals = runs.reduce(function(acc,r){ return acc.concat(r.reps); }, []);
+    var dayMean = dayVals.reduce(function(s,v){return s+v;},0) / dayVals.length;
+    var xs = dayPts.map(function(p){return p.x;});
+    var minX = Math.min.apply(null,xs) - 0.05;
+    var maxX = Math.max.apply(null,xs) + 0.05;
 
-    _epCharts[dotId] = new Chart(dotCanvas, {
-      type: 'scatter',
-      data: { datasets: dotDatasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { filter: function(item){ return !item.text.startsWith('_m'); }, font:{size:11} } },
-          tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(4); } } }
+    dotDatasets.push({ label: 'Day ' + day, data: dayPts, backgroundColor: col, pointRadius: 5, pointHoverRadius: 7, showLine: false });
+    dotDatasets.push({ label: '_m' + di, data: [{x:minX,y:dayMean},{x:maxX,y:dayMean}], borderColor: col, borderWidth: 1.5, borderDash:[4,3], pointRadius:0, showLine:true, fill:false });
+
+    var midX = (minX + maxX) / 2;
+    xTicks.push(midX);
+    xTickLabels.push('Day ' + day);
+    xPos += 0.3;
+  });
+
+  dotDatasets.push({ label: 'Grand mean', data:[{x:-0.3,y:stats.grandMean},{x:xPos,y:stats.grandMean}],
+    borderColor:'#334155', borderWidth:2, borderDash:[6,4], pointRadius:0, showLine:true, fill:false });
+
+  _epCharts[dotId] = new Chart(dotCanvas, {
+    type: 'scatter',
+    data: { datasets: dotDatasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { filter: function(item){ return !item.text.startsWith('_m') && item.text !== 'Grand mean'; }, font:{size:11} },
+          onClick: function(e, legendItem, legend) {
+            Chart.defaults.plugins.legend.onClick.call(this, e, legendItem, legend);
+            var chart = legend.chart;
+            var hiddenDayNums = [];
+            // Also sync the hidden _m mean-bar dataset for each day
+            chart.data.datasets.forEach(function(ds, i) {
+              if (ds.label && ds.label.startsWith('Day ')) {
+                var meta = chart.getDatasetMeta(i);
+                var isHidden = meta.hidden;
+                if (isHidden) hiddenDayNums.push(parseInt(ds.label.replace('Day ', '')));
+                // The mean-bar dataset is always the next one (_m{di})
+                var mMeta = chart.getDatasetMeta(i + 1);
+                if (mMeta) mMeta.hidden = isHidden;
+              }
+            });
+            chart.update();
+            refreshEP05Level(lvl, hiddenDayNums);
+          }
         },
-        scales: {
-          x: { display: false },
-          y: { title: { display: true, text: unit, font:{size:11} }, ticks: { font:{size:11} } }
-        }
+        tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(4); } } }
+      },
+      scales: {
+        x: { display: false },
+        y: { title: { display: true, text: unit, font:{size:11} }, ticks: { font:{size:11} } }
       }
-    });
-  }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// Distribution + CV charts
+// ─────────────────────────────────────────────
+function buildDistCVCharts(stats, cfg, lvl) {
+  var unit = cfg.unit || 'Value';
 
   // ── Distribution chart: Sw vs St ────────────────────────────────────────
   var distId = 'dist-chart-' + lvl;
@@ -1234,6 +1351,47 @@ function buildPrecisionCharts(stats, cfg, lvl) {
       }
     });
   }
+}
+
+// ─────────────────────────────────────────────
+// Refresh stats for a level when days are toggled
+// ─────────────────────────────────────────────
+function refreshEP05Level(lvl, hiddenDayNums) {
+  var ld = _levelsData[lvl];
+  if (!ld) return;
+  var d = getDesign();
+
+  // Filter original runData to exclude hidden days
+  var filteredRunData = ld.runData.filter(function(r) {
+    return hiddenDayNums.indexOf(r.day) === -1;
+  });
+  if (filteredRunData.filter(function(r) { return r.complete; }).length < 2) return;
+
+  var newStats = computeEP05(filteredRunData, d.reps);
+  if (!newStats) return;
+  newStats.outlierCells = [];
+
+  // Count distinct visible days
+  var visibleDays = {};
+  filteredRunData.forEach(function(r) { if (r.complete) visibleDays[r.day] = true; });
+  newStats._singleDayWarning = Object.keys(visibleDays).length < 2;
+
+  // Update stats and collapsibles sections (chart canvases stay untouched)
+  var statsPanel = document.getElementById('ep-stats-lvl-' + lvl);
+  var collapsPanel = document.getElementById('ep-collaps-lvl-' + lvl);
+  if (!statsPanel || !collapsPanel) return;
+
+  // Render a temporary full card to extract the two sections
+  var tempDiv = document.createElement('div');
+  tempDiv.innerHTML = renderLevelResults(newStats, ld.cfg, lvl, _levelsData.length);
+  var newStatsEl = tempDiv.querySelector('#ep-stats-lvl-' + lvl);
+  var newCollapsEl = tempDiv.querySelector('#ep-collaps-lvl-' + lvl);
+  if (newStatsEl) statsPanel.innerHTML = newStatsEl.innerHTML;
+  if (newCollapsEl) collapsPanel.innerHTML = newCollapsEl.innerHTML;
+
+  // Rebuild LJ and dist/CV charts with filtered stats (dot chart stays as-is)
+  buildLJChart(newStats, ld.cfg, lvl);
+  buildDistCVCharts(newStats, ld.cfg, lvl);
 }
 
 // Levey-Jennings chart builder
@@ -1447,7 +1605,7 @@ function toggleColl(header) {
   var body  = header.nextElementSibling;
   if (body) {
     var isOpen = body.style.display !== 'none' && body.style.display !== '';
-    body.style.display = isOpen ? 'none' : '';
+    body.style.display = isOpen ? 'none' : 'block';
     if (arrow) arrow.classList.toggle('open', !isOpen);
   }
 }
@@ -1683,6 +1841,12 @@ function loadScenarioEP05(n) {
     document.getElementById('gen-mean-1').value = '12.0';
     document.getElementById('gen-cvw-1').value = '0.5';
     document.getElementById('gen-cvb-1').value = '0.8';
+    document.getElementById('lc-analyte-0') && (document.getElementById('lc-analyte-0').value = 'Glucose');
+    document.getElementById('lc-unit-0')    && (document.getElementById('lc-unit-0').value    = 'mmol/L');
+    document.getElementById('lc-allowcv-0') && (document.getElementById('lc-allowcv-0').value = '1.4');
+    document.getElementById('lc-analyte-1') && (document.getElementById('lc-analyte-1').value = 'Glucose');
+    document.getElementById('lc-unit-1')    && (document.getElementById('lc-unit-1').value    = 'mmol/L');
+    document.getElementById('lc-allowcv-1') && (document.getElementById('lc-allowcv-1').value = '1.4');
   } else if (n === 2) {
     // HbA1c — 1 level, borderline
     document.querySelector('input[name="lvl-count"][value="1"]').checked = true;
@@ -1690,6 +1854,9 @@ function loadScenarioEP05(n) {
     document.getElementById('gen-mean-0').value = '52.0';
     document.getElementById('gen-cvw-0').value = '1.8';
     document.getElementById('gen-cvb-0').value = '2.2';
+    document.getElementById('lc-analyte-0') && (document.getElementById('lc-analyte-0').value = 'HbA1c');
+    document.getElementById('lc-unit-0')    && (document.getElementById('lc-unit-0').value    = 'mmol/mol');
+    document.getElementById('lc-allowcv-0') && (document.getElementById('lc-allowcv-0').value = '3.0');
   } else if (n === 3) {
     // Troponin — 2 levels, fails
     document.querySelector('input[name="lvl-count"][value="2"]').checked = true;
@@ -1700,6 +1867,12 @@ function loadScenarioEP05(n) {
     document.getElementById('gen-mean-1').value = '52.0';
     document.getElementById('gen-cvw-1').value = '2.0';
     document.getElementById('gen-cvb-1').value = '2.5';
+    document.getElementById('lc-analyte-0') && (document.getElementById('lc-analyte-0').value = 'Troponin');
+    document.getElementById('lc-unit-0')    && (document.getElementById('lc-unit-0').value    = 'ng/L');
+    document.getElementById('lc-allowcv-0') && (document.getElementById('lc-allowcv-0').value = '5.0');
+    document.getElementById('lc-analyte-1') && (document.getElementById('lc-analyte-1').value = 'Troponin');
+    document.getElementById('lc-unit-1')    && (document.getElementById('lc-unit-1').value    = 'ng/L');
+    document.getElementById('lc-allowcv-1') && (document.getElementById('lc-allowcv-1').value = '5.0');
   }
 
   // Clear EFLM analyte selection
@@ -1707,6 +1880,117 @@ function loadScenarioEP05(n) {
   if (eflmSel) { eflmSel.value = ''; ep05OnAnalyteChange(); }
 
   generateEPData();
+}
+
+// ─────────────────────────────────────────────
+// Add to Report
+// ─────────────────────────────────────────────
+async function addEP05ToReport() {
+  // Capture all chart images before building HTML
+  var chartImages = {};
+  Object.keys(_epCharts).forEach(function(id) {
+    try { chartImages[id] = _epCharts[id].toBase64Image('image/png', 1.0); } catch(e) {}
+  });
+
+  // Collect expanded sections
+  var sections = document.querySelectorAll('#ep-results .ep-rpt-section[data-open="true"]');
+  if (sections.length === 0) {
+    alert('No sections are expanded. Expand at least one section to include in the report.');
+    return;
+  }
+
+  // Also collect stats and collapsibles panels (always included if they exist)
+  var reportParts = [];
+
+  // For each level, grab stats panel
+  _levelsData.forEach(function(ld, lvl) {
+    var statsEl = document.getElementById('ep-stats-lvl-' + lvl);
+    if (statsEl) reportParts.push('<div class="level-block">' + statsEl.outerHTML + '</div>');
+  });
+
+  // Grab each expanded section, replacing canvas with image
+  sections.forEach(function(section) {
+    var clone = section.cloneNode(true);
+    // Remove toggle header — just show content
+    var hdr = clone.querySelector('.ep-rpt-hdr');
+    if (hdr) {
+      var titleEl = hdr.querySelector('.ep-rpt-hdr-left span:last-child');
+      var titleText = titleEl ? titleEl.textContent : '';
+      hdr.outerHTML = '<h3 style="font-size:13px;font-weight:700;color:#374151;margin:16px 0 8px;">' + titleText + '</h3>';
+    }
+    // Replace canvas elements with captured images
+    clone.querySelectorAll('canvas').forEach(function(canvas) {
+      var img = chartImages[canvas.id];
+      if (img) {
+        var imgEl = document.createElement('img');
+        imgEl.src = img;
+        imgEl.style.width = '100%';
+        imgEl.style.maxHeight = '320px';
+        imgEl.style.objectFit = 'contain';
+        canvas.parentNode.replaceChild(imgEl, canvas);
+      }
+    });
+    reportParts.push(clone.querySelector('.ep-rpt-body').innerHTML);
+  });
+
+  // Collapsibles that are open
+  _levelsData.forEach(function(ld, lvl) {
+    var collEl = document.getElementById('ep-collaps-lvl-' + lvl);
+    if (collEl) reportParts.push(collEl.innerHTML);
+  });
+
+  var analyte = (_levelsData[0] && _levelsData[0].cfg.analyte) || 'Precision Study';
+  var dateStr = new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+
+  var reportHtml = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    + '<title>EP05 Precision Report — ' + analyte + '</title>'
+    + '<style>'
+    + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:12px;color:#1e293b;margin:0;padding:24px;}'
+    + 'h1{font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px;}'
+    + 'h3{font-size:13px;font-weight:700;color:#374151;margin:16px 0 8px;}'
+    + '.meta{font-size:11px;color:#6b7280;margin-bottom:20px;}'
+    + '.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}'
+    + '.kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;}'
+    + '.kpi .label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}'
+    + '.kpi .value{font-size:16px;font-weight:800;color:#0f172a;}'
+    + '.kpi .sub{font-size:10px;color:#6b7280;}'
+    + '.card{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;}'
+    + '.verdict{border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;font-weight:700;}'
+    + '.verdict.pass{background:#f0fdf4;border:1px solid #86efac;color:#166534;}'
+    + '.verdict.fail{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;}'
+    + 'table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}'
+    + 'th{background:#f1f5f9;padding:5px 8px;border:1px solid #e2e8f0;text-align:left;font-size:10px;text-transform:uppercase;}'
+    + 'td{padding:5px 8px;border:1px solid #e2e8f0;}'
+    + '.section-title{font-size:15px;font-weight:800;color:#0f172a;margin-bottom:10px;}'
+    + '.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;line-height:1.7;}'
+    + 'img{display:block;}'
+    + '@media print{body{padding:0;}}'
+    + '</style></head><body>'
+    + '<h1>EP05 Precision Report — ' + analyte + '</h1>'
+    + '<div class="meta">Generated ' + dateStr + ' &nbsp;·&nbsp; Clinical Statistics</div>'
+    + '<hr style="border:none;border-top:1px solid #e2e8f0;margin-bottom:16px;">'
+    + reportParts.join('<hr style="border:none;border-top:1px solid #f1f5f9;margin:16px 0;">')
+    + '</body></html>';
+
+  try {
+    window.parent.addToReport({
+      tool: 'EP05 Precision',
+      analyte: analyte,
+      html: reportHtml
+    });
+    // Visual feedback on button
+    var btn = document.getElementById('ep05-add-report-btn');
+    if (btn) {
+      btn.textContent = '✓ Added to Report';
+      btn.style.background = '#16a34a';
+      setTimeout(function() {
+        btn.textContent = '+ Add to Report';
+        btn.style.background = '#0f172a';
+      }, 2000);
+    }
+  } catch(e) {
+    alert('Could not add to report: ' + (e && e.message ? e.message : String(e)));
+  }
 }
 </script>
 </body>

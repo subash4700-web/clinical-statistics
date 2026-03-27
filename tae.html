@@ -66,6 +66,17 @@
     .ex-param.warn{background:#fef9c3;color:#854d0e;}
     .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
     .ex-btn:hover{opacity:.88;}
+
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 <body>
@@ -89,14 +100,17 @@
           <span class="tg-badge tg-design">Enter CV% + Bias%</span>
           <span class="tg-badge tg-std">CLSI EP23-A · Six Sigma</span>
         </div>
-        <div class="tg-when">Use after completing Precision and Bias studies. Combines both results into a sigma metric to guide QC strategy design. No raw data entry — enter the summary statistics from your studies.</div>
+        <div class="tg-when">Use after completing Precision and Bias/Method Comparison studies. Combines both results into a sigma metric to guide QC strategy design. No raw data entry — enter the summary statistics from your studies. Supports two concentration levels.</div>
         <details class="tg-details">
-          <summary>Details</summary>
+          <summary>Details &amp; Concepts</summary>
           <div class="tg-body">
-            <div class="tg-row"><span class="tg-label">Input</span><span>CV% from precision study + Bias% from trueness study + TEa from EFLM, CLIA, or your specification</span></div>
-            <div class="tg-row"><span class="tg-label">Formula</span><span>TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; Sigma = (TEa − |Bias%|) / CV%</span></div>
-            <div class="tg-row"><span class="tg-label">Output</span><span>TE%, sigma metric, QC rule recommendation (Westgard), patient result distribution chart</span></div>
-            <div class="tg-row"><span class="tg-label">Note</span><span>Sigma ≥ 6 · Sigma 4–6 · Sigma 3–4 · Sigma &lt; 3</span></div>
+            <div class="tg-row"><span class="tg-label">Input</span><span>CV% from precision study (per level) + Bias% from trueness or method comparison study + TAE% from EFLM, CLIA, or your specification</span></div>
+            <div class="tg-row"><span class="tg-label">Formula</span><span>TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; Sigma = (TAE% − |Bias%|) / CV%</span></div>
+            <div class="tg-row"><span class="tg-label">TAE</span><span>Total Allowable Error — the maximum combined error (systematic + random) that a patient result may have before it affects clinical decisions. Set from EFLM biological variation, CLIA proficiency limits, or your laboratory's own quality goals.</span></div>
+            <div class="tg-row"><span class="tg-label">Sigma</span><span>Sigma metric quantifies how much of the TAE budget is consumed by your method's bias and imprecision. Sigma ≥ 6 = world class. 4–6 = good. 3–4 = marginal — intensive QC needed. &lt; 3 = poor — root-cause investigation required before release.</span></div>
+            <div class="tg-row"><span class="tg-label">Two levels</span><span>CV% often differs between concentration levels — typically higher (%) at low concentrations. Both levels must independently meet TAE. Bias is assumed constant across levels unless proportional bias was found in method comparison (slope ≠ 1), in which case enter level-specific bias manually.</span></div>
+            <div class="tg-row"><span class="tg-label">QC strategy</span><span>Sigma drives your QC rule selection (Westgard). High sigma = simple rules, low frequency. Low sigma = tight multirules, frequent runs. The goal is to detect errors before they affect patient results.</span></div>
+            <div class="tg-row"><span class="tg-label">Output</span><span>TE%, sigma metric per level, QC rule recommendation, patient result distribution chart</span></div>
           </div>
         </details>
       </div>
@@ -132,24 +146,30 @@
         <label class="field-label">Unit</label>
         <input type="text" id="inp-unit" placeholder="e.g. mmol/L, %">
 
-        <label class="field-label" style="margin-top:10px;">Bias% <span style="font-weight:400;color:var(--muted);">(absolute value)</span></label>
+        <label class="field-label" style="margin-top:10px;">Measured Bias% <span style="font-weight:400;color:var(--muted);">(from bias or method comparison study)</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-bias" min="0" step="0.1" placeholder="e.g. 2.0" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
 
-        <label class="field-label">CV% <span style="font-weight:400;color:var(--muted);">(imprecision)</span></label>
+        <label class="field-label">Measured CV% — Level 1 <span style="font-weight:400;color:var(--muted);">(from precision study)</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-cv" min="0" step="0.1" placeholder="e.g. 1.5" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
 
-        <label class="field-label">Total Allowable Error — TAE%</label>
+        <label class="field-label">Measured CV% — Level 2 <span style="font-weight:400;color:var(--muted);">(optional — leave blank for single-level)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="inp-cv-2" min="0" step="0.1" placeholder="Leave blank if single level" style="flex:1;">
+          <span style="font-size:13px;color:var(--muted);">%</span>
+        </div>
+
+        <label class="field-label">Total Allowable Error — TAE% <span style="font-weight:400;color:var(--muted);">(specification / limit)</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="inp-tae" min="0" step="0.5" placeholder="e.g. 8.0" style="flex:1;">
           <span style="font-size:13px;color:var(--muted);">%</span>
         </div>
-        <p class="note">From EFLM, CLIA, or your lab's specification. Or use the analyte lookup above.</p>
+        <p class="note">From EFLM, CLIA, or your lab's specification. Use the analyte lookup above to auto-fill.</p>
 
         <div class="error-msg" id="input-error"></div>
 
@@ -239,18 +259,34 @@
   <div id="tab-results" class="tab-content">
     <div id="results-area">
 
-      <!-- Sigma badge -->
-      <div id="sigmaBadge" class="sigma-badge sigma-poor">
-        <div class="sig-value" id="sigValue">—</div>
-        <div class="sig-label">Sigma metric</div>
-        <div class="sig-level" id="sigLevel">—</div>
-      </div>
-
-      <div class="results-col">
-
-        <!-- KPI stats -->
-        <div class="card">
-          <div class="section-title">Results</div>
+      <!-- Section 1: Sigma Metric & Results -->
+      <div class="rpt-section" data-open="true" id="rpt-sec-results">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Sigma Metric &amp; Results</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <!-- Sigma badge(s) — single or dual level -->
+          <div id="sigma-row" style="display:flex;gap:12px;margin-bottom:12px;">
+            <div style="flex:1;min-width:0;">
+              <div id="level1-label" style="display:none;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:4px;">Level 1</div>
+              <div id="sigmaBadge" class="sigma-badge sigma-poor">
+                <div class="sig-value" id="sigValue">—</div>
+                <div class="sig-label">Sigma metric</div>
+                <div class="sig-level" id="sigLevel">—</div>
+              </div>
+            </div>
+            <div id="level2-sigma-col" style="flex:1;min-width:0;display:none;">
+              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:4px;">Level 2</div>
+              <div id="sigmaBadge2" class="sigma-badge sigma-poor">
+                <div class="sig-value" id="sigValue2">—</div>
+                <div class="sig-label">Sigma metric</div>
+                <div class="sig-level" id="sigLevel2">—</div>
+              </div>
+            </div>
+          </div>
+          <!-- KPI stats -->
           <div class="stat-grid-3">
             <div class="stat-item" id="stat-bias-box">
               <div class="sk">|Bias%|</div>
@@ -268,13 +304,19 @@
               <div class="ss" id="stat-verdict-sub">—</div>
             </div>
           </div>
-          <div id="insight-box" class="insight-box insight-blue"></div>
+          <div id="insight-box" class="insight-box insight-blue" style="margin-top:8px;"></div>
           <p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>
         </div>
+      </div>
 
-        <!-- Formula -->
-        <div class="card">
-          <div class="section-title">Formula</div>
+      <!-- Section 2: Formula & Calculations -->
+      <div class="rpt-section" data-open="true" id="rpt-sec-formula">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Formula &amp; Calculations</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
           <div class="formula-box">
             <span class="f-label">Total Error:</span>
             TE = |Bias%| + 1.65 &times; CV%
@@ -287,28 +329,48 @@
           </div>
           <div id="formula-values" style="margin-top:8px;font-size:12px;color:#344054;line-height:2;"></div>
         </div>
+      </div>
 
-        <!-- QC implications -->
-        <div class="card">
-          <div class="section-title">QC Implications</div>
+      <!-- Section 3: QC Strategy -->
+      <div class="rpt-section" data-open="true" id="rpt-sec-qc">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">QC Strategy</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
           <div id="qc-box" class="qc-box qc-poor"></div>
         </div>
+      </div>
 
-        <!-- Charts -->
-        <div class="section-header">Patient Result Distribution vs TAE Limits</div>
-        <div class="card" style="padding:12px;">
+      <!-- Section 4: Distribution Chart -->
+      <div class="rpt-section" data-open="true" id="rpt-sec-dist">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Patient Result Distribution vs TAE Limits</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
           <canvas id="dist-chart" style="height:280px;"></canvas>
         </div>
+      </div>
 
-        <div class="section-header">Error Budget Breakdown</div>
-        <div class="card" style="padding:12px;">
+      <!-- Section 5: Error Budget Chart -->
+      <div class="rpt-section" data-open="true" id="rpt-sec-budget">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Error Budget Breakdown</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
           <canvas id="budget-chart" style="height:160px;"></canvas>
         </div>
+      </div>
 
-      </div><!-- /results-col -->
     </div><!-- /results-area -->
     <div class="btn-row" id="export-row" style="display:none;margin-top:16px;">
       <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
+      <button class="btn-secondary" id="tae-add-report-btn" onclick="addTAEToReport()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Add to Report</button>
     </div>
   </div><!-- /tab-results -->
 </div><!-- /container -->
@@ -414,79 +476,109 @@ function calculate() {
 
   var biasPct = parseFloat(document.getElementById('inp-bias').value);
   var cvPct   = parseFloat(document.getElementById('inp-cv').value);
+  var cvPct2  = parseFloat(document.getElementById('inp-cv-2').value);
   var taePct  = parseFloat(document.getElementById('inp-tae').value);
+  var isMultiLevel = !isNaN(cvPct2) && cvPct2 > 0;
 
   if (isNaN(biasPct) || biasPct < 0) { showError('Enter a valid Bias% (0 or greater).'); return; }
-  if (isNaN(cvPct)   || cvPct <= 0)  { showError('Enter a valid CV% (greater than 0).'); return; }
+  if (isNaN(cvPct)   || cvPct <= 0)  { showError('Enter a valid CV% Level 1 (greater than 0).'); return; }
   if (isNaN(taePct)  || taePct <= 0) { showError('Enter a valid TAE% (greater than 0).'); return; }
 
   var absBias = Math.abs(biasPct);
-  var te      = absBias + 1.65 * cvPct;
-  var sigma   = (taePct - absBias) / cvPct;
-  var passes  = te <= taePct;
 
-  // % outside TAE — use a reference mean of 100 (works in % space)
+  // ── Level 1 ──
+  var te1     = absBias + 1.65 * cvPct;
+  var sigma1  = (taePct - absBias) / cvPct;
+  var passes1 = te1 <= taePct;
   var trueMean = 100;
-  var measMean = trueMean * (1 + absBias / 100);
-  var sd       = trueMean * cvPct / 100;
-  var upperLimit = trueMean * (1 + taePct / 100);
-  var lowerLimit = trueMean * (1 - taePct / 100);
-  var zUpper = (upperLimit - measMean) / sd;
-  var zLower = (lowerLimit - measMean) / sd;
-  var pctInside = (normalCDF(zUpper) - normalCDF(zLower)) * 100;
-  var pctOut = Math.max(0, 100 - pctInside);
+  var measMean1 = trueMean * (1 + absBias / 100);
+  var sd1 = trueMean * cvPct / 100;
+  var ul = trueMean * (1 + taePct / 100), ll = trueMean * (1 - taePct / 100);
+  var pctOut1 = Math.max(0, 100 - (normalCDF((ul - measMean1) / sd1) - normalCDF((ll - measMean1) / sd1)) * 100);
 
-  // Show results panel
+  // ── Level 2 (optional) ──
+  var te2, sigma2, passes2, pctOut2;
+  if (isMultiLevel) {
+    te2     = absBias + 1.65 * cvPct2;
+    sigma2  = (taePct - absBias) / cvPct2;
+    passes2 = te2 <= taePct;
+    var sd2 = trueMean * cvPct2 / 100;
+    var measMean2 = trueMean * (1 + absBias / 100);
+    pctOut2 = Math.max(0, 100 - (normalCDF((ul - measMean2) / sd2) - normalCDF((ll - measMean2) / sd2)) * 100);
+  }
+
+  // Show results panel, switch tab
   document.getElementById('export-row').style.display = 'flex';
-  // Switch to results tab
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
   document.querySelector('[data-tab="tab-results"]').classList.add('active');
   document.getElementById('tab-results').classList.add('active');
 
-  // Sigma badge
-  var badge = document.getElementById('sigmaBadge');
-  badge.className = 'sigma-badge ' + getSigmaClass(sigma);
-  document.getElementById('sigValue').textContent = fmt(sigma, 2);
-  document.getElementById('sigLevel').textContent = getSigmaLevel(sigma);
+  // ── Sigma badges ──
+  document.getElementById('level1-label').style.display = isMultiLevel ? 'block' : 'none';
+  document.getElementById('level2-sigma-col').style.display = isMultiLevel ? 'block' : 'none';
 
-  // Stats
+  var badge = document.getElementById('sigmaBadge');
+  badge.className = 'sigma-badge ' + getSigmaClass(sigma1);
+  document.getElementById('sigValue').textContent = fmt(sigma1, 2);
+  document.getElementById('sigLevel').textContent = getSigmaLevel(sigma1);
+
+  if (isMultiLevel) {
+    document.getElementById('sigmaBadge2').className = 'sigma-badge ' + getSigmaClass(sigma2);
+    document.getElementById('sigValue2').textContent = fmt(sigma2, 2);
+    document.getElementById('sigLevel2').textContent = getSigmaLevel(sigma2);
+  }
+
+  // ── Stats (Level 1) ──
   var biasClass = absBias < taePct * 0.3 ? 'pass' : absBias < taePct * 0.5 ? 'warn' : 'fail';
   document.getElementById('stat-bias-box').className = 'stat-item ' + biasClass;
   document.getElementById('stat-bias-val').textContent = fmt(absBias, 1) + '%';
   document.getElementById('stat-bias-sub').textContent = fmt(absBias / taePct * 100, 0) + '% of TAE consumed';
 
-  document.getElementById('stat-te-box').className = 'stat-item ' + (passes ? 'pass' : 'fail');
-  document.getElementById('stat-te-val').textContent = fmt(te, 2) + '%';
+  document.getElementById('stat-te-box').className = 'stat-item ' + (passes1 ? 'pass' : 'fail');
+  document.getElementById('stat-te-val').textContent = fmt(te1, 2) + '%';
   document.getElementById('stat-te-sub').textContent = 'TAE = ' + fmt(taePct, 1) + '%';
 
-  document.getElementById('stat-verdict-box').className = 'stat-item ' + (passes ? 'pass' : 'fail');
-  document.getElementById('stat-verdict-val').textContent = passes ? 'Meets specification' : 'Exceeds TAE';
-  document.getElementById('stat-verdict-sub').textContent = fmt(pctOut, 3) + '% of results exceed TAE';
+  document.getElementById('stat-verdict-box').className = 'stat-item ' + (passes1 ? 'pass' : 'fail');
+  document.getElementById('stat-verdict-val').textContent = passes1 ? 'Meets specification' : 'Exceeds TAE';
+  document.getElementById('stat-verdict-sub').textContent = fmt(pctOut1, 3) + '% of results exceed TAE';
 
-  // Formula values
-  document.getElementById('formula-values').innerHTML =
-    'TE = ' + fmt(absBias,1) + ' + 1.65 \u00d7 ' + fmt(cvPct,1) + ' = <b>' + fmt(te,2) + '%</b><br>' +
-    '\u03c3 = (' + fmt(taePct,1) + ' \u2212 ' + fmt(absBias,1) + ') / ' + fmt(cvPct,1) + ' = <b>' + fmt(sigma,2) + '</b><br>' +
-    (passes
-      ? '<span style="color:#15803d;font-weight:700;">\u2713 ' + fmt(te,2) + '% \u2264 TAE ' + fmt(taePct,1) + '% \u2014 Meets specification</span>'
-      : '<span style="color:#b91c1c;font-weight:700;">\u2717 ' + fmt(te,2) + '% > TAE ' + fmt(taePct,1) + '% \u2014 Exceeds TAE</span>');
+  // ── Formula ──
+  var fv = 'Level 1: TE = ' + fmt(absBias,1) + ' + 1.65\u00d7' + fmt(cvPct,1) + ' = <b>' + fmt(te1,2) + '%</b> &nbsp; \u03c3 = <b>' + fmt(sigma1,2) + '</b> &nbsp;'
+    + (passes1 ? '<span style="color:#15803d;">\u2713 Meets TAE</span>' : '<span style="color:#b91c1c;">\u2717 Exceeds TAE</span>');
+  if (isMultiLevel) {
+    fv += '<br>Level 2: TE = ' + fmt(absBias,1) + ' + 1.65\u00d7' + fmt(cvPct2,1) + ' = <b>' + fmt(te2,2) + '%</b> &nbsp; \u03c3 = <b>' + fmt(sigma2,2) + '</b> &nbsp;'
+      + (passes2 ? '<span style="color:#15803d;">\u2713 Meets TAE</span>' : '<span style="color:#b91c1c;">\u2717 Exceeds TAE</span>');
+  }
+  document.getElementById('formula-values').innerHTML = fv;
 
-  // QC box
-  updateQCBox(sigma);
+  // ── QC box (use worst-case sigma) ──
+  var worstSigma = isMultiLevel ? Math.min(sigma1, sigma2) : sigma1;
+  updateQCBox(worstSigma);
 
-  // Insight
-  updateInsight(sigma, absBias, cvPct, te, taePct, passes, pctOut);
+  // ── Insight (Level 1; append Level 2 note if multi-level) ──
+  updateInsight(sigma1, absBias, cvPct, te1, taePct, passes1, pctOut1);
+  if (isMultiLevel) {
+    var insightBox = document.getElementById('insight-box');
+    var overallPass = passes1 && passes2;
+    insightBox.innerHTML += '<br><b>Level 2:</b> \u03c3 = ' + fmt(sigma2,2) + ' &nbsp;&middot;&nbsp; TE = ' + fmt(te2,2) + '% &nbsp;&middot;&nbsp;'
+      + (passes2 ? ' <span style="color:#15803d;">Meets TAE</span>' : ' <span style="color:#b91c1c;">Exceeds TAE</span>');
+    if (!overallPass) {
+      insightBox.innerHTML += ' &nbsp;&mdash;&nbsp; <b>Method fails at least one level.</b>';
+    }
+  }
 
-  // Charts
-  drawDistChart(trueMean, measMean, sd, taePct, pctOut);
-  drawBudgetChart(absBias, cvPct, taePct);
+  // ── Charts ──
+  drawDistChart(absBias, cvPct, taePct, isMultiLevel ? cvPct2 : null);
+  drawBudgetChart(absBias, cvPct, taePct, isMultiLevel ? cvPct2 : null);
 
-  // Store for export
   window._taeResult = {
     analyte: document.getElementById('inp-analyte').value.trim() || 'Sample',
     unit:    document.getElementById('inp-unit').value.trim(),
-    biasPct: absBias, cvPct, taePct, te, sigma, passes, pctOut
+    biasPct: absBias, cvPct, cvPct2: isMultiLevel ? cvPct2 : null, taePct,
+    te1, sigma1, passes1, pctOut1,
+    te2: isMultiLevel ? te2 : null, sigma2: isMultiLevel ? sigma2 : null,
+    passes2: isMultiLevel ? passes2 : null, isMultiLevel
   };
 }
 
@@ -535,59 +627,79 @@ function updateInsight(sigma, biasPct, cvPct, te, taePct, passes, pctOut) {
   box.innerHTML = msg;
 }
 
-function drawDistChart(trueMean, measMean, sd, taePct, pctOut) {
+function drawDistChart(biasPct, cvPct, taePct, cvPct2) {
   if (distChart) { distChart.destroy(); distChart = null; }
 
-  var upperLimit = trueMean * (1 + taePct / 100);
-  var lowerLimit = trueMean * (1 - taePct / 100);
-  var range = Math.max(sd * 5, Math.abs(measMean - trueMean) + sd * 4.5, taePct / 100 * trueMean + sd * 2);
+  var isMulti = cvPct2 != null && !isNaN(cvPct2) && cvPct2 > 0;
+  var ul = taePct, ll = -taePct;
+  var mu = biasPct; // bias is the mean deviation
 
-  var nPts = 200;
-  var labels = [], mainData = [], outsideData = [];
-  var step = 2 * range / nPts;
+  var maxSD = isMulti ? Math.max(cvPct, cvPct2) : cvPct;
+  var range = Math.max(maxSD * 4.5, Math.abs(mu) + maxSD * 3.5, taePct + maxSD * 1.5);
+  var nPts = 200, step = 2 * range / nPts;
+
+  var labels = [], within1 = [], outside1 = [], within2 = [], outside2 = [];
 
   for (var i = 0; i <= nPts; i++) {
-    var x = (trueMean - range) + step * i;
-    labels.push(parseFloat(x.toFixed(4)));
-    var y = normalPDF(x, measMean, sd);
-    var outside = x < lowerLimit || x > upperLimit;
-    mainData.push(outside ? null : y);
-    outsideData.push(outside ? y : null);
+    var x = -range + step * i;
+    labels.push(parseFloat(x.toFixed(3)));
+    var y1 = normalPDF(x, mu, cvPct);
+    var out1 = x < ll || x > ul;
+    within1.push(out1 ? null : y1);
+    outside1.push(out1 ? y1 : null);
+    if (isMulti) {
+      var y2 = normalPDF(x, mu, cvPct2);
+      var out2 = x < ll || x > ul;
+      within2.push(out2 ? null : y2);
+      outside2.push(out2 ? y2 : null);
+    }
   }
 
   // Smooth boundary fill
   for (var j = 1; j < labels.length - 1; j++) {
     var xl = labels[j];
-    if ((xl >= lowerLimit - step && xl <= lowerLimit + step) ||
-        (xl >= upperLimit - step && xl <= upperLimit + step)) {
-      var yb = normalPDF(xl, measMean, sd);
-      mainData[j] = yb;
-      outsideData[j] = yb;
+    if ((xl >= ll - step && xl <= ll + step) || (xl >= ul - step && xl <= ul + step)) {
+      var yb1 = normalPDF(xl, mu, cvPct);
+      within1[j] = yb1; outside1[j] = yb1;
+      if (isMulti) {
+        var yb2 = normalPDF(xl, mu, cvPct2);
+        within2[j] = yb2; outside2[j] = yb2;
+      }
     }
+  }
+
+  var po1 = Math.max(0, 100 - (normalCDF((ul - mu) / cvPct) - normalCDF((ll - mu) / cvPct)) * 100);
+  var datasets = [
+    {
+      label: (isMulti ? 'L1 ' : '') + 'Within TAE (' + fmt(100 - po1, 2) + '%)',
+      data: within1, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.15)',
+      fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4, spanGaps: false
+    },
+    {
+      label: (isMulti ? 'L1 ' : '') + 'Outside TAE (' + fmt(po1, 3) + '%)',
+      data: outside1, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.25)',
+      fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: false
+    }
+  ];
+
+  if (isMulti) {
+    var po2 = Math.max(0, 100 - (normalCDF((ul - mu) / cvPct2) - normalCDF((ll - mu) / cvPct2)) * 100);
+    datasets.push({
+      label: 'L2 Within TAE (' + fmt(100 - po2, 2) + '%)',
+      data: within2, borderColor: '#0891b2', backgroundColor: 'rgba(8,145,178,0.12)',
+      fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: false
+    });
+    datasets.push({
+      label: 'L2 Outside TAE (' + fmt(po2, 3) + '%)',
+      data: outside2, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.2)',
+      fill: true, borderWidth: 1.5, pointRadius: 0, tension: 0.4, spanGaps: false
+    });
   }
 
   var ctx = document.getElementById('dist-chart').getContext('2d');
   distChart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Within TAE (' + fmt(100 - pctOut, 2) + '%)',
-          data: mainData,
-          borderColor: '#7c3aed',
-          backgroundColor: 'rgba(124,58,237,0.15)',
-          fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4, spanGaps: false
-        },
-        {
-          label: 'Outside TAE (' + fmt(pctOut, 3) + '%)',
-          data: outsideData,
-          borderColor: '#dc2626',
-          backgroundColor: 'rgba(220,38,38,0.25)',
-          fill: true, borderWidth: 2, pointRadius: 0, tension: 0.4, spanGaps: false
-        }
-      ]
-    },
+    data: { labels: labels, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
@@ -597,11 +709,8 @@ function drawDistChart(trueMean, measMean, sd, taePct, pctOut) {
       scales: {
         x: {
           ticks: { maxTicksLimit: 8, font: { size: 10 },
-            callback: function(val, i) {
-              // Show % deviation from true mean
-              var raw = this.getLabelForValue(val);
-              var dev = ((raw - 100) / 1).toFixed(1);
-              return dev + '%';
+            callback: function(val) {
+              return parseFloat(this.getLabelForValue(val)).toFixed(1) + '%';
             }
           },
           title: { display: true, text: 'Deviation from target (%)', font: { size: 11 } }
@@ -612,25 +721,43 @@ function drawDistChart(trueMean, measMean, sd, taePct, pctOut) {
   });
 }
 
-function drawBudgetChart(biasPct, cvPct, taePct) {
+function drawBudgetChart(biasPct, cvPct, taePct, cvPct2) {
   if (budgetChart) { budgetChart.destroy(); budgetChart = null; }
 
-  var imprecContrib = 1.65 * cvPct;
-  var te = biasPct + imprecContrib;
-  var remaining = Math.max(0, taePct - te);
-  var overflow  = Math.max(0, te - taePct);
+  var isMulti = cvPct2 != null && !isNaN(cvPct2) && cvPct2 > 0;
+
+  var imp1 = 1.65 * cvPct, te1 = biasPct + imp1;
+  var rem1 = Math.max(0, taePct - te1), over1 = Math.max(0, te1 - taePct);
+  var maxTE = te1;
+
+  var biasData = [biasPct], impData = [imp1], remData = [rem1], overData = [over1];
+  var labels = isMulti ? ['Level 1', 'Level 2'] : ['Error budget'];
+
+  if (isMulti) {
+    var imp2 = 1.65 * cvPct2, te2 = biasPct + imp2;
+    var rem2 = Math.max(0, taePct - te2), over2 = Math.max(0, te2 - taePct);
+    maxTE = Math.max(te1, te2);
+    biasData.push(biasPct); impData.push(imp2); remData.push(rem2); overData.push(over2);
+  }
 
   var datasets = [
-    { label: '|Bias%|',      data: [biasPct],       backgroundColor: '#e05c2e' },
-    { label: '1.65 \u00d7 CV%', data: [imprecContrib], backgroundColor: '#f59e0b' },
+    { label: '|Bias%|',           data: biasData, backgroundColor: '#e05c2e' },
+    { label: '1.65 \u00d7 CV%',   data: impData,  backgroundColor: '#f59e0b' },
+    { label: 'Remaining budget',   data: remData,  backgroundColor: '#86efac' },
   ];
-  if (remaining > 0) datasets.push({ label: 'Remaining budget', data: [remaining], backgroundColor: '#86efac' });
-  if (overflow  > 0) datasets.push({ label: 'Exceeds TAE',      data: [overflow],  backgroundColor: '#fca5a5' });
+  if (overData.some(function(v){ return v > 0; })) {
+    datasets.push({ label: 'Exceeds TAE', data: overData, backgroundColor: '#fca5a5' });
+  }
+  datasets = datasets.filter(function(d){ return d.data.some(function(v){ return v > 0; }); });
 
-  var ctx = document.getElementById('budget-chart').getContext('2d');
+  // Adjust canvas height for two bars
+  var canvas = document.getElementById('budget-chart');
+  canvas.style.height = isMulti ? '200px' : '160px';
+
+  var ctx = canvas.getContext('2d');
   budgetChart = new Chart(ctx, {
     type: 'bar',
-    data: { labels: ['Error budget'], datasets: datasets },
+    data: { labels: labels, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       indexAxis: 'y',
@@ -643,9 +770,9 @@ function drawBudgetChart(biasPct, cvPct, taePct) {
           stacked: true,
           title: { display: true, text: '%', font: { size: 11 } },
           ticks: { font: { size: 10 }, callback: function(v) { return v + '%'; } },
-          max: Math.max(taePct, te) * 1.15
+          max: Math.max(taePct, maxTE) * 1.15
         },
-        y: { stacked: true, display: false }
+        y: { stacked: true }
       }
     }
   });
@@ -678,31 +805,63 @@ function exportExcel() {
     const bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
     if (!prec && !bias) return;
 
+    // Support both old format {cv, analyte, unit} and new format {levels:[...]}
+    const precL1 = prec ? (prec.levels ? prec.levels[0] : prec) : null;
+
     let details = '';
-    if (prec) details += `<strong>CV% = ${prec.cv}%</strong> from Precision (${prec.type})${prec.analyte ? ' · ' + prec.analyte : ''}<br>`;
-    if (bias) details += `<strong>|Bias%| = ${bias.bias}%</strong> from Bias study${bias.analyte ? ' · ' + bias.analyte : ''}`;
+    if (precL1) {
+      const hasL2 = prec.levels && prec.levels.length > 1;
+      details += `<strong>CV% Level 1 = ${precL1.cv}%</strong>`;
+      if (hasL2) details += ` · <strong>Level 2 = ${prec.levels[1].cv}%</strong>`;
+      details += ` from Precision (${prec.type || 'EP05'})${precL1.analyte ? ' · ' + precL1.analyte : ''}`;
+      if (precL1.tae) details += ` · <strong>TAE = ${precL1.tae}%</strong>`;
+      details += '<br>';
+    }
+    if (bias) {
+      details += `<strong>Measured Bias% = ${bias.bias}%</strong> from ${bias.source === 'method_comparison' ? 'Method Comparison' : 'Bias study'}${bias.analyte ? ' · ' + bias.analyte : ''}`;
+      if (bias.tae && !(precL1 && precL1.tae)) details += ` · <strong>TAE = ${bias.tae}%</strong>`;
+    }
 
     document.getElementById('wf-import-details').innerHTML = details;
     document.getElementById('wf-import-banner').style.display = 'block';
   } catch(e) {}
 })();
 
+function _setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el && val !== undefined && val !== null && val !== '') el.value = val;
+}
+
 function importWorkflowData() {
   try {
-    const prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
-    const bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
-    if (prec) {
-      document.getElementById('inp-cv').value = prec.cv;
-      if (prec.analyte) document.getElementById('inp-analyte').value = prec.analyte;
-      if (prec.unit) document.getElementById('inp-unit').value = prec.unit;
+    var prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    var bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
+
+    // Support both old format {cv, analyte, unit} and new format {levels:[...]}
+    var precL1 = prec ? (prec.levels ? prec.levels[0] : prec) : null;
+    var precL2 = (prec && prec.levels && prec.levels.length > 1) ? prec.levels[1] : null;
+
+    if (precL1) {
+      _setVal('inp-cv', precL1.cv);
+      _setVal('inp-analyte', precL1.analyte);
+      _setVal('inp-unit', precL1.unit);
     }
+    _setVal('inp-cv-2', precL2 ? precL2.cv : '');
+
     if (bias) {
-      document.getElementById('inp-bias').value = bias.bias;
-      if (!prec && bias.analyte) document.getElementById('inp-analyte').value = bias.analyte;
-      if (!prec && bias.unit) document.getElementById('inp-unit').value = bias.unit;
+      _setVal('inp-bias', bias.bias);
+      if (!precL1) {
+        _setVal('inp-analyte', bias.analyte);
+        _setVal('inp-unit', bias.unit);
+      }
     }
+
+    // TAE: prefer from precision (EFLM applied in EP05), fall back to bias/method comparison source
+    var taeVal = (precL1 && precL1.tae) ? precL1.tae : (bias && bias.tae ? bias.tae : null);
+    _setVal('inp-tae', taeVal);
+
     document.getElementById('wf-import-banner').style.display = 'none';
-  } catch(e) {}
+  } catch(e) { console.error('importWorkflowData error:', e); }
 }
 
 // ── EFLM integration ────────────────────────────────────────────────────────
@@ -781,8 +940,6 @@ function applyEFLM() {
   var mean = eflmRefMean(eflmKey);
   if (mean !== null) {
     var gm = document.getElementById('gen-mean'); if (gm) gm.value = mean;
-    var cv = document.getElementById('gen-cv');   if (cv) cv.value = t.cv;
-    var gb = document.getElementById('gen-bias'); if (gb) gb.value = +(t.bias / 2).toFixed(2);
   }
   renderEFLMInfoBar('eflm-info-bar', eflmKey, eflmTier);
 }
@@ -804,6 +961,97 @@ function loadScenario(n) {
   document.getElementById('inp-cv').value      = cv;
   document.getElementById('inp-tae').value     = tae;
   calculate();
+}
+
+function toggleRptSection(hdr) {
+  var sec   = hdr.closest('.rpt-section');
+  var body  = sec.querySelector('.rpt-sec-body');
+  var badge = hdr.querySelector('.rpt-sec-badge');
+  var arrow = hdr.querySelector('.rpt-sec-arrow');
+  var isOpen = sec.getAttribute('data-open') === 'true';
+  if (isOpen) {
+    sec.setAttribute('data-open', 'false');
+    body.style.display = 'none';
+    badge.textContent = 'Excluded';
+    badge.className = 'rpt-sec-badge rpt-badge-ex';
+    if (arrow) arrow.textContent = '▶';
+  } else {
+    sec.setAttribute('data-open', 'true');
+    body.style.display = '';
+    badge.textContent = 'In report';
+    badge.className = 'rpt-sec-badge rpt-badge-in';
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+
+function addTAEToReport() {
+  var analyte = (document.getElementById('inp-analyte').value || 'Unknown analyte').trim();
+  var unit    = (document.getElementById('inp-unit').value    || '').trim();
+  var label   = analyte + (unit ? ' (' + unit + ')' : '');
+
+  function _isOpen(id) {
+    var el = document.getElementById(id);
+    return el && el.getAttribute('data-open') === 'true';
+  }
+  function _chartImg(c) {
+    try { return c ? '<img src="' + c.toBase64Image('image/png', 1.0) + '" style="max-width:100%;margin:8px 0;">' : ''; } catch(e) { return ''; }
+  }
+  function _sec(title, content) {
+    if (!content || !content.trim()) return '';
+    return '<div style="margin-bottom:14px;"><strong style="display:block;font-size:13px;margin-bottom:6px;color:#1e293b;">' + title + '</strong>' + content + '</div>';
+  }
+
+  var html = '';
+
+  if (_isOpen('rpt-sec-results')) {
+    var sigRow    = document.getElementById('sigma-row');
+    var statGrid  = document.querySelector('#rpt-sec-results .stat-grid-3');
+    var insightEl = document.getElementById('insight-box');
+    html += _sec('Sigma Metric & Results',
+      (sigRow   ? sigRow.outerHTML   : '') +
+      (statGrid ? statGrid.outerHTML : '') +
+      (insightEl && insightEl.textContent.trim() ? insightEl.outerHTML : ''));
+  }
+
+  if (_isOpen('rpt-sec-formula')) {
+    var fmtEl = document.getElementById('formula-values');
+    html += _sec('Formula & Calculations',
+      '<div class="formula-box">TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; σ = (TAE% − |Bias%|) / CV%</div>' +
+      (fmtEl ? fmtEl.innerHTML : ''));
+  }
+
+  if (_isOpen('rpt-sec-qc')) {
+    var qcEl = document.getElementById('qc-box');
+    if (qcEl) html += _sec('QC Strategy', qcEl.outerHTML);
+  }
+
+  if (_isOpen('rpt-sec-dist')) {
+    html += _sec('Patient Result Distribution vs TAE Limits', _chartImg(distChart));
+  }
+
+  if (_isOpen('rpt-sec-budget')) {
+    html += _sec('Error Budget Breakdown', _chartImg(budgetChart));
+  }
+
+  if (!html) {
+    alert('No sections are expanded. Expand at least one section before adding to report.');
+    return;
+  }
+
+  if (window.parent && window.parent.addToReport) {
+    window.parent.addToReport({ tool: 'Total Error & Sigma', analyte: label, html: html });
+    var btn = document.getElementById('tae-add-report-btn');
+    if (btn) {
+      btn.textContent = '✓ Added!';
+      btn.style.background = '#15803d';
+      btn.style.borderColor = '#15803d';
+      setTimeout(function() {
+        btn.textContent = '+ Add to Report';
+        btn.style.background = '#2563eb';
+        btn.style.borderColor = '#2563eb';
+      }, 1800);
+    }
+  }
 }
 
 // Tab switching

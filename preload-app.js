@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('appAPI', {
   deactivate:         ()      => ipcRenderer.invoke('license:deactivate'),
   openExternal:       (url)   => ipcRenderer.invoke('license:openExternal', url),
   onShowLicenseModal: (cb)    => ipcRenderer.on('show-license-modal', (_e) => cb()),
+  previewReport:      (html, filename) => ipcRenderer.invoke('app:previewReport', html, filename),
 });

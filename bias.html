@@ -36,6 +36,17 @@
     .sig-val{font-family:ui-monospace,monospace;font-weight:700;}
     .badge-sig{background:#fef2f2;color:#b91c1c;}
     .badge-ns{background:#f0fdf4;color:#15803d;}
+
+    /* Report sections — collapsible */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;margin-left:4px;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 <body>
@@ -358,6 +369,32 @@ function parsePairs(raw){
   return pairs;
 }
 
+// ── Report sections ──
+function rptSection(title, contentHtml, open) {
+  var o = open !== false;
+  return '<div class="rpt-section" data-open="' + o + '">'
+    + '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+    + '<span class="rpt-sec-title">' + title + '</span>'
+    + '<div style="display:flex;align-items:center;gap:6px;">'
+    + '<span class="rpt-sec-badge ' + (o ? 'rpt-badge-in' : 'rpt-badge-ex') + '">' + (o ? 'In report' : 'Excluded') + '</span>'
+    + '<span class="rpt-sec-arrow">' + (o ? '▼' : '▶') + '</span>'
+    + '</div></div>'
+    + '<div class="rpt-sec-body" style="display:' + (o ? 'block' : 'none') + ';">' + contentHtml + '</div>'
+    + '</div>';
+}
+function toggleRptSection(hdr) {
+  var sec = hdr.parentElement;
+  var body = sec.querySelector('.rpt-sec-body');
+  var badge = hdr.querySelector('.rpt-sec-badge');
+  var arrow = hdr.querySelector('.rpt-sec-arrow');
+  var isOpen = sec.dataset.open === 'true';
+  sec.dataset.open = String(!isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  badge.textContent = isOpen ? 'Excluded' : 'In report';
+  badge.className = 'rpt-sec-badge ' + (isOpen ? 'rpt-badge-ex' : 'rpt-badge-in');
+  arrow.textContent = isOpen ? '▶' : '▼';
+}
+
 // ── Stats ──
 function mean(arr){return arr.reduce((s,v)=>s+v,0)/arr.length;}
 function sd(arr){
@@ -458,7 +495,8 @@ function _doCalculateBias(pairs){
       Analysis based on <strong>${n}</strong> of <strong>${_biasRows.length}</strong> samples — ${nExcl} excluded.</div>`;
   }
 
-  html+=kpiGrid([
+  // ── Section 1: Summary & Statistics ──
+  let summaryHtml = kpiGrid([
     {label:'n',                 value:n,                    sub:'samples'},
     {label:'Mean Bias',         value:fmt(meanBias,2)+'%',  sub:'systematic % bias'},
     {label:'95% CI of Mean Bias', value:`[${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`, sub:'where true bias likely lies'},
@@ -466,32 +504,28 @@ function _doCalculateBias(pairs){
     {label:'t-statistic',       value:fmt(t,3),             sub:`df=${df}, p=${pVal<0.001?'<0.001':fmt(pVal,3)}`},
     {label:'Systematic Bias',   value:sig?'Significant':'Not significant', sub:'one-sample t-test vs 0'},
   ]);
-
-  if(hasLimit) html+=verdictHtml(pass,`Mean bias ${fmt(meanBias,2)}%`,`allowable ±${fmt(allowable,1)}%`);
-
-  // t-test significance block
-  html+=`<div class="sig-row">
+  if(hasLimit) summaryHtml += verdictHtml(pass,`Mean bias ${fmt(meanBias,2)}%`,`allowable ±${fmt(allowable,1)}%`);
+  summaryHtml += `<div class="sig-row">
     <span class="sig-label">Significance test:</span>
     <span class="sig-val">t(${df}) = ${fmt(t,3)}, p = ${pVal<0.001?'<0.001':fmt(pVal,3)}</span>
     <span class="badge ${sig?'badge-sig':'badge-ns'}">${sig?'Significant systematic bias':'No significant bias detected'}</span>
     <span style="color:var(--muted);font-size:12px;">H₀: mean bias = 0</span>
   </div>`;
+  html += rptSection('Summary & Statistics', summaryHtml, true);
 
-  // Distribution chart
-  html+=`<div class="section-header">Distribution of Results vs Reference</div>`;
-  html+=`<div class="card" style="padding:12px;"><canvas id="dist-chart" style="height:220px;"></canvas></div>`;
+  // ── Section 2: Distribution chart ──
+  html += rptSection('Distribution of Results vs Reference',
+    '<div class="card" style="padding:12px;"><canvas id="dist-chart" style="height:220px;"></canvas></div>', true);
 
-  // Bias chart
-  html+=`<div class="section-header">Individual % Bias (per sample)</div>`;
-  html+=`<div class="card" style="padding:12px;"><canvas id="bias-chart"></canvas></div>`;
+  // ── Section 3: Individual bias chart ──
+  html += rptSection('Individual % Bias per Sample',
+    '<div class="card" style="padding:12px;"><canvas id="bias-chart"></canvas></div>', true);
 
-  // Per-sample table — build index mapping included _biasRows → pctArr position
+  // ── Section 4: Per-sample table ──
   const incIdx=[];
   _biasRows.forEach((r,i)=>{if(r.include)incIdx.push(i);});
 
-  html+=`<div class="section-header">Per-Sample Results${nFlagged>0?` <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;margin-left:6px;">${nFlagged} IQR outlier${nFlagged>1?'s':''}</span>`:''}
-    <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:8px;">Uncheck to exclude from analysis</span></div>`;
-  html+=`<div class="table-wrap"><table><thead><tr>
+  let tableHtml = `<div class="table-wrap"><table><thead><tr>
     <th></th><th>#</th>
     <th class="num">Measured</th>
     <th class="num">Reference</th>
@@ -507,7 +541,7 @@ function _doCalculateBias(pairs){
       const p=row.pair;
       const ab=p.measured-p.reference;
       const pb=p.reference!==0?(p.measured-p.reference)/p.reference*100:NaN;
-      html+=`<tr style="opacity:.4;">
+      tableHtml+=`<tr style="opacity:.4;">
         <td><input type="checkbox" onchange="_biasToggle(${ri})"></td>
         <td>${ri+1}</td><td class="num">${fmt(p.measured,4)}</td>
         <td class="num">${fmt(p.reference,4)}</td>
@@ -519,7 +553,7 @@ function _doCalculateBias(pairs){
     const iqrOut=iqrFlags[pctIdx];
     const limitFlag=hasLimit&&Math.abs(b.pctBias)>allowable;
     const rowBg=iqrOut?'background:#fef2f2;':'';
-    html+=`<tr style="${rowBg}">
+    tableHtml+=`<tr style="${rowBg}">
       <td><input type="checkbox" checked onchange="_biasToggle(${ri})"></td>
       <td>${ri+1}</td>
       <td class="num">${fmt(b.measured,4)}</td>
@@ -530,12 +564,19 @@ function _doCalculateBias(pairs){
     </tr>`;
     pctIdx++;
   });
-  html+=`</tbody></table></div>`;
+  tableHtml+=`</tbody></table></div>`;
+  html += rptSection('Per-Sample Data' + (nFlagged>0 ? ` (${nFlagged} IQR outlier${nFlagged>1?'s':''})` : ''), tableHtml, false);
 
   // Workflow: save result and show next-step card
-  try { localStorage.setItem('wf_bias', JSON.stringify({ bias: +Math.abs(meanBias).toFixed(2), analyte, unit })); } catch(e) {}
+  try {
+    const biasTae = (biasEFLMKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[biasEFLMKey])
+      ? +calcEFLMTiers(EFLM_DB[biasEFLMKey].cvi, EFLM_DB[biasEFLMKey].cvg)[biasEFLMTier].tea.toFixed(2)
+      : undefined;
+    localStorage.setItem('wf_bias', JSON.stringify({ bias: +Math.abs(meanBias).toFixed(2), analyte, unit, tae: biasTae }));
+  } catch(e) {}
   html+=_wfNextCard(2,'Total Error &amp; Sigma',`|Bias%| = ${Math.abs(meanBias).toFixed(2)}% saved`,'tae.html','Total Error &amp; Sigma');
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
+  html+=`<button id="bias-add-report-btn" onclick="addBiasToReport()" style="margin-top:12px;width:100%;padding:11px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">+ Add to Report</button>`;
 
   document.getElementById('results-body').innerHTML=html;
 
@@ -722,10 +763,43 @@ function biasApplyEFLM() {
   const mean = eflmRefMean(biasEFLMKey);
   if (mean !== null) {
     const gm = document.getElementById('gen-ref'); if (gm) gm.value = mean;
-    const sd = document.getElementById('gen-sd'); if (sd) sd.value = t.cv;
-    const bp = document.getElementById('gen-bias-pct'); if (bp) bp.value = +(t.bias / 2).toFixed(2);
   }
   renderEFLMInfoBar('eflm-info-bar', biasEFLMKey, biasEFLMTier);
+}
+
+function addBiasToReport() {
+  try {
+    var analyte = (document.getElementById('inp-analyte') || {}).value || 'Bias Study';
+    var html = '';
+
+    document.querySelectorAll('#results-body .rpt-section').forEach(function(sec) {
+      if (sec.dataset.open !== 'true') return;
+      var title = sec.querySelector('.rpt-sec-title').textContent;
+      var body  = sec.querySelector('.rpt-sec-body');
+      var canvas = body.querySelector('canvas');
+      html += '<div style="margin-bottom:14px;">';
+      html += '<div style="font-size:12px;font-weight:700;color:#1e3a8a;padding-bottom:5px;border-bottom:1px solid #e2e8f0;margin-bottom:8px;">' + title + '</div>';
+      if (canvas) {
+        var img = '';
+        try {
+          if (canvas.id === 'bias-chart' && lastChart)
+            img = '<img src="' + lastChart.toBase64Image('image/png', 1.0) + '" style="max-width:100%;">';
+          else if (canvas.id === 'dist-chart' && lastChart && lastChart._distChart)
+            img = '<img src="' + lastChart._distChart.toBase64Image('image/png', 1.0) + '" style="max-width:100%;">';
+        } catch(e) {}
+        html += img;
+      } else {
+        html += body.innerHTML;
+      }
+      html += '</div>';
+    });
+
+    window.parent.addToReport({ tool: 'Bias (CRM/EQA)', analyte: analyte, html: html });
+    var btn = document.getElementById('bias-add-report-btn');
+    btn.textContent = '✓ Added to Report';
+    btn.style.background = '#16a34a';
+    setTimeout(function() { btn.textContent = '+ Add to Report'; btn.style.background = '#0f172a'; }, 2000);
+  } catch(e) { alert('Could not add to report: ' + e.message); }
 }
 </script>
 </body>

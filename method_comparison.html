@@ -151,6 +151,16 @@
     .ex-param.warn{background:#fef9c3;color:#854d0e;}
     .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
     .ex-btn:hover{opacity:.88;}
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;margin-left:4px;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 
@@ -299,7 +309,7 @@
 
       <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
         <label class="check-item">
-          <input type="checkbox" id="relativeBlandAltman">
+          <input type="checkbox" id="relativeBlandAltman" checked>
           <span><strong>Use Relative Differences (%)</strong> for Bland-Altman</span>
         </label>
         <label class="check-item">
@@ -319,7 +329,7 @@
           <span><strong>Display Only One-Sided TE Band</strong> (on bias direction side)</span>
         </label>
         <label class="check-item">
-          <input type="checkbox" id="showMaxBias">
+          <input type="checkbox" id="showMaxBias" checked>
           <span><strong>Show Maximum Acceptable Bias Limit</strong> on Bland-Altman Plot</span>
         </label>
       </div>
@@ -540,22 +550,37 @@
       </div>
     </div>
 
-    <!-- KPI cards -->
-    <div id="statsDisplay" class="stat-cards"></div>
+    <!-- Summary & Statistics (collapsible) -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('summary')">
+        <h3>Summary &amp; Statistics</h3>
+        <span id="summary-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="coll-toggle" id="summary-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="summary-content">
+        <div id="statsDisplay" class="stat-cards"></div>
+        <div id="ttestDisplay" style="margin-bottom:16px;"></div>
+        <div id="cvDiffDisplay" style="margin-bottom:16px;"></div>
+      </div>
+    </div>
 
-    <!-- Paired t-test -->
-    <div id="ttestDisplay" style="margin-bottom:16px;"></div>
-
-    <!-- CV on differences -->
-    <div id="cvDiffDisplay" style="margin-bottom:16px;"></div>
-
-    <!-- Interpretation -->
-    <div id="interpretationContent" style="margin-bottom:16px;"></div>
+    <!-- Interpretation (collapsible) -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('interpretation')">
+        <h3>Interpretation</h3>
+        <span id="interpretation-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="coll-toggle" id="interpretation-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="interpretation-content">
+        <div id="interpretationContent" style="margin-bottom:16px;"></div>
+      </div>
+    </div>
 
     <!-- Normality -->
     <div class="collapsible">
       <div class="coll-header" onclick="toggleSection('normality')">
         <h3>Normality Analysis of Differences</h3>
+        <span id="normality-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
         <span class="coll-toggle" id="normality-toggle">▼</span>
       </div>
       <div class="coll-body" id="normality-content">
@@ -571,6 +596,7 @@
     <div class="collapsible">
       <div class="coll-header" onclick="toggleSection('blandaltman')">
         <h3>Bland-Altman Plot</h3>
+        <span id="blandaltman-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
         <span class="coll-toggle" id="blandaltman-toggle">▼</span>
       </div>
       <div class="coll-body" id="blandaltman-content">
@@ -594,6 +620,7 @@
     <div class="collapsible">
       <div class="coll-header" onclick="toggleSection('xyplot')">
         <h3>XY Plot — Method Comparison</h3>
+        <span id="xyplot-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
         <span class="coll-toggle" id="xyplot-toggle">▼</span>
       </div>
       <div class="coll-body" id="xyplot-content">
@@ -618,6 +645,7 @@
     <div class="collapsible">
       <div class="coll-header" onclick="toggleSection('datatable')">
         <h3>Data Review &amp; Outlier Exclusion</h3>
+        <span id="datatable-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
         <span class="coll-toggle" id="datatable-toggle">&#x25BC;</span>
       </div>
       <div class="coll-body" id="datatable-content">
@@ -703,15 +731,18 @@
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId + '-content');
             const toggle = document.getElementById(sectionId + '-toggle');
-            
-            if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                toggle.classList.remove('collapsed');
-                toggle.textContent = '▼';
-            } else {
+            const badge  = document.getElementById(sectionId + '-badge');
+            const isOpen = !content.classList.contains('collapsed');
+            if (isOpen) {
                 content.classList.add('collapsed');
                 toggle.classList.add('collapsed');
                 toggle.textContent = '▶';
+                if (badge) { badge.textContent = 'Excluded'; badge.className = 'rpt-sec-badge rpt-badge-ex'; }
+            } else {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '▼';
+                if (badge) { badge.textContent = 'In report'; badge.className = 'rpt-sec-badge rpt-badge-in'; }
             }
         }
 
@@ -1486,7 +1517,14 @@
             const biasPct = +Math.abs(stats.meanDiff).toFixed(2);
 
             if (useRelative) {
-                try { localStorage.setItem('wf_bias', JSON.stringify({ bias: biasPct, analyte, unit: '%', source: 'method_comparison' })); } catch(e) {}
+                try {
+                  const mcKey  = document.getElementById('eflm-analyte') ? document.getElementById('eflm-analyte').value : '';
+                  const mcTier = document.getElementById('eflm-tier') ? document.getElementById('eflm-tier').value : 'desirable';
+                  const mcTae  = (mcKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[mcKey])
+                    ? +calcEFLMTiers(EFLM_DB[mcKey].cvi, EFLM_DB[mcKey].cvg)[mcTier].tea.toFixed(2)
+                    : (parseFloat(document.getElementById('teaPercentage').value) || undefined);
+                  localStorage.setItem('wf_bias', JSON.stringify({ bias: biasPct, analyte, unit: '%', source: 'method_comparison', tae: mcTae }));
+                } catch(e) {}
                 card.innerHTML = `
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div>
@@ -1503,6 +1541,84 @@
                   <div style="font-size:13px;color:#1e3a8a;">Mean difference = ${biasPct} (absolute units). To transfer bias% to TAE, tick <strong>"Use Relative Differences (%)"</strong> in the options above and re-run.</div>`;
             }
             card.style.display = 'flex';
+
+            // Show Add to Report button
+            var addBtn = document.getElementById('mc-add-report-btn');
+            if (!addBtn) {
+              addBtn = document.createElement('button');
+              addBtn.id = 'mc-add-report-btn';
+              addBtn.textContent = '+ Add to Report';
+              addBtn.style.cssText = 'margin-top:12px;width:100%;padding:11px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;';
+              addBtn.onclick = addMCToReport;
+              card.parentNode.insertBefore(addBtn, card.nextSibling);
+            }
+            addBtn.style.display = 'block';
+        }
+
+        function addMCToReport() {
+          try {
+            var analyte = document.getElementById('method1Label') ? document.getElementById('method1Label').value : '';
+            var html = '';
+
+            function _isOpen(id) {
+              var el = document.getElementById(id + '-content');
+              return el && !el.classList.contains('collapsed');
+            }
+            function _chartImg(c) {
+              try { return c ? '<img src="' + c.toBase64Image('image/png', 1.0) + '" style="max-width:100%;margin:8px 0;">' : ''; } catch(e) { return ''; }
+            }
+            function _sec(title, content) {
+              if (!content || !content.trim()) return '';
+              return '<div style="margin-bottom:14px;"><strong style="display:block;font-size:13px;margin-bottom:6px;color:#1e293b;">' + title + '</strong>' + content + '</div>';
+            }
+
+            if (_isOpen('summary')) {
+              var stats = document.getElementById('statsDisplay');
+              var ttest = document.getElementById('ttestDisplay');
+              var cvd   = document.getElementById('cvDiffDisplay');
+              html += _sec('Summary & Statistics',
+                (stats ? stats.innerHTML : '') + (ttest ? ttest.innerHTML : '') + (cvd ? cvd.innerHTML : ''));
+            }
+            if (_isOpen('interpretation')) {
+              var interp = document.getElementById('interpretationContent');
+              if (interp) html += _sec('Interpretation', interp.innerHTML);
+            }
+            if (_isOpen('normality')) {
+              html += _sec('Normality Analysis of Differences', _chartImg(qqChart) + _chartImg(histChart));
+            }
+            if (_isOpen('blandaltman')) {
+              html += _sec('Bland-Altman Plot', _chartImg(chart));
+            }
+            if (_isOpen('xyplot')) {
+              var regStats = document.getElementById('regressionStats');
+              html += _sec('XY Plot — Method Comparison', _chartImg(xyChart) + (regStats ? regStats.innerHTML : ''));
+            }
+            if (_isOpen('datatable')) {
+              var tbl = document.getElementById('resultsTable');
+              if (tbl) html += _sec('Data Table', '<div class="table-wrap">' + tbl.outerHTML + '</div>');
+            }
+
+            if (!html) {
+              alert('No sections are expanded. Expand at least one section before adding to report.');
+              return;
+            }
+
+            window.parent.addToReport({
+              tool: 'Method Comparison',
+              analyte: analyte || 'Method Comparison',
+              html: html
+            });
+
+            var btn = document.getElementById('mc-add-report-btn');
+            btn.textContent = '✓ Added to Report';
+            btn.style.background = '#16a34a';
+            setTimeout(function() {
+              btn.textContent = '+ Add to Report';
+              btn.style.background = '#0f172a';
+            }, 2000);
+          } catch(e) {
+            alert('Could not add to report: ' + e.message);
+          }
         }
 
         function getConfidenceLevel(zValue) {
@@ -2187,11 +2303,10 @@
           document.getElementById('relativeBlandAltman').checked = true;
           const mean = eflmRefMean(key);
           if (mean !== null) {
-            const gm = document.getElementById('gen-mean');     if (gm) gm.value = mean;
-            const te = document.getElementById('gen-te-pct');   if (te) te.value = t.tea;
-            const bp = document.getElementById('gen-bias-pct'); if (bp) bp.value = +(t.bias / 2).toFixed(2);
+            const gm = document.getElementById('gen-mean'); if (gm) gm.value = mean;
           }
           renderEFLMInfoBar('eflm-info-bar', key, tier);
+          applyRefToDiscrim();
         }
 
         function generateSampleData() {
@@ -2624,6 +2739,10 @@
             document.getElementById('gen-bias-pct').value = '1.0';
             document.getElementById('gen-te-pct').value = '5.0';
             document.getElementById('gen-golden-std').checked = true;
+            document.getElementById('teaPercentage').value = '6.96';
+            document.getElementById('maxBias').value = '0.83';
+            var tx = document.getElementById('thresholdX'); if (tx) tx.value = '7.0';
+            var ty = document.getElementById('thresholdY'); if (ty) ty.value = '7.0';
           } else if (n === 2) {
             // Potassium — proportional bias
             document.getElementById('gen-n').value = '40';
@@ -2631,6 +2750,10 @@
             document.getElementById('gen-bias-pct').value = '5.0';
             document.getElementById('gen-te-pct').value = '10.0';
             document.getElementById('gen-golden-std').checked = true;
+            document.getElementById('teaPercentage').value = '8.83';
+            document.getElementById('maxBias').value = '1.65';
+            var tx = document.getElementById('thresholdX'); if (tx) tx.value = '5.0';
+            var ty = document.getElementById('thresholdY'); if (ty) ty.value = '5.0';
           } else if (n === 3) {
             // Cholesterol — poor agreement
             document.getElementById('gen-n').value = '45';
@@ -2638,7 +2761,16 @@
             document.getElementById('gen-bias-pct').value = '8.0';
             document.getElementById('gen-te-pct').value = '18.0';
             document.getElementById('gen-golden-std').checked = true;
+            document.getElementById('teaPercentage').value = '12.04';
+            document.getElementById('maxBias').value = '2.52';
+            var tx = document.getElementById('thresholdX'); if (tx) tx.value = '5.0';
+            var ty = document.getElementById('thresholdY'); if (ty) ty.value = '5.0';
           }
+
+          // Show TAE and max bias lines since values are set
+          document.getElementById('showTEBands').checked = true;
+          document.getElementById('showMaxBias').checked = true;
+          document.getElementById('showLoA').checked = true;
 
           // Clear EFLM analyte selection
           var eflmSel = document.getElementById('eflm-analyte');

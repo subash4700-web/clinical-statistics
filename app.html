@@ -188,6 +188,92 @@
       font-weight: 800;
       font-size: 16px;
     }
+    .report-btn {
+      background: #f1f5f9; color: #374151; border: 1px solid #e2e8f0;
+      border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all .15s;
+    }
+    .report-btn.has-sections { background: #2563eb; color: white; border-color: #2563eb; }
+    .report-btn.added { background: #16a34a; color: white; border-color: #16a34a; }
+    #report-panel-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9000;
+    }
+    #report-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 360px;
+      background: white; box-shadow: -4px 0 24px rgba(0,0,0,.15);
+      display: flex; flex-direction: column; z-index: 9001;
+    }
+    #report-panel-header {
+      padding: 16px 18px; border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #report-section-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .report-section-item {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .report-section-item .rsi-info { font-size: 12px; }
+    .report-section-item .rsi-tool { font-weight: 700; color: #1e3a8a; font-size: 12px; }
+    .report-section-item .rsi-analyte { color: #6b7280; font-size: 11px; margin-top:2px; }
+    .report-section-item .rsi-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; font-weight: 700; padding: 0 4px; }
+    #report-panel-footer { padding: 14px 18px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Report Preview Modal ── */
+    #report-preview-modal {
+      display: none; position: fixed; inset: 0; z-index: 10000;
+      background: #f1f5f9; flex-direction: column;
+    }
+    #rp-toolbar {
+      background: #0f172a; color: white; padding: 12px 28px;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    #rp-content {
+      flex: 1; overflow-y: auto; padding: 36px 24px;
+    }
+    .rp-report-wrap { max-width: 860px; margin: 0 auto; }
+    .rp-section-card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 24px 28px; margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .rp-insert-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; max-width: 860px; margin: 0 auto;
+    }
+    .rp-insert-btn {
+      font-size: 12px; color: #9ca3af; background: none;
+      border: 1px dashed #d1d5db; border-radius: 6px;
+      padding: 5px 14px; cursor: pointer; transition: all .12s;
+    }
+    .rp-insert-btn:hover { color: #2563eb; border-color: #2563eb; }
+    .rp-note-card {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+      padding: 14px 18px; max-width: 860px; margin: 0 auto 8px;
+    }
+    .rp-note-label {
+      font-size: 10px; font-weight: 700; color: #92400e;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .rp-note-area {
+      width: 100%; min-height: 64px; border: none; background: transparent;
+      font-family: -apple-system, sans-serif; font-size: 13px; color: #78350f;
+      resize: vertical; outline: none; box-sizing: border-box;
+    }
+    .rp-note-remove {
+      font-size: 11px; color: #dc2626; background: none; border: none;
+      cursor: pointer; padding: 0; margin-top: 4px;
+    }
+    @media print {
+      body > *:not(#report-preview-modal) { display: none !important; }
+      #report-preview-modal { display: flex !important; position: static !important; background: white !important; }
+      #rp-toolbar { display: none !important; }
+      #rp-content { overflow: visible !important; padding: 0 !important; }
+      .rp-insert-row { display: none !important; }
+      .rp-note-card { background: transparent !important; border: none !important; border-top: 1px solid #e2e8f0 !important; }
+      .rp-note-remove { display: none !important; }
+      .rp-section-card { box-shadow: none !important; border: none !important; border-bottom: 1px solid #e2e8f0 !important; border-radius: 0 !important; page-break-inside: avoid; }
+    }
 
     .workspace-content {
       flex: 1;
@@ -994,8 +1080,47 @@
           <button class="export-btn" id="loadDataBtn" style="display:none;" onclick="document.getElementById('loadDataInput').click()" title="Load data from file">⬆ Load data</button>
           <button class="export-btn" id="exportExcelBtn" style="display:none;" onclick="universalExportExcel()" title="Export to Excel">⬇ Excel</button>
           <button class="export-btn export-btn-pdf" id="exportPdfBtn" style="display:none;" onclick="universalExportPDF()" title="Export to PDF">⬇ PDF</button>
+          <button class="report-btn" id="reportBtn" onclick="openReportPanel()">&#128196; Report</button>
           <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">🇩🇰 DA</button>
           <button class="info-toggle" onclick="toggleInfo()" data-i18n="ui.info">Info</button>
+        </div>
+      </div>
+
+      <!-- Report Panel -->
+      <div id="report-panel-backdrop" onclick="closeReportPanel()"></div>
+      <div id="report-panel" style="display:none;">
+        <div id="report-panel-header">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;">Report Builder</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">Sections collected across tools</div>
+          </div>
+          <button onclick="closeReportPanel()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">&#10005;</button>
+        </div>
+        <div id="report-section-list">
+          <div id="report-empty-msg" style="text-align:center;color:#9ca3af;font-size:12px;padding:32px 0;">
+            No sections yet.<br>Run a tool and click <strong>Add to Report</strong>.
+          </div>
+        </div>
+        <div id="report-panel-footer">
+          <button onclick="clearReport()" style="background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;">Clear all sections</button>
+          <button onclick="previewFullReport()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">&#128196; Preview &amp; Save PDF</button>
+        </div>
+      </div>
+
+      <!-- Report Preview Modal -->
+      <div id="report-preview-modal">
+        <div id="rp-toolbar">
+          <div>
+            <div style="font-size:15px;font-weight:800;">Report Preview</div>
+            <div style="font-size:11px;opacity:.6;margin-top:2px;">Insert notes between sections, then save</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button onclick="printReportPreview()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;">Print / Save as PDF</button>
+            <button onclick="closeReportPreview()" style="background:#374151;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;">&#10005; Close</button>
+          </div>
+        </div>
+        <div id="rp-content">
+          <div class="rp-report-wrap" id="rp-body"></div>
         </div>
       </div>
 
@@ -2670,6 +2795,159 @@
       if (page && title) loadTool(page, title, null);
     } catch(e) {}
   })();
+</script>
+
+<script>
+// ─────────────────────────────────────────────
+// Report Builder — persistent across all tools
+// ─────────────────────────────────────────────
+var _reportSections = JSON.parse(localStorage.getItem('cs_report_sections') || '[]');
+
+function addToReport(sectionData) {
+  // sectionData: { tool, analyte, timestamp, html }
+  sectionData.id = Date.now().toString();
+  sectionData.timestamp = new Date().toISOString();
+  _reportSections.push(sectionData);
+  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
+  updateReportBtn();
+  renderReportList();
+  // Flash button green briefly
+  var btn = document.getElementById('reportBtn');
+  btn.textContent = '✓ Added!';
+  btn.classList.add('added');
+  setTimeout(function() {
+    updateReportBtn();
+    btn.classList.remove('added');
+  }, 1800);
+}
+
+function updateReportBtn() {
+  var btn = document.getElementById('reportBtn');
+  var count = _reportSections.length;
+  btn.innerHTML = '&#128196; Report' + (count > 0 ? ' <span style="background:white;color:#2563eb;border-radius:999px;padding:1px 7px;font-size:11px;">' + count + '</span>' : '');
+  btn.classList.toggle('has-sections', count > 0);
+}
+
+function renderReportList() {
+  var list = document.getElementById('report-section-list');
+  var emptyMsg = document.getElementById('report-empty-msg');
+  if (_reportSections.length === 0) {
+    emptyMsg.style.display = '';
+    list.querySelectorAll('.report-section-item').forEach(function(el) { el.remove(); });
+    return;
+  }
+  emptyMsg.style.display = 'none';
+  list.querySelectorAll('.report-section-item').forEach(function(el) { el.remove(); });
+  _reportSections.forEach(function(s, i) {
+    var ts = new Date(s.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    var item = document.createElement('div');
+    item.className = 'report-section-item';
+    item.innerHTML = '<div class="rsi-info">'
+      + '<div class="rsi-tool">' + s.tool + '</div>'
+      + '<div class="rsi-analyte">' + (s.analyte || '') + ' &nbsp;·&nbsp; ' + ts + '</div>'
+      + '</div>'
+      + '<button class="rsi-remove" onclick="removeReportSection(\'' + s.id + '\')" title="Remove">&#10005;</button>';
+    list.appendChild(item);
+  });
+}
+
+function removeReportSection(id) {
+  _reportSections = _reportSections.filter(function(s) { return s.id !== id; });
+  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
+  updateReportBtn();
+  renderReportList();
+}
+
+function clearReport() {
+  if (_reportSections.length === 0) return;
+  if (!confirm('Clear all ' + _reportSections.length + ' section(s) from the report?')) return;
+  _reportSections = [];
+  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
+  updateReportBtn();
+  renderReportList();
+}
+
+function openReportPanel() {
+  document.getElementById('report-panel').style.display = 'flex';
+  document.getElementById('report-panel-backdrop').style.display = 'block';
+  renderReportList();
+}
+
+function closeReportPanel() {
+  document.getElementById('report-panel').style.display = 'none';
+  document.getElementById('report-panel-backdrop').style.display = 'none';
+}
+
+function previewFullReport() {
+  if (_reportSections.length === 0) {
+    alert('No sections in report yet. Run a tool and click "Add to Report" first.');
+    return;
+  }
+  closeReportPanel();
+  buildReportPreviewModal();
+  document.getElementById('report-preview-modal').style.display = 'flex';
+}
+
+function buildReportPreviewModal() {
+  var body = document.getElementById('rp-body');
+  body.innerHTML = '';
+
+  var dateStr = new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
+
+  // Report header
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'margin-bottom:20px;';
+  hdr.innerHTML = '<h1 style="font-size:22px;font-weight:900;color:#0f172a;margin:0 0 4px;">Clinical Statistics \u2014 Validation Report</h1>'
+    + '<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">Generated ' + dateStr + '</div>'
+    + '<hr style="border:none;border-top:2px solid #e2e8f0;">';
+  body.appendChild(hdr);
+
+  // Insert zone before first section
+  body.appendChild(_rpInsertZone());
+
+  _reportSections.forEach(function(s, i) {
+    var card = document.createElement('div');
+    card.className = 'rp-section-card';
+    card.innerHTML = '<h2 style="font-size:15px;font-weight:800;color:#1e3a8a;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;">'
+      + s.tool + (s.analyte ? ' \u2014 ' + s.analyte : '') + '</h2>'
+      + s.html;
+    body.appendChild(card);
+    body.appendChild(_rpInsertZone());
+  });
+}
+
+function _rpInsertZone() {
+  var row = document.createElement('div');
+  row.className = 'rp-insert-row';
+  var btn = document.createElement('button');
+  btn.className = 'rp-insert-btn';
+  btn.textContent = '+ Insert text / note';
+  btn.onclick = function() { _rpInsertNote(row); };
+  row.appendChild(btn);
+  return row;
+}
+
+function _rpInsertNote(zone) {
+  var note = document.createElement('div');
+  note.className = 'rp-note-card';
+  note.innerHTML = '<div class="rp-note-label">Note / Annotation</div>'
+    + '<textarea class="rp-note-area" placeholder="Type your note, conclusion, or annotation here..."></textarea>'
+    + '<div><button class="rp-note-remove" onclick="this.closest(\'.rp-note-card\').remove()">Remove note</button></div>';
+  zone.parentElement.insertBefore(note, zone.nextSibling);
+  note.querySelector('textarea').focus();
+  zone.querySelector('.rp-insert-btn').style.display = 'none';
+}
+
+function closeReportPreview() {
+  document.getElementById('report-preview-modal').style.display = 'none';
+}
+
+function printReportPreview() {
+  window.print();
+}
+
+// Init on load
+updateReportBtn();
 </script>
 
 </body>

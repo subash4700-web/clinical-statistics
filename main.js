@@ -320,6 +320,49 @@ ipcMain.handle("license:deactivate", async () => {
   return { success: true };
 });
 
+// ─── COMPILE PDF ──────────────────────────────────────────────────────────────
+ipcMain.handle('app:previewReport', async (event, htmlContent, filename) => {
+  const tmpPath = path.join(app.getPath('temp'), 'cs-report-tmp.html');
+
+  // Toolbar hidden at print time via @media print
+  const toolbar = `<style>@media print{#cs-report-toolbar{display:none!important;}}</style>
+  <div id="cs-report-toolbar" style="position:fixed;top:0;left:0;right:0;background:#0f172a;color:white;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;z-index:9999;font-family:sans-serif;">
+    <span style="font-size:13px;font-weight:700;">Report Preview</span>
+    <button onclick="window.electronSavePDF()" style="background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer;">Save as PDF</button>
+  </div>
+  <div style="height:48px;"></div>`;
+
+  const htmlWithToolbar = htmlContent.replace('<body>', '<body>' + toolbar);
+  fs.writeFileSync(tmpPath, htmlWithToolbar, 'utf8');
+
+  const previewWin = new BrowserWindow({
+    width: 900, height: 1000,
+    title: 'Report Preview — ' + (filename || 'report.pdf'),
+    webPreferences: { preload: path.join(__dirname, 'preload-preview.js'), contextIsolation: true }
+  });
+
+  previewWin._reportFilename = filename || 'report.pdf';
+  await previewWin.loadFile(tmpPath);
+  return true;
+});
+
+ipcMain.handle('app:savePdfFromPreview', async (event) => {
+  const previewWin = BrowserWindow.fromWebContents(event.sender);
+  if (!previewWin) return null;
+
+  const filename = previewWin._reportFilename || 'report.pdf';
+  const { filePath, canceled } = await dialog.showSaveDialog(previewWin, {
+    defaultPath: filename,
+    filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+  });
+  if (canceled || !filePath) return null;
+
+  // Print the already-loaded preview window directly — no hidden window needed
+  const pdfData = await previewWin.webContents.printToPDF({ pageSize: 'A4', printBackground: true });
+  fs.writeFileSync(filePath, pdfData);
+  return filePath;
+});
+
 // ─── MENU ─────────────────────────────────────────────────────────────────────
 function createMenu() {
   const isMac = process.platform === "darwin";
