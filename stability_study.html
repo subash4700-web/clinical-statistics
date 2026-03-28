@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="assets/js/eflm_db.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/report-helper.js"></script>
   <style>
     .layout { display:grid; grid-template-columns:260px 1fr; gap:16px; align-items:start; }
     .section-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#344054; margin:14px 0 6px; }
@@ -87,6 +88,17 @@
     .ex-param.warn{background:#fef9c3;color:#854d0e;}
     .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
     .ex-btn:hover{opacity:.88;}
+
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 <body>
@@ -228,34 +240,59 @@
 
       <div id="results" style="display:none;">
 
-        <div class="card" style="margin-top:0;">
-          <div class="section-title">Results</div>
-
-          <div class="kpi-row" id="kpiRow"></div>
-
-          <table class="res-table" id="resTable">
-            <thead>
-              <tr>
-                <th>Time point</th>
-                <th>N</th>
-                <th>Mean % change</th>
-                <th>SD</th>
-                <th>95% CI</th>
-                <th>p-value</th>
-                <th>Result</th>
-              </tr>
-            </thead>
-            <tbody id="resBody"></tbody>
-          </table>
-
-          <div id="expiryBox"></div>
-
-          <div class="chart-wrap">
-            <div class="chart-title">% Change from T0 over time</div>
-            <canvas id="stabilityChart" height="220"></canvas>
+        <div class="rpt-section" data-open="true" data-sec-id="stability-summary">
+          <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+            <span class="rpt-sec-title">Stability Summary</span>
+            <span class="rpt-sec-badge rpt-badge-in">In report</span>
+            <span class="rpt-sec-arrow">▼</span>
           </div>
+          <div class="rpt-sec-body">
+            <div class="kpi-row" id="kpiRow"></div>
+            <div id="expiryBox"></div>
+          </div>
+        </div>
 
-          <div class="trend-box" id="trendBox"></div>
+        <div class="rpt-section" data-open="true" data-sec-id="stability-table">
+          <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+            <span class="rpt-sec-title">Results Table</span>
+            <span class="rpt-sec-badge rpt-badge-in">In report</span>
+            <span class="rpt-sec-arrow">▼</span>
+          </div>
+          <div class="rpt-sec-body">
+            <table class="res-table" id="resTable">
+              <thead>
+                <tr>
+                  <th>Time point</th>
+                  <th>N</th>
+                  <th>Mean % change</th>
+                  <th>SD</th>
+                  <th>95% CI</th>
+                  <th>p-value</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody id="resBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="rpt-section" data-open="true" data-sec-id="stability-chart">
+          <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+            <span class="rpt-sec-title">% Change Chart</span>
+            <span class="rpt-sec-badge rpt-badge-in">In report</span>
+            <span class="rpt-sec-arrow">▼</span>
+          </div>
+          <div class="rpt-sec-body">
+            <div class="chart-wrap" style="margin-top:0;">
+              <div class="chart-title">% Change from T0 over time</div>
+              <canvas id="stabilityChart" height="220"></canvas>
+            </div>
+            <div class="trend-box" id="trendBox" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:4px;margin-bottom:14px;">
+          <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
         </div>
 
       </div>
@@ -697,6 +734,13 @@ function loadScenario(num) {
     });
 })();
 eflmRestoreSelection('stab-eflm-analyte');
+
+function addToReport() {
+  var analyte = document.getElementById('analyteName')?.value || 'Stability Study';
+  if (collectAndAddToReport('Quantitative Stability Study', analyte)) {
+    rptBtnFeedback('add-report-btn');
+  }
+}
 
 function stabEFLMChange() {
   const key = document.getElementById('stab-eflm-analyte').value;

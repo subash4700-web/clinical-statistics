@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Categorical Method Comparison</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="assets/js/report-helper.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <style>
     .ctable { border-collapse: separate; border-spacing: 0; }
@@ -107,6 +108,17 @@
     .ex-param.warn{background:#fef9c3;color:#854d0e;}
     .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
     .ex-btn:hover{opacity:.88;}
+
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 <body>
@@ -490,114 +502,147 @@ function runAnalysis() {
   let html = '';
 
   // ── Summary KPI row ──
-  html += `<div class="card">
-    <div class="section-title">Summary</div>
-    <div class="kpi-grid">
-      <div class="kpi"><div class="label">n (total pairs)</div><div class="value">${N}</div></div>
-      <div class="kpi"><div class="label">Observed agreement</div><div class="value">${(Po*100).toFixed(1)}%</div></div>
-      <div class="kpi"><div class="label">Cohen's κ</div><div class="value">${kap ? kap.k.toFixed(3) : '—'}</div></div>
-      <div class="kpi"><div class="label">McNemar p</div><div class="value">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div></div>
+  html += `<div class="rpt-section" data-open="true" data-sec-id="summary">
+    <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+      <span class="rpt-sec-title">Summary</span>
+      <span class="rpt-sec-badge rpt-badge-in">In report</span>
+      <span class="rpt-sec-arrow">▼</span>
+    </div>
+    <div class="rpt-sec-body">
+      <div class="card" style="margin:0;">
+        <div class="section-title">Summary</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="label">n (total pairs)</div><div class="value">${N}</div></div>
+          <div class="kpi"><div class="label">Observed agreement</div><div class="value">${(Po*100).toFixed(1)}%</div></div>
+          <div class="kpi"><div class="label">Cohen's κ</div><div class="value">${kap ? kap.k.toFixed(3) : '—'}</div></div>
+          <div class="kpi"><div class="label">McNemar p</div><div class="value">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div></div>
+        </div>
+      </div>
     </div>
   </div>`;
 
   // ── Kappa + McNemar side by side ──
-  html += `<div class="kpi-pair">
-
-    <div class="kpi-box kpi-box-blue">
-      <div class="kb-label">Cohen's Kappa — Concordance</div>
-      <div class="kb-val">${kap ? kap.k.toFixed(3) : '—'}</div>
-      <div class="kb-sub">${ciPct}% CI: ${kap ? kapLo.toFixed(3) : '—'} to ${kap ? kapHi.toFixed(3) : '—'}</div>
-      <div class="kb-sub">Pₒ = ${(Po*100).toFixed(1)}% &nbsp;·&nbsp; Pₑ = ${kap ? (kap.Pe*100).toFixed(1) : '—'}%</div>
-      <div class="kb-interp ${ki.cls}">${ki.text}</div>
+  html += `<div class="rpt-section" data-open="true" data-sec-id="kappa-mcnemar">
+    <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+      <span class="rpt-sec-title">Kappa &amp; McNemar</span>
+      <span class="rpt-sec-badge rpt-badge-in">In report</span>
+      <span class="rpt-sec-arrow">▼</span>
     </div>
-
-    <div class="kpi-box kpi-box-orange">
-      <div class="kb-label">McNemar — Discordance Tilt</div>
-      <div class="kb-val">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div>
-      <div class="kb-sub">
-        ${mcn && mcn.stat !== null ? `${mcn.statLabel} = ${mcn.stat.toFixed(3)} &nbsp;·&nbsp; ` : `${mcn ? mcn.statLabel : ''} &nbsp;·&nbsp; `}
-        b = ${b}, c = ${c} &nbsp;·&nbsp; b+c = ${b+c}
+    <div class="rpt-sec-body">
+      <div class="kpi-pair">
+        <div class="kpi-box kpi-box-blue">
+          <div class="kb-label">Cohen's Kappa — Concordance</div>
+          <div class="kb-val">${kap ? kap.k.toFixed(3) : '—'}</div>
+          <div class="kb-sub">${ciPct}% CI: ${kap ? kapLo.toFixed(3) : '—'} to ${kap ? kapHi.toFixed(3) : '—'}</div>
+          <div class="kb-sub">Pₒ = ${(Po*100).toFixed(1)}% &nbsp;·&nbsp; Pₑ = ${kap ? (kap.Pe*100).toFixed(1) : '—'}%</div>
+          <div class="kb-interp ${ki.cls}">${ki.text}</div>
+        </div>
+        <div class="kpi-box kpi-box-orange">
+          <div class="kb-label">McNemar — Discordance Tilt</div>
+          <div class="kb-val">${mcn ? (mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)) : '—'}</div>
+          <div class="kb-sub">
+            ${mcn && mcn.stat !== null ? `${mcn.statLabel} = ${mcn.stat.toFixed(3)} &nbsp;·&nbsp; ` : `${mcn ? mcn.statLabel : ''} &nbsp;·&nbsp; `}
+            b = ${b}, c = ${c} &nbsp;·&nbsp; b+c = ${b+c}
+          </div>
+          <div class="kb-sub">${mcn && mcn.sig ? `p < α (${alpha}) — significant tilt` : `p ≥ α (${alpha}) — no systematic tilt`}</div>
+          ${mcn ? `<span class="direction-pill ${mcn.dirPill}">${mcn.direction}</span>` : ''}
+        </div>
       </div>
-      <div class="kb-sub">${mcn && mcn.sig ? `p < α (${alpha}) — significant tilt` : `p ≥ α (${alpha}) — no systematic tilt`}</div>
-      ${mcn ? `<span class="direction-pill ${mcn.dirPill}">${mcn.direction}</span>` : ''}
     </div>
-
   </div>`;
 
   // ── 2×2 visual table ──
-  html += `<div class="card">
-    <div class="section-title">2×2 Agreement Table</div>
-    <p class="note" style="margin-top:0;margin-bottom:10px;">
-      Blue = concordant pairs (agreement). Orange = discordant pairs (McNemar's test uses only these).
-    </p>
-    <div class="vis-table" style="grid-template-columns: 100px 1fr 1fr;">
-      <div></div>
-      <div class="vis-header">${mB}: ${posLbl}</div>
-      <div class="vis-header">${mB}: ${negLbl}</div>
-
-      <div class="vis-row-header">${mA}: ${posLbl}</div>
-      <div class="vis-cell vis-cell-agree">
-        <div class="vc-val">${a}</div>
-        <div class="vc-lbl">a — agree</div>
-        <div class="vc-pct">${(a/N*100).toFixed(1)}%</div>
-      </div>
-      <div class="vis-cell vis-cell-disagree">
-        <div class="vc-val">${b}</div>
-        <div class="vc-lbl">b — A+, B−</div>
-        <div class="vc-pct">${(b/N*100).toFixed(1)}%</div>
-      </div>
-
-      <div class="vis-row-header">${mA}: ${negLbl}</div>
-      <div class="vis-cell vis-cell-disagree">
-        <div class="vc-val">${c}</div>
-        <div class="vc-lbl">c — A−, B+</div>
-        <div class="vc-pct">${(c/N*100).toFixed(1)}%</div>
-      </div>
-      <div class="vis-cell vis-cell-agree">
-        <div class="vc-val">${d}</div>
-        <div class="vc-lbl">d — agree</div>
-        <div class="vc-pct">${(d/N*100).toFixed(1)}%</div>
+  html += `<div class="rpt-section" data-open="true" data-sec-id="agreement-table">
+    <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+      <span class="rpt-sec-title">2×2 Agreement Table</span>
+      <span class="rpt-sec-badge rpt-badge-in">In report</span>
+      <span class="rpt-sec-arrow">▼</span>
+    </div>
+    <div class="rpt-sec-body">
+      <div class="card" style="margin:0;">
+        <div class="section-title">2×2 Agreement Table</div>
+        <p class="note" style="margin-top:0;margin-bottom:10px;">
+          Blue = concordant pairs (agreement). Orange = discordant pairs (McNemar's test uses only these).
+        </p>
+        <div class="vis-table" style="grid-template-columns: 100px 1fr 1fr;">
+          <div></div>
+          <div class="vis-header">${mB}: ${posLbl}</div>
+          <div class="vis-header">${mB}: ${negLbl}</div>
+          <div class="vis-row-header">${mA}: ${posLbl}</div>
+          <div class="vis-cell vis-cell-agree">
+            <div class="vc-val">${a}</div>
+            <div class="vc-lbl">a — agree</div>
+            <div class="vc-pct">${(a/N*100).toFixed(1)}%</div>
+          </div>
+          <div class="vis-cell vis-cell-disagree">
+            <div class="vc-val">${b}</div>
+            <div class="vc-lbl">b — A+, B−</div>
+            <div class="vc-pct">${(b/N*100).toFixed(1)}%</div>
+          </div>
+          <div class="vis-row-header">${mA}: ${negLbl}</div>
+          <div class="vis-cell vis-cell-disagree">
+            <div class="vc-val">${c}</div>
+            <div class="vc-lbl">c — A−, B+</div>
+            <div class="vc-pct">${(c/N*100).toFixed(1)}%</div>
+          </div>
+          <div class="vis-cell vis-cell-agree">
+            <div class="vc-val">${d}</div>
+            <div class="vc-lbl">d — agree</div>
+            <div class="vc-pct">${(d/N*100).toFixed(1)}%</div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:16px;">Positive Rate Comparison</div>
+        <p class="note" style="margin-top:0;margin-bottom:8px;">
+          A difference here shows the "tilt" — one method calling more positives than the other.
+        </p>
+        <div class="tilt-wrap">
+          <div class="tilt-row">
+            <div class="tilt-label">${mA}</div>
+            <div class="tilt-track"><div class="tilt-fill tilt-fill-a" style="width:${(posA*100).toFixed(1)}%"></div></div>
+            <div class="tilt-pct">${(posA*100).toFixed(1)}%</div>
+          </div>
+          <div class="tilt-row">
+            <div class="tilt-label">${mB}</div>
+            <div class="tilt-track"><div class="tilt-fill tilt-fill-b" style="width:${(posB*100).toFixed(1)}%"></div></div>
+            <div class="tilt-pct">${(posB*100).toFixed(1)}%</div>
+          </div>
+        </div>
+        <p class="note" style="margin-top:6px;">
+          Difference in positive rate: <strong>${Math.abs((posA-posB)*100).toFixed(1)} percentage points</strong>
+          ${posA > posB ? `(${mA} calls more positives)` : posA < posB ? `(${mB} calls more positives)` : '(identical positive rate)'}.
+        </p>
       </div>
     </div>
-
-    <!-- Positive rate comparison (tilt bar) -->
-    <div class="section-title" style="margin-top:16px;">Positive Rate Comparison</div>
-    <p class="note" style="margin-top:0;margin-bottom:8px;">
-      A difference here shows the "tilt" — one method calling more positives than the other.
-    </p>
-    <div class="tilt-wrap">
-      <div class="tilt-row">
-        <div class="tilt-label">${mA}</div>
-        <div class="tilt-track"><div class="tilt-fill tilt-fill-a" style="width:${(posA*100).toFixed(1)}%"></div></div>
-        <div class="tilt-pct">${(posA*100).toFixed(1)}%</div>
-      </div>
-      <div class="tilt-row">
-        <div class="tilt-label">${mB}</div>
-        <div class="tilt-track"><div class="tilt-fill tilt-fill-b" style="width:${(posB*100).toFixed(1)}%"></div></div>
-        <div class="tilt-pct">${(posB*100).toFixed(1)}%</div>
-      </div>
-    </div>
-    <p class="note" style="margin-top:6px;">
-      Difference in positive rate: <strong>${Math.abs((posA-posB)*100).toFixed(1)} percentage points</strong>
-      ${posA > posB ? `(${mA} calls more positives)` : posA < posB ? `(${mB} calls more positives)` : '(identical positive rate)'}.
-    </p>
   </div>`;
 
   // ── Interpretation ──
   const kapSig = kap && kap.k > 0;
-  html += `<div class="card">
-    <div class="section-title">Interpretation</div>
-    <div class="alert ${kapBadge}">
-      <strong>Concordance (Kappa):</strong> κ = ${kap ? kap.k.toFixed(3) : '—'} — ${ki.text}.
-      ${(100*Po).toFixed(1)}% of paired results agree. Expected agreement by chance alone: ${kap ? (kap.Pe*100).toFixed(1) : '—'}%.
+  html += `<div class="rpt-section" data-open="true" data-sec-id="interpretation">
+    <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+      <span class="rpt-sec-title">Interpretation</span>
+      <span class="rpt-sec-badge rpt-badge-in">In report</span>
+      <span class="rpt-sec-arrow">▼</span>
     </div>
-    <div class="alert ${mcnBadge}" style="margin-top:8px;">
-      <strong>Systematic tilt (McNemar):</strong>
-      ${mcn ? (mcn.sig
-        ? `p = ${mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)} — significant. The disagreements are not symmetric. ${mcn.direction}. b = ${b}, c = ${c}.`
-        : `p = ${mcn.p.toFixed(3)} — not significant. Discordances are symmetric (b = ${b}, c = ${c}). No evidence of systematic bias between the two methods.`)
-      : 'No discordant pairs — McNemar cannot be computed.'}
+    <div class="rpt-sec-body">
+      <div class="card" style="margin:0;">
+        <div class="section-title">Interpretation</div>
+        <div class="alert ${kapBadge}">
+          <strong>Concordance (Kappa):</strong> κ = ${kap ? kap.k.toFixed(3) : '—'} — ${ki.text}.
+          ${(100*Po).toFixed(1)}% of paired results agree. Expected agreement by chance alone: ${kap ? (kap.Pe*100).toFixed(1) : '—'}%.
+        </div>
+        <div class="alert ${mcnBadge}" style="margin-top:8px;">
+          <strong>Systematic tilt (McNemar):</strong>
+          ${mcn ? (mcn.sig
+            ? `p = ${mcn.p < 0.001 ? '<0.001' : mcn.p.toFixed(3)} — significant. The disagreements are not symmetric. ${mcn.direction}. b = ${b}, c = ${c}.`
+            : `p = ${mcn.p.toFixed(3)} — not significant. Discordances are symmetric (b = ${b}, c = ${c}). No evidence of systematic bias between the two methods.`)
+          : 'No discordant pairs — McNemar cannot be computed.'}
+        </div>
+      </div>
     </div>
+  </div>`;
+
+  html += `<div style="margin-top:4px;">
+    <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
   </div>`;
 
   document.getElementById('results-body').innerHTML = html;
@@ -894,6 +939,15 @@ function qaLoadScenario(n) {
   document.querySelector('.tab[data-tab="tab-input"]').classList.add('active');
   document.getElementById('tab-input').classList.add('active');
   runAnalysis();
+}
+
+function addToReport() {
+  var mA = document.getElementById('inp-method-a')?.value || 'Method A';
+  var mB = document.getElementById('inp-method-b')?.value || 'Method B';
+  var analyte = mA + ' vs ' + mB;
+  if (collectAndAddToReport('Categorical Method Comparison', analyte)) {
+    rptBtnFeedback('add-report-btn');
+  }
 }
 </script>
 </body>

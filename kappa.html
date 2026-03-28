@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cohen's Kappa</title>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
   <style>
     td.num { text-align: right; font-family: ui-monospace, monospace; }
 
@@ -152,7 +153,23 @@
 
   <!-- ===== ANALYSIS TAB ===== -->
   <div id="analysis" class="tab-content">
-    <div id="results"></div>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Kappa Results</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div id="results"></div>
+      </div>
+    </div>
+    <div class="rpt-section" data-open="true" data-sec-id="heatmap">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Agreement Heatmap</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
     <div class="card" style="margin-top:12px;">
       <div class="section-title">Agreement Heatmap</div>
       <div class="note">Diagonal cells (marked ⬤) show agreement between raters. Colors show if observed agreement exceeds chance expectations. Expected table shows what would occur by chance alone based on marginal distributions.</div>
@@ -162,6 +179,11 @@
       <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
         <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The κ value and its interpretation scale are standard outputs of Cohen's Kappa. The 95% confidence interval shown in the results is an <em>asymptotic approximation</em> — it is not an official part of the Kappa test itself, but is included as a supplementary indicator of precision. The CI should be interpreted cautiously with small samples (n &lt; 30) or extreme marginal distributions. Kappa is also sensitive to prevalence: even high observed agreement can produce a low κ if one category is very rare. For ordinal categories where disagreement severity matters, use Weighted Kappa instead.
       </div>
+    </div>
+      </div><!-- /rpt-sec-body heatmap -->
+    </div><!-- /rpt-section heatmap -->
+    <div class="btn-row" style="margin-top:12px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
   </div>
 
@@ -462,6 +484,14 @@
       document.getElementById(tab.dataset.tab).classList.add("active");
     });
   });
+
+  function addToReport() {
+    var testName = "Cohen's Kappa";
+    var variable = testName;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
 </script>
 
 </body>

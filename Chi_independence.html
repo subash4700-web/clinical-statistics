@@ -6,6 +6,7 @@
   <title>Chi-square Test of Independence</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
 
   <style>
     a.back-link { display: inline-block; margin-bottom: 18px; color: var(--accent);
@@ -196,72 +197,94 @@
   <!-- ===== ANALYSIS TAB ===== -->
   <div id="analysis" class="tab-content">
 
-    <!-- KPIs -->
-    <div class="kpi-grid" id="kpiGrid" style="display:none;">
-      <div class="kpi"><div class="label">χ² statistic</div><div class="value" id="kpiChi">—</div></div>
-      <div class="kpi"><div class="label">df</div><div class="value" id="kpiDf">—</div></div>
-      <div class="kpi"><div class="label">p-value</div><div class="value" id="kpiP">—</div></div>
-      <div class="kpi"><div class="label">Cramér's V</div><div class="value" id="kpiV">—</div></div>
-    </div>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Summary Statistics</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpiGrid" style="display:none;">
+          <div class="kpi"><div class="label">χ² statistic</div><div class="value" id="kpiChi">—</div></div>
+          <div class="kpi"><div class="label">df</div><div class="value" id="kpiDf">—</div></div>
+          <div class="kpi"><div class="label">p-value</div><div class="value" id="kpiP">—</div></div>
+          <div class="kpi"><div class="label">Cramér's V</div><div class="value" id="kpiV">—</div></div>
+        </div>
 
-    <!-- Interpretation + summary side by side -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="section-title">Summary Statistics</div>
-        <div class="table-wrap">
-          <table><tbody id="summaryTable"></tbody></table>
+        <!-- Interpretation + summary side by side -->
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="card">
+            <div class="section-title">Summary Statistics</div>
+            <div class="table-wrap">
+              <table><tbody id="summaryTable"></tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title">Interpretation</div>
+            <div id="interpretBox" class="alert">Run the analysis to see results.</div>
+          </div>
+        </div>
+
+        <!-- Expected counts table -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-title">Expected Counts</div>
+          <p class="note" style="margin-top:0; margin-bottom:8px;">
+            All expected counts should be ≥ 5 for the chi-square approximation to be valid. Cells below 5 are flagged.
+          </p>
+          <div class="table-wrap">
+            <table><tbody id="expectedTable"></tbody></table>
+          </div>
+          <div id="expectedWarning" style="margin-top:8px;"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="section-title">Interpretation</div>
-        <div id="interpretBox" class="alert">Run the analysis to see results.</div>
+    </div>
+
+    <div class="rpt-section" data-open="true" data-sec-id="visualisation">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Hypothesis Visualisation</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <!-- Visualization -->
+        <div class="card">
+          <div class="section-title">Hypothesis Visualisation</div>
+          <p class="note" style="margin-top:0; margin-bottom:10px;">
+            Chi-square distribution with df = 1. The red shaded area is the rejection region (α). The observed χ² is shown as the vertical marker.
+          </p>
+          <div class="viz-header">
+            <div>
+              <div class="viz-header-label">What are we testing?</div>
+              <div class="viz-header-value">Independence of the two categorical variables</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="viz-header-label">Is χ² in the rejection region?</div>
+              <div class="viz-header-value" id="vizVerdict">—</div>
+            </div>
+          </div>
+          <div class="viz-wrap">
+            <canvas id="chiCanvas"></canvas>
+          </div>
+          <div class="viz-footer" id="vizFooter">Run the analysis to see the visualisation.</div>
+
+          <!-- Bar chart showing observed vs expected counts -->
+          <div class="section-title" style="margin-top:24px;">Observed vs Expected Counts</div>
+          <p class="note" style="margin-top:0; margin-bottom:10px;">
+            Comparison of observed counts (blue) and expected counts (orange) for each cell in the 2×2 table.
+          </p>
+          <div class="viz-wrap">
+            <canvas id="barCanvas"></canvas>
+          </div>
+          <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+            <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The chi-square approximation is valid when all expected cell counts are ≥ 5. Expected counts are shown in the table above; any cell below 5 is flagged. For 2×2 tables with low expected counts, use Fisher's Exact Test instead — it gives an exact p-value regardless of sample size.
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Expected counts table -->
-    <div class="card">
-      <div class="section-title">Expected Counts</div>
-      <p class="note" style="margin-top:0; margin-bottom:8px;">
-        All expected counts should be ≥ 5 for the chi-square approximation to be valid. Cells below 5 are flagged.
-      </p>
-      <div class="table-wrap">
-        <table><tbody id="expectedTable"></tbody></table>
-      </div>
-      <div id="expectedWarning" style="margin-top:8px;"></div>
-    </div>
-
-    <!-- Visualization -->
-    <div class="card">
-      <div class="section-title">Hypothesis Visualisation</div>
-      <p class="note" style="margin-top:0; margin-bottom:10px;">
-        Chi-square distribution with df = 1. The red shaded area is the rejection region (α). The observed χ² is shown as the vertical marker.
-      </p>
-      <div class="viz-header">
-        <div>
-          <div class="viz-header-label">What are we testing?</div>
-          <div class="viz-header-value">Independence of the two categorical variables</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="viz-header-label">Is χ² in the rejection region?</div>
-          <div class="viz-header-value" id="vizVerdict">—</div>
-        </div>
-      </div>
-      <div class="viz-wrap">
-        <canvas id="chiCanvas"></canvas>
-      </div>
-      <div class="viz-footer" id="vizFooter">Run the analysis to see the visualisation.</div>
-
-      <!-- Bar chart showing observed vs expected counts -->
-      <div class="section-title" style="margin-top:24px;">Observed vs Expected Counts</div>
-      <p class="note" style="margin-top:0; margin-bottom:10px;">
-        Comparison of observed counts (blue) and expected counts (orange) for each cell in the 2×2 table.
-      </p>
-      <div class="viz-wrap">
-        <canvas id="barCanvas"></canvas>
-      </div>
-      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> The chi-square approximation is valid when all expected cell counts are ≥ 5. Expected counts are shown in the table above; any cell below 5 is flagged. For 2×2 tables with low expected counts, use Fisher's Exact Test instead — it gives an exact p-value regardless of sample size.
-      </div>
+    <div style="margin:16px 0 8px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
 
     <!-- Results div for external JS to fill -->
@@ -871,6 +894,15 @@
     document.querySelector(".ctable").scrollIntoView({ behavior: "smooth", block: "nearest" });
     document.getElementById("runBtn").click();
   });
+
+  function addToReport() {
+    var testName = 'Chi-square Test of Independence';
+    var vEl = document.getElementById('kpiV');
+    var variable = vEl && vEl.textContent !== '—' ? "Cramér's V = " + vEl.textContent : testName;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
 
 </script>
 </body>

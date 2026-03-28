@@ -228,113 +228,155 @@ function renderResults(res){
   
   const resultsDiv = el('resultsContent');
   
-  // Build HTML with outlier info
+  // Build HTML with rpt-section wrappers
   let html = `
-    <div class="card">
-      <div class="section-title">Data screening</div>
-      <div style="font-size:13px; line-height:1.6;">
-        <strong>Group 1:</strong> ${state.rows1.length} values, ${state.rows1.filter(r=>r.outlier).length} flagged as outlier, ${state.rows1.filter(r=>r.include).length} included in analysis<br>
-        <div class="note">IQR rule: Q1 = ${state.out1.q1.toFixed(3)}, Q3 = ${state.out1.q3.toFixed(3)}, IQR = ${state.out1.iqr.toFixed(3)}, bounds [${state.out1.lo.toFixed(3)}, ${state.out1.hi.toFixed(3)}]</div>
-        <strong>Group 2:</strong> ${state.rows2.length} values, ${state.rows2.filter(r=>r.outlier).length} flagged as outlier, ${state.rows2.filter(r=>r.include).length} included in analysis<br>
-        <div class="note">IQR rule: Q1 = ${state.out2.q1.toFixed(3)}, Q3 = ${state.out2.q3.toFixed(3)}, IQR = ${state.out2.iqr.toFixed(3)}, bounds [${state.out2.lo.toFixed(3)}, ${state.out2.hi.toFixed(3)}]</div>
+    <div class="rpt-section" data-open="false" data-sec-id="screening">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Data Screening</span>
+        <span class="rpt-sec-badge rpt-badge-ex">Excluded</span>
+        <span class="rpt-sec-arrow">▶</span>
+      </div>
+      <div class="rpt-sec-body" style="display:none;">
+        <div class="card">
+          <div style="font-size:13px; line-height:1.6;">
+            <strong>Group 1:</strong> ${state.rows1.length} values, ${state.rows1.filter(r=>r.outlier).length} flagged as outlier, ${state.rows1.filter(r=>r.include).length} included in analysis<br>
+            <div class="note">IQR rule: Q1 = ${state.out1.q1.toFixed(3)}, Q3 = ${state.out1.q3.toFixed(3)}, IQR = ${state.out1.iqr.toFixed(3)}, bounds [${state.out1.lo.toFixed(3)}, ${state.out1.hi.toFixed(3)}]</div>
+            <strong>Group 2:</strong> ${state.rows2.length} values, ${state.rows2.filter(r=>r.outlier).length} flagged as outlier, ${state.rows2.filter(r=>r.include).length} included in analysis<br>
+            <div class="note">IQR rule: Q1 = ${state.out2.q1.toFixed(3)}, Q3 = ${state.out2.q3.toFixed(3)}, IQR = ${state.out2.iqr.toFixed(3)}, bounds [${state.out2.lo.toFixed(3)}, ${state.out2.hi.toFixed(3)}]</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Summary Statistics</div>
-      <table style="width:100%; font-size:13px;">
-        <tr style="background:#f9fafb;">
-          <th style="padding:8px;">Group</th>
-          <th style="padding:8px; text-align:right;">n</th>
-          <th style="padding:8px; text-align:right;">Median</th>
-          <th style="padding:8px; text-align:right;">Mean</th>
-          <th style="padding:8px; text-align:right;">Sum of Ranks</th>
-        </tr>
-        <tr>
-          <td style="padding:8px;">Group 1</td>
-          <td style="padding:8px; text-align:right;">${n1}</td>
-          <td style="padding:8px; text-align:right;">${median(g1).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${mean(g1).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${R1.toFixed(1)}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;">Group 2</td>
-          <td style="padding:8px; text-align:right;">${n2}</td>
-          <td style="padding:8px; text-align:right;">${median(g2).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${mean(g2).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${(n1+n2)*(n1+n2+1)/2 - R1.toFixed(1)}</td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Test Statistics</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <div class="small" style="font-weight:800;">U₁ (Mann–Whitney)</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${U1.toFixed(2)}</div>
-        </div>
-        <div>
-          <div class="small" style="font-weight:800;">U₂</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${U2.toFixed(2)}</div>
-        </div>
+    <div class="rpt-section" data-open="true" data-sec-id="summary" style="margin-top:10px;">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Summary Statistics</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="margin-top:12px;">
-        <div class="small" style="font-weight:800;">Standardized z-score (${methodType === 'exact' ? 'not applicable' : 'normal approximation'})</div>
-        <div style="font-size:20px; font-weight:900; margin-top:4px;">${z.toFixed(4)}</div>
+      <div class="rpt-sec-body">
+        <div class="card">
+          <table style="width:100%; font-size:13px;">
+            <tr style="background:#f9fafb;">
+              <th style="padding:8px;">Group</th>
+              <th style="padding:8px; text-align:right;">n</th>
+              <th style="padding:8px; text-align:right;">Median</th>
+              <th style="padding:8px; text-align:right;">Mean</th>
+              <th style="padding:8px; text-align:right;">Sum of Ranks</th>
+            </tr>
+            <tr>
+              <td style="padding:8px;">Group 1</td>
+              <td style="padding:8px; text-align:right;">${n1}</td>
+              <td style="padding:8px; text-align:right;">${median(g1).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${mean(g1).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${R1.toFixed(1)}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px;">Group 2</td>
+              <td style="padding:8px; text-align:right;">${n2}</td>
+              <td style="padding:8px; text-align:right;">${median(g2).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${mean(g2).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${(n1+n2)*(n1+n2+1)/2 - R1.toFixed(1)}</td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Hypothesis Test Result</div>
-      <div style="padding:12px; background:${significant ? '#ecfdf5' : '#f1f5f9'}; border-radius:10px; margin-bottom:12px;">
-        <div style="font-size:14px; font-weight:700; color:${significant ? '#15803d' : '#374151'};">
-          ${significant ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}
-        </div>
-        <div style="font-size:12px; color:${significant ? '#14532d' : '#374151'}; margin-top:4px;">
-          ${tail === 'two' ? 'The distributions differ significantly' : 
-            (tail === 'right' ? 'Group 1 is significantly greater than Group 2' : 
-                               'Group 1 is significantly less than Group 2')}
-        </div>
+    <div class="rpt-section" data-open="true" data-sec-id="testresult" style="margin-top:10px;">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Test Result</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="font-size:13px;">
-        <strong>p-value:</strong> ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(6)}<br>
-        <strong>Significance level (α):</strong> ${alpha}<br>
-        <strong>Test type:</strong> ${tail === 'two' ? 'Two-sided' : (tail === 'right' ? 'One-sided (Group 1 > Group 2)' : 'One-sided (Group 1 < Group 2)')}<br>
-        ${exactP !== null ? `<strong>Method:</strong> Exact (${totalPerms.toLocaleString()} permutations enumerated)` : 
-                           `<strong>Method:</strong> Normal approximation with tie correction`}
+      <div class="rpt-sec-body">
+        <div class="card">
+          <div class="section-title">Test Statistics</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <div class="small" style="font-weight:800;">U₁ (Mann–Whitney)</div>
+              <div style="font-size:20px; font-weight:900; margin-top:4px;">${U1.toFixed(2)}</div>
+            </div>
+            <div>
+              <div class="small" style="font-weight:800;">U₂</div>
+              <div style="font-size:20px; font-weight:900; margin-top:4px;">${U2.toFixed(2)}</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="small" style="font-weight:800;">Standardized z-score (${methodType === 'exact' ? 'not applicable' : 'normal approximation'})</div>
+            <div style="font-size:20px; font-weight:900; margin-top:4px;">${z.toFixed(4)}</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="section-title">Hypothesis Test Result</div>
+          <div style="padding:12px; background:${significant ? '#ecfdf5' : '#f1f5f9'}; border-radius:10px; margin-bottom:12px;">
+            <div style="font-size:14px; font-weight:700; color:${significant ? '#15803d' : '#374151'};">
+              ${significant ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}
+            </div>
+            <div style="font-size:12px; color:${significant ? '#14532d' : '#374151'}; margin-top:4px;">
+              ${tail === 'two' ? 'The distributions differ significantly' :
+                (tail === 'right' ? 'Group 1 is significantly greater than Group 2' :
+                                   'Group 1 is significantly less than Group 2')}
+            </div>
+          </div>
+          <div style="font-size:13px;">
+            <strong>p-value:</strong> ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(6)}<br>
+            <strong>Significance level (α):</strong> ${alpha}<br>
+            <strong>Test type:</strong> ${tail === 'two' ? 'Two-sided' : (tail === 'right' ? 'One-sided (Group 1 > Group 2)' : 'One-sided (Group 1 < Group 2)')}<br>
+            ${exactP !== null ? `<strong>Method:</strong> Exact (${totalPerms.toLocaleString()} permutations enumerated)` :
+                               `<strong>Method:</strong> Normal approximation with tie correction`}
+          </div>
+        </div>
       </div>
     </div>
   `;
-  
+
   if(showEffect){
     html += `
-      <div class="card" style="margin-top:16px;">
-        <div class="section-title">Effect Size</div>
-        <div>
-          <div class="small" style="font-weight:800;">Rank-biserial correlation (r)</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${r.toFixed(4)}</div>
-          <div class="note" style="margin-top:8px;">
-            Interpretation: |r| < 0.3 = small, 0.3-0.5 = medium, > 0.5 = large effect
+      <div class="rpt-section" data-open="true" data-sec-id="effectsize" style="margin-top:10px;">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Effect Size</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="card">
+            <div class="small" style="font-weight:800;">Rank-biserial correlation (r)</div>
+            <div style="font-size:20px; font-weight:900; margin-top:4px;">${r.toFixed(4)}</div>
+            <div class="note" style="margin-top:8px;">
+              Interpretation: |r| < 0.3 = small, 0.3-0.5 = medium, > 0.5 = large effect
+            </div>
           </div>
         </div>
       </div>
     `;
   }
-  
+
   resultsDiv.innerHTML = html;
+
+  // Show the Add to Report button row
+  const rptBtnRow = el('report-btn-row');
+  if(rptBtnRow) rptBtnRow.style.display = 'block';
   
   // Render visualizations if enabled
   if(showViz){
     try{
-      // Add hypothesis visualization card to results
+      // Add hypothesis visualization card wrapped in rpt-section
       const vizCard = document.createElement('div');
-      vizCard.className = 'card';
-      vizCard.style.marginTop = '16px';
+      vizCard.className = 'rpt-section';
+      vizCard.setAttribute('data-open', 'true');
+      vizCard.setAttribute('data-sec-id', 'viz');
+      vizCard.style.marginTop = '10px';
       
       // Build visualization HTML
       let vizHTML = `
-        <div class="section-title">Hypothesis visualisation</div>
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Hypothesis Visualisation</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+        <div class="card">
         <div class="note"><strong>Data distributions:</strong> Boxplots compare the actual observed values in each group (medians, quartiles, outliers).</div>
         <div style="margin-top:12px;">
           <canvas id="vizBoxplotMW" height="200"></canvas>
@@ -365,6 +407,7 @@ function renderResults(res){
         <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
           <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Boxplots show the actual observed data — they are exact representations of your sample, not assumptions. The normal approximation for the z-score (shown when using the large-sample method) is reliable for n₁ + n₂ ≥ 20 and becomes less accurate with very small groups or many tied ranks. For small samples the exact permutation p-value is used instead, and no sampling distribution is displayed. Mann-Whitney tests whether one group tends to have larger values (stochastic dominance) — it does <em>not</em> test for equal means or equal distributions.
         </div>
+        </div></div>
       `;
 
       vizCard.innerHTML = vizHTML;

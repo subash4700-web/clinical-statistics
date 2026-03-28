@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
   <style>
     .btn-secondary{ background:#111827; color:#fff; }
     .btn-sm { padding:6px 10px; font-size:12px; }
@@ -162,8 +163,20 @@
 
   <!-- ── RESULTS TAB ── -->
   <div id="results" class="tab-content">
-    <div id="resultsContent">
-      <p class="note" style="text-align:center;padding:40px;">Run the analysis to see results.</p>
+    <div class="rpt-section" data-open="true" data-sec-id="regression-results">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Regression Results</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div id="resultsContent">
+          <p class="note" style="text-align:center;padding:40px;">Run the analysis to see results.</p>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
   </div>
 
@@ -214,6 +227,16 @@
     document.getElementById('yData').value = document.getElementById('genOutY').value;
     document.getElementById('runBtn').click();
   });
+
+  function addToReport() {
+    var xLbl = document.getElementById('xLabel').value.trim() || 'X';
+    var yLbl = document.getElementById('yLabel').value.trim() || 'Y';
+    var testName = 'Linear Regression';
+    var variable = xLbl + ' vs ' + yLbl;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
 </script>
 </body>
 </html>

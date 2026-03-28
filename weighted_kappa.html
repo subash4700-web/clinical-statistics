@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Weighted Cohen's Kappa</title>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
   <style>
     /* WEIGHT TOGGLE */
     .weight-toggle { display: flex; gap: 8px; }
@@ -161,16 +162,36 @@
 
   <!-- ===== ANALYSIS TAB ===== -->
   <div id="analysis" class="tab-content">
-    <div id="results"></div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-title">Weighted Agreement Heatmap</div>
-      <div class="note">Weighted κ measures diagonal agreement (⬤ cells) with penalties for distance. Colors show how much diagonal cells deviate from expected by-chance distribution. Off-diagonal cells remain neutral as they represent disagreement with varying weight penalties.</div>
-      <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
-        <canvas id="heatmapWkappa" height="480"></canvas>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Weighted Kappa Results</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Weighted Kappa extends Cohen's Kappa by penalising disagreements proportionally to their distance. The choice of weight scheme matters: linear weights penalise all disagreements equally per step; quadratic weights penalise larger disagreements more heavily and are equivalent to an intraclass correlation for ordinal data. The 95% CI is an asymptotic approximation and should be interpreted cautiously for small samples. Weighted Kappa requires the same ordered categories for both raters — it is not suitable for unordered (nominal) categories, where unweighted Cohen's Kappa should be used instead.
+      <div class="rpt-sec-body">
+        <div id="results"></div>
       </div>
+    </div>
+    <div class="rpt-section" data-open="true" data-sec-id="heatmap">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Weighted Agreement Heatmap</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="card" style="margin-top:12px;">
+          <div class="note">Weighted κ measures diagonal agreement (⬤ cells) with penalties for distance. Colors show how much diagonal cells deviate from expected by-chance distribution. Off-diagonal cells remain neutral as they represent disagreement with varying weight penalties.</div>
+          <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+            <canvas id="heatmapWkappa" height="480"></canvas>
+          </div>
+          <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+            <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Weighted Kappa extends Cohen's Kappa by penalising disagreements proportionally to their distance. The choice of weight scheme matters: linear weights penalise all disagreements equally per step; quadratic weights penalise larger disagreements more heavily and are equivalent to an intraclass correlation for ordinal data. The 95% CI is an asymptotic approximation and should be interpreted cautiously for small samples. Weighted Kappa requires the same ordered categories for both raters — it is not suitable for unordered (nominal) categories, where unweighted Cohen's Kappa should be used instead.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
   </div>
 
@@ -566,6 +587,14 @@
       document.getElementById(tab.dataset.tab).classList.add("active");
     });
   });
+
+  function addToReport() {
+    var testName = "Weighted Cohen's Kappa";
+    var variable = testName;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
 
   buildTable();
 </script>

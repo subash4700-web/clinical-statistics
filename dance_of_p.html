@@ -677,7 +677,8 @@ const EXERCISES = {
         <li>Watch the p-value in the readout jump up and down. This is the <b>dance of the p-values</b>.</li>
         <li>After ~100 experiments, check the estimated power. With n = 25 and δ = 0.50, you should see power around 50–60%.</li>
       </ol>
-      <b>Key insight:</b> The same true effect can produce p = 0.002 in one experiment and p = 0.31 in the next. A single p-value tells you very little on its own.`
+      <b>Key insight:</b> The same true effect can produce p = 0.002 in one experiment and p = 0.31 in the next. A single p-value tells you very little on its own.<br><br>
+      <b>What the p-value actually means:</b> If H₀ is true and you repeat the experiment 100 times, you expect to see a result this extreme — or more extreme — in roughly p × 100 of those repetitions, purely by chance. p = 0.03 means about 3 out of 100. This simulation shows exactly that: watch how often you get p &lt; 0.05 even when Δ = 0 (false positives) or miss significance even when the effect is real (false negatives).`
   },
   2: {
     muC:50, muE:60, sigmaC:20, sigmaE:20, n:8, alpha:'0.05', speed:15,

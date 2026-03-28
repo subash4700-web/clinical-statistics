@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>McNemar's Test</title>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
 
   <style>
     a.back-link { display: inline-block; margin-bottom: 18px; color: var(--accent);
@@ -184,18 +185,38 @@
 
   <!-- ===== ANALYSIS TAB ===== -->
   <div id="analysis" class="tab-content">
-    <div id="results"></div>
-    <div class="card" style="margin-top:12px;">
-      <div class="section-title">Contingency Table Heatmap</div>
-      <p class="note" style="margin-top:0; margin-bottom:10px;">
-        Color intensity represents cell counts. Discordant cells (b and c, highlighted) determine the test outcome.
-      </p>
-      <div class="viz-wrap" style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
-        <canvas id="heatmapCanvas" height="300"></canvas>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">McNemar Test Results</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> McNemar's test is based only on the discordant pairs (cells b and c) — concordant pairs (a and d) do not affect the p-value. The chi-square approximation is reliable when b + c ≥ 25. With fewer discordant pairs, use the exact binomial version of McNemar's test for a more accurate p-value.
+      <div class="rpt-sec-body">
+        <div id="results"></div>
       </div>
+    </div>
+    <div class="rpt-section" data-open="true" data-sec-id="heatmap">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Contingency Table Heatmap</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="card" style="margin-top:12px;">
+          <p class="note" style="margin-top:0; margin-bottom:10px;">
+            Color intensity represents cell counts. Discordant cells (b and c, highlighted) determine the test outcome.
+          </p>
+          <div class="viz-wrap" style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+            <canvas id="heatmapCanvas" height="300"></canvas>
+          </div>
+          <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+            <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> McNemar's test is based only on the discordant pairs (cells b and c) — concordant pairs (a and d) do not affect the p-value. The chi-square approximation is reliable when b + c ≥ 25. With fewer discordant pairs, use the exact binomial version of McNemar's test for a more accurate p-value.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
   </div>
 
@@ -203,6 +224,14 @@
 
 <script src="assets/js/stats/mcnemar.js"></script>
 <script>
+  function addToReport() {
+    var testName = "McNemar's Test";
+    var variable = testName;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
+
   // Tab switching
   document.querySelectorAll(".tab").forEach(tab => {
     tab.addEventListener("click", () => {

@@ -9,6 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="assets/js/eflm_db.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
   <style>
     /* Module-specific styles only */
     tr.excl-row td:not(.excl-cb-cell) { opacity: .35; text-decoration: line-through; }
@@ -287,10 +288,20 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
-    <div id="results-body"></div>
+    <div class="rpt-section" data-open="true" data-sec-id="precision-results">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Precision Results</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div id="results-body"></div>
+      </div>
+    </div>
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
       <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
   </div>
 </div>
@@ -1256,6 +1267,15 @@ function exportExcel(){
   if(!isNaN(r.allowable)) rows.push([],[`Allowable CV%`,r.allowable],['Result',r.pass?'Within spec':'Exceeds allowable']);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Precision');
   XLSX.writeFile(wb,`precision_${r.analyte||'results'}.xlsx`);
+}
+
+// ── Add to Report ──
+function addToReport() {
+  var analyte = (document.getElementById('inp-analyte') || {}).value || 'Precision';
+  var testName = 'Precision Analysis';
+  if (collectAndAddToReport(testName, analyte)) {
+    rptBtnFeedback('add-report-btn');
+  }
 }
 
 // ── Init ──

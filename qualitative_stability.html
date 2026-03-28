@@ -6,6 +6,7 @@
   <title>Qualitative Stability Study</title>
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/report-helper.js"></script>
   <style>
     .tp-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
     .tp-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -64,6 +65,17 @@
     .ex-param.warn{background:#fef9c3;color:#854d0e;}
     .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
     .ex-btn:hover{opacity:.88;}
+
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;}
+    .rpt-sec-body{padding:12px 14px;}
   </style>
 </head>
 <body>
@@ -451,14 +463,8 @@ function runStability() {
   // Build results HTML
   var html = '';
 
-  // Summary table
-  html += '<div class="card"><div class="section-title">Results Summary — ' + analyte + '</div>';
-  html += '<div style="overflow-x:auto;"><table class="res-table">';
-  html += '<thead><tr>' +
-    '<th>Time Point</th><th>n</th><th>κ (Kappa)</th><th>' + ciPct + '% CI</th>' +
-    '<th>McNemar p</th><th>Direction</th><th>Status</th>' +
-    '</tr></thead><tbody>';
-
+  // ── Summary table ──
+  var tableRows = '';
   results.forEach(function(r) {
     if (r.N === 0) return;
     var kStr = r.kap ? r.kap.k.toFixed(3) : '—';
@@ -471,7 +477,7 @@ function runStability() {
     var passBadge = r.pass
       ? '<span class="badge-pass">PASS</span>'
       : '<span class="badge-fail">FAIL</span>';
-    html += '<tr>' +
+    tableRows += '<tr>' +
       '<td><strong>' + r.lbl + '</strong></td>' +
       '<td>' + r.N + '</td>' +
       '<td><strong>' + kStr + '</strong></td>' +
@@ -481,17 +487,42 @@ function runStability() {
       '<td>' + passBadge + '</td>' +
       '</tr>';
   });
-  html += '</tbody></table></div></div>';
 
-  // Kappa chart
-  html += '<div class="card"><div class="section-title">κ Over Time</div>';
-  html += '<canvas id="kappaChart" height="220"></canvas>';
-  html += '<p class="note" style="margin-top:8px;">Dashed line = κ acceptance criterion (' + kappaCrit.toFixed(2) + '). ' +
-    'Error bars = ' + ciPct + '% CI. Orange = FAIL, teal = PASS.</p></div>';
+  html += '<div class="rpt-section" data-open="true" data-sec-id="qs-summary">' +
+    '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">' +
+      '<span class="rpt-sec-title">Results Summary</span>' +
+      '<span class="rpt-sec-badge rpt-badge-in">In report</span>' +
+      '<span class="rpt-sec-arrow">▼</span>' +
+    '</div>' +
+    '<div class="rpt-sec-body">' +
+      '<div class="section-title" style="margin-top:0;">Results Summary — ' + analyte + '</div>' +
+      '<div style="overflow-x:auto;"><table class="res-table">' +
+        '<thead><tr>' +
+          '<th>Time Point</th><th>n</th><th>κ (Kappa)</th><th>' + ciPct + '% CI</th>' +
+          '<th>McNemar p</th><th>Direction</th><th>Status</th>' +
+        '</tr></thead><tbody>' + tableRows + '</tbody>' +
+      '</table></div>' +
+    '</div>' +
+  '</div>';
 
-  // Functional expiry
+  // ── Kappa chart ──
+  html += '<div class="rpt-section" data-open="true" data-sec-id="qs-chart">' +
+    '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">' +
+      '<span class="rpt-sec-title">κ Over Time</span>' +
+      '<span class="rpt-sec-badge rpt-badge-in">In report</span>' +
+      '<span class="rpt-sec-arrow">▼</span>' +
+    '</div>' +
+    '<div class="rpt-sec-body">' +
+      '<canvas id="kappaChart" height="220"></canvas>' +
+      '<p class="note" style="margin-top:8px;">Dashed line = κ acceptance criterion (' + kappaCrit.toFixed(2) + '). ' +
+        'Error bars = ' + ciPct + '% CI. Orange = FAIL, teal = PASS.</p>' +
+    '</div>' +
+  '</div>';
+
+  // ── Functional expiry + insight ──
+  var expiryHtml = '';
   if (lastPass) {
-    html += '<div class="expiry-box' + (allPass ? '' : '') + '">' +
+    expiryHtml = '<div class="expiry-box' + (allPass ? '' : '') + '">' +
       '<div class="ex-label">Functional Expiry</div>' +
       '<div class="ex-val">' + lastPass + '</div>' +
       '<div class="ex-note">The last time point where κ ≥ ' + kappaCrit.toFixed(2) +
@@ -501,17 +532,27 @@ function runStability() {
       '</div>' +
     '</div>';
   } else {
-    html += '<div class="expiry-box fail">' +
+    expiryHtml = '<div class="expiry-box fail">' +
       '<div class="ex-label">Functional Expiry</div>' +
       '<div class="ex-val">No passing time point</div>' +
       '<div class="ex-note">No time point met both κ ≥ ' + kappaCrit.toFixed(2) +
         ' and McNemar p ≥ ' + alpha + '. Review your material or acceptance criteria.</div>' +
     '</div>';
   }
-
-  // Insight box
   var insight = buildInsight(results, kappaCrit, alpha, analyte, posLbl);
-  html += insight;
+
+  html += '<div class="rpt-section" data-open="true" data-sec-id="qs-expiry">' +
+    '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">' +
+      '<span class="rpt-sec-title">Functional Expiry &amp; Interpretation</span>' +
+      '<span class="rpt-sec-badge rpt-badge-in">In report</span>' +
+      '<span class="rpt-sec-arrow">▼</span>' +
+    '</div>' +
+    '<div class="rpt-sec-body">' + expiryHtml + insight + '</div>' +
+  '</div>';
+
+  html += '<div style="margin-top:4px;">' +
+    '<button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>' +
+  '</div>';
 
   document.getElementById('results-body').innerHTML = html;
 
@@ -761,6 +802,13 @@ window.loadSaveData = function(data) {
     });
   }
 };
+
+function addToReport() {
+  var analyte = document.getElementById('inp-analyte')?.value || 'Qualitative Stability';
+  if (collectAndAddToReport('Qualitative Stability Study', analyte)) {
+    rptBtnFeedback('add-report-btn');
+  }
+}
 </script>
 </body>
 </html>

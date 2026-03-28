@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="assets/js/xlsx.full.min.js"></script>
+  <script src="assets/js/report-helper.js"></script>
   <style>
     :root{
       --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
@@ -111,6 +112,17 @@
     .ex-instructions b{color:#1e40af;}
     .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
     .ex-instructions li{margin-bottom:5px;}
+
+    /* Report sections */
+    .rpt-section{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .rpt-sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:#f8fafc;user-select:none;}
+    .rpt-sec-hdr:hover{background:#f1f5f9;}
+    .rpt-sec-title{font-size:13px;font-weight:700;color:#1e293b;flex:1;}
+    .rpt-sec-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;}
+    .rpt-badge-in{background:#dcfce7;color:#15803d;}
+    .rpt-badge-ex{background:#f1f5f9;color:#9ca3af;}
+    .rpt-sec-arrow{font-size:11px;color:#6b7280;}
+    .rpt-sec-body{padding:0;}
   </style>
 </head>
 <body>
@@ -310,39 +322,97 @@
     <div class="charts-col">
       <div id="alertArea"></div>
 
-      <div class="chart-panel" id="rocPanel" style="display:none">
-        <div class="chart-hd">ROC Curve <span id="rocSubtitle"></span></div>
-        <div class="chart-bd">
-          <canvas id="rocCanvas" height="340"></canvas>
+      <div class="rpt-section" data-open="true" data-sec-id="roc" id="rpt-roc" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">ROC Curve</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="rocPanel">
+            <div class="chart-hd">ROC Curve <span id="rocSubtitle"></span></div>
+            <div class="chart-bd">
+              <canvas id="rocCanvas" height="340"></canvas>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="chart-panel" id="kpiPanel" style="display:none">
-        <div class="chart-hd">Diagnostic performance <span id="kpiSubtitle"></span></div>
-        <div class="chart-bd">
-          <div class="kpi-grid" id="kpiGrid"></div>
-          <div class="note-box" id="interpBox"></div>
+      <div class="rpt-section" data-open="true" data-sec-id="kpis" id="rpt-kpis" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Diagnostic Performance</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="kpiPanel">
+            <div class="chart-hd">Diagnostic performance <span id="kpiSubtitle"></span></div>
+            <div class="chart-bd">
+              <div class="kpi-grid" id="kpiGrid"></div>
+              <div class="note-box" id="interpBox"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="chart-panel" id="tablePanel" style="display:none">
-        <div class="chart-hd">AUC comparison <span id="tableSubtitle"></span></div>
-        <div class="chart-bd" id="aucTableBd"></div>
+      <div class="rpt-section" data-open="true" data-sec-id="auctable" id="rpt-auctable" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">AUC Comparison</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="tablePanel">
+            <div class="chart-hd">AUC comparison <span id="tableSubtitle"></span></div>
+            <div class="chart-bd" id="aucTableBd"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chart-panel" id="distPanel" style="display:none">
-        <div class="chart-hd">Score distributions <span id="distPanelTitle"></span></div>
-        <div class="chart-bd"><canvas id="distCanvas" height="220"></canvas></div>
+      <div class="rpt-section" data-open="true" data-sec-id="dist" id="rpt-dist" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Score Distributions</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="distPanel">
+            <div class="chart-hd">Score distributions <span id="distPanelTitle"></span></div>
+            <div class="chart-bd"><canvas id="distCanvas" height="220"></canvas></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chart-panel" id="ssPanel" style="display:none">
-        <div class="chart-hd">Sensitivity &amp; specificity vs threshold <span>Youden J maximises the sum</span></div>
-        <div class="chart-bd"><canvas id="ssCanvas" height="220"></canvas></div>
+      <div class="rpt-section" data-open="true" data-sec-id="sscurve" id="rpt-sscurve" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Sensitivity &amp; Specificity vs Threshold</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="ssPanel">
+            <div class="chart-hd">Sensitivity &amp; specificity vs threshold <span>Youden J maximises the sum</span></div>
+            <div class="chart-bd"><canvas id="ssCanvas" height="220"></canvas></div>
+          </div>
+        </div>
       </div>
 
-      <div class="chart-panel" id="pvPanel" style="display:none">
-        <div class="chart-hd">Predictive values vs prevalence <span>at Youden cut-off sens/spec</span></div>
-        <div class="chart-bd"><canvas id="pvCanvas" height="220"></canvas></div>
+      <div class="rpt-section" data-open="true" data-sec-id="pvcurve" id="rpt-pvcurve" style="display:none">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Predictive Values vs Prevalence</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="chart-panel" id="pvPanel">
+            <div class="chart-hd">Predictive values vs prevalence <span>at Youden cut-off sens/spec</span></div>
+            <div class="chart-bd"><canvas id="pvCanvas" height="220"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rpt-btn-row" style="display:none;margin-top:4px;">
+        <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
       </div>
 
     </div>
@@ -727,7 +797,8 @@ function runWithConfig() {
 const PALETTE = ['#2b6cb0', '#e05e00', '#118a4b', '#7c3aed', '#0891b2'];
 
 function drawROC(analResults, combined) {
-  document.getElementById('rocPanel').style.display = '';
+  document.getElementById('rpt-roc').style.display = '';
+  document.getElementById('rpt-btn-row').style.display = '';
   const ctx = document.getElementById('rocCanvas').getContext('2d');
   if (rocChartInst) { rocChartInst.destroy(); rocChartInst = null; }
 
@@ -826,7 +897,7 @@ function drawDistributions(analResults, combined, labels) {
   const primary = combined ?? analResults[0];
   if (!primary?.scores) return;
 
-  document.getElementById('distPanel').style.display = '';
+  document.getElementById('rpt-dist').style.display = '';
   document.getElementById('distPanelTitle').textContent = combined ? 'combined model — logistic probabilities' : primary.col;
 
   const posScores = primary.scores.filter((_, i) => labels[i] === 1);
@@ -894,7 +965,7 @@ function moveDistThreshold(t) {
 }
 
 function drawSSCurve(roc) {
-  document.getElementById('ssPanel').style.display = '';
+  document.getElementById('rpt-sscurve').style.display = '';
   const pts = [...roc.pts].sort((a, b) => a.thresh - b.thresh);
   const labels = pts.map(p => fmtN(p.thresh));
   const sensArr   = pts.map(p => p.tpr);
@@ -925,7 +996,7 @@ function drawSSCurve(roc) {
 }
 
 function drawPVChart(sens, spec) {
-  document.getElementById('pvPanel').style.display = '';
+  document.getElementById('rpt-pvcurve').style.display = '';
   const nPts = 100, prevLabels = [], ppvArr = [], npvArr = [];
   for (let i = 0; i <= nPts; i++) {
     const prev = i / nPts;
@@ -962,7 +1033,7 @@ function drawPVChart(sens, spec) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function renderKpis(analResults, combined, labels) {
-  document.getElementById('kpiPanel').style.display = '';
+  document.getElementById('rpt-kpis').style.display = '';
   const primary = combined ?? analResults[0];
   if (!primary?.roc) return;
   const yPt   = youdenPoint(primary.roc);
@@ -1003,9 +1074,9 @@ function renderKpis(analResults, combined, labels) {
 
 function renderAucTable(analResults, combined) {
   if (analResults.length < 2 && !combined) {
-    document.getElementById('tablePanel').style.display = 'none'; return;
+    document.getElementById('rpt-auctable').style.display = 'none'; return;
   }
-  document.getElementById('tablePanel').style.display = '';
+  document.getElementById('rpt-auctable').style.display = '';
   const subtitleEl = document.getElementById('tableSubtitle');
   if (subtitleEl) subtitleEl.textContent = combined ? '· individual analytes vs logistic regression model' : '· individual analytes';
   const all = [...analResults, ...(combined ? [combined] : [])];
@@ -1208,6 +1279,13 @@ function loadSampleData() {
 }
 
 document.addEventListener('DOMContentLoaded', loadSampleData);
+
+function addToReport() {
+  var analyte = document.getElementById('analyteName')?.value || 'ROC Analysis';
+  if (collectAndAddToReport('ROC & Diagnostic Performance', analyte)) {
+    rptBtnFeedback('add-report-btn');
+  }
+}
 
 window.exportToExcel = function() {
   if (!parsedData || !colRoles) { alert('Run analysis first.'); return; }

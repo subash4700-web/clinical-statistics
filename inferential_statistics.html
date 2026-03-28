@@ -188,17 +188,20 @@
   <!-- 3 -->
   <div class="section" id="pvalue">
     <h2>4. The p-value</h2>
-    <p>The p-value is the probability of obtaining a result as extreme as — or more extreme than — the one observed, <b>assuming the null hypothesis is true</b>.</p>
+    <p>The p-value is the probability of obtaining a result <b>at least as extreme</b> as the observed one, assuming the null hypothesis is true. It is not the probability that H₀ is true, and it does not measure the size or importance of an effect.</p>
     <div class="callout">
       <b>Correct interpretation:</b> A p-value of 0.03 means: if H₀ were true, there would be a 3% chance of seeing a difference this large (or larger) purely by chance.
     </div>
+    <p>A useful way to think about it: if the null hypothesis is true and you repeated the same experiment 100 times, you would expect to see a result as extreme as yours — or more extreme — in about <b>p × 100</b> of those repetitions, purely by chance.</p>
+    <p>So p = 0.03 means roughly <b>3 out of 100</b> repetitions would produce a result this extreme by chance alone. That is rare enough to make you doubt H₀ — but it does not prove H₀ is false, and it says nothing about how large or clinically important the effect is.</p>
     <div class="warn">
       <b>Common misconceptions:</b><br>
-      ✗ "p = 0.03 means there is a 3% chance H₀ is true." — <em>Wrong.</em><br>
+      ✗ "p = 0.03 means there is a 3% chance H₀ is true." — <em>Wrong. The p-value assumes H₀ is true — it cannot tell you the probability that it is.</em><br>
       ✗ "p = 0.03 means there is a 97% chance the result is real." — <em>Wrong.</em><br>
-      ✗ "A smaller p-value means a bigger effect." — <em>Wrong.</em>
+      ✗ "A smaller p-value means a bigger effect." — <em>Wrong. A tiny p-value can come from a trivially small effect in a very large sample.</em><br>
+      ✗ "p ≥ 0.05 means there is no effect." — <em>Wrong. It means the data are insufficient to reject H₀ — absence of evidence is not evidence of absence.</em>
     </div>
-    <p>In practice, the p-value is treated as <b>dichotomous</b>: either p &lt; α (reject H₀, "significant") or p ≥ α (fail to reject H₀, "not significant"). A p = 0.049 and p = 0.051 represent essentially the same evidence, yet are treated completely differently by this threshold.</p>
+    <p>In practice, the p-value is treated as <b>dichotomous</b>: either p &lt; α (reject H₀, "significant") or p ≥ α (fail to reject H₀, "not significant"). A p = 0.049 and p = 0.051 represent essentially the same evidence, yet are treated completely differently by this threshold. This is why effect size and confidence intervals matter more than the p-value alone.</p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
   <hr class="divider"/>

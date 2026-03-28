@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Fisher's Exact Test (2×2)</title>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
   <style>
     .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;}
     .field{ flex:1 1 220px;}
@@ -167,17 +168,42 @@
     </div>
 
     <div id="results" class="tab-content">
-      <div id="out"></div>
-      <div class="card" style="margin-top:12px;">
-        <div class="section-title">Contingency Table Heatmap</div>
-        <div class="note">Cell colors show deviation from independence. Orange indicates cells driving the association.</div>
-        <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
-          <canvas id="heatmapCanvasFisher" height="300"></canvas>
+
+      <div class="rpt-section" data-open="true" data-sec-id="summary">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Test Results</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
         </div>
-        <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Fisher's Exact Test computes an exact p-value by enumerating all possible tables with the same marginal totals — no approximation is involved. It is most appropriate for small samples or when any expected cell count is below 5. With larger samples (all expected counts ≥ 5), chi-square gives equivalent results and is computationally faster. The test is conservative and two-sided p-values are computed by doubling the one-sided probability, which can be slightly conservative for asymmetric distributions.
+        <div class="rpt-sec-body">
+          <div id="out"></div>
         </div>
       </div>
+
+      <div class="rpt-section" data-open="true" data-sec-id="heatmap">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Contingency Table Heatmap</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="card">
+            <div class="section-title">Contingency Table Heatmap</div>
+            <div class="note">Cell colors show deviation from independence. Orange indicates cells driving the association.</div>
+            <div style="margin-top:8px; padding:0; overflow:hidden; border-radius:12px; background:#fff;">
+              <canvas id="heatmapCanvasFisher" height="300"></canvas>
+            </div>
+            <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+              <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Fisher's Exact Test computes an exact p-value by enumerating all possible tables with the same marginal totals — no approximation is involved. It is most appropriate for small samples or when any expected cell count is below 5. With larger samples (all expected counts ≥ 5), chi-square gives equivalent results and is computationally faster. The test is conservative and two-sided p-values are computed by doubling the one-sided probability, which can be slightly conservative for asymmetric distributions.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:16px 0 8px;">
+        <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
+      </div>
+
     </div>
   </div>
 
@@ -454,6 +480,16 @@
       document.getElementById(tab.dataset.tab).classList.add("active");
     });
   });
+
+  function addToReport() {
+    var testName = "Fisher's Exact Test";
+    var rowName = (document.getElementById("rowName") ? document.getElementById("rowName").value.trim() : '') || 'Rows';
+    var colName = (document.getElementById("colName") ? document.getElementById("colName").value.trim() : '') || 'Columns';
+    var variable = rowName + ' × ' + colName;
+    if (collectAndAddToReport(testName, variable)) {
+      rptBtnFeedback('add-report-btn');
+    }
+  }
 </script>
 </body>
 </html>

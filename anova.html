@@ -8,6 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/report-helper.js"></script>
 
   <style>
     .copybox{
@@ -157,117 +158,166 @@
 
     <div id="statusArea" style="margin-bottom:12px;"></div>
 
-    <div class="kpi-grid" id="kpiGrid" style="display:none;">
-      <div class="kpi"><div class="label">Groups (k)</div><div class="value" id="kpiK">—</div></div>
-      <div class="kpi"><div class="label">F statistic</div><div class="value" id="kpiF">—</div></div>
-      <div class="kpi"><div class="label">p-value</div><div class="value" id="kpiP">—</div></div>
-      <div class="kpi"><div class="label">η²</div><div class="value" id="kpiEta">—</div></div>
-    </div>
-
-    <div class="grid-2" style="margin-top:12px;">
-      <div class="card">
-        <div class="section-title">ANOVA table</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Source</th>
-                <th class="num">SS</th>
-                <th class="num">df</th>
-                <th class="num">MS</th>
-                <th class="num">F</th>
-                <th class="num">p</th>
-              </tr>
-            </thead>
-            <tbody id="anovaTable"></tbody>
-          </table>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Summary Statistics</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="kpi-grid" id="kpiGrid" style="display:none;">
+          <div class="kpi"><div class="label">Groups (k)</div><div class="value" id="kpiK">—</div></div>
+          <div class="kpi"><div class="label">F statistic</div><div class="value" id="kpiF">—</div></div>
+          <div class="kpi"><div class="label">p-value</div><div class="value" id="kpiP">—</div></div>
+          <div class="kpi"><div class="label">η²</div><div class="value" id="kpiEta">—</div></div>
         </div>
-        <div id="effectArea" class="note" style="margin-top:8px;"></div>
-      </div>
 
-      <div class="card">
-        <div class="section-title">Interpretation</div>
-        <div id="interpretBox" class="alert" style="margin-bottom:10px;">
-          Run the analysis to see interpretation.
-        </div>
-        <div class="section-title" style="margin-top:10px;">Reporting text</div>
-        <div class="copybox">
-          <pre id="reportText">—</pre>
-          <button class="btn-ghost" id="copyReportBtn">Copy</button>
-        </div>
-        <div class="note">Template only — add units and clinical context before use.</div>
-      </div>
-    </div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="card">
+            <div class="section-title">ANOVA table</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th class="num">SS</th>
+                    <th class="num">df</th>
+                    <th class="num">MS</th>
+                    <th class="num">F</th>
+                    <th class="num">p</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaTable"></tbody>
+              </table>
+            </div>
+            <div id="effectArea" class="note" style="margin-top:8px;"></div>
+          </div>
 
-    <div class="card" style="margin-top:16px;" id="groupSummaryCard">
-      <div class="section-title">Group summary</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Group</th>
-              <th class="num">n</th>
-              <th class="num">Mean</th>
-              <th class="num">SD</th>
-              <th class="num">SE</th>
-              <th class="num">95% CI</th>
-            </tr>
-          </thead>
-          <tbody id="groupSummaryTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px; display:none;" id="postHocCard">
-      <div class="section-title">Post-hoc: Tukey HSD pairwise comparisons</div>
-      <div class="note" style="margin-bottom:8px;">Tukey HSD controls the family-wise error rate. Significant pairs are highlighted.</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Comparison</th>
-              <th class="num">Mean diff</th>
-              <th class="num">SE</th>
-              <th class="num">q</th>
-              <th class="num">p (adjusted)</th>
-              <th class="num">Significant?</th>
-            </tr>
-          </thead>
-          <tbody id="postHocTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Assumption checks</div>
-      <div id="assumptionArea" class="note">Assumption checks will appear here.</div>
-    </div>
-
-    <div class="card" style="margin-top:16px; display:none;" id="vizCard">
-      <div class="section-title">Hypothesis visualisation</div>
-      <div class="note" style="margin-top:0;">
-        Bell curves show the estimated distribution for each group using sample mean and SD. Below the baseline: <strong>pink arrows</strong> show the actual data range (min–max) within each group — this is what SS_within measures. <strong>Cyan arrows</strong> show how far each group mean sits from the grand mean — this is what SS_between measures. The F-ratio compares these two sources of variation.
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px; padding:0 4px;">
-        <div>
-          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">What are we testing?</div>
-          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-top:2px;">Are any group means different? (H₀: μ₁ = μ₂ = … = μₖ)</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">Overall result</div>
-          <div id="vizVerdict" style="font-size:13px; font-weight:900; margin-top:2px;">—</div>
+          <div class="card">
+            <div class="section-title">Interpretation</div>
+            <div id="interpretBox" class="alert" style="margin-bottom:10px;">
+              Run the analysis to see interpretation.
+            </div>
+            <div class="section-title" style="margin-top:10px;">Reporting text</div>
+            <div class="copybox">
+              <pre id="reportText">—</pre>
+              <button class="btn-ghost" id="copyReportBtn">Copy</button>
+            </div>
+            <div class="note">Template only — add units and clinical context before use.</div>
+          </div>
         </div>
       </div>
-      <div class="viz-wrap" style="margin-top:8px;">
-        <canvas id="anovaVizCanvas"></canvas>
+    </div>
+
+    <div class="rpt-section" data-open="true" data-sec-id="group-summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Group Summary</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
-      <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Bell curves represent the estimated within-group distributions using sample means and SDs — they are not a direct output of the F-test. ANOVA assumes normality within each group and homogeneity of variance across groups (checked by Levene's test). With small group sizes (n &lt; 10 per group) and marked non-normality, the F-test p-value becomes less reliable. In those cases consider the Kruskal-Wallis test.
+      <div class="rpt-sec-body">
+        <div class="card" id="groupSummaryCard">
+          <div class="section-title">Group summary</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Group</th>
+                  <th class="num">n</th>
+                  <th class="num">Mean</th>
+                  <th class="num">SD</th>
+                  <th class="num">SE</th>
+                  <th class="num">95% CI</th>
+                </tr>
+              </thead>
+              <tbody id="groupSummaryTable"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
+    <div class="rpt-section" data-open="true" data-sec-id="posthoc">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Post-hoc: Tukey HSD</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="card" style="display:none;" id="postHocCard">
+          <div class="section-title">Post-hoc: Tukey HSD pairwise comparisons</div>
+          <div class="note" style="margin-bottom:8px;">Tukey HSD controls the family-wise error rate. Significant pairs are highlighted.</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Comparison</th>
+                  <th class="num">Mean diff</th>
+                  <th class="num">SE</th>
+                  <th class="num">q</th>
+                  <th class="num">p (adjusted)</th>
+                  <th class="num">Significant?</th>
+                </tr>
+              </thead>
+              <tbody id="postHocTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-section" data-open="true" data-sec-id="assumptions">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Assumption Checks</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="card">
+          <div class="section-title">Assumption checks</div>
+          <div id="assumptionArea" class="note">Assumption checks will appear here.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-section" data-open="true" data-sec-id="visualisation">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Hypothesis Visualisation</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="card" style="display:none;" id="vizCard">
+          <div class="section-title">Hypothesis visualisation</div>
+          <div class="note" style="margin-top:0;">
+            Bell curves show the estimated distribution for each group using sample mean and SD. Below the baseline: <strong>pink arrows</strong> show the actual data range (min–max) within each group — this is what SS_within measures. <strong>Cyan arrows</strong> show how far each group mean sits from the grand mean — this is what SS_between measures. The F-ratio compares these two sources of variation.
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px; padding:0 4px;">
+            <div>
+              <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">What are we testing?</div>
+              <div style="font-size:13px; font-weight:700; color:var(--ink); margin-top:2px;">Are any group means different? (H₀: μ₁ = μ₂ = … = μₖ)</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;">Overall result</div>
+              <div id="vizVerdict" style="font-size:13px; font-weight:900; margin-top:2px;">—</div>
+            </div>
+          </div>
+          <div class="viz-wrap" style="margin-top:8px;">
+            <canvas id="anovaVizCanvas"></canvas>
+          </div>
+          <div id="vizFooter" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:var(--muted);">—</div>
+          <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+            <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Bell curves represent the estimated within-group distributions using sample means and SDs — they are not a direct output of the F-test. ANOVA assumes normality within each group and homogeneity of variance across groups (checked by Levene's test). With small group sizes (n &lt; 10 per group) and marked non-normality, the F-test p-value becomes less reliable. In those cases consider the Kruskal-Wallis test.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
+    </div>
+
+    <div class="card" style="margin-top:8px;">
       <div class="section-title">Export</div>
       <div class="note">PDF export opens the print dialog. Excel export includes raw data and ANOVA results.</div>
       <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
@@ -1120,6 +1170,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   rebuildGroupParams();
   refreshGeneratedAnova();
 });
+
+function addToReport() {
+  var testName = 'One-Way ANOVA';
+  var groupNames = state.groupNames && state.groupNames.length ? state.groupNames.join(', ') : testName;
+  if (collectAndAddToReport(testName, groupNames)) {
+    rptBtnFeedback('add-report-btn');
+  }
+}
 </script>
 </body>
 </html>

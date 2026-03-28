@@ -230,118 +230,160 @@ function renderResults(res){
   
   const resultsDiv = el('resultsContent');
   
-  // Build HTML with outlier info
+  // Build HTML with rpt-section wrappers
   let html = `
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Data screening</div>
-      <div style="font-size:13px; line-height:1.6;">
-        <strong>Total pairs:</strong> ${state.rows.length}<br>
-        <strong>Outliers flagged:</strong> ${state.rows.filter(r=>r.outlier).length}<br>
-        <strong>Included in analysis:</strong> ${state.rows.filter(r=>r.include).length}<br>
-        <div class="note">IQR rule on differences: Q1 = ${state.outInfo.q1.toFixed(3)}, Q3 = ${state.outInfo.q3.toFixed(3)}, IQR = ${state.outInfo.iqr.toFixed(3)}, bounds [${state.outInfo.lo.toFixed(3)}, ${state.outInfo.hi.toFixed(3)}]</div>
+    <div class="rpt-section" data-open="false" data-sec-id="screening">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Data Screening</span>
+        <span class="rpt-sec-badge rpt-badge-ex">Excluded</span>
+        <span class="rpt-sec-arrow">▶</span>
+      </div>
+      <div class="rpt-sec-body" style="display:none;">
+        <div class="card">
+          <div style="font-size:13px; line-height:1.6;">
+            <strong>Total pairs:</strong> ${state.rows.length}<br>
+            <strong>Outliers flagged:</strong> ${state.rows.filter(r=>r.outlier).length}<br>
+            <strong>Included in analysis:</strong> ${state.rows.filter(r=>r.include).length}<br>
+            <div class="note">IQR rule on differences: Q1 = ${state.outInfo.q1.toFixed(3)}, Q3 = ${state.outInfo.q3.toFixed(3)}, IQR = ${state.outInfo.iqr.toFixed(3)}, bounds [${state.outInfo.lo.toFixed(3)}, ${state.outInfo.hi.toFixed(3)}]</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Summary Statistics</div>
-      <table style="width:100%; font-size:13px;">
-        <tr style="background:#f9fafb;">
-          <th style="padding:8px;">Measure</th>
-          <th style="padding:8px; text-align:right;">Before</th>
-          <th style="padding:8px; text-align:right;">After</th>
-          <th style="padding:8px; text-align:right;">Difference</th>
-        </tr>
-        <tr>
-          <td style="padding:8px;">n</td>
-          <td style="padding:8px; text-align:right;" colspan="2">${n}</td>
-          <td style="padding:8px; text-align:right;">${n} (non-zero)</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;">Median</td>
-          <td style="padding:8px; text-align:right;">${median(before).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${median(after).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${median(diffs).toFixed(3)}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px;">Mean</td>
-          <td style="padding:8px; text-align:right;">${mean(before).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${mean(after).toFixed(3)}</td>
-          <td style="padding:8px; text-align:right;">${mean(diffs).toFixed(3)}</td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Test Statistics</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <div class="small" style="font-weight:800;">W+ (positive ranks)</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${Wpos.toFixed(2)}</div>
-        </div>
-        <div>
-          <div class="small" style="font-weight:800;">W− (negative ranks)</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${Wneg.toFixed(2)}</div>
-        </div>
+    <div class="rpt-section" data-open="true" data-sec-id="summary" style="margin-top:10px;">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Summary Statistics</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="margin-top:12px;">
-        <div class="small" style="font-weight:800;">W (min of W+, W−)</div>
-        <div style="font-size:20px; font-weight:900; margin-top:4px;">${W.toFixed(2)}</div>
-      </div>
-      <div style="margin-top:12px;">
-        <div class="small" style="font-weight:800;">Standardized z-score (${methodType === 'exact' ? 'not applicable' : 'normal approximation'})</div>
-        <div style="font-size:20px; font-weight:900; margin-top:4px;">${z.toFixed(4)}</div>
+      <div class="rpt-sec-body">
+        <div class="card">
+          <table style="width:100%; font-size:13px;">
+            <tr style="background:#f9fafb;">
+              <th style="padding:8px;">Measure</th>
+              <th style="padding:8px; text-align:right;">Before</th>
+              <th style="padding:8px; text-align:right;">After</th>
+              <th style="padding:8px; text-align:right;">Difference</th>
+            </tr>
+            <tr>
+              <td style="padding:8px;">n</td>
+              <td style="padding:8px; text-align:right;" colspan="2">${n}</td>
+              <td style="padding:8px; text-align:right;">${n} (non-zero)</td>
+            </tr>
+            <tr>
+              <td style="padding:8px;">Median</td>
+              <td style="padding:8px; text-align:right;">${median(before).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${median(after).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${median(diffs).toFixed(3)}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px;">Mean</td>
+              <td style="padding:8px; text-align:right;">${mean(before).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${mean(after).toFixed(3)}</td>
+              <td style="padding:8px; text-align:right;">${mean(diffs).toFixed(3)}</td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Hypothesis Test Result</div>
-      <div style="padding:12px; background:${significant ? '#ecfdf5' : '#f1f5f9'}; border-radius:10px; margin-bottom:12px;">
-        <div style="font-size:14px; font-weight:700; color:${significant ? '#15803d' : '#374151'};">
-          ${significant ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}
-        </div>
-        <div style="font-size:12px; color:${significant ? '#14532d' : '#374151'}; margin-top:4px;">
-          ${tail === 'two' ? 'The median difference is significantly different from zero' : 
-            (tail === 'right' ? 'After is significantly greater than Before' : 
-                               'After is significantly less than Before')}
-        </div>
+    <div class="rpt-section" data-open="true" data-sec-id="testresult" style="margin-top:10px;">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Test Result</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div style="font-size:13px;">
-        <strong>p-value:</strong> ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(6)}<br>
-        <strong>Significance level (α):</strong> ${alpha}<br>
-        <strong>Test type:</strong> ${tail === 'two' ? 'Two-sided' : (tail === 'right' ? 'One-sided (After > Before)' : 'One-sided (After < Before)')}<br>
-        ${exactP !== null ? `<strong>Method:</strong> Exact (${totalPerms.toLocaleString()} sign permutations enumerated)` : 
-                           `<strong>Method:</strong> Normal approximation`}
+      <div class="rpt-sec-body">
+        <div class="card">
+          <div class="section-title">Test Statistics</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <div class="small" style="font-weight:800;">W+ (positive ranks)</div>
+              <div style="font-size:20px; font-weight:900; margin-top:4px;">${Wpos.toFixed(2)}</div>
+            </div>
+            <div>
+              <div class="small" style="font-weight:800;">W− (negative ranks)</div>
+              <div style="font-size:20px; font-weight:900; margin-top:4px;">${Wneg.toFixed(2)}</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="small" style="font-weight:800;">W (min of W+, W−)</div>
+            <div style="font-size:20px; font-weight:900; margin-top:4px;">${W.toFixed(2)}</div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="small" style="font-weight:800;">Standardized z-score (${methodType === 'exact' ? 'not applicable' : 'normal approximation'})</div>
+            <div style="font-size:20px; font-weight:900; margin-top:4px;">${z.toFixed(4)}</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="section-title">Hypothesis Test Result</div>
+          <div style="padding:12px; background:${significant ? '#ecfdf5' : '#f1f5f9'}; border-radius:10px; margin-bottom:12px;">
+            <div style="font-size:14px; font-weight:700; color:${significant ? '#15803d' : '#374151'};">
+              ${significant ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}
+            </div>
+            <div style="font-size:12px; color:${significant ? '#14532d' : '#374151'}; margin-top:4px;">
+              ${tail === 'two' ? 'The median difference is significantly different from zero' :
+                (tail === 'right' ? 'After is significantly greater than Before' :
+                                   'After is significantly less than Before')}
+            </div>
+          </div>
+          <div style="font-size:13px;">
+            <strong>p-value:</strong> ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(6)}<br>
+            <strong>Significance level (α):</strong> ${alpha}<br>
+            <strong>Test type:</strong> ${tail === 'two' ? 'Two-sided' : (tail === 'right' ? 'One-sided (After > Before)' : 'One-sided (After < Before)')}<br>
+            ${exactP !== null ? `<strong>Method:</strong> Exact (${totalPerms.toLocaleString()} sign permutations enumerated)` :
+                               `<strong>Method:</strong> Normal approximation`}
+          </div>
+        </div>
       </div>
     </div>
   `;
-  
+
   if(showEffect){
     html += `
-      <div class="card" style="margin-top:16px;">
-        <div class="section-title">Effect Size</div>
-        <div>
-          <div class="small" style="font-weight:800;">Matched-pairs rank-biserial correlation (r)</div>
-          <div style="font-size:20px; font-weight:900; margin-top:4px;">${r.toFixed(4)}</div>
-          <div class="note" style="margin-top:8px;">
-            Interpretation: |r| < 0.3 = small, 0.3-0.5 = medium, > 0.5 = large effect
+      <div class="rpt-section" data-open="true" data-sec-id="effectsize" style="margin-top:10px;">
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Effect Size</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+          <div class="card">
+            <div class="small" style="font-weight:800;">Matched-pairs rank-biserial correlation (r)</div>
+            <div style="font-size:20px; font-weight:900; margin-top:4px;">${r.toFixed(4)}</div>
+            <div class="note" style="margin-top:8px;">
+              Interpretation: |r| < 0.3 = small, 0.3-0.5 = medium, > 0.5 = large effect
+            </div>
           </div>
         </div>
       </div>
     `;
   }
-  
+
   resultsDiv.innerHTML = html;
+
+  // Show the Add to Report button row
+  const rptBtnRow = el('report-btn-row');
+  if(rptBtnRow) rptBtnRow.style.display = 'block';
   
   // Render visualizations if enabled
   if(showViz){
     try{
-      // Add hypothesis visualization card to results
+      // Add hypothesis visualization card wrapped in rpt-section
       const vizCard = document.createElement('div');
-      vizCard.className = 'card';
-      vizCard.style.marginTop = '16px';
-      
+      vizCard.className = 'rpt-section';
+      vizCard.setAttribute('data-open', 'true');
+      vizCard.setAttribute('data-sec-id', 'viz');
+      vizCard.style.marginTop = '10px';
+
       let vizHTML = `
-        <div class="section-title">Hypothesis visualisation</div>
+        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+          <span class="rpt-sec-title">Hypothesis Visualisation</span>
+          <span class="rpt-sec-badge rpt-badge-in">In report</span>
+          <span class="rpt-sec-arrow">▼</span>
+        </div>
+        <div class="rpt-sec-body">
+        <div class="card">
         <div class="note"><strong>Paired comparison:</strong> Boxplots compare Before vs After measurements, showing medians, quartiles, and outliers.</div>
         <div style="margin-top:12px;">
           <canvas id="vizPairedBox" height="200"></canvas>
@@ -378,6 +420,7 @@ function renderResults(res){
         <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
           <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Boxplots show the actual observed data and differences — these are exact representations of your sample. The normal approximation for the z-score (shown when using the large-sample method) is reliable for n ≥ 20 non-zero differences and becomes less accurate with many tied ranks or very small samples. For small samples the exact permutation p-value is used instead, and no sampling distribution is displayed. The Wilcoxon signed-rank test assumes the differences are symmetrically distributed around the median — if differences are strongly skewed, the sign test is a more assumption-free alternative.
         </div>
+        </div></div>
       `;
 
       vizCard.innerHTML = vizHTML;

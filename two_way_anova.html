@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="assets/css/components.css">
+<script src="assets/js/report-helper.js"></script>
 <style>
 .copybox{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--line);padding:10px;border-radius:12px;background:#fff;}
 .copybox pre{margin:0;white-space:pre-wrap;word-break:break-word;font-size:12.5px;line-height:1.5;flex:1;}
@@ -192,105 +193,136 @@ First 5 rows → Factor A level 1.  Next 5 rows → Factor A level 2."></textare
 
     <div id="statusArea" style="margin-bottom:12px;"></div>
 
-    <div class="kpi-grid" id="kpiGrid" style="display:none;">
-      <div class="kpi"><div class="label">F (Factor A)</div><div class="value" id="kpiFA">—</div></div>
-      <div class="kpi"><div class="label">F (Factor B)</div><div class="value" id="kpiFB">—</div></div>
-      <div class="kpi"><div class="label">F (Interaction)</div><div class="value" id="kpiFI">—</div></div>
-      <div class="kpi"><div class="label">p (Interaction)</div><div class="value" id="kpiPI">—</div></div>
-    </div>
-
-    <div class="grid-2" style="margin-top:12px;">
-      <div class="card">
-        <div class="section-title">ANOVA table</div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Source</th>
-                <th class="num">SS</th>
-                <th class="num">df</th>
-                <th class="num">MS</th>
-                <th class="num">F</th>
-                <th class="num">p</th>
-                <th class="num" id="etaColHeader">η²</th>
-              </tr>
-            </thead>
-            <tbody id="anovaTable"></tbody>
-          </table>
-        </div>
+    <div class="rpt-section" data-open="true" data-sec-id="summary">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Summary Statistics</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-
-      <div class="card">
-        <div class="section-title">Interpretation</div>
-        <div id="interpretBox" class="alert">Run the analysis to see interpretation.</div>
-        <div class="section-title" style="margin-top:12px;">Reporting text</div>
-        <div class="copybox">
-          <pre id="reportText">—</pre>
-          <button class="btn-ghost btn-sm" id="copyReportBtn">Copy</button>
+      <div class="rpt-sec-body">
+        <div class="kpi-grid" id="kpiGrid" style="display:none;">
+          <div class="kpi"><div class="label">F (Factor A)</div><div class="value" id="kpiFA">—</div></div>
+          <div class="kpi"><div class="label">F (Factor B)</div><div class="value" id="kpiFB">—</div></div>
+          <div class="kpi"><div class="label">F (Interaction)</div><div class="value" id="kpiFI">—</div></div>
+          <div class="kpi"><div class="label">p (Interaction)</div><div class="value" id="kpiPI">—</div></div>
         </div>
-        <div class="note">Template only — add units and context before use.</div>
-      </div>
-    </div>
 
-    <!-- Cell means table -->
-    <div class="card" style="margin-top:16px;" id="cellSummaryCard">
-      <div class="section-title">Cell means &amp; standard deviations</div>
-      <div id="cellSummaryTable"></div>
-    </div>
-
-    <!-- Marginal means -->
-    <div class="card" style="margin-top:16px;">
-      <div class="section-title">Marginal means</div>
-      <div class="grid-2" style="gap:12px;">
-        <div>
-          <div class="small" style="font-weight:800;margin-bottom:6px;" id="marginalATitle">Factor A marginal means</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Level</th><th class="num">Mean</th><th class="num">n</th></tr></thead>
-            <tbody id="marginalATable"></tbody></table>
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="card">
+            <div class="section-title">ANOVA table</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th class="num">SS</th>
+                    <th class="num">df</th>
+                    <th class="num">MS</th>
+                    <th class="num">F</th>
+                    <th class="num">p</th>
+                    <th class="num" id="etaColHeader">η²</th>
+                  </tr>
+                </thead>
+                <tbody id="anovaTable"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        <div>
-          <div class="small" style="font-weight:800;margin-bottom:6px;" id="marginalBTitle">Factor B marginal means</div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Level</th><th class="num">Mean</th><th class="num">n</th></tr></thead>
-            <tbody id="marginalBTable"></tbody></table>
+
+          <div class="card">
+            <div class="section-title">Interpretation</div>
+            <div id="interpretBox" class="alert">Run the analysis to see interpretation.</div>
+            <div class="section-title" style="margin-top:12px;">Reporting text</div>
+            <div class="copybox">
+              <pre id="reportText">—</pre>
+              <button class="btn-ghost btn-sm" id="copyReportBtn">Copy</button>
+            </div>
+            <div class="note">Template only — add units and context before use.</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Three charts -->
-    <div id="vizSection" style="display:none;">
-      <div style="margin-top:16px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-        <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Marginal mean plots show estimated group distributions assuming normality within each cell. The interaction plot displays cell means ± 1 SE — non-parallel lines suggest an interaction, but visual patterns can be misleading with small cell sizes or large SE. Two-way ANOVA requires normality within each cell, homogeneity of variance, and a balanced or near-balanced design. Severely unbalanced cells or small n per cell reduce reliability.
+    <div class="rpt-section" data-open="true" data-sec-id="cell-means">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Cell Means &amp; Marginal Means</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
-      <div class="card" style="margin-top:16px;">
-        <div class="section-title" id="plotATitle">Factor A — Marginal Means</div>
-        <div class="note" style="margin-bottom:8px;">
-          Each bell curve shows the data distribution for each group using its SD (wider curves = more variability within that group).
-          The dashed line is the grand mean. Arrows above the curves show between-group spread (each group mean → grand mean, drives F numerator).
-          Arrows below show within-group spread (±3 SD per group, drives F denominator). Colours match each group's curve.
+      <div class="rpt-sec-body">
+        <!-- Cell means table -->
+        <div class="card" id="cellSummaryCard">
+          <div class="section-title">Cell means &amp; standard deviations</div>
+          <div id="cellSummaryTable"></div>
         </div>
-        <div class="viz-wrap"><canvas id="plotA"></canvas></div>
-      </div>
-      <div class="card" style="margin-top:16px;">
-        <div class="section-title" id="plotBTitle">Factor B — Marginal Means</div>
-        <div class="note" style="margin-bottom:8px;">
-          Each bell curve shows the data distribution for each group using its SD (wider curves = more variability within that group).
-          The dashed line is the grand mean. Arrows above show between-group spread (group mean → grand mean).
-          Arrows below show within-group spread (±3 SD). Colours match each group's curve.
+
+        <!-- Marginal means -->
+        <div class="card" style="margin-top:16px;">
+          <div class="section-title">Marginal means</div>
+          <div class="grid-2" style="gap:12px;">
+            <div>
+              <div class="small" style="font-weight:800;margin-bottom:6px;" id="marginalATitle">Factor A marginal means</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Level</th><th class="num">Mean</th><th class="num">n</th></tr></thead>
+                <tbody id="marginalATable"></tbody></table>
+              </div>
+            </div>
+            <div>
+              <div class="small" style="font-weight:800;margin-bottom:6px;" id="marginalBTitle">Factor B marginal means</div>
+              <div class="table-wrap">
+                <table><thead><tr><th>Level</th><th class="num">Mean</th><th class="num">n</th></tr></thead>
+                <tbody id="marginalBTable"></tbody></table>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="viz-wrap"><canvas id="plotB"></canvas></div>
       </div>
-      <div class="card" style="margin-top:16px;">
-        <div class="section-title">Interaction Plot</div>
-        <div class="note" style="margin-bottom:8px;">Cell means for every combination of Factor A and Factor B. Non-parallel lines indicate an interaction effect. Error bars = ±1 SE.</div>
-        <div class="viz-wrap"><canvas id="plotInteraction" height="320"></canvas></div>
+    </div>
+
+    <div class="rpt-section" data-open="true" data-sec-id="visualisation">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Visualisations</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
       </div>
+      <div class="rpt-sec-body">
+        <!-- Three charts -->
+        <div id="vizSection" style="display:none;">
+          <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
+            <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Marginal mean plots show estimated group distributions assuming normality within each cell. The interaction plot displays cell means ± 1 SE — non-parallel lines suggest an interaction, but visual patterns can be misleading with small cell sizes or large SE. Two-way ANOVA requires normality within each cell, homogeneity of variance, and a balanced or near-balanced design. Severely unbalanced cells or small n per cell reduce reliability.
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="section-title" id="plotATitle">Factor A — Marginal Means</div>
+            <div class="note" style="margin-bottom:8px;">
+              Each bell curve shows the data distribution for each group using its SD (wider curves = more variability within that group).
+              The dashed line is the grand mean. Arrows above the curves show between-group spread (each group mean → grand mean, drives F numerator).
+              Arrows below show within-group spread (±3 SD per group, drives F denominator). Colours match each group's curve.
+            </div>
+            <div class="viz-wrap"><canvas id="plotA"></canvas></div>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="section-title" id="plotBTitle">Factor B — Marginal Means</div>
+            <div class="note" style="margin-bottom:8px;">
+              Each bell curve shows the data distribution for each group using its SD (wider curves = more variability within that group).
+              The dashed line is the grand mean. Arrows above show between-group spread (group mean → grand mean).
+              Arrows below show within-group spread (±3 SD). Colours match each group's curve.
+            </div>
+            <div class="viz-wrap"><canvas id="plotB"></canvas></div>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="section-title">Interaction Plot</div>
+            <div class="note" style="margin-bottom:8px;">Cell means for every combination of Factor A and Factor B. Non-parallel lines indicate an interaction effect. Error bars = ±1 SE.</div>
+            <div class="viz-wrap"><canvas id="plotInteraction" height="320"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px;">
+      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
     </div>
 
     <!-- Export -->
-    <div class="card" style="margin-top:16px;">
+    <div class="card" style="margin-top:8px;">
       <div class="section-title">Export</div>
       <div class="note">PDF export opens the print dialog. Excel export includes raw data and ANOVA results.</div>
       <div class="btn-row" style="margin-top:10px;justify-content:flex-start;">
@@ -1167,6 +1199,16 @@ document.addEventListener("DOMContentLoaded",()=>{
   // Initialize cell params grid
   rebuildCellParams();
 });
+
+function addToReport() {
+  var testName = 'Two-Way ANOVA';
+  var factorA = document.getElementById('factorAName') ? document.getElementById('factorAName').value : 'Factor A';
+  var factorB = document.getElementById('factorBName') ? document.getElementById('factorBName').value : 'Factor B';
+  var variable = factorA + ' × ' + factorB;
+  if (collectAndAddToReport(testName, variable)) {
+    rptBtnFeedback('add-report-btn');
+  }
+}
 </script>
 </body>
 </html>
