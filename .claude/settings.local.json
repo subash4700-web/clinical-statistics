@@ -16,7 +16,14 @@
       "Bash(npm install:*)",
       "Bash(open \"dist/Clinical Statistics-1.0.27.dmg\")",
       "Bash(open \"dist/Clinical Statistics-1.0.28.dmg\")",
-      "Bash(open \"dist/Clinical Statistics-1.0.31.dmg\")"
+      "Bash(open \"dist/Clinical Statistics-1.0.31.dmg\")",
+      "WebSearch",
+      "WebFetch(domain:dokumen.pub)",
+      "WebFetch(domain:www.intuitivebiostatistics.com)",
+      "WebFetch(domain:brouwern.github.io)",
+      "WebFetch(domain:www.amazon.com)",
+      "Bash(grep -rn \"clearAll\\\\|clearData\\\\|clear-btn\\\\|clearMC\\\\|Clear data\\\\|clear data\\\\|clearToolData\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html --include=\"*.html\")",
+      "Bash(grep -rn \"clearAll\\\\|clearData\\\\|clearEPData\\\\|clearMCData\\\\|clearAllPrimers\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html)"
     ]
   }
 }

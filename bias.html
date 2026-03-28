@@ -221,7 +221,7 @@
 
     <div class="error-msg" id="input-error"></div>
     <div class="btn-row">
-      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear data</button>
       <button class="btn-primary" onclick="calculate()">Calculate</button>
     </div>
   </div>
@@ -310,20 +310,21 @@ function loadScenario(n) {
   document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
   document.getElementById('bias-sc' + n).classList.add('active');
   var analyte, unit, mode, ref, txt;
+  var allowable;
   if (n === 1) {
-    analyte = 'Glucose'; unit = 'mmol/L'; mode = 'single'; ref = '5.50';
+    analyte = 'Glucose'; unit = 'mmol/L'; mode = 'single'; ref = '5.50'; allowable = '0.83';
     txt = '5.44\n5.51\n5.48\n5.46\n5.53\n5.49\n5.52\n5.47\n5.45\n5.50';
   } else if (n === 2) {
-    analyte = 'Cholesterol'; unit = 'mmol/L'; mode = 'multi'; ref = '';
+    analyte = 'Cholesterol'; unit = 'mmol/L'; mode = 'multi'; ref = ''; allowable = '2.52';
     txt = '4.16,4.00\n4.19,4.00\n4.14,4.00\n6.30,6.05\n6.27,6.05\n6.34,6.05\n7.98,7.65\n8.02,7.65\n7.95,7.65';
   } else {
-    analyte = 'Troponin'; unit = 'ng/L'; mode = 'single'; ref = '50.0';
+    analyte = 'Troponin'; unit = 'ng/L'; mode = 'single'; ref = '50.0'; allowable = '';
     txt = '54.1\n53.8\n55.2\n54.7\n53.5\n54.9\n55.4\n53.9\n54.3\n55.8';
   }
-  document.getElementById('sel-mode').value    = mode;
-  document.getElementById('inp-analyte').value = analyte;
-  document.getElementById('inp-unit').value    = unit;
-  // allowable bias intentionally not set — use EFLM lookup or enter your own
+  document.getElementById('sel-mode').value       = mode;
+  document.getElementById('inp-analyte').value    = analyte;
+  document.getElementById('inp-unit').value       = unit;
+  document.getElementById('inp-allowable').value  = allowable;
   updateHints();
   if (mode === 'single' && ref) document.getElementById('inp-ref').value = ref;
   document.getElementById('txt-data').value = txt;
@@ -496,21 +497,73 @@ function _doCalculateBias(pairs){
   }
 
   // ── Section 1: Summary & Statistics ──
-  let summaryHtml = kpiGrid([
-    {label:'n',                 value:n,                    sub:'samples'},
-    {label:'Mean Bias',         value:fmt(meanBias,2)+'%',  sub:'systematic % bias'},
-    {label:'95% CI of Mean Bias', value:`[${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`, sub:'where true bias likely lies'},
-    {label:'SD of Bias',        value:fmt(sdBias,2)+'%',    sub:'variability of bias'},
-    {label:'t-statistic',       value:fmt(t,3),             sub:`df=${df}, p=${pVal<0.001?'<0.001':fmt(pVal,3)}`},
-    {label:'Systematic Bias',   value:sig?'Significant':'Not significant', sub:'one-sample t-test vs 0'},
-  ]);
-  if(hasLimit) summaryHtml += verdictHtml(pass,`Mean bias ${fmt(meanBias,2)}%`,`allowable ±${fmt(allowable,1)}%`);
-  summaryHtml += `<div class="sig-row">
-    <span class="sig-label">Significance test:</span>
+
+  // Analyte header
+  let summaryHtml = `<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:baseline;gap:8px;">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>
+    <span style="font-size:16px;font-weight:800;color:#0c4a6e;">${analyte}</span>
+    ${unit?`<span style="font-size:13px;color:#0284c7;">(${unit})</span>`:''}
+  </div>`;
+
+  // Compact card — measured from data + spec + verdict
+  summaryHtml += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:8px;">Measured from data</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:${hasLimit?'14px':'0'};">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">n</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${n}</div>
+        <div style="font-size:10px;color:#9ca3af;">samples analysed</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Mean Bias</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(meanBias,2)}%</div>
+        <div style="font-size:10px;color:#9ca3af;">systematic % bias</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">95% CI</div>
+        <div style="font-size:13px;font-weight:800;color:#111827;">[${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]</div>
+        <div style="font-size:10px;color:#9ca3af;">where true bias likely lies</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">SD of Bias</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(sdBias,2)}%</div>
+        <div style="font-size:10px;color:#9ca3af;">variability of bias</div>
+      </div>
+    </div>
+
+    ${hasLimit ? (()=>{
+      const ratio = Math.abs(meanBias) / allowable;
+      const pctUsed = (ratio * 100).toFixed(0);
+      const barColor = pass ? '#16a34a' : '#dc2626';
+      return `<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">Allowable Bias = ±${fmt(allowable,1)}%</span>
+          </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">|Mean Bias|</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(Math.abs(meanBias),2)}%</span>
+          </div>
+        </div>
+        <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${Math.min(ratio,1)*100}%;background:${barColor};border-radius:4px;transition:width .4s;"></div>
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">${pctUsed}% of allowable limit used</div>
+        ${verdictHtml(pass,`Mean bias ${fmt(meanBias,2)}%`,`allowable ±${fmt(allowable,1)}%`)}
+      </div>`;
+    })() : ''}
+  </div>`;
+
+  // Significance test
+  summaryHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Statistical significance (t-test vs 0)</div>
+  <div class="sig-row">
     <span class="sig-val">t(${df}) = ${fmt(t,3)}, p = ${pVal<0.001?'<0.001':fmt(pVal,3)}</span>
     <span class="badge ${sig?'badge-sig':'badge-ns'}">${sig?'Significant systematic bias':'No significant bias detected'}</span>
     <span style="color:var(--muted);font-size:12px;">H₀: mean bias = 0</span>
   </div>`;
+
   html += rptSection('Summary & Statistics', summaryHtml, true);
 
   // ── Section 2: Distribution chart ──
@@ -576,7 +629,7 @@ function _doCalculateBias(pairs){
   } catch(e) {}
   html+=_wfNextCard(2,'Total Error &amp; Sigma',`|Bias%| = ${Math.abs(meanBias).toFixed(2)}% saved`,'tae.html','Total Error &amp; Sigma');
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
-  html+=`<button id="bias-add-report-btn" onclick="addBiasToReport()" style="margin-top:12px;width:100%;padding:11px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">+ Add to Report</button>`;
+  html+=`<button id="bias-add-report-btn" onclick="addBiasToReport()" class="btn-report">+ Add to Report</button>`;
 
   document.getElementById('results-body').innerHTML=html;
 
@@ -587,28 +640,122 @@ function _doCalculateBias(pairs){
     iqrFlags[i]?'#f59e0b':
     b.pctBias>0?'#1976d2':'#7c3aed'
   );
-  const ctx=document.getElementById('bias-chart');
-  lastChart=new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels,
-      datasets:[
-        {label:'% Bias',data:pctArr,backgroundColor:barColors,borderRadius:4},
-        {label:'Mean Bias',data:labels.map(()=>meanBias),type:'line',borderColor:'#2e7d32',borderWidth:2,borderDash:[],pointRadius:0,fill:false},
-        {label:'95% CI upper',data:labels.map(()=>ciHi),type:'line',borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
-        {label:'95% CI lower',data:labels.map(()=>ciLo),type:'line',borderColor:'#f59e0b',borderDash:[5,4],pointRadius:0,fill:false},
-        ...(hasLimit?[
-          {label:`+Allowable (${fmt(allowable,1)}%)`,data:labels.map(()=>allowable),type:'line',borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false},
-          {label:`-Allowable`,data:labels.map(()=>-allowable),type:'line',borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false},
-        ]:[]),
-      ]
+  // Scatter dot plot — Bland-Altman style
+  const dotData = pctArr.map((y, i) => ({ x: i + 1, y }));
+  const dotColors = barColors; // reuse same pass/fail/outlier colouring
+
+  // Horizontal reference lines as scatter datasets with many x points
+  const xFull = labels.map((_, i) => ({ x: i + 1, y: meanBias }));
+  const xCiHi = labels.map((_, i) => ({ x: i + 1, y: ciHi }));
+  const xCiLo = labels.map((_, i) => ({ x: i + 1, y: ciLo }));
+
+  const scatterDatasets = [
+    {
+      label: '% Bias per sample',
+      data: dotData,
+      type: 'scatter',
+      pointBackgroundColor: dotColors,
+      pointBorderColor: dotColors.map(c => c),
+      pointRadius: 7,
+      pointHoverRadius: 9,
     },
-    options:{
-      responsive:true,
-      plugins:{legend:{position:'bottom',labels:{boxWidth:14,font:{size:11}}}},
-      scales:{
-        x:{title:{display:true,text:'Sample #'}},
-        y:{title:{display:true,text:'% Bias'},grid:{color:ctx=>'#e5e7eb'}}
+    {
+      label: `Mean Bias (${fmt(meanBias,2)}%)`,
+      data: xFull,
+      type: 'line',
+      borderColor: '#2e7d32',
+      borderWidth: 2,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    },
+    {
+      label: `95% CI [${fmt(ciLo,2)}%, ${fmt(ciHi,2)}%]`,
+      data: xCiHi,
+      type: 'line',
+      borderColor: '#f59e0b',
+      borderDash: [5, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: '+1',
+      backgroundColor: 'rgba(245,158,11,0.08)',
+      tension: 0,
+    },
+    {
+      label: '',
+      data: xCiLo,
+      type: 'line',
+      borderColor: '#f59e0b',
+      borderDash: [5, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    },
+    ...(hasLimit ? [
+      {
+        label: `+Allowable (±${fmt(allowable,1)}%)`,
+        data: labels.map((_, i) => ({ x: i + 1, y: allowable })),
+        type: 'line',
+        borderColor: '#c62828',
+        borderDash: [6, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      },
+      {
+        label: '',
+        data: labels.map((_, i) => ({ x: i + 1, y: -allowable })),
+        type: 'line',
+        borderColor: '#c62828',
+        borderDash: [6, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+      },
+    ] : []),
+  ];
+
+  const ctx = document.getElementById('bias-chart');
+  lastChart = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets: scatterDatasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 14,
+            font: { size: 11 },
+            filter: item => item.text !== '',  // hide blank legend entries
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(c) {
+              if (c.dataset.type === 'scatter' || c.dataset.label === '% Bias per sample') {
+                return `Sample ${c.parsed.x}: ${fmt(c.parsed.y, 2)}%`;
+              }
+              return c.dataset.label ? `${c.dataset.label}: ${fmt(c.parsed.y, 2)}%` : null;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Sample #' },
+          ticks: { stepSize: 1, precision: 0 },
+          min: 0.5,
+          max: pctArr.length + 0.5,
+        },
+        y: {
+          title: { display: true, text: '% Bias' },
+          grid: { color: '#e5e7eb' }
+        }
       }
     }
   });
@@ -794,13 +941,57 @@ function addBiasToReport() {
       html += '</div>';
     });
 
-    window.parent.addToReport({ tool: 'Bias (CRM/EQA)', analyte: analyte, html: html });
+    var file = (window.parent.getCurrentToolFile && window.parent.getCurrentToolFile()) || '';
+    var state = null;
+    try { if (typeof window.getSaveData === 'function') state = { custom: true, data: window.getSaveData() }; } catch(e) {}
+    window.parent.addToReport({ tool: 'Bias (CRM/EQA)', analyte: analyte, html: html, file: file, state: state });
     var btn = document.getElementById('bias-add-report-btn');
     btn.textContent = '✓ Added to Report';
     btn.style.background = '#16a34a';
     setTimeout(function() { btn.textContent = '+ Add to Report'; btn.style.background = '#0f172a'; }, 2000);
   } catch(e) { alert('Could not add to report: ' + e.message); }
 }
+
+window.getSaveData = function() {
+  return {
+    mode:      document.getElementById('sel-mode').value,
+    analyte:   document.getElementById('inp-analyte').value,
+    unit:      document.getElementById('inp-unit').value,
+    allowable: document.getElementById('inp-allowable').value,
+    ref:       document.getElementById('inp-ref').value,
+    data:      document.getElementById('txt-data').value,
+    excludes:  _biasRows.map(function(r) { return r.include; })
+  };
+};
+
+window.loadSaveData = function(d) {
+  if (!d) return;
+  document.getElementById('sel-mode').value    = d.mode || 'single';
+  document.getElementById('inp-analyte').value = d.analyte || '';
+  document.getElementById('inp-unit').value    = d.unit || '';
+  document.getElementById('inp-allowable').value = d.allowable || '';
+  document.getElementById('inp-ref').value     = d.ref || '';
+  document.getElementById('txt-data').value    = d.data || '';
+  updateHints();
+  previewParse();
+  if (d.data && d.data.trim()) {
+    calculate();
+    if (d.excludes && Array.isArray(d.excludes)) {
+      _biasRows.forEach(function(r, i) {
+        if (d.excludes[i] === false) r.include = false;
+      });
+      calculate();
+    }
+    setTimeout(function() {
+      try {
+        var resultsTab = document.querySelector('[data-tab="tab-results"]');
+        if (resultsTab) resultsTab.click();
+      } catch(e) {}
+    }, 200);
+  }
+};
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

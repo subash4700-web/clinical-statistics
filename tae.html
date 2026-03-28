@@ -171,6 +171,13 @@
         </div>
         <p class="note">From EFLM, CLIA, or your lab's specification. Use the analyte lookup above to auto-fill.</p>
 
+        <label class="field-label">Allowable Bias% <span style="font-weight:400;color:var(--muted);">(optional — auto-filled from EFLM)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="inp-bias-max" min="0" step="0.1" placeholder="e.g. 0.83" style="flex:1;">
+          <span style="font-size:13px;color:var(--muted);">%</span>
+        </div>
+        <p class="note">Maximum permitted systematic bias from your performance specification. Enables a separate bias comparison bar in results.</p>
+
         <div class="error-msg" id="input-error"></div>
 
         <div class="btn-row" style="margin-top:12px;">
@@ -267,6 +274,110 @@
           <span class="rpt-sec-arrow">▼</span>
         </div>
         <div class="rpt-sec-body">
+          <!-- Analyte header -->
+          <div id="tae-analyte-header" style="display:none;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>
+            <span id="tae-analyte-name" style="font-size:16px;font-weight:800;color:#0c4a6e;"></span>
+            <span id="tae-analyte-unit" style="font-size:13px;color:#0284c7;"></span>
+          </div>
+          <!-- Measured vs Specification clarity sections -->
+          <div id="tae-clarity-sections" style="display:none;margin-bottom:14px;">
+
+            <!-- Measured from data -->
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Measured from data</div>
+            <div class="kpi-grid" id="tae-measured-kpi" style="margin-bottom:16px;">
+              <div class="kpi">
+                <div class="kpi-label">|Bias%|</div>
+                <div class="kpi-value" id="tae-m-bias">—</div>
+                <div class="kpi-sub">systematic % bias</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">CV% — Level 1</div>
+                <div class="kpi-value" id="tae-m-cv1">—</div>
+                <div class="kpi-sub">from precision study</div>
+              </div>
+              <div class="kpi" id="tae-m-cv2-kpi" style="display:none;">
+                <div class="kpi-label">CV% — Level 2</div>
+                <div class="kpi-value" id="tae-m-cv2">—</div>
+                <div class="kpi-sub">from precision study</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Total Error (TE) L1</div>
+                <div class="kpi-value" id="tae-m-te1">—</div>
+                <div class="kpi-sub">|Bias| + 1.65 × CV%</div>
+              </div>
+              <div class="kpi" id="tae-m-te2-kpi" style="display:none;">
+                <div class="kpi-label">Total Error (TE) L2</div>
+                <div class="kpi-value" id="tae-m-te2">—</div>
+                <div class="kpi-sub">|Bias| + 1.65 × CV%</div>
+              </div>
+            </div>
+
+            <!-- Acceptance specification -->
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Acceptance specification</div>
+            <div class="kpi-grid" style="margin-bottom:16px;">
+              <div class="kpi">
+                <div class="kpi-label">TAE%</div>
+                <div class="kpi-value" id="tae-spec-tae">—</div>
+                <div class="kpi-sub">total allowable error limit</div>
+              </div>
+              <div class="kpi" id="tae-spec-bias-kpi" style="display:none;">
+                <div class="kpi-label">Allowable Bias%</div>
+                <div class="kpi-value" id="tae-spec-bias">—</div>
+                <div class="kpi-sub">maximum permitted bias</div>
+              </div>
+            </div>
+
+            <!-- Bias comparison (shown only when allowable bias is entered) -->
+            <div id="tae-bias-cmp-section" style="display:none;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Bias — measured vs specification</div>
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">
+                  <span><strong>|Bias%|</strong> = <span id="tae-bias-cmp-val">—</span></span>
+                  <span style="color:#6b7280;font-size:12px;">Allowable = <span id="tae-bias-cmp-limit">—</span></span>
+                </div>
+                <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">
+                  <div id="tae-bias-cmp-bar" style="height:100%;width:0%;border-radius:4px;transition:width .3s;"></div>
+                </div>
+                <div style="font-size:11px;color:#6b7280;" id="tae-bias-cmp-pct">—</div>
+              </div>
+              <div id="tae-bias-verdict" class="verdict pass" style="display:none;">—</div>
+            </div>
+
+            <!-- Comparison: measured vs specification — Level 1 -->
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Comparison — measured vs specification</div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+              <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px;" id="tae-cmp-l1-heading">Level 1</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">
+                <span><strong>TE</strong> = <span id="tae-cmp-te1-val">—</span></span>
+                <span style="color:#6b7280;font-size:12px;">TAE = <span id="tae-cmp-tae-val">—</span></span>
+              </div>
+              <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">
+                <div id="tae-cmp-bar1" style="height:100%;width:0%;border-radius:4px;transition:width .3s;"></div>
+              </div>
+              <div style="font-size:11px;color:#6b7280;" id="tae-cmp-pct1">—</div>
+            </div>
+            <div id="tae-verdict1" class="verdict pass" style="display:none;">—</div>
+
+            <!-- Comparison: Level 2 (shown only when CV2 entered) -->
+            <div id="tae-cmp-l2-section" style="display:none;">
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px;">Level 2</div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">
+                  <span><strong>TE</strong> = <span id="tae-cmp-te2-val">—</span></span>
+                  <span style="color:#6b7280;font-size:12px;">TAE = <span id="tae-cmp-tae-val2">—</span></span>
+                </div>
+                <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">
+                  <div id="tae-cmp-bar2" style="height:100%;width:0%;border-radius:4px;transition:width .3s;"></div>
+                </div>
+                <div style="font-size:11px;color:#6b7280;" id="tae-cmp-pct2">—</div>
+              </div>
+              <div id="tae-verdict2" class="verdict pass" style="display:none;">—</div>
+            </div>
+
+          </div><!-- /tae-clarity-sections -->
+          <!-- Sigma metric (shown after comparison) -->
+          <div id="tae-sigma-label" style="display:none;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Sigma metric</div>
           <!-- Sigma badge(s) — single or dual level -->
           <div id="sigma-row" style="display:flex;gap:12px;margin-bottom:12px;">
             <div style="flex:1;min-width:0;">
@@ -370,8 +481,8 @@
     </div><!-- /results-area -->
     <div class="btn-row" id="export-row" style="display:none;margin-top:16px;">
       <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
-      <button class="btn-secondary" id="tae-add-report-btn" onclick="addTAEToReport()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Add to Report</button>
     </div>
+    <button class="btn-report" id="tae-add-report-btn" onclick="addTAEToReport()" style="display:none;">+ Add to Report</button>
   </div><!-- /tab-results -->
 </div><!-- /container -->
 
@@ -509,12 +620,104 @@ function calculate() {
 
   // Show results panel, switch tab
   document.getElementById('export-row').style.display = 'flex';
+  document.getElementById('tae-add-report-btn').style.display = 'block';
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
   document.querySelector('[data-tab="tab-results"]').classList.add('active');
   document.getElementById('tab-results').classList.add('active');
 
+  // ── Analyte header + spec row ──
+  var analyteEl = document.getElementById('inp-analyte');
+  var unitEl    = document.getElementById('inp-unit');
+  var analyteName = analyteEl ? analyteEl.value.trim() : '';
+  var analyteUnit = unitEl    ? unitEl.value.trim()    : '';
+  if (analyteName) {
+    document.getElementById('tae-analyte-header').style.display = 'flex';
+    document.getElementById('tae-analyte-name').textContent = analyteName;
+    document.getElementById('tae-analyte-unit').textContent = analyteUnit ? '(' + analyteUnit + ')' : '';
+  }
+  // ── Clarity sections: Measured from data / Acceptance spec / Comparison ──
+  document.getElementById('tae-clarity-sections').style.display = 'block';
+
+  // Measured from data KPI grid
+  document.getElementById('tae-m-bias').textContent = fmt(absBias, 1) + '%';
+  document.getElementById('tae-m-cv1').textContent  = fmt(cvPct, 1) + '%';
+  document.getElementById('tae-m-te1').textContent  = fmt(te1, 2) + '%';
+  if (isMultiLevel) {
+    document.getElementById('tae-m-cv2-kpi').style.display = '';
+    document.getElementById('tae-m-cv2').textContent = fmt(cvPct2, 1) + '%';
+    document.getElementById('tae-m-te2-kpi').style.display = '';
+    document.getElementById('tae-m-te2').textContent = fmt(te2, 2) + '%';
+  } else {
+    document.getElementById('tae-m-cv2-kpi').style.display = 'none';
+    document.getElementById('tae-m-te2-kpi').style.display = 'none';
+  }
+
+  // Acceptance specification
+  document.getElementById('tae-spec-tae').textContent = fmt(taePct, 1) + '%';
+
+  // Bias comparison (optional)
+  var biasMaxPct = parseFloat(document.getElementById('inp-bias-max').value);
+  var hasBiasMax = !isNaN(biasMaxPct) && biasMaxPct > 0;
+  document.getElementById('tae-spec-bias-kpi').style.display = hasBiasMax ? '' : 'none';
+  document.getElementById('tae-bias-cmp-section').style.display = hasBiasMax ? '' : 'none';
+  if (hasBiasMax) {
+    var biasRatio = absBias / biasMaxPct;
+    var biasPctUsed = (biasRatio * 100).toFixed(0);
+    var biasPass = absBias <= biasMaxPct;
+    var biasBarColor = biasPass ? '#16a34a' : '#dc2626';
+    document.getElementById('tae-spec-bias').textContent = fmt(biasMaxPct, 2) + '%';
+    document.getElementById('tae-bias-cmp-val').textContent = fmt(absBias, 2) + '%';
+    document.getElementById('tae-bias-cmp-limit').textContent = fmt(biasMaxPct, 2) + '%';
+    document.getElementById('tae-bias-cmp-bar').style.width = Math.min(biasRatio, 1) * 100 + '%';
+    document.getElementById('tae-bias-cmp-bar').style.background = biasBarColor;
+    document.getElementById('tae-bias-cmp-pct').textContent = biasPctUsed + '% of allowable bias used';
+    var bv = document.getElementById('tae-bias-verdict');
+    bv.style.display = 'flex';
+    bv.className = 'verdict ' + (biasPass ? 'pass' : 'fail');
+    bv.textContent = biasPass
+      ? 'Bias within specification — ' + fmt(absBias,2) + '% \u2264 ' + fmt(biasMaxPct,2) + '%'
+      : 'Bias exceeds specification — ' + fmt(absBias,2) + '% > ' + fmt(biasMaxPct,2) + '%';
+  }
+
+  // Comparison — Level 1
+  var ratio1 = te1 / taePct;
+  var pctUsed1 = (ratio1 * 100).toFixed(0);
+  var barColor1 = passes1 ? '#16a34a' : '#dc2626';
+  document.getElementById('tae-cmp-l1-heading').style.display = isMultiLevel ? 'block' : 'none';
+  document.getElementById('tae-cmp-te1-val').textContent = fmt(te1, 2) + '%';
+  document.getElementById('tae-cmp-tae-val').textContent = fmt(taePct, 1) + '%';
+  document.getElementById('tae-cmp-bar1').style.width = Math.min(ratio1, 1) * 100 + '%';
+  document.getElementById('tae-cmp-bar1').style.background = barColor1;
+  document.getElementById('tae-cmp-pct1').textContent = pctUsed1 + '% of TAE limit used';
+  var v1 = document.getElementById('tae-verdict1');
+  v1.style.display = 'flex';
+  v1.className = 'verdict ' + (passes1 ? 'pass' : 'fail');
+  v1.textContent = passes1 ? 'Within TAE — TE ' + fmt(te1,2) + '% \u2264 TAE ' + fmt(taePct,1) + '%'
+                           : 'Exceeds TAE — TE ' + fmt(te1,2) + '% > TAE ' + fmt(taePct,1) + '%';
+
+  // Comparison — Level 2
+  if (isMultiLevel) {
+    var ratio2 = te2 / taePct;
+    var pctUsed2 = (ratio2 * 100).toFixed(0);
+    var barColor2 = passes2 ? '#16a34a' : '#dc2626';
+    document.getElementById('tae-cmp-l2-section').style.display = 'block';
+    document.getElementById('tae-cmp-te2-val').textContent = fmt(te2, 2) + '%';
+    document.getElementById('tae-cmp-tae-val2').textContent = fmt(taePct, 1) + '%';
+    document.getElementById('tae-cmp-bar2').style.width = Math.min(ratio2, 1) * 100 + '%';
+    document.getElementById('tae-cmp-bar2').style.background = barColor2;
+    document.getElementById('tae-cmp-pct2').textContent = pctUsed2 + '% of TAE limit used';
+    var v2 = document.getElementById('tae-verdict2');
+    v2.style.display = 'flex';
+    v2.className = 'verdict ' + (passes2 ? 'pass' : 'fail');
+    v2.textContent = passes2 ? 'Within TAE — TE ' + fmt(te2,2) + '% \u2264 TAE ' + fmt(taePct,1) + '%'
+                             : 'Exceeds TAE — TE ' + fmt(te2,2) + '% > TAE ' + fmt(taePct,1) + '%';
+  } else {
+    document.getElementById('tae-cmp-l2-section').style.display = 'none';
+  }
+
   // ── Sigma badges ──
+  document.getElementById('tae-sigma-label').style.display = 'block';
   document.getElementById('level1-label').style.display = isMultiLevel ? 'block' : 'none';
   document.getElementById('level2-sigma-col').style.display = isMultiLevel ? 'block' : 'none';
 
@@ -932,7 +1135,8 @@ function applyEFLM() {
   if (!eflmKey || typeof EFLM_DB === 'undefined' || !EFLM_DB[eflmKey]) return;
   var a = EFLM_DB[eflmKey];
   var t = calcEFLMTiers(a.cvi, a.cvg)[eflmTier];
-  document.getElementById('inp-tae').value  = t.tea;
+  document.getElementById('inp-tae').value      = t.tea;
+  document.getElementById('inp-bias-max').value = t.bias;
   var analyteEl = document.getElementById('inp-analyte');
   var unitEl    = document.getElementById('inp-unit');
   if (!analyteEl.value) analyteEl.value = a.name;
@@ -1039,7 +1243,17 @@ function addTAEToReport() {
   }
 
   if (window.parent && window.parent.addToReport) {
-    window.parent.addToReport({ tool: 'Total Error & Sigma', analyte: label, html: html });
+    var _taeFile = (window.parent.getCurrentToolFile && window.parent.getCurrentToolFile()) || '';
+    var _taeState = null;
+    try {
+      var _taeFields = {};
+      document.querySelectorAll('input[id], select[id], textarea[id]').forEach(function(el) {
+        if (el.type === 'checkbox' || el.type === 'radio') _taeFields[el.id] = el.checked;
+        else _taeFields[el.id] = el.value;
+      });
+      if (Object.keys(_taeFields).length) _taeState = { custom: false, data: _taeFields };
+    } catch(e) {}
+    window.parent.addToReport({ tool: 'Total Error & Sigma', analyte: label, html: html, file: _taeFile, state: _taeState });
     var btn = document.getElementById('tae-add-report-btn');
     if (btn) {
       btn.textContent = '✓ Added!';
@@ -1064,5 +1278,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(function(tab) {
   });
 });
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

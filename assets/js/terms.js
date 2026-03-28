@@ -53,6 +53,46 @@ window.CLINICAL_TERMS = [
   { id:'trueness', label:'Trueness',         category:'Reference materials',
     def:'Closeness of the mean of many measurements to the true or reference value. Related to bias — a method with high trueness has low bias. Distinct from precision (closeness of repeated measurements to each other).' },
 
+  /* ── Method comparison ── */
+  { id:'bland-altman', label:'Bland-Altman', category:'Method comparison',
+    def:'A graphical method for assessing agreement between two measurement methods. Plots the difference between the two methods (y-axis) against their mean (x-axis). Reveals whether disagreement is constant across the measurement range or increases with concentration.' },
+  { id:'limits-of-agreement', label:'Limits of Agreement', category:'Method comparison',
+    def:'The range within which 95% of differences between two methods are expected to fall: mean difference ± 1.96 SD. If the limits of agreement lie within a pre-defined acceptable difference, the methods can be considered clinically interchangeable.' },
+  { id:'mean-difference', label:'Mean difference', category:'Method comparison',
+    def:'The average of all paired differences between two methods (Method B − Method A). Represents systematic bias — a consistent shift in one direction. Also called the bias in a Bland-Altman analysis.' },
+  { id:'passing-bablok', label:'Passing-Bablok', category:'Method comparison',
+    def:'A regression method for comparing two measurement methods when both have measurement error. Estimates slope and intercept with 95% CI. Slope ≠ 1 indicates proportional bias; intercept ≠ 0 indicates constant bias. More appropriate than ordinary linear regression for method comparison.' },
+  { id:'proportional-bias', label:'Proportional bias', category:'Method comparison',
+    def:'A systematic error that increases (or decreases) with the concentration of the analyte. Detected by Passing-Bablok regression as a slope significantly different from 1.0. Example: method B reads 5% higher than method A across the entire range.' },
+  { id:'constant-bias', label:'Constant bias', category:'Method comparison',
+    def:'A fixed systematic difference between two methods that does not change with concentration. Detected by Passing-Bablok regression as an intercept significantly different from 0. Example: method B consistently reads 2 units higher than method A.' },
+
+  /* ── EP protocols ── */
+  { id:'ep05', label:'EP05', category:'EP protocols',
+    def:'CLSI EP05-A3: Evaluation of Precision of Quantitative Measurement Procedures. Defines the study design for validating precision (repeatability and intermediate precision). Standard design: 5 days × 2 runs/day × 2–4 replicates per run.' },
+  { id:'ep15', label:'EP15', category:'EP protocols',
+    def:'CLSI EP15-A3: User Verification of Precision and Estimation of Bias. A shorter verification study (typically 5 days × 1–2 runs) used to confirm manufacturer-claimed precision in your own laboratory. Less rigorous than EP05 but suitable for routine verification.' },
+  { id:'ep09', label:'EP09', category:'EP protocols',
+    def:'CLSI EP09-A3: Measurement Procedure Comparison and Bias Estimation. Defines the design for comparing two measurement methods using patient samples. Recommends ≥ 40 samples spanning the measurement range, measured in duplicate by both methods.' },
+  { id:'ep25', label:'EP25', category:'EP protocols',
+    def:'CLSI EP25-A: Evaluation of Stability of In Vitro Diagnostic Reagents. Defines protocols for assessing how long a reagent or sample remains stable. Outputs include % change from baseline, confidence intervals, and functional expiry.' },
+
+  /* ── Stability ── */
+  { id:'functional-expiry', label:'Functional expiry', category:'Stability',
+    def:'The time point at which a sample or reagent no longer meets the defined stability criterion. Estimated from a stability study as the last time point where the 95% CI for % change from baseline still lies within the allowable limit.' },
+  { id:'stability-limit', label:'Stability limit', category:'Stability',
+    def:'The maximum acceptable % change from baseline that a sample or reagent may show before it is considered unstable. Typically set equal to the allowable bias for the analyte, derived from biological variation or regulatory requirements.' },
+
+  /* ── Categorical agreement ── */
+  { id:'kappa', label:'Kappa', category:'Categorical agreement',
+    def:'Cohen\'s Kappa (κ): a measure of agreement between two raters or methods on categorical outcomes, corrected for chance agreement. Ranges from −1 to +1. κ ≥ 0.61 is generally considered acceptable in clinical practice (Landis & Koch scale).' },
+  { id:'weighted-kappa', label:'Weighted Kappa', category:'Categorical agreement',
+    def:'An extension of Cohen\'s Kappa for ordinal scales, applying penalties proportional to the distance of disagreement. Quadratic weighting penalises large disagreements more than small ones. More appropriate than unweighted Kappa when categories are ordered (e.g. mild / moderate / severe).' },
+  { id:'mcnemar', label:'McNemar', category:'Categorical agreement',
+    def:'McNemar\'s test: tests for a systematic difference (tilt) between two paired binary measurements — e.g. whether one method calls more positives than the other on the same samples. Only discordant pairs contribute to the test.' },
+  { id:'concordance', label:'Concordance', category:'Categorical agreement',
+    def:'The proportion of cases where two raters or methods agree on the same category. Unlike Kappa, concordance is not corrected for chance agreement and overestimates true agreement when one category is very common.' },
+
   /* ── Inferential statistics ── */
   { id:'p-value', label:'p-value',           category:'Inferential statistics',
     def:'The probability of observing results at least as extreme as the data, assuming the null hypothesis is true. A small p-value (typically < 0.05) suggests the result is unlikely under H₀ — but does not measure effect size or clinical importance.' },
@@ -74,6 +114,18 @@ window.CLINICAL_TERMS = [
     def:'A statistical test that assumes the data follow a specific distribution (usually normal). Examples: t-test, ANOVA. More powerful than non-parametric tests when assumptions are met.' },
   { id:'nonparametric', label:'Non-parametric test', category:'Inferential statistics',
     def:'A statistical test that makes no assumption about the underlying distribution. Used when data are non-normal, ordinal, or when sample sizes are very small. Examples: Mann–Whitney U, Wilcoxon signed-rank.' },
+  { id:'effect-size', label:'Effect size', category:'Inferential statistics',
+    def:'A measure of the magnitude of a difference or relationship, independent of sample size. Unlike p-values, effect size tells you how large the effect is in practice. Common measures: Cohen\'s d (means), r (correlation), odds ratio (categorical).' },
+  { id:'cohens-d', label:"Cohen's d", category:'Inferential statistics',
+    def:'A standardised effect size for comparing two means: d = (Mean₁ − Mean₂) / pooled SD. Interpretation: small ≈ 0.2, medium ≈ 0.5, large ≈ 0.8. Allows comparison of effect sizes across studies regardless of the unit of measurement.' },
+  { id:'shapiro-wilk', label:'Shapiro-Wilk', category:'Inferential statistics',
+    def:'A statistical test for normality. Tests whether a sample could plausibly have come from a normal distribution. p < 0.05 suggests non-normality. Sensitive to sample size — large samples may fail even for minor deviations from normality.' },
+  { id:'alpha', label:'Alpha (α)', category:'Inferential statistics',
+    def:'The significance level — the maximum probability of a Type I error (false positive) that is considered acceptable. Typically set at 0.05 (5%). Must be defined before data collection. p < α leads to rejection of H₀.' },
+  { id:'frequentist', label:'Frequentist', category:'Inferential statistics',
+    def:'A framework for probability where probability represents the long-run frequency of events over many repeated experiments. The basis for p-values and classical hypothesis testing. Cannot directly state the probability that a hypothesis is true.' },
+  { id:'bayesian', label:'Bayesian', category:'Inferential statistics',
+    def:'A framework for probability where probability represents degree of belief, updated as new evidence arrives. Uses prior knowledge combined with observed data to produce a posterior probability — a direct statement about the likelihood of a hypothesis being true.' },
 
   /* ── Correlation & Regression ── */
   { id:'pearson-r', label:'Pearson r',       category:'Correlation & Regression',

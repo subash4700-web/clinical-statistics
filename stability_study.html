@@ -223,7 +223,7 @@
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="runAnalysis()">Run analysis</button>
           <button class="btn btn-secondary" onclick="generateData()">Sample data</button>
-          <button class="btn btn-secondary" onclick="clearData()">Clear</button>
+          <button class="btn-ghost" onclick="clearAll()">Clear data</button>
         </div>
       </div>
     </div>
@@ -292,7 +292,7 @@
         </div>
 
         <div style="margin-top:4px;margin-bottom:14px;">
-          <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
+          <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
         </div>
 
       </div>
@@ -618,7 +618,7 @@ function generateData() {
   });
 }
 
-function clearData() {
+function clearAll() {
   const n = parseInt(document.getElementById('nSamples').value);
   activeTP.forEach(t => {
     for(let r=1;r<=n;r++){
@@ -754,5 +754,7 @@ function stabEFLMChange() {
   renderEFLMInfoBar('eflm-info-bar', key, 'desirable');
 }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

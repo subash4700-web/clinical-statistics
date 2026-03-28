@@ -213,33 +213,6 @@
       </div>
     </details>
 
-      <div class="note">
-        Accepted separators: tab, space, comma, semicolon. First row can be a header (it will be skipped automatically if non-numeric).
-      </div>
-
-      <div class="grid-2" style="margin-top:12px;">
-        <div>
-          <label class="small" style="font-weight:800;">Column meaning</label>
-          <select id="direction">
-            <option value="before-after" selected>Column 1 = Before, Column 2 = After</option>
-            <option value="after-before">Column 1 = After, Column 2 = Before</option>
-          </select>
-          <div class="note">Differences are computed as <strong>After − Before</strong>.</div>
-        </div>
-
-        <div>
-          <label class="small" style="font-weight:800;">Options</label>
-          <div class="note" style="margin-top:0;">
-            Outliers are flagged on the <strong>differences</strong> using the IQR rule. You can exclude them manually after running.
-          </div>
-        </div>
-      </div>
-
-      <div class="btn-row" style="margin-top:12px;">
-        <button class="btn-ghost" id="clearBtn">Clear</button>
-        <button class="btn-primary" id="runBtn">Run analysis</button>
-      </div>
-
       <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
     </div>
 
@@ -428,7 +401,7 @@
       <div class="btn-row" style="margin-top:10px; justify-content:flex-start;">
         <button class="btn-secondary" id="exportPdfBtn">Export PDF</button>
         <button class="btn-primary" id="exportXlsxBtn">Export Excel</button>
-        <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
+        <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
       </div>
     </div>
 
@@ -1369,6 +1342,8 @@ function addToReport() {
   }
 }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 
 </body>
 </html>

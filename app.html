@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src 'self' file:; img-src 'self' data: blob:; connect-src 'self' https://clinical-stats-api.vercel.app https://api.keygen.sh;">
   <title>Clinical Statistics</title>
+  <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
     /* ---------- GLOBAL ---------- */
     body {
       margin: 0;
+      padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #F4F6F8;
     }
@@ -189,11 +191,14 @@
       font-size: 16px;
     }
     .report-btn {
+      display: inline-flex; align-items: center; gap: 5px;
       background: #f1f5f9; color: #374151; border: 1px solid #e2e8f0;
-      border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700;
-      cursor: pointer; transition: all .15s;
+      border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s; margin-left: 6px; font-family: inherit;
     }
+    .report-btn:hover { background: #e2e8f0; }
     .report-btn.has-sections { background: #2563eb; color: white; border-color: #2563eb; }
+    .report-btn.has-sections:hover { background: #1d4ed8; }
     .report-btn.added { background: #16a34a; color: white; border-color: #16a34a; }
     #report-panel-backdrop {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9000;
@@ -312,8 +317,8 @@
     .info-toggle {
       background: #1F2937;
       color: white;
-      border: none;
-      padding: 7px 12px;
+      border: 1px solid #1F2937;
+      padding: 6px 12px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 800;
@@ -321,6 +326,16 @@
     }
 
     .info-toggle:hover { background: #111827; }
+
+    /* Lang toggle in white toolbar context */
+    .workspace-header .lang-toggle {
+      background: #fff; color: #1F2937;
+      border: 1px solid #E5E7EB; border-radius: 8px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600;
+      margin-left: 6px; cursor: pointer;
+      transition: background .15s;
+    }
+    .workspace-header .lang-toggle:hover { background: #F3F4F6; }
 
     .close-btn {
       background: #fff;
@@ -332,34 +347,34 @@
     }
     .close-btn:hover { background: #F9FAFB; }
 
-    .report-issue-btn {
-      background: #EF4444;
-      color: white;
-      border: none;
-      padding: 7px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 13px;
-      margin-left: 8px;
-    }
-    .report-issue-btn:hover { background: #DC2626; }
-
-    .export-btn {
-      background: #fff;
-      color: #1F2937;
+    /* ── Unified toolbar button base ── */
+    .tb-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff; color: #1F2937;
       border: 1px solid #E5E7EB;
-      padding: 7px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 13px;
-      margin-left: 6px;
-      transition: background .15s;
+      padding: 6px 12px; border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-size: 13px;
+      margin-left: 6px; white-space: nowrap;
+      transition: background .15s, border-color .15s;
+      font-family: inherit;
     }
-    .export-btn:hover { background: #F3F4F6; }
-    .export-btn-pdf { background: #1F2937; color: #fff; border-color: #1F2937; }
-    .export-btn-pdf:hover { background: #111827; }
+    .tb-btn:hover { background: #F3F4F6; }
+    .tb-btn:disabled { opacity: .45; cursor: default; }
+
+    /* Variants */
+    .tb-btn-danger  { color: #991b1b; border-color: #fca5a5; }
+    .tb-btn-danger:hover  { background: #fef2f2; }
+    .tb-btn-dark    { background: #1F2937; color: #fff; border-color: #1F2937; }
+    .tb-btn-dark:hover    { background: #111827; }
+    .tb-btn-blue    { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .tb-btn-blue:hover    { background: #1d4ed8; }
+    .tb-btn-red     { background: #EF4444; color: #fff; border-color: #EF4444; }
+    .tb-btn-red:hover     { background: #DC2626; }
+
+    /* Legacy aliases so existing JS/HTML still works */
+    .report-issue-btn { display:inline-flex;align-items:center;gap:5px;background:#EF4444;color:#fff;border:1px solid #EF4444;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;margin-left:6px;white-space:nowrap;transition:background .15s;font-family:inherit; }
+    .report-issue-btn:hover { background:#DC2626; }
+
     #appToast {
       position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px);
       background: #1F2937; color: #fff; padding: 10px 20px; border-radius: 8px;
@@ -367,7 +382,6 @@
       transition: opacity .25s, transform .25s; z-index: 99999; white-space: nowrap;
     }
     #appToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .export-btn:disabled { opacity: .45; cursor: default; }
 
     /* Welcome page styles */
     .welcome-container {
@@ -423,6 +437,7 @@
       font-weight: 900;
       margin: 0 0 10px;
       letter-spacing: -0.5px;
+      color: #fff;
     }
 
     .home-hero p {
@@ -742,7 +757,7 @@
 
     /* Search */
     .search-wrap { padding: 8px 10px 4px; position: relative; }
-    .search-input {
+    input.search-input {
       width: 100%; box-sizing: border-box;
       padding: 7px 10px 7px 30px;
       background: rgba(255,255,255,0.08);
@@ -751,8 +766,8 @@
       color: #e2e8f0; font-size: 12px; font-family: inherit;
       outline: none;
     }
-    .search-input::placeholder { color: rgba(255,255,255,0.35); }
-    .search-input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
+    input.search-input::placeholder { color: rgba(255,255,255,0.35); }
+    input.search-input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
     .search-icon {
       position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
       font-size: 12px; color: rgba(255,255,255,0.35); pointer-events: none;
@@ -848,6 +863,7 @@
       font-weight: 900;
       margin: 0 0 8px;
       letter-spacing: -0.3px;
+      color: #fff;
     }
 
     .sl-hero p {
@@ -1015,16 +1031,16 @@
           <button class="learn-btn" onclick="loadTool('analytical_performance_theory.html','Analytical Performance — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">Precision · bias · TAE · sigma metric</span></button>
           <button class="learn-btn" onclick="loadTool('precision_learning.html','Understanding Precision', this)">📚 Precision<span class="btn-hint">Repeatability · intermediate precision · reproducibility</span></button>
           <button class="learn-btn" onclick="loadTool('bias_learning.html','Understanding Bias', this)">📚 Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
-          <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">📚 Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
+          <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('precision.html','Precision', this)">Precision — Quick<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
           <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)">EP05 — Validation<span class="btn-hint">Full validation study · CLSI protocol · patient samples</span></button>
           <button onclick="loadTool('bias.html','Bias', this)">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
-          <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
           <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)">Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
+          <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
           <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Stability Study<span class="btn-hint">% change from T0 · functional expiry · stored patient panel</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
@@ -1074,13 +1090,11 @@
         </div>
         <span id="toolTitle"></span>
         <div>
-          <button class="report-issue-btn" onclick="reportIssue()" style="display:none;" id="reportIssueBtn" data-i18n="ui.reportIssue">Report Issue</button>
-          <button class="export-btn" id="saveDataBtn" style="display:none;" onclick="saveToolData()" title="Save data to file">⬇ Save data</button>
+          <!-- Data group -->
           <input type="file" id="loadDataInput" accept=".json" style="display:none;" onchange="loadToolData(event)">
-          <button class="export-btn" id="loadDataBtn" style="display:none;" onclick="document.getElementById('loadDataInput').click()" title="Load data from file">⬆ Load data</button>
-          <button class="export-btn" id="exportExcelBtn" style="display:none;" onclick="universalExportExcel()" title="Export to Excel">⬇ Excel</button>
-          <button class="export-btn export-btn-pdf" id="exportPdfBtn" style="display:none;" onclick="universalExportPDF()" title="Export to PDF">⬇ PDF</button>
+          <!-- Report -->
           <button class="report-btn" id="reportBtn" onclick="openReportPanel()">&#128196; Report</button>
+          <!-- UI -->
           <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">🇩🇰 DA</button>
           <button class="info-toggle" onclick="toggleInfo()" data-i18n="ui.info">Info</button>
         </div>
@@ -1265,7 +1279,7 @@
                 <div>
                   <div style="font-weight:800;font-size:15px;color:#1e3a8a;margin-bottom:2px;">Subash Suntharalingam</div>
                   <div style="font-size:12px;color:#3b82f6;font-weight:600;margin-bottom:8px;">Clinical Laboratory Scientist · MSc Biomedicine · Lecturer at University College Absalon</div>
-                  <div style="font-size:13px;color:#374151;line-height:1.6;">Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use the <strong>Report Issue</strong> button in any tool to share feedback.</div>
+                  <div style="font-size:13px;color:#374151;line-height:1.6;">Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use <strong>Help → Report an Issue</strong> in the menu bar to send feedback or submit a crash report.</div>
                 </div>
               </div>
             </div>
@@ -1276,7 +1290,7 @@
           </div>
 
           <div class="get-started">
-            Select a tool from the sidebar to begin your analysis
+            Select a tool to begin your analysis
           </div>
         </div>
       </div>
@@ -1301,6 +1315,7 @@
 <script src="assets/js/version.js"></script>
 <script>
   let currentToolPage = null;
+  let _pendingRestore = null;
 
   function applyAppVersion() {
     const versionElement = document.getElementById("appVersion");
@@ -1315,76 +1330,63 @@
     if (btn) btn.classList.add("active");
   }
 
-  // ── UX: dirty tracking ────────────────────────────────────────────────────
-  let _toolDirty = false;
-
-  function _autoSaveCurrentTool() {
-    try {
-      const iframe = document.getElementById('toolIframe');
-      if (!iframe || !currentToolPage) return;
-      const win = iframe.contentWindow;
-      if (typeof win?.getSaveData === 'function') {
-        const data = win.getSaveData();
-        if (data) localStorage.setItem('autosave_' + currentToolPage, JSON.stringify(data));
-      }
-    } catch(e) {}
-  }
-
-  function loadTool(page, title, btn, infoFile) {
-    // Auto-save current tool before leaving (if dirty or it has getSaveData)
-    if (currentToolPage && _toolDirty) _autoSaveCurrentTool();
-
-    // Unsaved warning for tools without getSaveData (can't auto-save)
-    if (currentToolPage && _toolDirty) {
-      try {
-        const win = document.getElementById('toolIframe')?.contentWindow;
-        if (typeof win?.getSaveData !== 'function') {
-          if (!confirm('You have unsaved data. Switch tools anyway?')) return;
-        }
-      } catch(e) {}
-    }
-
-    _toolDirty = false;
+  function loadTool(page, title, btn, infoFile, restoreState) {
+    _pendingRestore = restoreState || null;
     currentToolPage = page;
+    window._currentToolFile = page;
+    window._currentToolTitle = title;
+    window.getCurrentToolFile = function() { return window._currentToolFile || ''; };
 
 
     const displayTitle = (btn && btn.dataset.i18n) ? T(btn.dataset.i18n) : title;
     document.getElementById("toolTitle").innerText = (page === 'PCR.html') ? '' : displayTitle;
     setActiveButton(btn);
 
-    // Hide Excel until we confirm the tool supports it
-    document.getElementById("exportExcelBtn").style.display = "none";
-
     document.getElementById("contentArea").innerHTML =
       `<iframe src="${page}" style="width:100%; height:100%; border:none;" id="toolIframe"></iframe>`;
 
-    // Show Report Issue + PDF + Save/Load immediately; Excel only if tool supports it
-    document.getElementById("reportIssueBtn").style.display = "inline-block";
-    document.getElementById("saveDataBtn").style.display = "inline-block";
-    document.getElementById("loadDataBtn").style.display = "inline-block";
-    document.getElementById("exportPdfBtn").style.display = "inline-block";
-
-    // After iframe loads: check Excel support, restore auto-saved data, attach dirty tracking
+    // After iframe loads: restore state if editing a report entry
     document.getElementById("toolIframe").addEventListener("load", function() {
       const win = this.contentWindow;
 
-      // Excel support
-      document.getElementById("exportExcelBtn").style.display =
-        typeof win?.exportToExcel === "function" ? "inline-block" : "none";
-
-      // Auto-restore last session for this tool
-      try {
-        const saved = localStorage.getItem('autosave_' + page);
-        if (saved && typeof win?.loadSaveData === 'function') {
-          win.loadSaveData(JSON.parse(saved));
-        }
-      } catch(e) {}
-
-      // Dirty tracking — mark dirty on any input change
-      try {
-        this.contentDocument.addEventListener('input', () => { _toolDirty = true; }, true);
-        this.contentDocument.addEventListener('change', () => { _toolDirty = true; }, true);
-      } catch(e) {}
+      if (_pendingRestore) {
+        var state = _pendingRestore;
+        _pendingRestore = null;
+        setTimeout(function() {
+          try {
+            if (state.custom && typeof win.loadSaveData === 'function') {
+              win.loadSaveData(state.data);
+              // Switch to results tab after tool's own loadSaveData finishes
+              setTimeout(function() {
+                try {
+                  var resultsTab = win.document.querySelector('[data-tab="tab-results"], [data-tab="results"]');
+                  if (resultsTab) resultsTab.click();
+                } catch(e) {}
+              }, 700);
+            } else if (state.data) {
+              Object.keys(state.data).forEach(function(key) {
+                var el = win.document.getElementById(key);
+                if (!el) return;
+                if (el.type === 'checkbox' || el.type === 'radio') el.checked = state.data[key];
+                else el.value = state.data[key];
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+              });
+              var fn = win.calculate || win.runAnalysis || win.calculateEP || win.runStability;
+              if (typeof fn === 'function') setTimeout(function() {
+                try {
+                  fn.call(win);
+                  setTimeout(function() {
+                    try {
+                      var resultsTab = win.document.querySelector('[data-tab="tab-results"], [data-tab="results"]');
+                      if (resultsTab) resultsTab.click();
+                    } catch(e) {}
+                  }, 100);
+                } catch(e) {}
+              }, 150);
+            }
+          } catch(e) {}
+        }, 300);
+      }
     });
 
     // Load info panel HTML — use explicit infoFile if provided, otherwise derive from page name
@@ -1403,10 +1405,9 @@
       });
   }
 
+
   // Called by workflow navigation buttons inside iframes — skips dirty check
   function loadToolFromWorkflow(page, title) {
-    _autoSaveCurrentTool();
-    _toolDirty = false;
     loadTool(page, title, null);
   }
 
@@ -1597,7 +1598,6 @@
             document.getElementById("toolTitle").innerText = `${toolTitle} (Report Loaded)`;
             
             // Show the report issue button
-            document.getElementById("reportIssueBtn").style.display = "inline-block";
             currentToolPage = toolFile;
 
             alert(`Report loaded successfully!\n\nTool: ${toolTitle}\nTimestamp: ${reportData.timestamp || 'Unknown'}\n\nAll inputs and results have been restored.`);
@@ -1754,11 +1754,6 @@
     setActiveButton(null);
     document.querySelectorAll('.home-button').forEach(b => b.classList.remove('active'));
     document.getElementById('contentArea').innerHTML = getSectionHTML(key);
-    document.getElementById('reportIssueBtn').style.display  = 'none';
-    document.getElementById('saveDataBtn').style.display     = 'none';
-    document.getElementById('loadDataBtn').style.display     = 'none';
-    document.getElementById('exportExcelBtn').style.display  = 'none';
-    document.getElementById('exportPdfBtn').style.display    = 'none';
     document.getElementById('infoContent').innerHTML = "<p style='color:#6B7280;'>" + T('home.infoWelcome') + "</p>";
     expandSidebarFor(key);
   }
@@ -1837,8 +1832,8 @@
             tc('precision.html',         'Precision — Quick / QC',            'Daily monitoring · run-to-run statistics'),
             tc('precision_ep05.html',    'EP05/EP15 — Validation',             'Full validation study · CLSI protocol'),
             tc('bias.html',              'Bias — CRM / EQA',                   'Known reference value vs your method'),
-            tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
             tc('method_comparison.html', 'Quantitative Method Comparison',     'Bland-Altman · Passing-Bablok · Deming · paired samples'),
+            tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
             tc('stability_study.html',   'Quantitative Stability Study',       '% change from T0 · functional expiry · CLSI EP25-A'),
           ]),
           grp('Categorical', [
@@ -2113,11 +2108,6 @@
     setActiveButton(null);
     document.querySelectorAll(".home-button").forEach(b => b.classList.add("active"));
     document.getElementById("contentArea").innerHTML = getHomeHTML();
-    document.getElementById("reportIssueBtn").style.display = "none";
-    document.getElementById("saveDataBtn").style.display = "none";
-    document.getElementById("loadDataBtn").style.display = "none";
-    document.getElementById("exportExcelBtn").style.display = "none";
-    document.getElementById("exportPdfBtn").style.display = "none";
     document.getElementById("infoContent").innerHTML = "<p style='color:#6B7280;'>" + T('home.infoWelcome') + "</p>";
   }
 
@@ -2182,10 +2172,10 @@
       'home.pcrDesc':'End-to-end PCR workflow: in silico primer design and validation, master mix calculator, and primer dilution planning.',
       'home.labTools':'Lab Tools',
       'home.labDesc':'Everyday laboratory calculators for dilution series, solution preparation, photometry, and potentiometry.',
-      'home.aboutText':'Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use the <strong>Report Issue</strong> button in any tool to share feedback.',
+      'home.aboutText':'Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use <strong>Help → Report an Issue</strong> in the menu bar to send feedback or submit a crash report.',
       'home.disclaimerTitle':'For educational and research use only',
       'home.disclaimerText':'Always verify results independently and consult a qualified statistician for critical clinical decisions. This tool does not replace professional judgement.',
-      'home.getStarted':'Select a tool from the sidebar to begin your analysis',
+      'home.getStarted':'Select a tool to begin your analysis',
       'home.infoWelcome':'Welcome to the Clinical Statistics Toolkit. Select a test or tool from the sidebar to get started.',
     },
     da: {
@@ -2537,8 +2527,6 @@
   async function universalExportPDF() {
     const iframe = document.getElementById("toolIframe");
     if (!iframe) return;
-    const btn = document.getElementById("exportPdfBtn");
-    btn.disabled = true; btn.textContent = "Generating…";
 
     try {
       const toolTitle = document.getElementById("toolTitle").innerText || "Export";
@@ -2607,8 +2595,6 @@
       pdf.save(`${toolTitle.replace(/[^a-z0-9]/gi, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
       alert("PDF export failed: " + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = "⬇ PDF";
     }
   }
 
@@ -2718,6 +2704,29 @@
       }
     };
     reader.readAsText(file);
+  }
+
+  // Called by File menu → Load Tool Data (data already parsed by main process)
+  function loadToolDataFromObject(payload) {
+    const iframe = document.getElementById("toolIframe");
+    if (!iframe || !iframe.contentDocument) { alert("No tool is open."); return; }
+    const iDoc = iframe.contentDocument;
+    const fields = payload.fields || {};
+    const customSet = iframe.contentWindow && iframe.contentWindow.loadSaveData;
+    if (payload.custom && typeof customSet === 'function') {
+      customSet(fields);
+      showToast("Data loaded — review your inputs, then click Run to recalculate.");
+      return;
+    }
+    Object.entries(fields).forEach(([key, value]) => {
+      const el = iDoc.getElementById(key) || iDoc.querySelector(`[name="${key}"]`);
+      if (!el) return;
+      if (el.type === "checkbox" || el.type === "radio") { el.checked = !!value; }
+      else { el.value = value; }
+      el.dispatchEvent(new Event("input",  { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    showToast("Data loaded — review your inputs, then click Run to recalculate.");
   }
 </script>
 
@@ -2870,11 +2879,19 @@ function renderReportList() {
     var ts = new Date(s.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
     var item = document.createElement('div');
     item.className = 'report-section-item';
+    item.style.cursor = s.file ? 'pointer' : 'default';
+    item.title = s.file ? 'Click to return to this tool' : '';
     item.innerHTML = '<div class="rsi-info">'
       + '<div class="rsi-tool">' + s.tool + '</div>'
       + '<div class="rsi-analyte">' + (s.analyte || '') + ' &nbsp;·&nbsp; ' + ts + '</div>'
       + '</div>'
-      + '<button class="rsi-remove" onclick="removeReportSection(\'' + s.id + '\')" title="Remove">&#10005;</button>';
+      + '<button class="rsi-remove" onclick="event.stopPropagation();removeReportSection(\'' + s.id + '\')" title="Remove">&#10005;</button>';
+    if (s.file) {
+      item.addEventListener('click', function() {
+        closeReportPanel();
+        loadTool(s.file, s.tool, null, null, s.state || null);
+      });
+    }
     list.appendChild(item);
   });
 }
@@ -2919,6 +2936,30 @@ function previewFullReport() {
 function buildReportPreviewModal() {
   var body = document.getElementById('rp-body');
   body.innerHTML = '';
+
+  // Inject components.css only inside the report preview so tool styles render correctly
+  // without affecting the rest of the app shell
+  if (!document.getElementById('rp-components-css')) {
+    var link = document.createElement('style');
+    link.id = 'rp-components-css';
+    // Fetch and scope all component styles under #rp-body
+    fetch('assets/css/components.css').then(function(r){ return r.text(); }).then(function(css){
+      // Scope every rule to #rp-body so it doesn't bleed into the app shell
+      var scoped = css.replace(/(^|\})\s*([^@{}/][^{]*)\{/gm, function(m, brace, sel) {
+        var trimmed = sel.trim();
+        if (!trimmed) return m;
+        var selectors = trimmed.split(',').map(function(s){
+          s = s.trim();
+          if (!s) return s;
+          if (s.startsWith(':root') || s.startsWith('html')) return s;
+          return '#rp-body ' + s;
+        });
+        return (brace || '') + ' ' + selectors.join(', ') + ' {';
+      });
+      link.textContent = scoped;
+    }).catch(function(){});
+    document.head.appendChild(link);
+  }
 
   var dateStr = new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
 

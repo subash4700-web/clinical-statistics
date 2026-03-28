@@ -22,6 +22,22 @@ function toggleRptSection(hdr) {
   }
 }
 
+// Capture current tool state (for report-entry editing).
+// Tries custom getSaveData() hook first, falls back to generic field capture.
+function captureToolState() {
+  try {
+    if (typeof window.getSaveData === 'function') {
+      return { custom: true, data: window.getSaveData() };
+    }
+    var fields = {};
+    document.querySelectorAll('input[id], select[id], textarea[id]').forEach(function(el) {
+      if (el.type === 'checkbox' || el.type === 'radio') fields[el.id] = el.checked;
+      else fields[el.id] = el.value;
+    });
+    return Object.keys(fields).length ? { custom: false, data: fields } : null;
+  } catch(e) { return null; }
+}
+
 // Collect all expanded sections and send to parent report builder.
 // toolName: string shown in report panel
 // analyte:  string shown as subtitle (test name, variable, etc.)
@@ -69,8 +85,11 @@ function collectAndAddToReport(toolName, analyte, chartMap) {
     return false;
   }
 
+  var state = captureToolState();
+
   if (window.parent && window.parent.addToReport) {
-    window.parent.addToReport({ tool: toolName, analyte: analyte || toolName, html: html });
+    var file = (window.parent.getCurrentToolFile && window.parent.getCurrentToolFile()) || (window.parent._currentToolFile) || '';
+    window.parent.addToReport({ tool: toolName, analyte: analyte || toolName, html: html, file: file, state: state });
   }
   return true;
 }

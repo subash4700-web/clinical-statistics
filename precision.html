@@ -281,7 +281,7 @@
 
     <div class="error-msg" id="input-error"></div>
     <div class="btn-row">
-      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear data</button>
       <button class="btn-primary" onclick="calculate()">Calculate</button>
     </div>
   </div>
@@ -301,7 +301,7 @@
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
       <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
-      <button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>
+      <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
     </div>
   </div>
 </div>
@@ -403,7 +403,19 @@ function loadScenario(n) {
   document.getElementById('sel-type').value    = type;
   document.getElementById('inp-analyte').value = analyte;
   document.getElementById('inp-unit').value    = unit;
-  // allowable CV intentionally not set — use EFLM lookup or enter your own
+  // Auto-match analyte in EFLM database to fill allowable CV%
+  if (typeof EFLM_DB !== 'undefined') {
+    const matchKey = Object.keys(EFLM_DB).find(k =>
+      EFLM_DB[k].name.toLowerCase() === analyte.toLowerCase()
+    );
+    if (matchKey) {
+      eflmKey = matchKey;
+      eflmTier = 'desirable';
+      document.getElementById('eflm-analyte').value = matchKey;
+      renderEFLMTierCards();
+      applyEFLM();
+    }
+  }
   syncUnitLabels();
   document.getElementById('txt-data').value = txt;
   if (_inputMode === 'table') populateTableFromText(txt);
@@ -557,13 +569,23 @@ let lastCharts  = [];
 function destroyCharts(){ lastCharts.forEach(c=>c.destroy()); lastCharts=[]; _dotChartInst=null; }
 
 function _wfNextCard(step, nextTool, savedMsg, page, title) {
-  return `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-    <div>
-      <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Step ${step} of 3 complete</div>
-      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ${nextTool}</div>
-      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">${savedMsg} · will auto-fill in Total Error &amp; Sigma</div>
+  return `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:16px;margin-top:16px;">
+    <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Step ${step} of 3 complete — Precision saved</div>
+    <div style="font-size:13px;color:#1e3a8a;margin-bottom:2px;font-weight:600;">Next: Bias assessment</div>
+    <div style="font-size:12px;color:#3b82f6;margin-bottom:12px;">${savedMsg} · will auto-fill in Total Error &amp; Sigma</div>
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;">How will you assess bias? Choose a method:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;display:flex;flex-direction:column;">
+        <div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">CRM / EQA Bias</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;flex:1;">You have a sample with a known assigned value (certified reference material or EQA material).</div>
+        <button onclick="try{window.parent.loadToolFromWorkflow('bias.html','Bias')}catch(e){alert('Open Bias from the sidebar')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Bias tool →</button>
+      </div>
+      <div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;display:flex;flex-direction:column;">
+        <div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">Method Comparison</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;flex:1;">You are comparing your method against a reference method using patient samples (EP09 / Passing-Bablok).</div>
+        <button onclick="try{window.parent.loadToolFromWorkflow('method_comparison.html','Method Comparison')}catch(e){alert('Open Method Comparison from the sidebar')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Method Comparison →</button>
+      </div>
     </div>
-    <button onclick="try{window.parent.loadToolFromWorkflow('${page}','${title}')}catch(e){alert('Open ${title} from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ${nextTool} →</button>
   </div>`;
 }
 
@@ -638,6 +660,62 @@ function renderRepeatability(){
 
   let html='';
 
+  // ── Analyte header ──
+  html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:baseline;gap:8px;">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>
+    <span style="font-size:16px;font-weight:800;color:#0c4a6e;">${analyte}</span>
+    ${unit?`<span style="font-size:13px;color:#0284c7;">(${unit})</span>`:''}
+  </div>`;
+
+  // ── Compact summary card ──
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:8px;">Measured from data</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:${hasLimit?'14px':'0'};">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">n</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${n}</div>
+        <div style="font-size:10px;color:#9ca3af;">${_excludedSet.size>0?`${_excludedSet.size} excluded`:'observations'}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Mean</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(mu,4)}</div>
+        <div style="font-size:10px;color:#9ca3af;">${unit||''}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">SD</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(s,4)}</div>
+        <div style="font-size:10px;color:#9ca3af;">95% CI [${fmt(ciSD.lower,4)}, ${fmt(ciSD.upper,4)}]</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">CV%</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(cv,2)}%</div>
+        <div style="font-size:10px;color:#9ca3af;">95% CI [${fmt(ciCVLo,2)}%, ${fmt(ciCVHi,2)}%]</div>
+      </div>
+    </div>
+    ${hasLimit?(()=>{
+      const ratio = cv/allowable;
+      const pctUsed = (ratio*100).toFixed(0);
+      const barColor = pass ? '#16a34a' : '#dc2626';
+      return `<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">Allowable CV% = ${fmt(allowable,1)}%</span>
+          </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Measured CV%</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(cv,2)}%</span>
+          </div>
+        </div>
+        <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${Math.min(ratio,1)*100}%;background:${barColor};border-radius:4px;transition:width .4s;"></div>
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">${pctUsed}% of allowable limit used</div>
+        ${verdictHtml(pass,`CV% ${fmt(cv,2)}%`,`allowable ${fmt(allowable,1)}%`)}
+      </div>`;
+    })():''}
+  </div>`;
+
   // Fixed limits notice
   if(usingFixed){
     html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;color:#0369a1;margin-bottom:10px;">
@@ -651,6 +729,7 @@ function renderRepeatability(){
     html+=`<div class="excl-info"><strong>${_excludedSet.size} observation${_excludedSet.size!==1?'s':''} excluded</strong> from statistics. Showing full dataset below.</div>`;
   }
 
+  html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Full results</div>`;
   html+=kpiGrid([
     {label:'n (active)',      value:n,                       sub:_excludedSet.size>0?`${_excludedSet.size} excluded`:'observations'},
     {label:'Mean',            value:fmt(mu,4),               sub:unit||''},
@@ -659,8 +738,6 @@ function renderRepeatability(){
     {label:'95% CI (mean)',   value:`${fmt(ciMeanLo,4)} – ${fmt(ciMeanHi,4)}`, sub:unit||''},
     {label:'Min / Max',       value:`${fmt(Math.min(...activeVals),4)} / ${fmt(Math.max(...activeVals),4)}`, sub:'range'},
   ]);
-
-  if(hasLimit) html+=verdictHtml(pass,`CV% ${fmt(cv,2)}%`,`allowable ${fmt(allowable,1)}%`);
 
   // Westgard summary panel
   html+=`<div class="section-header">Westgard Rule Check</div>`;
@@ -818,6 +895,63 @@ function renderIntermediate(){
   const wgVio = checkWestgard(gMeansArr, ctrlMu, ctrlS);
 
   let html='';
+
+  // ── Analyte header ──
+  html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:baseline;gap:8px;">
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>
+    <span style="font-size:16px;font-weight:800;color:#0c4a6e;">${analyte}</span>
+    ${unit?`<span style="font-size:13px;color:#0284c7;">(${unit})</span>`:''}
+  </div>`;
+
+  // ── Compact summary card ──
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:8px;">Measured from data</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:${hasLimit?'14px':'0'};">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">n</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${N}</div>
+        <div style="font-size:10px;color:#9ca3af;">${k} groups${_excludedSet.size>0?` · ${_excludedSet.size} excl.`:''}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Grand Mean</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(grandMean,4)}</div>
+        <div style="font-size:10px;color:#9ca3af;">${unit||''}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">SD (total)</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(St,4)}</div>
+        <div style="font-size:10px;color:#9ca3af;">St</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">CV% (total)</div>
+        <div style="font-size:18px;font-weight:800;color:#111827;">${fmt(cvT,2)}%</div>
+        <div style="font-size:10px;color:#9ca3af;">95% CI [${fmt(ciCVlo,2)}%, ${fmt(ciCVhi,2)}%]</div>
+      </div>
+    </div>
+    ${hasLimit?(()=>{
+      const ratio = cvT/allowable;
+      const pctUsed = (ratio*100).toFixed(0);
+      const barColor = pass ? '#16a34a' : '#dc2626';
+      return `<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">Allowable CV% = ${fmt(allowable,1)}%</span>
+          </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Total CV%</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(cvT,2)}%</span>
+          </div>
+        </div>
+        <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${Math.min(ratio,1)*100}%;background:${barColor};border-radius:4px;transition:width .4s;"></div>
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">${pctUsed}% of allowable limit used</div>
+        ${verdictHtml(pass,`Total CV% ${fmt(cvT,2)}%`,`allowable ${fmt(allowable,1)}%`)}
+      </div>`;
+    })():''}
+  </div>`;
+
   if(usingFixed){
     html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:12px;color:#0369a1;margin-bottom:10px;">
       <strong>Fixed control limits applied</strong> — `;
@@ -829,6 +963,7 @@ function renderIntermediate(){
     html+=`<div class="excl-info"><strong>${_excludedSet.size} group${_excludedSet.size!==1?'s':''} excluded</strong> from statistics.</div>`;
   }
 
+  html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Full results</div>`;
   html+=kpiGrid([
     {label:'Groups (active)',    value:k,               sub:`${N} total observations`},
     {label:'Grand Mean',         value:fmt(grandMean,4), sub:unit||''},
@@ -837,8 +972,6 @@ function renderIntermediate(){
     {label:'Total IP SD (St)',   value:fmt(St,4),       sub:`CV% ${fmt(cvT,2)}%`},
     {label:'95% CI (CV%)',       value:`${fmt(ciCVlo,2)}% – ${fmt(ciCVhi,2)}%`, sub:'for total CV%'},
   ]);
-
-  if(hasLimit) html+=verdictHtml(pass,`Total CV% ${fmt(cvT,2)}%`,`allowable ${fmt(allowable,1)}%`);
 
   // Variance components
   html+=`<div class="section-header">Variance Components</div>`;
@@ -1269,6 +1402,68 @@ function exportExcel(){
   XLSX.writeFile(wb,`precision_${r.analyte||'results'}.xlsx`);
 }
 
+// ── Save / Load state (for report restore) ──
+function getSaveData() {
+  // Sync table → textarea so txt-data always has latest values
+  syncTableToTextarea();
+  return {
+    type:       (document.getElementById('sel-type')||{}).value || 'repeatability',
+    analyte:    (document.getElementById('inp-analyte')||{}).value || '',
+    unit:       (document.getElementById('inp-unit')||{}).value || '',
+    allowable:  (document.getElementById('inp-allowable')||{}).value || '',
+    fixedMean:  (document.getElementById('inp-fixed-mean')||{}).value || '',
+    fixedSD:    (document.getElementById('inp-fixed-sd')||{}).value || '',
+    eflmKey:    eflmKey || '',
+    eflmTier:   eflmTier || 'desirable',
+    txtData:    (document.getElementById('txt-data')||{}).value || '',
+    tblRepN:    (document.getElementById('tbl-rep-n')||{}).value || '20',
+    tblIpGroups:(document.getElementById('tbl-ip-groups')||{}).value || '5',
+    tblIpReps:  (document.getElementById('tbl-ip-reps')||{}).value || '3',
+  };
+}
+
+function loadSaveData(d) {
+  if (!d) return;
+  // 1. Restore type
+  var selType = document.getElementById('sel-type');
+  if (selType && d.type) { selType.value = d.type; updateHints(); }
+  // 2. Restore fields
+  if (d.analyte !== undefined)   document.getElementById('inp-analyte').value   = d.analyte;
+  if (d.unit !== undefined)      document.getElementById('inp-unit').value       = d.unit;
+  if (d.allowable !== undefined) document.getElementById('inp-allowable').value = d.allowable;
+  if (d.fixedMean !== undefined) document.getElementById('inp-fixed-mean').value = d.fixedMean;
+  if (d.fixedSD !== undefined)   document.getElementById('inp-fixed-sd').value   = d.fixedSD;
+  syncUnitLabels();
+  // 3. Restore EFLM
+  if (d.eflmKey) {
+    eflmKey  = d.eflmKey;
+    eflmTier = d.eflmTier || 'desirable';
+    var sel = document.getElementById('eflm-analyte');
+    if (sel) sel.value = eflmKey;
+    renderEFLMTierCards();
+    applyEFLM();
+  }
+  // 4. Restore table config then rebuild table
+  if (d.tblRepN)    document.getElementById('tbl-rep-n').value    = d.tblRepN;
+  if (d.tblIpGroups) document.getElementById('tbl-ip-groups').value = d.tblIpGroups;
+  if (d.tblIpReps)  document.getElementById('tbl-ip-reps').value  = d.tblIpReps;
+  buildPrecTable();
+  // 5. Put data into textarea, populate table, then calculate
+  if (d.txtData) {
+    document.getElementById('txt-data').value = d.txtData;
+    populateTableFromText(d.txtData);
+  }
+  setTimeout(function() {
+    try { calculate(); } catch(e) {}
+    setTimeout(function() {
+      try {
+        var resultsTab = document.querySelector('[data-tab="tab-results"], [data-tab="results"]');
+        if (resultsTab) resultsTab.click();
+      } catch(e) {}
+    }, 100);
+  }, 150);
+}
+
 // ── Add to Report ──
 function addToReport() {
   var analyte = (document.getElementById('inp-analyte') || {}).value || 'Precision';
@@ -1363,5 +1558,7 @@ function applyEFLM() {
   renderEFLMInfoBar('eflm-info-bar', eflmKey, eflmTier);
 }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

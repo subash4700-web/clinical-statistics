@@ -306,7 +306,7 @@
     <div class="error-msg" id="ep-error"></div>
 
     <div class="btn-row">
-      <button class="btn-ghost" onclick="clearEPData()">Clear data</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear data</button>
       <button class="btn-primary" onclick="calculateEP()">Calculate</button>
     </div>
   </div>
@@ -658,7 +658,7 @@ function handlePaste(e, lvl, startRow, startCol) {
 // ─────────────────────────────────────────────
 // Clear data
 // ─────────────────────────────────────────────
-function clearEPData() {
+function clearAll() {
   var d = getDesign();
   for (var lvl = 0; lvl < d.levels; lvl++) {
     for (var row = 0; row < d.totalRuns; row++) {
@@ -837,16 +837,16 @@ function _wfBiasChoiceCard(wfLevels) {
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
 
     // Option A: CRM / EQA
-    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">'
+    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;display:flex;flex-direction:column;">'
     + '<div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">CRM / EQA Bias</div>'
-    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;">You have a sample with a known assigned value (certified reference material or EQA material).</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;flex:1;">You have a sample with a known assigned value (certified reference material or EQA material).</div>'
     + '<button onclick="try{window.parent.loadToolFromWorkflow(\'bias.html\',\'Bias\')}catch(e){alert(\'Open Bias from the sidebar\')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Bias tool \u2192</button>'
     + '</div>'
 
     // Option B: Method Comparison
-    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">'
+    + '<div style="background:white;border:1px solid #bfdbfe;border-radius:8px;padding:12px;display:flex;flex-direction:column;">'
     + '<div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px;">Method Comparison</div>'
-    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;">You are comparing your method against a reference method using patient samples (EP09 / Passing-Bablok).</div>'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:10px;flex:1;">You are comparing your method against a reference method using patient samples (EP09 / Passing-Bablok).</div>'
     + '<button onclick="try{window.parent.loadToolFromWorkflow(\'method_comparison.html\',\'Method Comparison\')}catch(e){alert(\'Open Method Comparison from the sidebar\')}" style="width:100%;background:#2563eb;color:white;border:none;border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;">Open Method Comparison \u2192</button>'
     + '</div>'
 
@@ -917,7 +917,7 @@ function calculateEP() {
   } catch(e) {}
 
   // Add to Report button
-  html += '<button id="ep05-add-report-btn" onclick="addEP05ToReport()" style="margin-top:20px;width:100%;padding:12px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;">+ Add to Report</button>';
+  html += '<button id="ep05-add-report-btn" onclick="addEP05ToReport()" class="btn-report">+ Add to Report</button>';
   html += '<p style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">Expanded sections are included — collapse any section to exclude it.</p>';
 
   document.getElementById('ep-results').innerHTML = html;
@@ -996,9 +996,55 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     ? 'Level ' + (lvl + 1) + (analyte ? ' — ' + analyte : '')
     : (analyte || 'Results');
 
+  var d = getDesign();
+
   var html = '<div class="card" id="ep-card-lvl-' + lvl + '">';
   html += '<div id="ep-stats-lvl-' + lvl + '">';
   html += '<div class="section-title" style="font-size:16px;">' + escHtml(cardTitle) + (unit ? ' <span style="font-size:12px;font-weight:400;color:var(--muted);">(' + escHtml(unit) + ')</span>' : '') + '</div>';
+
+  // ── Analyte header banner ──
+  html += '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:baseline;gap:8px;">';
+  html += '<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>';
+  html += '<span style="font-size:16px;font-weight:800;color:#0c4a6e;">' + escHtml(analyte || ('Level ' + (lvl + 1))) + '</span>';
+  if (unit) html += '<span style="font-size:13px;color:#0284c7;">(' + escHtml(unit) + ')</span>';
+  html += '</div>';
+
+  // ── Measured from data ──
+  html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Measured from data</div>';
+  html += '<div class="kpi-grid">';
+  html += kpi('n (samples)', stats.n * stats.m, 'total measurements');
+  html += kpi('Days', d.days, 'study days');
+  html += kpi('Runs', stats.n, 'complete runs');
+  html += kpi('S<sub>w</sub> (within-run SD)', fmt(stats.Sw, 4), 'CV<sub>w</sub> ' + fmt(stats.CVw, 2) + '%');
+  html += kpi('S<sub>t</sub> (total SD)', fmt(stats.St, 4), 'CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '%');
+  html += '</div>';
+
+  // ── Acceptance specification + comparison (only if allowable CV entered) ──
+  if (hasAllowCV) {
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Acceptance specification</div>';
+    html += '<div class="kpi-grid">';
+    html += kpi('Allowable CV%', fmt(allowableCV, 1) + '%', 'total intermediate precision limit');
+    html += '</div>';
+
+    var ratio = stats.CVt / allowableCV;
+    var pctUsed = Math.round(ratio * 100);
+    var barColor = pass ? '#16a34a' : '#dc2626';
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Comparison \u2014 measured vs specification</div>';
+    html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:10px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">';
+    html += '<span><strong>CV<sub>t</sub></strong> = ' + fmt(stats.CVt, 2) + '%</span>';
+    html += '<span style="color:#6b7280;font-size:12px;">Allowable = ' + fmt(allowableCV, 1) + '%</span>';
+    html += '</div>';
+    html += '<div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">';
+    html += '<div style="height:100%;width:' + Math.min(ratio, 1) * 100 + '%;background:' + barColor + ';border-radius:4px;"></div>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:#6b7280;">' + pctUsed + '% of allowable limit used</div>';
+    html += '</div>';
+    html += '<div class="verdict ' + (pass ? 'pass' : 'fail') + '">';
+    html += (pass ? '&#10003; Within spec' : '&#10007; Exceeds allowable');
+    html += ' \u2014 CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% ' + (pass ? '\u2264' : '>') + ' allowable ' + fmt(allowableCV, 1) + '%';
+    html += '</div>';
+  }
 
   // Fixed limits note
   if (usingFixed) {
@@ -1041,11 +1087,8 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     'CV ' + fmt(stats.CVt, 2) + '% | 95% CI [' + fmt(stats.ciCVtLo, 2) + '%, ' + fmt(stats.ciCVtHi, 2) + '%]');
   html += '</div>';
 
-  // EP05 PASS/FAIL (establish mode)
+  // EP05 PASS/FAIL (establish mode) — verdict shown in comparison section above
   if (hasAllowCV) {
-    var vClass = pass ? 'pass' : 'fail';
-    var vIcon  = pass ? '&#10003; PASS' : '&#10007; FAIL';
-    html += '<div class="verdict ' + vClass + '">' + vIcon + ' &mdash; CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% is ' + (pass ? 'within' : 'above') + ' allowable ' + fmt(allowableCV, 1) + '%</div>';
     // Show EFLM source attribution if allowable CV was set from EFLM database
     if (ep05EFLMKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[ep05EFLMKey]) {
       var eflmA = EFLM_DB[ep05EFLMKey];
@@ -1883,6 +1926,92 @@ function loadScenarioEP05(n) {
 }
 
 // ─────────────────────────────────────────────
+// Save / Load state (for report restore)
+// ─────────────────────────────────────────────
+function getSaveData() {
+  var d = getDesign();
+  var lvlConfigs = [];
+  for (var lvl = 0; lvl < d.levels; lvl++) {
+    lvlConfigs.push(getLevelConfig(lvl));
+  }
+  var cells = {};
+  document.querySelectorAll('input[id^="ep-d"]').forEach(function(el) {
+    if (el.value.trim()) cells[el.id] = el.value;
+  });
+  var purposeEl = document.querySelector('input[name="study-purpose"]:checked');
+  return {
+    days:    d.days,
+    runs:    d.runs,
+    reps:    d.reps,
+    levels:  d.levels,
+    purpose: purposeEl ? purposeEl.value : 'establish',
+    eflmKey: ep05EFLMKey || '',
+    eflmTier: ep05EFLMTier || 'desirable',
+    levelConfigs: lvlConfigs,
+    cells:   cells
+  };
+}
+
+function loadSaveData(d) {
+  if (!d) return;
+  // 1. Restore design
+  var daysEl = document.getElementById('inp-days');
+  var runsEl = document.getElementById('inp-runs');
+  var repsEl = document.getElementById('inp-reps');
+  if (daysEl && d.days) daysEl.value = d.days;
+  if (runsEl && d.runs) runsEl.value = d.runs;
+  if (repsEl && d.reps) repsEl.value = d.reps;
+  if (d.levels) {
+    var lvlRadio = document.querySelector('input[name="lvl-count"][value="' + d.levels + '"]');
+    if (lvlRadio) { lvlRadio.checked = true; onLevelCountChange(); }
+  }
+  if (d.purpose) {
+    var purposeRadio = document.querySelector('input[name="study-purpose"][value="' + d.purpose + '"]');
+    if (purposeRadio) { purposeRadio.checked = true; }
+  }
+  onDesignChange();
+  // 2. Restore EFLM
+  if (d.eflmKey) {
+    ep05EFLMKey  = d.eflmKey;
+    ep05EFLMTier = d.eflmTier || 'desirable';
+    var sel = document.getElementById('ep05-eflm-analyte');
+    if (sel) sel.value = ep05EFLMKey;
+    if (typeof ep05RenderTierCards === 'function') ep05RenderTierCards();
+    if (typeof ep05ApplyAllowCV === 'function') ep05ApplyAllowCV();
+  }
+  // 3. Restore level configs
+  if (d.levelConfigs) {
+    d.levelConfigs.forEach(function(cfg, lvl) {
+      var set = function(id, val) { var el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+      set('lc-analyte-' + lvl, cfg.analyte);
+      set('lc-unit-' + lvl, cfg.unit);
+      set('lc-allowcv-' + lvl, cfg.allowableCV);
+      set('lc-tmean-' + lvl, cfg.targetMean);
+      set('lc-tsd-' + lvl, cfg.targetSD);
+      set('lc-claimcvw-' + lvl, cfg.claimCVw);
+      set('lc-claimcvt-' + lvl, cfg.claimCVt);
+    });
+  }
+  // 4. Restore cell values
+  if (d.cells) {
+    Object.keys(d.cells).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = d.cells[id];
+    });
+  }
+  // 5. Calculate and show results
+  setTimeout(function() {
+    try { calculateEP(); } catch(e) {}
+    setTimeout(function() {
+      try {
+        var resultsTab = document.querySelector('[data-tab="tab-results"], [data-tab="results"]');
+        if (resultsTab) resultsTab.click();
+      } catch(e) {}
+    }, 200);
+  }, 150);
+}
+
+// ─────────────────────────────────────────────
 // Add to Report
 // ─────────────────────────────────────────────
 async function addEP05ToReport() {
@@ -1973,10 +2102,15 @@ async function addEP05ToReport() {
     + '</body></html>';
 
   try {
+    var _epFile = (window.parent.getCurrentToolFile && window.parent.getCurrentToolFile()) || '';
+    var _epState = null;
+    try { _epState = { custom: true, data: getSaveData() }; } catch(e) {}
     window.parent.addToReport({
       tool: 'EP05 Precision',
       analyte: analyte,
-      html: reportHtml
+      html: reportHtml,
+      file: _epFile,
+      state: _epState
     });
     // Visual feedback on button
     var btn = document.getElementById('ep05-add-report-btn');
@@ -1993,5 +2127,7 @@ async function addEP05ToReport() {
   }
 }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

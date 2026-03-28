@@ -83,13 +83,15 @@
       <li><a href="#clt">The Central Limit Theorem</a></li>
       <li><a href="#hypothesis">Hypothesis testing</a></li>
       <li><a href="#pvalue">The p-value</a></li>
-      <li><a href="#alpha">Significance level (α) and Type I error</a></li>
+      <li><a href="#frequentist-bayesian">Two ways of thinking about probability</a></li>
+      <li><a href="#alpha">Significance level (α)</a></li>
       <li><a href="#errors">Type I and Type II errors</a></li>
       <li><a href="#power">Statistical power</a></li>
       <li><a href="#ci">Confidence intervals</a></li>
       <li><a href="#effectsize">Statistical vs. clinical significance</a></li>
       <li><a href="#categorical">Categorical tests</a></li>
       <li><a href="#summary">Summary table</a></li>
+      <li><a href="#references">References</a></li>
     </ol>
   </div>
 
@@ -206,9 +208,34 @@
   </div>
   <hr class="divider"/>
 
-  <!-- 4 -->
+  <!-- 4b -->
+  <div class="section" id="frequentist-bayesian">
+    <h2>5. Two ways of thinking about probability</h2>
+    <p>The p-value interpretation above is a <b>frequentist</b> one — and for p-values, the frequentist interpretation is the <em>correct</em> one. Understanding the two schools of thought explains why so many people misread p-values.</p>
+
+    <table class="stat-table" style="margin-top:12px;">
+      <thead><tr><th></th><th>Frequentist ✓</th><th>Bayesian</th></tr></thead>
+      <tbody>
+        <tr><td><b>Probability means</b></td><td>Long-run frequency over many repeated experiments</td><td>Degree of belief, updated as evidence accumulates</td></tr>
+        <tr><td><b>What p-value tells you</b></td><td>P(data this extreme or more | H₀ is true) — correct</td><td>Does not use p-values</td></tr>
+        <tr><td><b>Can say "probability H₀ is true"?</b></td><td>No — H₀ is either true or not; probability doesn't apply</td><td>Yes — expressed as a posterior probability</td></tr>
+        <tr><td><b>Requires prior knowledge?</b></td><td>No</td><td>Yes — requires a prior distribution</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top:14px;">
+      <b>The frequentist interpretation is correct for p-values</b> because p-values are a frequentist tool — they were designed within that framework. The question most researchers <em>want</em> to ask is actually Bayesian: "given my data, what is the probability that H₀ is true?" But a p-value cannot answer that. It answers the reverse: "given H₀ is true, how probable is this data?" Trying to give a p-value a Bayesian reading is not a matter of preference — it is simply wrong.
+    </div>
+
+    <p>The two most influential statisticians in this area — Ronald Fisher and Jerzy Neyman/Egon Pearson — both worked within the frequentist framework. They disagreed on the details of how to use p-values: Fisher saw the p-value as a continuous measure of evidence against H₀, while Neyman and Pearson wanted a strict yes/no decision rule based on a pre-set threshold. But neither was asking "what is the probability that H₀ is true?" — that question belongs to the Bayesian world.</p>
+    <p>Bayesian statistics is a completely separate approach that answers different questions using different tools. Instead of p-values, it produces something called a <b>posterior probability</b> — a direct statement about how likely something is given the data. It is not better or worse than frequentist statistics; it is built for a different purpose and requires prior knowledge to be specified in advance.</p>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- 5 -->
   <div class="section" id="alpha">
-    <h2>5. Significance level (α)</h2>
+    <h2>6. Significance level (α)</h2>
     <p>The significance level α is the threshold we set <em>before</em> the experiment. It defines how willing we are to make a <b>Type I error</b> — falsely rejecting a true null hypothesis (a false positive).</p>
     <p>The most commonly used threshold is α = 0.05, meaning we accept a 5% risk of a false positive. This is a convention, not a law — in some contexts (e.g. genomics, safety-critical decisions) much lower α values are used.</p>
     <div class="callout">
@@ -220,7 +247,7 @@
 
   <!-- 5 -->
   <div class="section" id="errors">
-    <h2>6. Type I and Type II errors</h2>
+    <h2>7. Type I and Type II errors</h2>
     <p>Every decision in hypothesis testing carries two possible error types:</p>
     <table>
       <tr><th></th><th>H₀ is true (no real effect)</th><th>H₀ is false (real effect exists)</th></tr>
@@ -238,7 +265,7 @@
 
   <!-- 6 -->
   <div class="section" id="power">
-    <h2>7. Statistical power</h2>
+    <h2>8. Statistical power</h2>
     <p><b>Power</b> is the probability of correctly detecting a true effect — rejecting H₀ when H₁ is actually true. Power = 1 − β. A study with 80% power has a 20% chance of missing a real effect.</p>
     <p>Power is determined by three factors:</p>
     <table>
@@ -259,7 +286,7 @@
 
   <!-- 7 -->
   <div class="section" id="ci">
-    <h2>8. Confidence intervals</h2>
+    <h2>9. Confidence intervals</h2>
     <p>A 95% confidence interval (CI) is a range calculated from sample data that, in repeated sampling, would contain the true population parameter 95% of the time. It does <em>not</em> mean there is a 95% probability that the true value lies within any single interval.</p>
     <div class="callout">
       <b>Correct interpretation:</b> If you repeated the same experiment 100 times and computed a 95% CI each time, approximately 95 of those intervals would contain the true population value. Any single CI either contains the true value or it doesn't — we just don't know which.
@@ -274,7 +301,7 @@
 
   <!-- 8 -->
   <div class="section" id="effectsize">
-    <h2>9. Statistical vs. clinical significance</h2>
+    <h2>10. Statistical vs. clinical significance</h2>
     <p>A statistically significant result (p &lt; α) tells you only that the observed difference is unlikely to be due to chance. It says <b>nothing</b> about whether that difference is clinically meaningful.</p>
     <p>With a large enough sample size, almost any difference — no matter how trivially small — will eventually become statistically significant. This is why <b>effect size</b> matters.</p>
     <table>
@@ -297,7 +324,7 @@
 
   <!-- 9 -->
   <div class="section" id="categorical">
-    <h2>10. Categorical tests</h2>
+    <h2>11. Categorical tests</h2>
     <p>Categorical tests are used when the outcome variable is not a continuous measurement but a <b>category</b> — for example: positive/negative, disease present/absent, or agreement/disagreement between two raters.</p>
     <p>Like all inferential tests, they produce a p-value that answers: <em>if H₀ is true, how likely is this distribution of counts by chance?</em></p>
 
@@ -345,7 +372,7 @@
 
   <!-- 10 -->
   <div class="section" id="summary">
-    <h2>11. Summary</h2>
+    <h2>12. Summary</h2>
     <table>
       <tr><th>Concept</th><th>In plain language</th></tr>
       <tr><td><b>Central Limit Theorem</b></td><td>Sample means follow a normal distribution as n grows, regardless of the population shape — the foundation of parametric tests</td></tr>
@@ -363,6 +390,34 @@
       <tr><td><b>Clinical significance</b></td><td>Whether the difference matters in practice — not determined by statistics alone</td></tr>
       <tr><td><b>Categorical tests</b></td><td>Hypothesis tests for count/frequency data rather than continuous measurements</td></tr>
     </table>
+    <a class="back-top" href="#top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <!-- References -->
+  <div class="section" id="references">
+    <h2>References</h2>
+    <p style="font-size:13px; color:#64748b; margin-bottom:14px;">The following books cover the theory and concepts presented in this module. Together they provide a comprehensive foundation in statistical thinking for clinical and biomedical research.</p>
+    <ol style="line-height:2; font-size:13.5px; color:#1e293b;">
+      <li>
+        Motulsky, H.J. (2014). <em>Intuitive Biostatistics: A Nonmathematical Guide to Statistical Thinking</em> (3rd ed.). Oxford University Press.<br>
+        <span style="font-size:12px; color:#64748b;">
+          Hypothesis testing &amp; p-values: pp. 127–169 · Statistical power: pp. 170–196 · Confidence intervals: pp. 43–58 · Statistical vs. clinical significance: pp. 197–210 · Frequentist interpretation: pp. 127–140 · Bayesian contrast: pp. 321–356
+        </span>
+      </li>
+      <li>
+        Altman, D.G. (1991). <em>Practical Statistics for Medical Research</em>. Chapman &amp; Hall/CRC.<br>
+        <span style="font-size:12px; color:#64748b;">
+          Central Limit Theorem: pp. 53–88 · Hypothesis testing framework: pp. 153–178 · Type I &amp; II errors: pp. 153–165 · t-tests &amp; quantitative tests: pp. 179–228 · Categorical tests (Chi-square, Fisher's, McNemar): pp. 229–280 · Kappa: pp. 403–409
+        </span>
+      </li>
+      <li>
+        Gelman, A., Carlin, J.B., Stern, H.S., &amp; Rubin, D.B. (2004). <em>Bayesian Data Analysis</em> (2nd ed.). Chapman &amp; Hall/CRC.<br>
+        <span style="font-size:12px; color:#64748b;">
+          Bayesian probability and inference (contrast with frequentist framework): pp. 1–30
+        </span>
+      </li>
+    </ol>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
 

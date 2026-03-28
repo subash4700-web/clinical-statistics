@@ -387,43 +387,62 @@ function createMenu() {
       label: "File",
       submenu: [
         {
-          label: "New Window",
-          accelerator: "CmdOrCtrl+N",
-          click: () => createWindow(),
+          label: "Save Tool Data...",
+          accelerator: "CmdOrCtrl+S",
+          click: () => {
+            const focusedWindow = BrowserWindow.getFocusedWindow();
+            if (focusedWindow) focusedWindow.webContents.executeJavaScript(`if (typeof saveToolData === 'function') saveToolData();`);
+          },
         },
-        { type: "separator" },
         {
-          label: "Load Report...",
-          accelerator: "CmdOrCtrl+O",
+          label: "Load Tool Data...",
+          accelerator: "CmdOrCtrl+L",
           click: async () => {
             const focusedWindow = BrowserWindow.getFocusedWindow();
             if (!focusedWindow) return;
-
             const result = await dialog.showOpenDialog(focusedWindow, {
-              title: "Load Issue Report",
-              filters: [
-                { name: "JSON Reports", extensions: ["json"] },
-                { name: "All Files",    extensions: ["*"]    },
-              ],
+              title: "Load Tool Data",
+              filters: [{ name: "JSON Data", extensions: ["json"] }, { name: "All Files", extensions: ["*"] }],
               properties: ["openFile"],
             });
-
             if (!result.canceled && result.filePaths.length > 0) {
               try {
                 const fileContent = fs.readFileSync(result.filePaths[0], "utf8");
-                const reportData  = JSON.parse(fileContent);
+                const data = JSON.parse(fileContent);
                 focusedWindow.webContents.executeJavaScript(`
-                  if (typeof loadReportData === 'function') {
-                    loadReportData(${JSON.stringify(reportData)});
+                  if (typeof loadToolDataFromObject === 'function') {
+                    loadToolDataFromObject(${JSON.stringify(data)});
                   } else {
-                    alert('Report loading function not available. Please ensure the app is fully loaded.');
+                    alert('No tool is currently loaded, or it does not support data loading.');
                   }
                 `);
               } catch (error) {
-                dialog.showErrorBox("Error Loading Report", `Failed to load report file:\n${error.message}`);
+                dialog.showErrorBox("Error Loading Data", `Failed to load data file:\n${error.message}`);
               }
             }
           },
+        },
+        { type: "separator" },
+        {
+          label: "Download",
+          submenu: [
+            {
+              label: "Export to Excel...",
+              accelerator: "CmdOrCtrl+E",
+              click: () => {
+                const focusedWindow = BrowserWindow.getFocusedWindow();
+                if (focusedWindow) focusedWindow.webContents.executeJavaScript(`if (typeof universalExportExcel === 'function') universalExportExcel();`);
+              },
+            },
+            {
+              label: "Export to PDF...",
+              accelerator: "CmdOrCtrl+P",
+              click: () => {
+                const focusedWindow = BrowserWindow.getFocusedWindow();
+                if (focusedWindow) focusedWindow.webContents.executeJavaScript(`if (typeof universalExportPDF === 'function') universalExportPDF();`);
+              },
+            },
+          ],
         },
         { type: "separator" },
         isMac ? { role: "close" } : { role: "quit" },
@@ -471,6 +490,12 @@ function createMenu() {
     {
       label: "Window",
       submenu: [
+        {
+          label: "New Window",
+          accelerator: "CmdOrCtrl+N",
+          click: () => createWindow(),
+        },
+        { type: "separator" },
         { role: "minimize" },
         { role: "zoom" },
         ...(isMac ? [
@@ -488,6 +513,42 @@ function createMenu() {
   template.push({
     label: "Help",
     submenu: [
+      {
+        label: "Report an Issue…",
+        click: () => {
+          const win = BrowserWindow.getFocusedWindow();
+          if (win) win.webContents.executeJavaScript(`if (typeof reportIssue === 'function') reportIssue();`);
+        },
+      },
+      {
+        label: "Load Crash Report…",
+        accelerator: "CmdOrCtrl+O",
+        click: async () => {
+          const focusedWindow = BrowserWindow.getFocusedWindow();
+          if (!focusedWindow) return;
+          const result = await dialog.showOpenDialog(focusedWindow, {
+            title: "Load Crash Report",
+            filters: [{ name: "JSON Reports", extensions: ["json"] }, { name: "All Files", extensions: ["*"] }],
+            properties: ["openFile"],
+          });
+          if (!result.canceled && result.filePaths.length > 0) {
+            try {
+              const fileContent = fs.readFileSync(result.filePaths[0], "utf8");
+              const reportData  = JSON.parse(fileContent);
+              focusedWindow.webContents.executeJavaScript(`
+                if (typeof loadReportData === 'function') {
+                  loadReportData(${JSON.stringify(reportData)});
+                } else {
+                  alert('Report loading not available. Please ensure the app is fully loaded.');
+                }
+              `);
+            } catch (error) {
+              dialog.showErrorBox("Error Loading Report", `Failed to load report file:\n${error.message}`);
+            }
+          }
+        },
+      },
+      { type: "separator" },
       {
         label: "License Info…",
         click: () => {

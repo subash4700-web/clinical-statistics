@@ -332,9 +332,10 @@ const TREE = {
     question: "Which performance characteristic are you evaluating?",
     info: "A complete method validation evaluates all three: precision (random error), bias (systematic error), and method agreement. Each maps to a specific performance specification and CLSI EP guideline.",
     options: [
-      { label: "Precision — random error, reproducibility of repeated measurements",       icon: "🎯", next: "ap_precision_type"  },
-      { label: "Trueness / Bias — systematic error against a reference value or method",   icon: "⚖️", next: "ap_bias"            },
-      { label: "Method comparison — agreement or equivalence between two methods",         icon: "🔀", next: "ap_method_goal"     }
+      { label: "Precision — random error, reproducibility of repeated measurements",                              icon: "🎯", next: "ap_precision_type"  },
+      { label: "Trueness / Bias — systematic error against a reference value or method",                          icon: "⚖️", next: "ap_bias_type"       },
+      { label: "Total Error & Sigma — combine precision and bias to evaluate against allowable total error",      icon: "📊", next: "ap_tae_result"      },
+      { label: "Method comparison — agreement or equivalence between two methods",                                icon: "🔀", next: "ap_method_goal"     }
     ]
   },
 
@@ -365,38 +366,48 @@ const TREE = {
     }
   },
 
-  ap_bias: {
+  ap_bias_type: {
+    question: "What are you comparing your measurements against?",
+    info: "Bias can be assessed in two ways: against a known true value (using a certified reference material or EQA sample), or against a reference method by measuring the same patient samples in parallel on both methods.",
+    options: [
+      { label: "A certified reference material (CRM) or EQA/EQAS sample with a known assigned value",        icon: "🏷️", next: "ap_bias_crm"    },
+      { label: "A reference method — the same patient samples measured in parallel by both methods",           icon: "🔬", next: "ap_bias_method" }
+    ]
+  },
+
+  ap_bias_crm: {
     result: {
       test: "Bias & Trueness",
       file: "bias.html",
-      description: "Evaluates systematic error (bias) against a reference value, reference method, or certified reference material. Calculates absolute and relative bias (%) with confidence intervals.",
+      description: "Evaluates systematic error (bias) against a certified reference material (CRM) or EQA/EQAS sample with a known assigned value. Calculates absolute and relative bias (%) with confidence intervals and a paired t-test for statistical significance.",
       note: "Enter your allowable bias (from your performance specification) to receive a PASS/FAIL verdict. The 95% CI for bias should lie entirely within the allowable bias limit for the method to pass."
     }
   },
 
-  ap_method_goal: {
-    question: "What is the primary goal of the method comparison?",
-    options: [
-      { label: "Assess clinical interchangeability — limits of agreement between two methods", icon: "↕️", next: "ap_bland_altman"   },
-      { label: "Quantify proportional and constant bias — fit a comparison regression line",   icon: "📉", next: "ap_passing_bablok" }
-    ]
-  },
-
-  ap_bland_altman: {
+  ap_bias_method: {
     result: {
-      test: "Method Comparison — Bland-Altman Analysis",
+      test: "Method Comparison — Bias against Reference Method",
       file: "method_comparison.html",
-      description: "Plots the difference between two methods against their mean. Calculates limits of agreement (mean difference ± 1.96 SD). Answers: can these two methods be used interchangeably in clinical practice?",
-      note: "Define an acceptable difference limit before analysis. If the limits of agreement fall entirely within this pre-specified limit, the methods can be considered clinically interchangeable."
+      description: "When the same patient samples are measured by both your method and a reference method, bias is best assessed through method comparison (Bland-Altman or Passing-Bablok). This accounts for measurement error in both methods and reflects real-world patient sample behaviour. Measurements must be paired — the same sample run on both methods.",
+      note: "Use Bland-Altman to assess the mean difference (systematic bias) and limits of agreement. Use Passing-Bablok regression to detect proportional and constant bias across the measurement range."
     }
   },
 
-  ap_passing_bablok: {
+  ap_tae_result: {
     result: {
-      test: "Method Comparison — Regression Analysis",
+      test: "Total Error & Sigma Metric",
+      file: "tae.html",
+      description: "Combines precision (CV%) and bias (%) to calculate Total Error (TE = |Bias| + 1.65 × CV%) and the Sigma metric (σ = (TAE% − |Bias%|) / CV%). Evaluates whether the method's combined error fits within the Total Allowable Error (TAE) specification and recommends a QC strategy.",
+      note: "Run the Precision and Bias tools first to obtain CV% and Bias% for your method. Enter these along with your TAE% specification. Sigma ≥ 6 is excellent; 4–6 requires standard QC rules; < 4 indicates the method needs improvement or tighter QC."
+    }
+  },
+
+  ap_method_goal: {
+    result: {
+      test: "Method Comparison",
       file: "method_comparison.html",
-      description: "Fits a regression line to compare two measurement methods. Provides slope and intercept with 95% CI to detect proportional (slope ≠ 1) and constant (intercept ≠ 0) systematic bias.",
-      note: "Passing-Bablok regression is preferred when both methods have measurement error. Ordinary linear regression assumes the reference method is error-free, which is rarely the case in clinical laboratory comparisons."
+      description: "Compares two measurement methods using the same patient samples measured in parallel. The tool automatically runs both Bland-Altman analysis (agreement — are the methods clinically interchangeable?) and Passing-Bablok regression (bias — is there a constant or proportional difference across the measurement range?). You do not need to choose between them — both are calculated and displayed together.",
+      note: "Measurements must be paired — the same sample measured by both methods. Enter your allowable difference limit to get a PASS/FAIL verdict on clinical interchangeability."
     }
   },
 

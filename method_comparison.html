@@ -235,6 +235,16 @@
             <input type="text" id="method2Name" placeholder="e.g., Reference Method" value="Method 2">
           </div>
         </div>
+        <div class="grid-2" style="margin-top:10px;">
+          <div>
+            <label for="mcAnalyte">Analyte <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+            <input type="text" id="mcAnalyte" placeholder="e.g., Glucose">
+          </div>
+          <div>
+            <label for="mcUnit">Unit <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+            <input type="text" id="mcUnit" placeholder="e.g., mmol/L">
+          </div>
+        </div>
 
         <div style="margin-top:12px;">
           <label for="numPairs">Number of Measurement Pairs</label>
@@ -272,6 +282,16 @@
           <div>
             <label for="method2NamePaste">Method 2 Name</label>
             <input type="text" id="method2NamePaste" placeholder="e.g., Reference Method" value="Method 2">
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:10px;">
+          <div>
+            <label for="mcAnalytePaste">Analyte <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+            <input type="text" id="mcAnalytePaste" placeholder="e.g., Glucose">
+          </div>
+          <div>
+            <label for="mcUnitPaste">Unit <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+            <input type="text" id="mcUnitPaste" placeholder="e.g., mmol/L">
           </div>
         </div>
         <div style="margin-top:12px;">
@@ -521,6 +541,7 @@
       <button class="btn-primary" onclick="generateAnalysis()" style="padding:12px 24px; font-size:14px;">
         Generate Analysis
       </button>
+      <button class="btn-ghost" onclick="clearAll()">Clear data</button>
     </div>
     <div id="inputError" class="alert bad" style="display:none; margin-top:10px;"></div>
 
@@ -534,21 +555,6 @@
       <button class="btn-danger"  onclick="exportToPDF()">Export to PDF</button>
     </div>
 
-    <!-- Results selector -->
-    <div id="resultsSelectorWrap" style="display:none; margin-bottom:12px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
-      <div style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">Show results</div>
-      <div style="display:flex; flex-wrap:wrap; gap:8px 20px;">
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-n" checked> Sample Size</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-bias" checked> Mean Bias</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-sd" checked> SD</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-te" checked> Calculated TE</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-loa-upper" checked> Upper LoA</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-loa-lower" checked> Lower LoA</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-tae-pct" checked> % within TAE</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-maxbias" checked> Max Bias</label>
-        <label style="font-weight:400; font-size:13px; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="show-ccc" checked> Lin's CCC</label>
-      </div>
-    </div>
 
     <!-- Summary & Statistics (collapsible) -->
     <div class="collapsible">
@@ -558,7 +564,18 @@
         <span class="coll-toggle" id="summary-toggle">▼</span>
       </div>
       <div class="coll-body" id="summary-content">
-        <div id="statsDisplay" class="stat-cards"></div>
+        <!-- Methods + specification header — filled on calculate -->
+        <div id="mc-study-header" style="display:none;margin-bottom:14px;">
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Methods compared</span>
+            <span id="mc-methods-label" style="font-size:15px;font-weight:800;color:#0c4a6e;"></span>
+          </div>
+          <div id="mc-spec-bar" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:13px;display:flex;gap:20px;flex-wrap:wrap;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;width:100%;margin-bottom:2px;">Acceptance specification</span>
+            <span id="mc-spec-tae-wrap"><strong>TAE%</strong> = <span id="mc-spec-tae">—</span> &nbsp;<span style="color:#6b7280;font-size:11px;">(total allowable error limit)</span></span>
+          </div>
+        </div>
+        <div id="statsDisplay"></div>
         <div id="ttestDisplay" style="margin-bottom:16px;"></div>
         <div id="cvDiffDisplay" style="margin-bottom:16px;"></div>
       </div>
@@ -819,6 +836,8 @@
             
             document.getElementById('method1Name').value = document.getElementById('method1NamePaste').value;
             document.getElementById('method2Name').value = document.getElementById('method2NamePaste').value;
+            document.getElementById('mcAnalyte').value = document.getElementById('mcAnalytePaste').value;
+            document.getElementById('mcUnit').value = document.getElementById('mcUnitPaste').value;
             
             // switch back to manual view
             const manualBtn = document.querySelector('.toggle-btn');
@@ -915,9 +934,8 @@
             return rawStr.split('.')[1].length;
         }
 
-        function chk(id) {
-            const el = document.getElementById(id);
-            return el ? el.checked : true;
+        function chk() {
+            return true;
         }
 
         function updateStatsDisplay(stats) {
@@ -926,67 +944,95 @@
             const teaDec = decimalCount(stats.teaRaw);
             const maxBiasDec = decimalCount(stats.maxBiasRaw);
 
-            // Show the results selector once we have data
-            const selectorWrap = document.getElementById('resultsSelectorWrap');
-            if (selectorWrap) selectorWrap.style.display = 'block';
 
             let html = '';
 
-            if (chk('show-n')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Sample Size</div>
-                    <div class="stat-value">${stats.n}</div>
-                </div>`;
+            // ── Measured vs Specification summary block ──────────────────
+            {
+                const loaStr = `[${stats.loa_lower.toFixed(3)}, ${stats.loa_upper.toFixed(3)}]${suffix}`;
+                const tePct = stats.te_percentage.toFixed(1);
+                const teaFmt = stats.teaPercentage.toFixed(decimalCount(stats.teaRaw));
+                const teCalc = stats.te_calculated;
+                const tea = stats.teaPercentage;
+                const pass = teCalc <= tea;
+                const barPct = Math.min(100, tea > 0 ? (teCalc / tea) * 100 : 0).toFixed(1);
+                const barColor = pass ? '#16a34a' : '#dc2626';
 
-            if (chk('show-bias')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Mean Bias</div>
-                    <div class="stat-value">${stats.meanDiff.toFixed(3)}${suffix}</div>
-                </div>`;
+                html += `<div style="grid-column:1/-1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
 
-            if (chk('show-sd')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Standard Deviation</div>
-                    <div class="stat-value">${stats.sd.toFixed(3)}${suffix}</div>
-                </div>`;
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:8px;">Measured from data</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px;">
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">n</div>
+                      <div style="font-size:18px;font-weight:800;color:#111827;">${stats.n}</div>
+                      <div style="font-size:10px;color:#9ca3af;">pairs analysed</div>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Mean Bias</div>
+                      <div style="font-size:18px;font-weight:800;color:#111827;">${stats.meanDiff.toFixed(3)}${suffix}</div>
+                      <div style="font-size:10px;color:#9ca3af;">systematic difference</div>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">SD</div>
+                      <div style="font-size:18px;font-weight:800;color:#111827;">${stats.sd.toFixed(3)}${suffix}</div>
+                      <div style="font-size:10px;color:#9ca3af;">random variability</div>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">LoA (Z=${stats.zValue})</div>
+                      <div style="font-size:13px;font-weight:800;color:#111827;">${loaStr}</div>
+                      <div style="font-size:10px;color:#9ca3af;">95% of differences</div>
+                    </div>
+                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                      <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Within TAE</div>
+                      <div style="font-size:18px;font-weight:800;color:#111827;">${tePct}%</div>
+                      <div style="font-size:10px;color:#9ca3af;">pairs within ±${teaFmt}${suffix}</div>
+                    </div>
+                  </div>
 
-            if (chk('show-te')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Calculated TE (|Bias|+${stats.zValueTE}SD)</div>
-                    <div class="stat-value">${stats.te_calculated.toFixed(3)}${suffix}</div>
-                </div>`;
+                  <div style="border-top:1px solid #e2e8f0;padding-top:12px;">
 
-            if (showLoA && chk('show-loa-upper')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Upper LoA (Z=${stats.zValue})</div>
-                    <div class="stat-value">${stats.loa_upper.toFixed(3)}${suffix}</div>
-                </div>`;
+                    ${(()=>{
+                      const absBias = Math.abs(stats.meanDiff);
+                      const maxBiasFmt = stats.maxBias.toFixed(maxBiasDec);
+                      const biasRatio = absBias / stats.maxBias;
+                      const biasPctUsed = (Math.min(biasRatio,1)*100).toFixed(1);
+                      const biasPass = absBias <= stats.maxBias;
+                      const biasBarColor = biasPass ? '#16a34a' : '#dc2626';
+                      return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <div>
+                          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Allowable bias</span>
+                          <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${maxBiasFmt}${suffix}</span>
+                        </div>
+                        <div>
+                          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">|Mean Bias|</span>
+                          <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${absBias.toFixed(3)}${suffix}</span>
+                        </div>
+                      </div>
+                      <div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px;">
+                        <div style="height:100%;width:${(Math.min(biasRatio,1)*100).toFixed(1)}%;background:${biasBarColor};border-radius:4px;transition:width .4s;"></div>
+                      </div>
+                      <div style="font-size:11px;color:#6b7280;margin-bottom:14px;">${biasPctUsed}% of allowable bias used</div>`;
+                    })()}
 
-            if (showLoA && chk('show-loa-lower')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Lower LoA (Z=${stats.zValue})</div>
-                    <div class="stat-value">${stats.loa_lower.toFixed(3)}${suffix}</div>
-                </div>`;
-
-            if (chk('show-tae-pct')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">TE within TAE (±${stats.teaPercentage.toFixed(teaDec)}${suffix})</div>
-                    <div class="stat-value">${stats.te_percentage.toFixed(1)}%</div>
-                </div>`;
-
-            if (chk('show-maxbias')) html += `
-                <div class="stat-card">
-                    <div class="stat-label">Max Acceptable Bias</div>
-                    <div class="stat-value">±${stats.maxBias.toFixed(maxBiasDec)}${suffix}</div>
-                </div>`;
-
-            if (chk('show-ccc') && stats.ccc !== undefined) {
-                const cccVal = stats.ccc.toFixed(4);
-                const cccStr = isFinite(stats.ccc) ? cccVal : 'n/a';
-                html += `
-                <div class="stat-card">
-                    <div class="stat-label">Lin's CCC (ρc)</div>
-                    <div class="stat-value">${cccStr}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                      <div>
+                        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification (TAE)</span>
+                        <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${teaFmt}${suffix}</span>
+                      </div>
+                      <div>
+                        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Calculated TE</span>
+                        <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${teCalc.toFixed(3)}${suffix}</span>
+                        <span style="font-size:11px;color:#6b7280;margin-left:4px;">(|Bias| + ${stats.zValueTE}·SD)</span>
+                      </div>
+                    </div>
+                    <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
+                      <div style="height:100%;width:${barPct}%;background:${barColor};border-radius:4px;transition:width .4s;"></div>
+                    </div>
+                    <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">${barPct}% of allowable limit used</div>
+                    <div class="verdict ${pass ? 'pass' : 'fail'}">
+                      ${pass ? 'PASS' : 'FAIL'} — Calculated TE ${pass ? 'within' : 'exceeds'} TAE: ${teCalc.toFixed(3)}${suffix} ${pass ? '≤' : '>'} ±${teaFmt}${suffix}
+                    </div>
+                  </div>
                 </div>`;
             }
 
@@ -1051,6 +1097,18 @@
 
             const stats = calculateStats(includedData, useRelative, designation, newMethod);
             currentStats = stats;
+
+            // Fill study header
+            const m1 = document.getElementById('method1Name').value || 'Method 1';
+            const m2 = document.getElementById('method2Name').value || 'Method 2';
+            const taeVal = document.getElementById('teaPercentage').value || '10';
+            const analyteName = document.getElementById('eflm-analyte').options[document.getElementById('eflm-analyte').selectedIndex]?.text || '';
+            document.getElementById('mc-methods-label').textContent = `${m1} vs ${m2}`;
+            document.getElementById('mc-spec-tae').textContent = `${taeVal}%`;
+            if (analyteName && analyteName !== '— Select analyte —') {
+              document.getElementById('mc-methods-label').textContent = `${analyteName} — ${m1} vs ${m2}`;
+            }
+            document.getElementById('mc-study-header').style.display = 'block';
 
             const ttest = pairedTTestFromDifferences(stats.differences);
             renderTTest(ttest);
@@ -1513,7 +1571,8 @@
         function updateWfMcCard(stats, useRelative) {
             const card = document.getElementById('wf-mc-card');
             if (!card) return;
-            const analyte = document.getElementById('method1Name').value || '';
+            const analyte = document.getElementById('mcAnalyte').value.trim() || document.getElementById('method1Name').value || '';
+            const mcUnit  = document.getElementById('mcUnit').value.trim() || '';
             const biasPct = +Math.abs(stats.meanDiff).toFixed(2);
 
             if (useRelative) {
@@ -1523,7 +1582,7 @@
                   const mcTae  = (mcKey && typeof EFLM_DB !== 'undefined' && EFLM_DB[mcKey])
                     ? +calcEFLMTiers(EFLM_DB[mcKey].cvi, EFLM_DB[mcKey].cvg)[mcTier].tea.toFixed(2)
                     : (parseFloat(document.getElementById('teaPercentage').value) || undefined);
-                  localStorage.setItem('wf_bias', JSON.stringify({ bias: biasPct, analyte, unit: '%', source: 'method_comparison', tae: mcTae }));
+                  localStorage.setItem('wf_bias', JSON.stringify({ bias: biasPct, analyte, unit: mcUnit || '%', source: 'method_comparison', tae: mcTae }));
                 } catch(e) {}
                 card.innerHTML = `
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -1547,8 +1606,8 @@
             if (!addBtn) {
               addBtn = document.createElement('button');
               addBtn.id = 'mc-add-report-btn';
+              addBtn.className = 'btn-report';
               addBtn.textContent = '+ Add to Report';
-              addBtn.style.cssText = 'margin-top:12px;width:100%;padding:11px;background:#0f172a;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;';
               addBtn.onclick = addMCToReport;
               card.parentNode.insertBefore(addBtn, card.nextSibling);
             }
@@ -1603,10 +1662,15 @@
               return;
             }
 
+            var _mcFile = (window.parent.getCurrentToolFile && window.parent.getCurrentToolFile()) || '';
+            var _mcState = null;
+            try { if (typeof window.getSaveData === 'function') _mcState = { custom: true, data: window.getSaveData() }; } catch(e) {}
             window.parent.addToReport({
               tool: 'Method Comparison',
               analyte: analyte || 'Method Comparison',
-              html: html
+              html: html,
+              file: _mcFile,
+              state: _mcState
             });
 
             var btn = document.getElementById('mc-add-report-btn');
@@ -2391,10 +2455,9 @@
                   <span class="coll-toggle" id="cvdiff-toggle">▼</span>
                 </div>
                 <div class="coll-body" id="cvdiff-content">
-                  <p style="font-size:13px;color:#374151;line-height:1.6;margin-bottom:12px;">
-                    CV on differences measures repeatability or agreement between paired measurements,
-                    independent of population variability. Use when each pair represents duplicate measurements of the same sample.
-                  </p>
+                  <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#0c4a6e;line-height:1.6;">
+                    <strong>How to interpret:</strong> CV on differences here reflects the <em>combined</em> variability of both methods together — it is not the imprecision of either method individually. Use it as a rough indicator of measurement scatter. <strong>The √2 correction (CV<sub>within</sub>) does not apply here</strong> — that correction is only valid when both measurements in a pair come from the <em>same method</em> (CLSI EP5/EP15 duplicate design). For judging agreement and bias, use the Bland-Altman LoA and the TAE comparison above.
+                  </div>
                   <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
                     <div class="kpi">
                       <div class="label">Grand mean (x̄)</div>
@@ -2423,6 +2486,39 @@
                   </div>
                 </div>
               </div>`;
+        }
+
+        function clearAll() {
+            // Clear manual table
+            document.querySelectorAll('#dataTable tbody tr').forEach(function(row) {
+                row.querySelectorAll('input[type="number"]').forEach(function(inp) { inp.value = ''; });
+            });
+            // Clear paste input
+            var paste = document.getElementById('pasteData');
+            if (paste) paste.value = '';
+            // Clear analyte/unit/method name fields
+            ['mcAnalyte','mcUnit','method1Name','method2Name',
+             'mcAnalytePaste','mcUnitPaste','method1NamePaste','method2NamePaste'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            // Reset method name defaults
+            document.getElementById('method1Name').value = 'Method 1';
+            document.getElementById('method2Name').value = 'Method 2';
+            document.getElementById('method1NamePaste').value = 'Method 1';
+            document.getElementById('method2NamePaste').value = 'Method 2';
+            // Clear results
+            document.getElementById('statsDisplay').innerHTML = '';
+            document.getElementById('ttestDisplay').innerHTML = '';
+            document.getElementById('cvDiffDisplay').innerHTML = '';
+            document.getElementById('analysisTab').querySelectorAll('.collapsible').forEach(function(c) {
+                c.querySelector('.coll-body').innerHTML = '';
+            });
+            var studyHdr = document.getElementById('mc-study-header');
+            if (studyHdr) studyHdr.style.display = 'none';
+            // Deactivate scenario cards
+            document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
+            clearInputError();
         }
 
         function generateAnalysis() {
@@ -2734,6 +2830,10 @@
 
           if (n === 1) {
             // Glucose — excellent agreement
+            document.getElementById('mcAnalyte').value = 'Glucose';
+            document.getElementById('mcUnit').value = 'mmol/L';
+            document.getElementById('method1Name').value = 'New Method';
+            document.getElementById('method2Name').value = 'Reference Method';
             document.getElementById('gen-n').value = '50';
             document.getElementById('gen-mean').value = '8.0';
             document.getElementById('gen-bias-pct').value = '1.0';
@@ -2745,6 +2845,10 @@
             var ty = document.getElementById('thresholdY'); if (ty) ty.value = '7.0';
           } else if (n === 2) {
             // Potassium — proportional bias
+            document.getElementById('mcAnalyte').value = 'Potassium';
+            document.getElementById('mcUnit').value = 'mmol/L';
+            document.getElementById('method1Name').value = 'New Method';
+            document.getElementById('method2Name').value = 'Reference Method';
             document.getElementById('gen-n').value = '40';
             document.getElementById('gen-mean').value = '4.5';
             document.getElementById('gen-bias-pct').value = '5.0';
@@ -2756,6 +2860,10 @@
             var ty = document.getElementById('thresholdY'); if (ty) ty.value = '5.0';
           } else if (n === 3) {
             // Cholesterol — poor agreement
+            document.getElementById('mcAnalyte').value = 'Cholesterol';
+            document.getElementById('mcUnit').value = 'mmol/L';
+            document.getElementById('method1Name').value = 'New Method';
+            document.getElementById('method2Name').value = 'Reference Method';
             document.getElementById('gen-n').value = '45';
             document.getElementById('gen-mean').value = '5.5';
             document.getElementById('gen-bias-pct').value = '8.0';
@@ -2779,6 +2887,81 @@
           generateSampleData();
           useSampleData();
         }
+
+        window.getSaveData = function() {
+          // Capture table rows (covers both manual entry and parsed paste data)
+          var numPairs = parseInt(document.getElementById('numPairs').value) || 0;
+          var rows = [];
+          for (var i = 0; i < numPairs; i++) {
+            var m1 = document.getElementById('m1_' + i);
+            var m2 = document.getElementById('m2_' + i);
+            if (m1 && m2 && m1.value && m2.value) {
+              rows.push([m1.value, m2.value]);
+            }
+          }
+          return {
+            analyte:      document.getElementById('mcAnalyte').value,
+            unit:         document.getElementById('mcUnit').value,
+            method1:      document.getElementById('method1Name').value,
+            method2:      document.getElementById('method2Name').value,
+            pasteData:    document.getElementById('pasteData').value,
+            rows:         rows,
+            teaPercentage: document.getElementById('teaPercentage').value,
+            maxBias:      document.getElementById('maxBias').value,
+            relative:     document.getElementById('relativeBlandAltman').checked,
+            designation:  document.getElementById('methodDesignation').value,
+            newMethod:    document.getElementById('newMethodSelection').value
+          };
+        };
+
+        window.loadSaveData = function(d) {
+          if (!d) return;
+          // Restore settings
+          document.getElementById('mcAnalyte').value        = d.analyte || '';
+          document.getElementById('mcUnit').value           = d.unit || '';
+          document.getElementById('method1Name').value      = d.method1 || 'Method 1';
+          document.getElementById('method2Name').value      = d.method2 || 'Method 2';
+          document.getElementById('mcAnalytePaste').value   = d.analyte || '';
+          document.getElementById('mcUnitPaste').value      = d.unit || '';
+          document.getElementById('method1NamePaste').value = d.method1 || 'Method 1';
+          document.getElementById('method2NamePaste').value = d.method2 || 'Method 2';
+          document.getElementById('teaPercentage').value    = d.teaPercentage || '';
+          document.getElementById('maxBias').value          = d.maxBias || '';
+          document.getElementById('relativeBlandAltman').checked = !!d.relative;
+          if (d.designation) document.getElementById('methodDesignation').value = d.designation;
+          if (d.newMethod)   document.getElementById('newMethodSelection').value = d.newMethod;
+
+          // Restore data: prefer raw rows (works for both manual and paste entry)
+          if (d.rows && d.rows.length > 0) {
+            var tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('numPairs').value = d.rows.length;
+            d.rows.forEach(function(row, i) {
+              var tr = tbody.insertRow();
+              tr.innerHTML = '<td class="row-num">' + (i + 1) + '</td>'
+                + '<td><input type="number" step="any" id="m1_' + i + '" value="' + row[0] + '"></td>'
+                + '<td><input type="number" step="any" id="m2_' + i + '" value="' + row[1] + '"></td>';
+            });
+            // Also restore pasteData textarea for reference
+            if (d.pasteData) document.getElementById('pasteData').value = d.pasteData;
+          } else if (d.pasteData) {
+            document.getElementById('pasteData').value = d.pasteData;
+            try { parsePastedData(); } catch(e) {}
+          }
+
+          setTimeout(function() {
+            try {
+              if (typeof generateAnalysis === 'function') generateAnalysis();
+              setTimeout(function() {
+                try {
+                  document.querySelectorAll('.tab').forEach(function(t) {
+                    if (t.textContent.trim().indexOf('Analysis') !== -1) t.click();
+                  });
+                } catch(e) {}
+              }, 300);
+            } catch(e) {}
+          }, 300);
+        };
 </script>
 <!-- ===== LIN'S CCC INFO MODAL ===== -->
 <div class="info-modal-backdrop" id="cccInfoModal" onclick="closeCCCModal(event)">
@@ -2816,5 +2999,7 @@
     }
   }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>

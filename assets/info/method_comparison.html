@@ -139,19 +139,23 @@
   </p>
 
   <h3 id="mc-cvdiff">CV on Differences</h3>
+  <p class="note">
+    In a method comparison study, CV on differences reflects the <strong>combined variability of both methods together</strong> — it is not the precision of either method alone. It can be used as a rough indicator of overall measurement scatter across the pair. For judging whether the methods agree clinically, use the Bland-Altman limits of agreement and the TAE comparison instead.
+  </p>
+  <p class="note" style="background:#fefce8;border-color:#fde68a;color:#92400e;">
+    <strong>√2 correction does not apply here.</strong> CV<sub>within</sub> = SD<sub>d</sub> / (√2 × x̄) is only valid when both measurements in a pair come from the <em>same method</em> (CLSI EP5/EP15 duplicate design). In method comparison the two columns come from different methods, so the variance decomposition Var(d) = 2σ² does not hold.
+  </p>
   <p>
-    CV on differences expresses the variability of pairwise differences relative to the grand mean of all measurements.
-    It quantifies repeatability or agreement independently of between-sample biological variation.
+    CV on differences expresses the variability of pairwise differences relative to the grand mean of all measurements,
+    independently of between-sample biological variation.
   </p>
   <p><strong>CV = SD<sub>d</sub> / x̄ × 100%</strong></p>
   <p>
-    When each pair represents <em>duplicate measurements of the same sample</em> (e.g. CLSI EP5/EP15 duplicate design),
-    apply the √2 correction to estimate within-method precision:
+    For duplicate pairs (same sample, same method), apply the √2 correction to recover the single-measurement within-method SD:
   </p>
   <p><strong>CV<sub>within</sub> = (SD<sub>d</sub> / √2) / x̄ × 100%</strong></p>
   <p class="note">
-    The √2 correction applies because the variance of a difference between two independent measurements with the same
-    within-method variance σ² is Var(d) = 2σ², so σ = SD<sub>d</sub> / √2.
+    The √2 correction applies because Var(d) = Var(x₁ − x₂) = 2σ², so σ = SD<sub>d</sub> / √2.
   </p>
 
   <h3 id="mc-correlation">Correlation — Not Agreement</h3>

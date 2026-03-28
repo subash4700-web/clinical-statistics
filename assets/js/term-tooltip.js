@@ -117,8 +117,11 @@
 
   /* ── Run after DOM ready ── */
   function init() {
-    /* Mark .section elements (theory pages) */
-    document.querySelectorAll('.section, .wrap > p, .wrap > ul, .wrap > table').forEach(markContainer);
+    /* Mark .section elements (theory pages) and .rpt-section bodies (tools) */
+    document.querySelectorAll(
+      '.section, .wrap > p, .wrap > ul, .wrap > table, ' +
+      '.rpt-sec-body, #resultsArea, #statusArea, .kpi-grid, .result-block, .stat-table'
+    ).forEach(markContainer);
   }
 
   if (document.readyState === 'loading') {

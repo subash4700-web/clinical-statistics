@@ -169,7 +169,7 @@
       <div id="tp-error" class="alert bad" style="display:none;margin-top:10px;"></div>
       <div class="btn-row" style="margin-top:14px;">
         <button class="btn-primary" onclick="runStability()">Run Analysis</button>
-        <button class="btn-ghost" onclick="clearAll()">Clear</button>
+        <button class="btn-ghost" onclick="clearAll()">Clear data</button>
       </div>
     </div>
 
@@ -551,7 +551,7 @@ function runStability() {
   '</div>';
 
   html += '<div style="margin-top:4px;">' +
-    '<button id="add-report-btn" onclick="addToReport()" style="background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add to Report</button>' +
+    '<button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>' +
   '</div>';
 
   document.getElementById('results-body').innerHTML = html;
@@ -810,5 +810,7 @@ function addToReport() {
   }
 }
 </script>
+<script src="assets/js/terms.js"></script>
+<script src="assets/js/term-tooltip.js"></script>
 </body>
 </html>
