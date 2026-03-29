@@ -81,6 +81,31 @@
 </div>
 <div class="wrap">
 
+  <!-- Concept distinction banner -->
+  <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.7;color:#312e81;">
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6366f1;margin-bottom:6px;">What stability testing actually measures</div>
+    <p style="margin:0 0 8px;">
+      <strong>Stability testing asks: "Is my material still the same?"</strong><br>
+      It tests the <em>material</em> — a reagent, stored sample panel, or calibrator — by assuming the <em>method</em> is stable and looking for change over time.
+    </p>
+    <p style="margin:0 0 8px;">
+      This is the opposite of analytical performance studies (precision, bias), which assume the <em>material</em> is stable and study how much the <em>method</em> varies.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+      <div style="background:#fff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:800;color:#0d9488;margin-bottom:4px;">ANALYTICAL PERFORMANCE</div>
+        <div style="font-size:12px;color:#374151;">Fixed: stable QC material<br>Studied: method variation<br>Output: CV%, bias%, sigma</div>
+      </div>
+      <div style="background:#fff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:800;color:#4338ca;margin-bottom:4px;">STABILITY &amp; TIME</div>
+        <div style="font-size:12px;color:#374151;">Fixed: stable, consistent method<br>Studied: material change over time<br>Output: % change, Kappa, functional expiry</div>
+      </div>
+    </div>
+    <p style="margin:8px 0 0;font-size:12px;color:#4338ca;">
+      ⚠ A stability result (e.g. 8% change at T6) is a <strong>material signal</strong>, not an analytical error. You cannot apply sigma metrics or compare it to your TAE.
+    </p>
+  </div>
+
   <!-- Exercises -->
   <div class="exercises">
     <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">

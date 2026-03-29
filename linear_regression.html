@@ -34,6 +34,27 @@
   <!-- ── INPUT TAB ── -->
   <div id="input" class="tab-content active">
 
+    <!-- Tool guide card -->
+    <div class="tg-card">
+      <div class="tg-badges">
+        <span class="tg-badge tg-type">Correlation &amp; Regression</span>
+        <span class="tg-badge tg-material">Paired continuous measurements</span>
+        <span class="tg-badge tg-design">Scatter · Pearson r · OLS regression</span>
+        <span class="tg-badge tg-std">General statistical</span>
+      </div>
+      <div class="tg-when">Quantify the strength of a linear relationship between two continuous variables and fit a prediction line. Use for data exploration, calibration curves, or educational purposes. For clinical method comparison use the Quantitative Method Comparison tool instead — linear regression alone cannot assess agreement.</div>
+      <details class="tg-details">
+        <summary>Details</summary>
+        <div class="tg-body">
+          <div class="tg-row"><span class="tg-label">Material</span><span>Any two continuous variables measured on the same subjects or observation units — e.g. age vs biomarker, absorbance vs concentration, standard vs measured values</span></div>
+          <div class="tg-row"><span class="tg-label">Design</span><span>Pearson r (normal data) or Spearman rₛ (non-normal); ordinary least-squares regression line y = a + bx; assumption checks via residual plot and normality test</span></div>
+          <div class="tg-row"><span class="tg-label">Output</span><span>Correlation coefficient (r), p-value, R², regression equation with 95% confidence and prediction intervals, residual plot</span></div>
+          <div class="tg-row"><span class="tg-label">Note</span><span>Correlation ≠ agreement. Two methods can have r = 0.99 and still be clinically unacceptable if one consistently reads 20% higher. For method comparison, use Bland-Altman + Passing-Bablok in the Method Comparison tool</span></div>
+          <div class="tg-row"><span class="tg-label">Assumptions</span><span>Both variables continuous; linear relationship (verify with scatterplot); homoscedastic residuals; independent observations; approximately normal (for Pearson)</span></div>
+        </div>
+      </details>
+    </div>
+
     <div class="grid-2">
       <details class="assumptions-panel" open>
         <summary>Assumptions &amp; Study Context</summary>

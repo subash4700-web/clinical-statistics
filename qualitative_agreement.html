@@ -140,6 +140,27 @@
   <!-- INPUT TAB -->
   <div id="tab-input" class="tab-content active">
 
+    <!-- Tool guide card -->
+    <div class="tg-card">
+      <div class="tg-badges">
+        <span class="tg-badge tg-type">Categorical Method Comparison</span>
+        <span class="tg-badge tg-material">Patient samples · qualitative result</span>
+        <span class="tg-badge tg-design">Paired pos/neg · 2×2 table</span>
+        <span class="tg-badge tg-std">ISO 15189 · Kappa · McNemar</span>
+      </div>
+      <div class="tg-when">Compare two qualitative (pos/neg) methods on the same patient samples. Measures overall agreement beyond chance (Kappa) and detects systematic directional disagreement (McNemar). Use when introducing a new rapid test, point-of-care device, or alternative platform alongside an existing reference method.</div>
+      <details class="tg-details">
+        <summary>Details</summary>
+        <div class="tg-body">
+          <div class="tg-row"><span class="tg-label">Material</span><span>The same patient samples tested by both methods — ideally simultaneously or in close succession to avoid biological change between measurements</span></div>
+          <div class="tg-row"><span class="tg-label">Design</span><span>Enter paired results as a 2×2 contingency table: a = both positive, b = A+/B−, c = A−/B+, d = both negative. Minimum n ≥ 40 samples recommended; include both positive and negative cases</span></div>
+          <div class="tg-row"><span class="tg-label">Output</span><span>Cohen's Kappa with 95% CI, McNemar χ² (systematic bias direction), positive and negative concordance rates, and positive/negative agreement percentages</span></div>
+          <div class="tg-row"><span class="tg-label">Note</span><span>Kappa ≥ 0.80 is generally acceptable for clinical diagnostic methods (ISO 15189). Kappa can be misleadingly low when prevalence is very high or very low — always report raw agreement rates alongside Kappa</span></div>
+          <div class="tg-row"><span class="tg-label">Quantitative?</span><span>For continuous methods (e.g. two glucose analysers) use <strong>Quantitative Method Comparison</strong> — Bland-Altman, Passing-Bablok, and Deming regression</span></div>
+        </div>
+      </details>
+    </div>
+
     <div class="grid-2">
       <div class="card">
         <div class="section-title">Method Names</div>
@@ -342,14 +363,49 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('compressed')">Compressed view</button>
+      </div>
+    </div>
     <div id="results-body">
       <p class="note" style="padding:20px 0;text-align:center;">Run the analysis to see results.</p>
+    </div>
+    <div class="lab-comment-wrap" id="lab-comment-wrap" style="display:none;">
+      <label>Laboratory assessment / director comment</label>
+      <textarea id="lab-comment" rows="3" placeholder="Optional — document any deviation, justification, or contextual notes for the validation report"></textarea>
     </div>
   </div>
 
 </div><!-- /container -->
 
 <script>
+// ── Compressed view toggle ─────────────────────────────────────────────────
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'compressed';
+  document.querySelectorAll('#acr-toggle-bar .view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  document.querySelectorAll('#results-body .rpt-section[data-acr="hide"]').forEach(function(sec) {
+    var body = sec.querySelector('.rpt-sec-body');
+    var badge = sec.querySelector('.rpt-sec-badge');
+    var arrow = sec.querySelector('.rpt-sec-arrow');
+    if (_acrMode) {
+      sec.dataset.open = 'false';
+      if (body) body.style.display = 'none';
+      if (badge) { badge.textContent = 'Excluded'; badge.className = 'rpt-sec-badge rpt-badge-ex'; }
+      if (arrow) arrow.textContent = '▶';
+    } else {
+      sec.dataset.open = 'true';
+      if (body) body.style.display = '';
+      if (badge) { badge.textContent = 'In report'; badge.className = 'rpt-sec-badge rpt-badge-in'; }
+      if (arrow) arrow.textContent = '▼';
+    }
+  });
+}
+
 // ── Tab switching ──────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -552,7 +608,7 @@ function runAnalysis() {
   </div>`;
 
   // ── 2×2 visual table ──
-  html += `<div class="rpt-section" data-open="true" data-sec-id="agreement-table">
+  html += `<div class="rpt-section" data-open="true" data-sec-id="agreement-table" data-acr="hide">
     <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
       <span class="rpt-sec-title">2×2 Agreement Table</span>
       <span class="rpt-sec-badge rpt-badge-in">In report</span>
@@ -646,12 +702,16 @@ function runAnalysis() {
   </div>`;
 
   document.getElementById('results-body').innerHTML = html;
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  document.getElementById('lab-comment-wrap').style.display = '';
+  setAcrView('full');
 
   // Switch to results tab
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('[data-tab="tab-results"]').classList.add('active');
   document.getElementById('tab-results').classList.add('active');
+  window.scrollTo(0, 0);
 }
 
 // ── Generate sample data ───────────────────────────────────────────────────

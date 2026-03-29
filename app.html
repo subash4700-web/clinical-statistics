@@ -386,9 +386,7 @@
 
     /* Welcome page styles */
     .welcome-container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 32px 20px 48px;
+      padding: 32px 28px 48px;
     }
 
     .home-hero {
@@ -820,9 +818,7 @@
 
     /* ─── Section Landing Pages ──────────────────────────────────── */
     .section-landing {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 28px 20px 48px;
+      padding: 28px 28px 48px;
     }
 
     .sl-hero {
@@ -879,6 +875,7 @@
     .sl-teal   { background: linear-gradient(135deg, #064e3b 0%, #059669 100%); }
     .sl-rose   { background: linear-gradient(135deg, #4c0519 0%, #be123c 100%); }
     .sl-purple { background: linear-gradient(135deg, #2e1065 0%, #7c3aed 100%); }
+    .sl-indigo { background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); }
     .sl-orange { background: linear-gradient(135deg, #431407 0%, #ea580c 100%); }
 
     .sl-group { margin-bottom: 24px; }
@@ -1034,18 +1031,27 @@
           <button class="learn-btn" onclick="loadTool('bias_learning.html','Understanding Bias', this)">📚 Bias<span class="btn-hint">Systematic error · CRM vs EQA · total error</span></button>
           <button class="learn-btn" onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">📚 Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
           <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
-          <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('precision.html','Precision', this)">Precision — Quick<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
-          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)">EP05 — Validation<span class="btn-hint">Full validation study · CLSI protocol · patient samples</span></button>
-          <button onclick="loadTool('bias.html','Bias', this)">Bias — CRM / EQA<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
+          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)">Precision (EP05)<span class="btn-hint">Full precision study · CLSI EP05/EP15 · 2×2×20 design</span></button>
+          <button onclick="loadTool('bias.html','Bias', this)">Bias (CRM / EQA)<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
           <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)">Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
           <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
-          <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Stability Study<span class="btn-hint">% change from T0 · functional expiry · stored patient panel</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
-          <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability Study<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
+        </div>
+      </div>
+
+      <!-- Stability & Time -->
+      <div class="collapsible-section">
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.stability">Stability &amp; Time</button>
+        <div class="collapsible-content child-nav">
+          <button class="learn-btn" onclick="loadTool('stability_theory.html','Concepts &amp; Theory — Stability &amp; Time', this)">📚 Concepts &amp; Theory<span class="btn-hint">Material vs method · stability vs analytical performance</span></button>
+          <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
+          <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
         </div>
       </div>
 
@@ -1130,6 +1136,11 @@
             <div style="font-size:11px;opacity:.6;margin-top:2px;">Insert notes between sections, then save</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
+            <div style="display:flex;align-items:center;gap:4px;background:#1e293b;border-radius:8px;padding:4px 8px;">
+              <button onclick="adjustReportZoom(-10)" title="Zoom out" style="background:none;border:none;color:white;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;">−</button>
+              <span id="rp-zoom-label" style="font-size:12px;color:#94a3b8;min-width:36px;text-align:center;">100%</span>
+              <button onclick="adjustReportZoom(10)" title="Zoom in" style="background:none;border:none;color:white;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;">+</button>
+            </div>
             <button onclick="printReportPreview()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;">Print / Save as PDF</button>
             <button onclick="closeReportPreview()" style="background:#374151;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;">&#10005; Close</button>
           </div>
@@ -1638,6 +1649,7 @@
     const svgTarget = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>`;
     const svgROC    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="21" x2="21" y2="3" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/><path d="M3 21 C3 9 7 3 21 3"/></svg>`;
     const svgLab    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M9 3v6.5L5 17a2 2 0 001.8 2.9h10.4A2 2 0 0019 17l-4-7.5V3"/><line x1="6.1" y1="14" x2="17.9" y2="14"/></svg>`;
+    const svgClock  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><line x1="3.5" y1="5.5" x2="5.5" y2="3.5" stroke-width="1.5" opacity="0.5"/><line x1="20.5" y1="5.5" x2="18.5" y2="3.5" stroke-width="1.5" opacity="0.5"/></svg>`;
     const svgPerson = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
     return `
       <div class="welcome-container">
@@ -1660,7 +1672,15 @@
             <div class="htc-body">
               <h3>${T('home.analytical')}</h3>
               <p>${T('home.analyticalDesc')}</p>
-              <div class="htc-tags"><span>Precision · Bias · TAE</span><span>Sigma Metric</span><span>EP05/EP15 Validation</span><span>Method Comparison</span><span>Biological Variation</span></div>
+              <div class="htc-tags"><span>Precision · Bias · TAE</span><span>Sigma Metric</span><span>EP05/EP15 Precision</span><span>Method Comparison</span><span>Biological Variation</span></div>
+            </div>
+          </div>
+          <div class="home-tool-card htc-indigo" onclick="loadSection('stability')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('stability')">
+            <div class="htc-icon">${svgClock}</div>
+            <div class="htc-body">
+              <h3>${T('home.stability')}</h3>
+              <p>${T('home.stabilityDesc')}</p>
+              <div class="htc-tags"><span>% Change from T0</span><span>Functional Expiry</span><span>Quantitative &amp; Qualitative</span><span>CLSI EP25-A</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-rose" onclick="loadSection('regression')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('regression')">
@@ -1671,7 +1691,7 @@
               <div class="htc-tags"><span>Correlation · r · R²</span><span>Linear Regression</span><span>ROC Curves</span><span>AUC · Sensitivity · Specificity</span><span>Method Comparison</span></div>
             </div>
           </div>
-          <div class="home-tool-card htc-orange" onclick="loadSection('lab')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('lab')">
+          <div class="home-tool-card htc-orange" onclick="loadSection('lab')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('lab')" style="grid-column:span 2;">
             <div class="htc-icon">${svgLab}</div>
             <div class="htc-body">
               <h3>${T('home.labTools')}</h3>
@@ -1747,6 +1767,7 @@
     const titles = {
       inferential: T('cat.hypothesisTests'),
       analytical:  T('cat.analytical'),
+      stability:   T('cat.stability'),
       regression:  T('cat.correlation'),
       lab:         T('cat.lab'),
       pcr:         'PCR',
@@ -1826,20 +1847,36 @@
             tc('bias_learning.html', 'Understanding Bias', 'Systematic error · CRM vs EQA · total error'),
             tc('tae_learning.html', 'Understanding Total Error &amp; Sigma', 'TE · TAE · sigma metric · QC design'),
             tc('method_comparison_learning.html', 'Understanding Method Comparison', 'Bland-Altman · bias types · r trap · paired methods'),
-            tc('stability_learning.html', 'Understanding Stability Studies', 'Reagent stability · % change · Kappa over time'),
             tc('categorical_method_comparison_learning.html', 'Understanding Categorical Method Comparison', 'Kappa paradox · McNemar bias direction · pos/neg methods'),
           ]),
           grp('Quantitative', [
             tc('precision.html',         'Precision — Quick / QC',            'Daily monitoring · run-to-run statistics'),
-            tc('precision_ep05.html',    'EP05/EP15 — Validation',             'Full validation study · CLSI protocol'),
-            tc('bias.html',              'Bias — CRM / EQA',                   'Known reference value vs your method'),
+            tc('precision_ep05.html',    'Precision (EP05/EP15)',               'Full precision study · CLSI EP05/EP15 · 2×2×20 design'),
+            tc('bias.html',              'Bias (CRM / EQA)',                    'Known reference value vs your method'),
             tc('method_comparison.html', 'Quantitative Method Comparison',     'Bland-Altman · Passing-Bablok · Deming · paired samples'),
             tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
-            tc('stability_study.html',   'Quantitative Stability Study',       '% change from T0 · functional expiry · CLSI EP25-A'),
           ]),
           grp('Categorical', [
             tc('qualitative_agreement.html', 'Categorical Method Comparison',  'Kappa · McNemar · pos/neg methods · 2×2 table'),
-            tc('qualitative_stability.html', 'Qualitative Stability Study',    'Kappa over time · functional expiry · stored panel'),
+          ]),
+        ].join(''),
+      },
+      stability: {
+        heroClass: 'sl-indigo',
+        title: T('cat.stability'),
+        desc: 'Determine whether patient material or reagent lots remain stable over time. Calculate % change from baseline, detect significant trends, and document functional expiry for ISO 15189 validation.',
+        back: `loadHome()`,
+        backLabel: '← Home',
+        body: [
+          grp('📚 Learning', [
+            tc('stability_theory.html',   'Concepts &amp; Theory',              'Material vs method · stability vs analytical performance · EP25-A'),
+            tc('stability_learning.html', 'Understanding Stability Studies', 'Reagent stability · % change from T0 · Kappa over time · functional expiry'),
+          ]),
+          grp('Quantitative', [
+            tc('stability_study.html', 'Quantitative Stability Study', '% change from T0 · paired t-test per time point · CLSI EP25-A'),
+          ]),
+          grp('Qualitative', [
+            tc('qualitative_stability.html', 'Qualitative Stability Study', 'Kappa over time · pos/neg agreement · functional expiry'),
           ]),
         ].join(''),
       },
@@ -1945,16 +1982,17 @@
     { file:'bias_learning.html',                 name:'Understanding Bias',               section:'Analytical Performance › Learning' },
     { file:'tae_learning.html',                  name:'Understanding Total Error & Sigma',section:'Analytical Performance › Learning' },
     { file:'method_comparison_learning.html',    name:'Understanding Method Comparison',          section:'Analytical Performance › Learning' },
-    { file:'stability_learning.html',                         name:'Understanding Stability Studies',                 section:'Analytical Performance › Learning' },
     { file:'categorical_method_comparison_learning.html',   name:'Understanding Categorical Method Comparison',      section:'Analytical Performance › Learning' },
     { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Quantitative' },
-    { file:'precision_ep05.html',                name:'EP05/EP15 — Validation',           section:'Analytical Performance › Quantitative' },
-    { file:'bias.html',                          name:'Bias — CRM / EQA',                 section:'Analytical Performance › Quantitative' },
+    { file:'precision_ep05.html',                name:'Precision (EP05/EP15)',             section:'Analytical Performance › Quantitative' },
+    { file:'bias.html',                          name:'Bias (CRM / EQA)',                  section:'Analytical Performance › Quantitative' },
     { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Quantitative' },
     { file:'method_comparison.html',             name:'Quantitative Method Comparison',   section:'Analytical Performance › Quantitative' },
-    { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Analytical Performance › Quantitative' },
     { file:'qualitative_agreement.html',         name:'Categorical Method Comparison',    section:'Analytical Performance › Categorical' },
-    { file:'qualitative_stability.html',         name:'Qualitative Stability Study',      section:'Analytical Performance › Categorical' },
+    { file:'stability_theory.html',              name:'Concepts & Theory — Stability & Time', section:'Stability & Time › Learning' },
+    { file:'stability_learning.html',            name:'Understanding Stability Studies',  section:'Stability & Time › Learning' },
+    { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Stability & Time › Quantitative' },
+    { file:'qualitative_stability.html',         name:'Qualitative Stability Study',      section:'Stability & Time › Qualitative' },
     { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
     { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
     { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Correlation & Regression › Learning' },
@@ -2124,6 +2162,7 @@
       const sectionMap = {
         'cat.hypothesisTests': 'inferential',
         'cat.analytical':      'analytical',
+        'cat.stability':       'stability',
         'cat.correlation':     'regression',
         'cat.lab':             'lab',
         'ui.pcr':              'pcr',
@@ -2144,6 +2183,7 @@
       'sub.normalBased':'Based on Normal Distribution','sub.fBased':'Based on F Distribution',
       'cat.quantitativeTests':'Quantitative Tests','cat.nonparametric':'Nonparametric Tests','cat.qualitative':'Categorical Tests',
       'sub.tests':'Tests','cat.analytical':'Analytical Performance',
+      'cat.stability':'Stability & Time',
       'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools',
       'tool.normalDist':'Normal Distribution','tool.fDist':'F Distribution',
       'tool.oneSampleT':'One-Sample T-Test','tool.pairedT':'Paired T-Test',
@@ -2153,7 +2193,7 @@
       'tool.chiGOF':'Chi-Square GOF','tool.chiIndep':'Chi-Square Independence',
       'tool.mcnemar':'McNemar Test','tool.fisher':"Fisher's Exact Test",
       'tool.kappa':'Kappa','tool.weightedKappa':'Weighted Kappa',
-      'tool.precision':'Precision — Quick / QC','tool.ep05':'EP05/EP15 Precision — Validation','tool.bias':'Bias','tool.methodComp':'Quantitative Method Comparison',
+      'tool.precision':'Precision — Quick / QC','tool.ep05':'Precision (EP05/EP15)','tool.bias':'Bias (CRM / EQA)','tool.methodComp':'Quantitative Method Comparison',
       'tool.linReg':'Linear Regression','tool.logReg':'ROC & Diagnostic Performance','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Setup','tool.primerDil':'Primer Dilution',
       'tool.dilution':'Dilution Calculator','tool.molarity':'Molarity & Solution Prep',
@@ -2166,7 +2206,9 @@
       'home.hypothesisTests':'Inferential Statistics',
       'home.hypothesisDesc':'Theory, interactive simulations, and calculators for hypothesis testing — from p-values and distributions to t-tests, ANOVA, and categorical tests.',
       'home.analytical':'Analytical Performance',
-      'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP5/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
+      'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP05/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
+      'home.stability':'Stability &amp; Time',
+      'home.stabilityDesc':'Determine whether patient material or reagent lots remain stable over time. Calculate % change from baseline, detect trends, and document functional expiry.',
       'home.regression':'Regression &amp; Diagnostics',
       'home.regressionDesc':'Understand and apply correlation, linear regression, and diagnostic test performance — with interactive simulations for ROC curves, AUC, and cut-off selection.',
       'home.pcr':'PCR',
@@ -2188,6 +2230,7 @@
       'sub.normalBased':'Baseret på Normalfordeling','sub.fBased':'Baseret på F-fordeling',
       'cat.quantitativeTests':'Kvantitative Test','cat.nonparametric':'Ikke-parametriske Test','cat.qualitative':'Kategoriske Test',
       'sub.tests':'Test','cat.analytical':'Analytisk Præstation',
+      'cat.stability':'Stabilitet & Tid',
       'cat.correlation':'Korrelation & Regression','cat.lab':'Laboratorieværktøjer',
       'tool.normalDist':'Normalfordeling','tool.fDist':'F-fordeling',
       'tool.oneSampleT':'Én-stikprøve T-test','tool.pairedT':'Parret T-test',
@@ -2210,7 +2253,9 @@
       'home.hypothesisTests':'Inferentiel Statistik',
       'home.hypothesisDesc':'Parametriske og ikke-parametriske test med effektstørrelse, konfidensintervaller og antagelseskontrol.',
       'home.analytical':'Analytisk Præstation',
-      'home.analyticalDesc':'CLSI/EP5-A3 præcision, trueness vs. reference, Bland-Altman metodekomparing og regression med diagnostiske grænseværdier.',
+      'home.analyticalDesc':'Lær og beregn præcision, bias og total fejl. Dækker EP05/EP15-validering, metodekomparing, TAE og sigma-metrikker.',
+      'home.stability':'Stabilitet &amp; Tid',
+      'home.stabilityDesc':'Vurder om patientmateriale eller reagenspartier forbliver stabile over tid. Beregn % afvigelse fra baseline og dokumenter funktionel udløbsdato.',
       'home.regression':'Regression &amp; Diagnostik',
       'home.regressionDesc':'Undersøg sammenhænge mellem variable og evaluer den diagnostiske præstation af tests og biomarkører.',
       'home.pcr':'PCR',
@@ -2839,14 +2884,13 @@
 // ─────────────────────────────────────────────
 // Report Builder — persistent across all tools
 // ─────────────────────────────────────────────
-var _reportSections = JSON.parse(localStorage.getItem('cs_report_sections') || '[]');
+var _reportSections = [];
 
 function addToReport(sectionData) {
   // sectionData: { tool, analyte, timestamp, html }
   sectionData.id = Date.now().toString();
   sectionData.timestamp = new Date().toISOString();
   _reportSections.push(sectionData);
-  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
   updateReportBtn();
   renderReportList();
   // Flash button green briefly
@@ -2899,7 +2943,6 @@ function renderReportList() {
 
 function removeReportSection(id) {
   _reportSections = _reportSections.filter(function(s) { return s.id !== id; });
-  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
   updateReportBtn();
   renderReportList();
 }
@@ -2908,7 +2951,6 @@ function clearReport() {
   if (_reportSections.length === 0) return;
   if (!confirm('Clear all ' + _reportSections.length + ' section(s) from the report?')) return;
   _reportSections = [];
-  localStorage.setItem('cs_report_sections', JSON.stringify(_reportSections));
   updateReportBtn();
   renderReportList();
 }
@@ -2931,6 +2973,9 @@ function previewFullReport() {
   }
   closeReportPanel();
   buildReportPreviewModal();
+  _rpZoom = 100;
+  document.getElementById('rp-body').style.zoom = 1;
+  document.getElementById('rp-zoom-label').textContent = '100%';
   document.getElementById('report-preview-modal').style.display = 'flex';
 }
 
@@ -2967,7 +3012,7 @@ function buildReportPreviewModal() {
   // Report header
   var hdr = document.createElement('div');
   hdr.style.cssText = 'margin-bottom:20px;';
-  hdr.innerHTML = '<h1 style="font-size:22px;font-weight:900;color:#0f172a;margin:0 0 4px;">Clinical Statistics \u2014 Validation Report</h1>'
+  hdr.innerHTML = '<h1 style="font-size:22px;font-weight:900;color:#0f172a;margin:0 0 4px;">Clinical Statistics \u2014 Analytical Validation Report</h1>'
     + '<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">Generated ' + dateStr + '</div>'
     + '<hr style="border:none;border-top:2px solid #e2e8f0;">';
   body.appendChild(hdr);
@@ -3010,6 +3055,13 @@ function _rpInsertNote(zone) {
 
 function closeReportPreview() {
   document.getElementById('report-preview-modal').style.display = 'none';
+}
+
+var _rpZoom = 100;
+function adjustReportZoom(delta) {
+  _rpZoom = Math.min(200, Math.max(50, _rpZoom + delta));
+  document.getElementById('rp-body').style.zoom = (_rpZoom / 100);
+  document.getElementById('rp-zoom-label').textContent = _rpZoom + '%';
 }
 
 function printReportPreview() {

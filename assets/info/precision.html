@@ -8,7 +8,7 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 16px; font-size:12px;">
       <a href="#prec-purpose"    style="color:var(--accent); text-decoration:none; padding:2px 0;">Purpose</a>
       <a href="#prec-when"       style="color:var(--accent); text-decoration:none; padding:2px 0;">When to Use</a>
-      <a href="#prec-clsi"       style="color:var(--accent); text-decoration:none; padding:2px 0;">CLSI EP5-A3</a>
+      <a href="#prec-clsi"       style="color:var(--accent); text-decoration:none; padding:2px 0;">CLSI EP05-A3</a>
       <a href="#prec-types"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Precision Types</a>
       <a href="#prec-formulas"   style="color:var(--accent); text-decoration:none; padding:2px 0;">Formulas</a>
       <a href="#prec-fixed"      style="color:var(--accent); text-decoration:none; padding:2px 0;">Fixed Control Limits</a>
@@ -42,9 +42,9 @@
     <li>ISO 15189 / CAP accreditation documentation</li>
   </ul>
 
-  <h3 id="prec-clsi">CLSI EP5-A3 Standard</h3>
+  <h3 id="prec-clsi">CLSI EP05-A3 Standard</h3>
   <p>
-    <strong>EP5-A3</strong> (Evaluation of Precision of Quantitative Measurement Procedures) is the CLSI
+    <strong>EP05-A3</strong> (Evaluation of Precision of Quantitative Measurement Procedures) is the CLSI
     guideline that defines how precision must be measured and reported in clinical laboratories.
     It is recognized by ISO 15189, CAP, and EQAS programs globally.
   </p>
@@ -65,17 +65,35 @@
   <em>Intermediate Precision</em> when measurements are grouped by day or run.</p>
 
   <h3 id="prec-formulas">Formulas</h3>
-  <p><strong>Repeatability SD:</strong></p>
-  <p><strong>Sw = SD of all replicates</strong></p>
-  <p><strong>Intermediate precision (ANOVA decomposition):</strong></p>
-  <ul>
-    <li><strong>Sw</strong> = within-run SD (square root of MS<sub>within</sub>)</li>
-    <li><strong>Sb</strong> = between-run SD = √(max(0, (MS<sub>between</sub> − MS<sub>within</sub>) / n<sub>per run</sub>))</li>
-    <li><strong>St</strong> = total precision SD = √(Sw² + Sb²)</li>
-  </ul>
-  <p><strong>CV% = (SD / mean) × 100</strong></p>
+
+  <p><strong>Repeatability (single run):</strong></p>
+  <p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:12px;">
+    Sw = √[ Σ(xᵢ − x̄)² / (n − 1) ]<br>
+    CV% = (Sw / x̄) × 100
+  </p>
+
+  <p><strong>Intermediate precision (ANOVA decomposition — multiple runs):</strong></p>
+  <p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:6px;">
+    MSw = SSw / dfW &nbsp;&nbsp;&nbsp; (within-run mean square)<br>
+    MSb = SSb / (k − 1) &nbsp; (between-run mean square)<br>
+    n₀  = effective group size (harmonic mean)<br>
+    <br>
+    Sw  = √MSw &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (within-run SD = repeatability)<br>
+    Sb  = √max(0, (MSb − MSw) / n₀) &nbsp; (between-run SD)<br>
+    St  = √(Sw² + Sb²) &nbsp; (intermediate precision SD)<br>
+    <br>
+    CV% = (St / x̄) × 100
+  </p>
+  <p class="note" style="margin-bottom:12px;">
+    Sb is set to zero if the variance component estimate is negative (a known artefact of ANOVA at small sample sizes).
+    St is the key figure for method validation — it reflects all within-laboratory sources of variation.
+  </p>
+
   <p><strong>95% CI for SD</strong> (chi-square based):</p>
-  <p><strong>[ SD × √(df / χ²<sub>upper</sub>), &nbsp; SD × √(df / χ²<sub>lower</sub>) ]</strong></p>
+  <p style="font-family:monospace; background:#f9fafb; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:6px;">
+    Lower = SD × √(df / χ²₀.₉₇₅)<br>
+    Upper = SD × √(df / χ²₀.₀₂₅)
+  </p>
   <p class="note">
     The chi-square CI is asymmetric: it extends further above the point estimate than below,
     reflecting that the distribution of sample variances is right-skewed.

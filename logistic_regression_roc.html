@@ -63,6 +63,7 @@
     .col-tag.ignore{background:#f3f4f6;border-color:#d1d5db;color:#6b7280;}
 
     .cutoff-row{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;margin-top:4px;}
+
     input[type=range]{width:100%;accent-color:var(--accent);}
     input[type=number]{padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;background:#fff;outline:none;box-sizing:border-box;}
     input[type=number]:focus{border-color:var(--accent);}
@@ -127,20 +128,47 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>ROC &amp; Diagnostic Performance</h1>
-  <p class="subtitle">Evaluate diagnostic accuracy, find optimal cut-offs, and — when multiple analytes are entered — combine them into a single score using logistic regression.</p>
 
-  <!-- ── EXERCISES ── -->
-  <div class="exercises">
-    <button class="ex-toggle" id="exToggle" onclick="toggleExercises()">
-      <span>📋 Guided Exercises</span>
-      <span class="ex-arrow">▶</span>
-    </button>
-    <div id="exPanel" style="display:none">
+  <!-- ── TAB BAR ── -->
+  <div class="tabs">
+    <div class="tab active" data-tab="tab-input">Data &amp; Options</div>
+    <div class="tab" data-tab="tab-results">Results</div>
+  </div>
+
+  <!-- ── TAB: DATA & OPTIONS ── -->
+  <div id="tab-input" class="tab-content active">
+
+    <h1>ROC &amp; Diagnostic Performance</h1>
+    <p class="subtitle">Evaluate diagnostic accuracy, find optimal cut-offs, and — when multiple analytes are entered — combine them into a single score using logistic regression.</p>
+
+    <!-- Tool guide card -->
+    <div class="tg-card">
+      <div class="tg-badges">
+        <span class="tg-badge tg-type">Diagnostic Performance</span>
+        <span class="tg-badge tg-material">Patient samples · known outcome</span>
+        <span class="tg-badge tg-design">Continuous result vs binary truth</span>
+        <span class="tg-badge tg-std">ROC · AUC · Logistic Regression</span>
+      </div>
+      <div class="tg-when">Evaluate the diagnostic accuracy of a continuous biomarker or test result. Find the optimal cut-off that balances sensitivity and specificity for your clinical context. Combine multiple analytes into a single diagnostic score using logistic regression.</div>
+      <details class="tg-details">
+        <summary>Details</summary>
+        <div class="tg-body">
+          <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples with a confirmed binary outcome per sample (disease yes/no, based on a gold standard independent of the test being evaluated)</span></div>
+          <div class="tg-row"><span class="tg-label">Design</span><span>Each sample has a continuous test result and a known true status. The ROC curve plots true positive rate vs false positive rate across all possible cut-offs</span></div>
+          <div class="tg-row"><span class="tg-label">Output</span><span>AUC, optimal cut-off (Youden index), sensitivity, specificity, LR+, LR−, PPV, NPV. When multiple analytes are entered: logistic regression score with combined ROC curve</span></div>
+          <div class="tg-row"><span class="tg-label">Note</span><span>AUC 0.5 = no better than chance; AUC 1.0 = perfect discrimination. Clinical acceptance typically requires AUC ≥ 0.80. The cut-off depends on clinical purpose — screening favours high sensitivity, confirmation favours high specificity</span></div>
+          <div class="tg-row"><span class="tg-label">Warning</span><span>The gold standard must be confirmed independently of the test being evaluated. Using the test itself to define disease status causes incorporation bias and artificially inflates AUC</span></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Scenario cards -->
+    <div class="card" style="margin-top:16px;">
+      <div class="section-title">Load a scenario</div>
       <div class="ex-grid">
 
         <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
-          <div class="ex-num">Exercise 1</div>
+          <div class="ex-num">Scenario 1</div>
           <div class="ex-title">Reading a ROC curve</div>
           <div class="ex-obj">What does AUC mean? Why does the curve bow upward for a good test, and what is the diagonal?</div>
           <div class="ex-params">
@@ -148,11 +176,11 @@
             <span class="ex-param">n = 30</span>
             <span class="ex-param">Single analyte</span>
           </div>
-          <button class="ex-btn">Load exercise</button>
+          <button class="ex-btn">Load scenario</button>
         </div>
 
         <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
-          <div class="ex-num">Exercise 2</div>
+          <div class="ex-num">Scenario 2</div>
           <div class="ex-title">Choosing a cut-off</div>
           <div class="ex-obj">The Youden index maximises J = Sens + Spec − 1. Is it always the right clinical choice?</div>
           <div class="ex-params">
@@ -160,11 +188,11 @@
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Cut-off selection</span>
           </div>
-          <button class="ex-btn">Load exercise</button>
+          <button class="ex-btn">Load scenario</button>
         </div>
 
         <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
-          <div class="ex-num">Exercise 3</div>
+          <div class="ex-num">Scenario 3</div>
           <div class="ex-title">Screening vs confirmation</div>
           <div class="ex-obj">Missing a case vs raising a false alarm — explore how the intended use determines the right cut-off.</div>
           <div class="ex-params">
@@ -172,11 +200,11 @@
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Clinical trade-off</span>
           </div>
-          <button class="ex-btn">Load exercise</button>
+          <button class="ex-btn">Load scenario</button>
         </div>
 
         <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
-          <div class="ex-num">Exercise 4</div>
+          <div class="ex-num">Scenario 4</div>
           <div class="ex-title">Combining analytes</div>
           <div class="ex-obj">Three analytes with modest individual AUC. Combined via logistic regression — does the model outperform each alone?</div>
           <div class="ex-params">
@@ -184,11 +212,11 @@
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Multi-analyte model</span>
           </div>
-          <button class="ex-btn">Load exercise</button>
+          <button class="ex-btn">Load scenario</button>
         </div>
 
         <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
-          <div class="ex-num">Exercise 5</div>
+          <div class="ex-num">Scenario 5</div>
           <div class="ex-title">Comparing two markers</div>
           <div class="ex-obj">Troponin vs myoglobin: which has better diagnostic accuracy? Use AUC and 95% CI to decide.</div>
           <div class="ex-params">
@@ -196,226 +224,214 @@
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Compare AUCs</span>
           </div>
-          <button class="ex-btn">Load exercise</button>
+          <button class="ex-btn">Load scenario</button>
         </div>
 
       </div>
       <div class="ex-instructions" id="exInstructions"></div>
     </div>
-  </div>
 
-  <div class="layout">
-
-    <!-- ── LEFT PANEL ── -->
-    <div>
-      <div class="panel">
-        <div class="panel-hd">Data input
-          <div style="display:flex;gap:4px;">
-            <button class="mode-tab active" id="modeTabSimple" onclick="switchMode('simple')">Simple</button>
-            <button class="mode-tab" id="modeTabCsv" onclick="switchMode('csv')">CSV / multi-analyte</button>
+    <!-- Data input -->
+    <div class="layout" style="margin-top:16px;">
+      <div>
+        <div class="panel">
+          <div class="panel-hd">Data input
+            <div style="display:flex;gap:4px;">
+              <button class="mode-tab active" id="modeTabSimple" onclick="switchMode('simple')">Simple</button>
+              <button class="mode-tab" id="modeTabCsv" onclick="switchMode('csv')">CSV / multi-analyte</button>
+            </div>
           </div>
-        </div>
 
-        <!-- SIMPLE MODE -->
-        <div class="panel-bd" id="modeSimple">
-          <label style="margin-top:0">Analyte name</label>
-          <input type="text" id="analyteName" placeholder="e.g. Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+          <!-- SIMPLE MODE -->
+          <div class="panel-bd" id="modeSimple">
+            <label style="margin-top:0">Analyte name</label>
+            <input type="text" id="analyteName" placeholder="e.g. Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
 
-          <label>Disease <span style="font-weight:400;color:var(--muted);">(outcome = 1) — values from this group</span></label>
-          <textarea id="posValues" placeholder="Enter values separated by commas or one per line:&#10;312&#10;245&#10;198&#10;287" style="min-height:80px;"></textarea>
+            <label>Disease <span style="font-weight:400;color:var(--muted);">(outcome = 1) — values from this group</span></label>
+            <textarea id="posValues" placeholder="Enter values separated by commas or one per line:&#10;312&#10;245&#10;198&#10;287" style="min-height:80px;"></textarea>
 
-          <label>No disease <span style="font-weight:400;color:var(--muted);">(outcome = 0) — values from this group</span></label>
-          <textarea id="negValues" placeholder="Enter values separated by commas or one per line:&#10;28&#10;35&#10;22&#10;41" style="min-height:80px;"></textarea>
+            <label>No disease <span style="font-weight:400;color:var(--muted);">(outcome = 0) — values from this group</span></label>
+            <textarea id="negValues" placeholder="Enter values separated by commas or one per line:&#10;28&#10;35&#10;22&#10;41" style="min-height:80px;"></textarea>
 
-          <div class="btn-row">
-            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
-            <button class="btn btn-primary" style="flex:1" onclick="runSimpleMode()">▶ Run analysis</button>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
+              <button class="btn btn-primary" style="flex:1" onclick="runSimpleMode()">▶ Run analysis</button>
+            </div>
           </div>
-        </div>
 
-        <!-- CSV MODE -->
-        <div class="panel-bd" id="modeCsv" style="display:none">
-          <div style="background:#f8faff;border:1px solid #c7d7fd;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.7;color:#1e3a5f;margin-bottom:10px;">
-            <b>Format:</b> first row = headers, one patient per row, comma-separated.<br>
-            One column named <code>outcome</code> with <b>1</b> (positive) or <b>0</b> (negative).<br>
-            Remaining columns = analytes. Multiple analytes triggers logistic regression.
-            <div style="margin-top:6px;font-family:monospace;font-size:11px;background:#fff;border:1px solid #dde;border-radius:5px;padding:6px 8px;white-space:pre;">outcome,Analyte1,Analyte2
+          <!-- CSV MODE -->
+          <div class="panel-bd" id="modeCsv" style="display:none">
+            <div style="background:#f8faff;border:1px solid #c7d7fd;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.7;color:#1e3a5f;margin-bottom:10px;">
+              <b>Format:</b> first row = headers, one patient per row, comma-separated.<br>
+              One column named <code>outcome</code> with <b>1</b> (positive) or <b>0</b> (negative).<br>
+              Remaining columns = analytes. Multiple analytes triggers logistic regression.
+              <div style="margin-top:6px;font-family:monospace;font-size:11px;background:#fff;border:1px solid #dde;border-radius:5px;padding:6px 8px;white-space:pre;">outcome,Analyte1,Analyte2
 1,312,145
 1,245,89
 0,28,18
 0,35,22</div>
-          </div>
-          <textarea id="dataTa" placeholder="outcome,Troponin&#10;1,312&#10;0,28&#10;..."></textarea>
-          <div class="btn-row">
-            <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
-            <button class="btn btn-primary" style="flex:1" onclick="parseAndRun()">▶ Run analysis</button>
+            </div>
+            <textarea id="dataTa" placeholder="outcome,Troponin&#10;1,312&#10;0,28&#10;..."></textarea>
+            <div class="btn-row">
+              <button class="btn btn-ghost btn-sm" onclick="loadSampleData()">Sample data</button>
+              <button class="btn btn-primary" style="flex:1" onclick="parseAndRun()">▶ Run analysis</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <details style="margin-bottom:12px;">
-        <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
-        <div class="panel" style="margin-top:8px;">
+        <details style="margin-bottom:12px;">
+          <summary style="font-weight:700;cursor:pointer;padding:6px 0;font-size:14px;">Generate sample data</summary>
+          <div class="panel" style="margin-top:8px;">
+            <div class="panel-bd">
+              <label style="margin-top:0;">Analyte name</label>
+              <input type="text" id="gen-analyte" value="Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
+                <div>
+                  <label>Disease group — mean</label>
+                  <input type="number" id="gen-pos-mean" value="250" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+                  <label>SD</label>
+                  <input type="number" id="gen-pos-sd" value="60" min="0.1" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+                </div>
+                <div>
+                  <label>Healthy group — mean</label>
+                  <input type="number" id="gen-neg-mean" value="40" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+                  <label>SD</label>
+                  <input type="number" id="gen-neg-sd" value="15" min="0.1" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+                </div>
+              </div>
+
+              <label>n per group</label>
+              <input type="number" id="gen-n" value="25" min="5" step="1" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+
+              <div id="gen-auc-preview" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
+
+              <div class="btn-row" style="margin-top:10px;">
+                <button class="btn btn-ghost btn-sm" onclick="previewGenAUC()">Preview AUC</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="generateROCData()">Generate &amp; run</button>
+              </div>
+              <p style="margin:8px 0 0;font-size:11px;color:var(--muted);">Simulates two groups drawn from normal distributions. Useful for exploring how group separation affects AUC and cut-off selection.</p>
+            </div>
+          </div>
+        </details>
+
+        <div class="panel" id="colConfigPanel" style="display:none">
+          <div class="panel-hd">Column roles <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);">click to cycle</span></div>
           <div class="panel-bd">
-            <label style="margin-top:0;">Analyte name</label>
-            <input type="text" id="gen-analyte" value="Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
-              <div>
-                <label>Disease group — mean</label>
-                <input type="number" id="gen-pos-mean" value="250" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-                <label>SD</label>
-                <input type="number" id="gen-pos-sd" value="60" min="0.1" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-              </div>
-              <div>
-                <label>Healthy group — mean</label>
-                <input type="number" id="gen-neg-mean" value="40" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-                <label>SD</label>
-                <input type="number" id="gen-neg-sd" value="15" min="0.1" step="any" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-              </div>
+            <div class="col-tags" id="colTags"></div>
+            <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.8;">
+              <span class="col-tag outcome" style="cursor:default">outcome</span> binary 0/1 &nbsp;
+              <span class="col-tag analyte" style="cursor:default">analyte</span> predictor &nbsp;
+              <span class="col-tag ignore" style="cursor:default">ignore</span> skip
             </div>
-
-            <label>n per group</label>
-            <input type="number" id="gen-n" value="25" min="5" step="1" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
-
-            <div id="gen-auc-preview" style="margin-top:8px;font-size:12px;color:var(--muted);"></div>
-
-            <div class="btn-row" style="margin-top:10px;">
-              <button class="btn btn-ghost btn-sm" onclick="previewGenAUC()">Preview AUC</button>
-              <button class="btn btn-primary" style="flex:1;" onclick="generateROCData()">Generate &amp; run</button>
+            <div class="btn-row">
+              <button class="btn btn-primary" style="flex:1" onclick="runWithConfig()">▶ Run analysis</button>
             </div>
-            <p style="margin:8px 0 0;font-size:11px;color:var(--muted);">Simulates two groups drawn from normal distributions. Useful for exploring how group separation affects AUC and cut-off selection.</p>
-          </div>
-        </div>
-      </details>
-
-      <div class="panel" id="colConfigPanel" style="display:none">
-        <div class="panel-hd">Column roles <span style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);">click to cycle</span></div>
-        <div class="panel-bd">
-          <div class="col-tags" id="colTags"></div>
-          <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.8;">
-            <span class="col-tag outcome" style="cursor:default">outcome</span> binary 0/1 &nbsp;
-            <span class="col-tag analyte" style="cursor:default">analyte</span> predictor &nbsp;
-            <span class="col-tag ignore" style="cursor:default">ignore</span> skip
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-primary" style="flex:1" onclick="runWithConfig()">▶ Run analysis</button>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="panel" id="cutoffPanel" style="display:none">
-        <div class="panel-hd">Cut-off explorer</div>
-        <div class="panel-bd">
-          <div id="cutoffActiveLabel" style="font-size:11px;color:var(--muted);margin-bottom:6px;"></div>
-          <label style="margin-top:0">Threshold</label>
-          <div class="cutoff-row">
-            <input type="range" id="cutoffSlider" min="0" max="1000" value="500" oninput="onCutoffSlider()">
-            <input type="number" id="cutoffValInput" step="any" oninput="onCutoffValInput()">
-          </div>
+  </div>
+
+  <!-- ── TAB: RESULTS ── -->
+  <div id="tab-results" class="tab-content">
+
+    <div id="alertArea"></div>
+
+    <!-- Cut-off explorer -->
+    <div class="panel" id="cutoffPanel" style="display:none;margin-bottom:12px;">
+      <div class="panel-hd" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="toggleCutoffKpis()">
+        <span>Cut-off explorer</span>
+        <span id="cutoffKpisToggle" style="font-size:11px;color:var(--muted);user-select:none;">Hide details ▲</span>
+      </div>
+      <div class="panel-bd">
+        <div id="cutoffActiveLabel" style="font-size:11px;color:var(--muted);margin-bottom:6px;"></div>
+        <label style="margin-top:0">Threshold</label>
+        <div class="cutoff-row">
+          <input type="range" id="cutoffSlider" min="0" max="1000" value="500" oninput="onCutoffSlider()">
+          <input type="number" id="cutoffValInput" step="any" oninput="onCutoffValInput()">
+        </div>
+        <div id="cutoffKpisWrap">
           <div class="ex-cutoff-grid" id="cutoffKpis"></div>
         </div>
       </div>
     </div>
 
-    <!-- ── RIGHT AREA ── -->
-    <div class="charts-col">
-      <div id="alertArea"></div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="roc" id="rpt-roc" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">ROC Curve</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="rocPanel">
-            <div class="chart-hd">ROC Curve <span id="rocSubtitle"></span></div>
-            <div class="chart-bd">
-              <canvas id="rocCanvas" height="340"></canvas>
-            </div>
-          </div>
-        </div>
+    <!-- Compressed view toggle -->
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
       </div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="kpis" id="rpt-kpis" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">Diagnostic Performance</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="kpiPanel">
-            <div class="chart-hd">Diagnostic performance <span id="kpiSubtitle"></span></div>
-            <div class="chart-bd">
-              <div class="kpi-grid" id="kpiGrid"></div>
-              <div class="note-box" id="interpBox"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="auctable" id="rpt-auctable" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">AUC Comparison</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="tablePanel">
-            <div class="chart-hd">AUC comparison <span id="tableSubtitle"></span></div>
-            <div class="chart-bd" id="aucTableBd"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="dist" id="rpt-dist" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">Score Distributions</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="distPanel">
-            <div class="chart-hd">Score distributions <span id="distPanelTitle"></span></div>
-            <div class="chart-bd"><canvas id="distCanvas" height="220"></canvas></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="sscurve" id="rpt-sscurve" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">Sensitivity &amp; Specificity vs Threshold</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="ssPanel">
-            <div class="chart-hd">Sensitivity &amp; specificity vs threshold <span>Youden J maximises the sum</span></div>
-            <div class="chart-bd"><canvas id="ssCanvas" height="220"></canvas></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="rpt-section" data-open="true" data-sec-id="pvcurve" id="rpt-pvcurve" style="display:none">
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">Predictive Values vs Prevalence</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-          <div class="chart-panel" id="pvPanel">
-            <div class="chart-hd">Predictive values vs prevalence <span>at Youden cut-off sens/spec</span></div>
-            <div class="chart-bd"><canvas id="pvCanvas" height="220"></canvas></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="rpt-btn-row" style="display:none;margin-top:4px;">
-        <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
-      </div>
-
     </div>
+
+    <!-- Result sections -->
+
+    <!-- AUC table — always shown -->
+    <div class="rpt-section" data-open="true" data-sec-id="auctable" id="rpt-auctable" style="display:none">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">AUC Comparison</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div class="chart-panel" id="tablePanel">
+          <div class="chart-hd">AUC comparison <span id="tableSubtitle"></span></div>
+          <div class="chart-bd" id="aucTableBd"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2×2 chart grid — hidden in compressed view -->
+    <div class="rpt-section" data-open="true" data-sec-id="charts" id="rpt-charts" data-acr="hide" style="display:none">
+      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
+        <span class="rpt-sec-title">Diagnostic Charts</span>
+        <span class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="rpt-sec-arrow">▼</span>
+      </div>
+      <div class="rpt-sec-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#e5e7eb;border-radius:0 0 10px 10px;overflow:hidden;">
+
+          <!-- Distribution -->
+          <div style="background:#fff;padding:12px 14px;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:4px;">Distribution — Healthy vs Disease</div>
+            <div id="distSubtitle" style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;text-align:center;"></div>
+            <div style="height:220px;position:relative;"><canvas id="distCanvas"></canvas></div>
+          </div>
+
+          <!-- ROC Curve -->
+          <div style="background:#fff;padding:12px 14px;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:4px;">ROC Curve <span id="rocSubtitle" style="font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:#9ca3af;"></span></div>
+            <div style="height:220px;position:relative;"><canvas id="rocCanvas"></canvas></div>
+          </div>
+
+          <!-- Sensitivity & Specificity -->
+          <div style="background:#fff;padding:12px 14px;border-top:1px solid #e5e7eb;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:4px;">Sensitivity &amp; Specificity vs Threshold</div>
+            <div style="height:220px;position:relative;"><canvas id="ssCanvas"></canvas></div>
+          </div>
+
+          <!-- PPV & NPV -->
+          <div style="background:#fff;padding:12px 14px;border-top:1px solid #e5e7eb;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin-bottom:4px;">PPV &amp; NPV vs Prevalence</div>
+            <div id="pvSubtitle" style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;text-align:center;"></div>
+            <div style="height:220px;position:relative;"><canvas id="pvCanvas"></canvas></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="lab-comment-wrap" id="lab-comment-wrap" style="display:none;margin-top:10px;">
+      <label style="display:block;font-size:11px;font-weight:700;color:#344054;margin-bottom:4px;">Lab comment / interpretation</label>
+      <textarea id="lab-comment" style="width:100%;padding:7px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;box-sizing:border-box;" placeholder="Optional: enter your interpretation for the report..."></textarea>
+    </div>
+
+    <div id="rpt-btn-row" style="display:none;margin-top:8px;">
+      <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
+    </div>
+
   </div>
 </div>
 
@@ -537,15 +553,57 @@ let pvChartInst   = null;
 let cutoffState   = null;   // {scores, labels, roc, col}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXERCISES
+// TAB NAVIGATION
 // ─────────────────────────────────────────────────────────────────────────────
 
-function toggleExercises() {
-  const btn   = document.getElementById('exToggle');
-  const panel = document.getElementById('exPanel');
-  btn.classList.toggle('open');
-  panel.style.display = (panel.style.display === 'none') ? '' : 'none';
+document.querySelectorAll('.tab').forEach(function(t) {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tab === 'tab-' + tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPRESSED VIEW
+// ─────────────────────────────────────────────────────────────────────────────
+
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'accreditation';
+  document.querySelectorAll('#acr-toggle-bar .view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  document.querySelectorAll('#tab-results .rpt-section[data-acr="hide"]').forEach(function(sec) {
+    var body  = sec.querySelector('.rpt-sec-body');
+    var badge = sec.querySelector('.rpt-sec-badge');
+    var arrow = sec.querySelector('.rpt-sec-arrow');
+    if (_acrMode) {
+      sec.dataset.open = 'false';
+      if (body)  body.style.display = 'none';
+      if (badge) { badge.textContent = 'Excluded'; badge.className = 'rpt-sec-badge rpt-badge-ex'; }
+      if (arrow) arrow.textContent = '▶';
+    } else {
+      sec.dataset.open = 'true';
+      if (body)  body.style.display = '';
+      if (badge) { badge.textContent = 'In report'; badge.className = 'rpt-sec-badge rpt-badge-in'; }
+      if (arrow) arrow.textContent = '▼';
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXERCISES
+// ─────────────────────────────────────────────────────────────────────────────
 
 function loadExercise(n) {
   document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
@@ -776,7 +834,6 @@ function runWithConfig() {
   window._labels      = labels;
 
   drawROC(analResults, combined);
-  renderKpis(analResults, combined, labels);
   renderAucTable(analResults, combined);
   setupCutoffExplorer(analResults, combined, labels);
 
@@ -788,6 +845,13 @@ function runWithConfig() {
     const st  = cutoffStats((combined ?? analResults[0]).scores, labels, yPt.thresh);
     drawPVChart(st.sens, st.spec);
   }
+
+  // Switch to results tab and show controls
+  showTab('results');
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  document.getElementById('rpt-btn-row').style.display = '';
+  document.getElementById('lab-comment-wrap').style.display = '';
+  setAcrView('full');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -796,20 +860,41 @@ function runWithConfig() {
 
 const PALETTE = ['#2b6cb0', '#e05e00', '#118a4b', '#7c3aed', '#0891b2'];
 
+// AUC annotation drawn inside the ROC chart
+const aucAnnotationPlugin = {
+  id: 'aucAnnotation',
+  afterDraw(chart) {
+    const auc = chart._aucValue;
+    if (auc == null) return;
+    const {ctx, chartArea: {top, right}} = chart;
+    ctx.save();
+    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = '#e11d48';
+    ctx.textAlign = 'right';
+    ctx.fillText('AUC = ' + auc.toFixed(3), right - 10, top + 26);
+    ctx.restore();
+  }
+};
+
 function drawROC(analResults, combined) {
-  document.getElementById('rpt-roc').style.display = '';
-  document.getElementById('rpt-btn-row').style.display = '';
+  document.getElementById('rpt-charts').style.display = '';
   const ctx = document.getElementById('rocCanvas').getContext('2d');
   if (rocChartInst) { rocChartInst.destroy(); rocChartInst = null; }
+
+  // Primary analyte for fill (first or combined)
+  const primaryForFill = combined ?? analResults[0];
+  const primaryAuc = primaryForFill?.roc?.auc ?? null;
 
   const datasets = [];
   analResults.forEach((ar, i) => {
     if (!ar.roc) return;
+    const isPrimary = !combined && i === 0;
     datasets.push({
       label: `${ar.col} (AUC ${ar.roc.auc.toFixed(3)})`,
       data:  ar.roc.pts.map(p => ({x: p.fpr, y: p.tpr})),
       borderColor: PALETTE[i % PALETTE.length],
-      backgroundColor: 'transparent',
+      backgroundColor: isPrimary ? 'rgba(225,29,72,0.07)' : 'transparent',
+      fill: isPrimary ? 'origin' : false,
       borderWidth: 2.5,
       pointRadius: 0,
       showLine: true,
@@ -822,10 +907,10 @@ function drawROC(analResults, combined) {
     datasets.push({
       label: `Combined model (AUC ${combined.roc.auc.toFixed(3)})`,
       data:  combined.roc.pts.map(p => ({x: p.fpr, y: p.tpr})),
-      borderColor: '#b42318',
-      backgroundColor: 'transparent',
-      borderWidth: 3,
-      borderDash: [7, 4],
+      borderColor: '#e11d48',
+      backgroundColor: 'rgba(225,29,72,0.07)',
+      fill: 'origin',
+      borderWidth: 2.5,
       pointRadius: 0,
       showLine: true,
       tension: 0.3,
@@ -837,12 +922,13 @@ function drawROC(analResults, combined) {
   datasets.push({
     label: 'No skill (AUC 0.500)',
     data: [{x: 0, y: 0}, {x: 1, y: 1}],
-    borderColor: '#9ca3af',
+    borderColor: '#d1d5db',
     backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderDash: [5, 5],
     pointRadius: 0,
     showLine: true,
+    fill: false,
     order: 3
   });
 
@@ -864,13 +950,15 @@ function drawROC(analResults, combined) {
   rocChartInst = new Chart(ctx, {
     type: 'scatter',
     data: {datasets},
+    plugins: [aucAnnotationPlugin],
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: {mode: 'nearest', intersect: false},
       plugins: {
         legend: {
           position: 'bottom',
-          labels: {font: {size: 11}, boxWidth: 18, filter: item => !item.text.startsWith('_')}
+          labels: {font: {size: 11}, boxWidth: 14, filter: item => !item.text.startsWith('_')}
         },
         tooltip: {
           filter: item => !item.dataset.label.startsWith('_'),
@@ -880,11 +968,12 @@ function drawROC(analResults, combined) {
         }
       },
       scales: {
-        x: {min: 0, max: 1, title: {display: true, text: '1 − Specificity  (false positive rate)', font: {size: 12}}, grid: {color: '#f3f4f6'}},
-        y: {min: 0, max: 1, title: {display: true, text: 'Sensitivity  (true positive rate)', font: {size: 12}}, grid: {color: '#f3f4f6'}}
+        x: {min: 0, max: 1, title: {display: true, text: '1 − Specificity (FPR)', font: {size: 11}}, grid: {color: '#f3f4f6'}, ticks: {font: {size: 10}}},
+        y: {min: 0, max: 1, title: {display: true, text: 'Sensitivity (TPR)', font: {size: 11}}, grid: {color: '#f3f4f6'}, ticks: {font: {size: 10}}}
       }
     }
   });
+  rocChartInst._aucValue = primaryAuc;
 }
 
 function moveMarker(fpr, tpr) {
@@ -896,9 +985,6 @@ function moveMarker(fpr, tpr) {
 function drawDistributions(analResults, combined, labels) {
   const primary = combined ?? analResults[0];
   if (!primary?.scores) return;
-
-  document.getElementById('rpt-dist').style.display = '';
-  document.getElementById('distPanelTitle').textContent = combined ? 'combined model — logistic probabilities' : primary.col;
 
   const posScores = primary.scores.filter((_, i) => labels[i] === 1);
   const negScores = primary.scores.filter((_, i) => labels[i] === 0);
@@ -929,6 +1015,12 @@ function drawDistributions(analResults, combined, labels) {
   const thresh = yPt.thresh;
   const threshData = xs.map(x => Math.abs(x - thresh) < step * 1.8 ? maxY : null);
 
+  // Show Youden threshold stats in subtitle
+  const yPtDist = youdenPoint(primary.roc);
+  const stDist  = cutoffStats(primary.scores, labels, yPtDist.thresh);
+  document.getElementById('distSubtitle').textContent =
+    `Threshold = ${fmtN(yPtDist.thresh)}  |  Sens = ${pct(stDist.sens)}  |  Spec = ${pct(stDist.spec)}`;
+
   if (distChartInst) { distChartInst.destroy(); distChartInst = null; }
   const ctx = document.getElementById('distCanvas').getContext('2d');
   distChartInst = new Chart(ctx, {
@@ -936,20 +1028,20 @@ function drawDistributions(analResults, combined, labels) {
     data: {
       labels: xs.map(x => fmtN(x)),
       datasets: [
-        { label: 'No disease', data: negKDE, borderColor: '#2b6cb0', backgroundColor: 'rgba(43,108,176,0.12)', fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
-        { label: 'Disease',    data: posKDE, borderColor: '#e11d48', backgroundColor: 'rgba(225,29,72,0.12)',  fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
-        { label: 'Threshold',  data: threshData, borderColor: '#f59e0b', borderWidth: 2.5, borderDash: [5, 4], pointRadius: 0 }
+        { label: 'Healthy',   data: negKDE, borderColor: '#2b6cb0', backgroundColor: 'rgba(43,108,176,0.15)', fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
+        { label: 'Disease',   data: posKDE, borderColor: '#e11d48', backgroundColor: 'rgba(225,29,72,0.15)',  fill: true, borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
+        { label: 'Threshold', data: threshData, borderColor: '#f59e0b', borderWidth: 2, borderDash: [5, 4], pointRadius: 0 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { font: { size: 11 } } },
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
         tooltip: { filter: item => item.datasetIndex < 2 }
       },
       scales: {
         x: { ticks: { maxTicksLimit: 8, font: { size: 10 } }, title: { display: true, text: 'Score', font: { size: 11 } } },
-        y: { display: false }
+        y: { display: true, ticks: { font: { size: 10 } }, title: { display: true, text: 'Density', font: { size: 11 } } }
       }
     }
   });
@@ -965,12 +1057,16 @@ function moveDistThreshold(t) {
 }
 
 function drawSSCurve(roc) {
-  document.getElementById('rpt-sscurve').style.display = '';
   const pts = [...roc.pts].sort((a, b) => a.thresh - b.thresh);
   const labels = pts.map(p => fmtN(p.thresh));
   const sensArr   = pts.map(p => p.tpr);
   const specArr   = pts.map(p => 1 - p.fpr);
   const youdenArr = pts.map(p => p.tpr + (1 - p.fpr) - 1);
+
+  // Youden point marker data
+  const yPtSS = youdenPoint(roc);
+  const yIdx  = pts.findIndex(p => p.thresh === yPtSS.thresh);
+  const youdenMarker = pts.map((_, i) => i === yIdx ? youdenArr[i] : null);
 
   if (ssChartInst) { ssChartInst.destroy(); ssChartInst = null; }
   const ctx = document.getElementById('ssCanvas').getContext('2d');
@@ -979,33 +1075,45 @@ function drawSSCurve(roc) {
     data: {
       labels,
       datasets: [
-        { label: 'Sensitivity', data: sensArr,   borderColor: '#e11d48', borderWidth: 2,   pointRadius: 0, tension: 0.3 },
-        { label: 'Specificity', data: specArr,   borderColor: '#2b6cb0', borderWidth: 2,   pointRadius: 0, tension: 0.3 },
-        { label: 'Youden J',    data: youdenArr, borderColor: '#10b981', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, tension: 0.3 }
+        { label: 'Sensitivity', data: sensArr,      borderColor: '#e11d48', borderWidth: 2,   pointRadius: 0, tension: 0.3 },
+        { label: 'Specificity', data: specArr,      borderColor: '#2b6cb0', borderWidth: 2,   pointRadius: 0, tension: 0.3 },
+        { label: 'Youden J',    data: youdenArr,    borderColor: '#10b981', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, tension: 0.3 },
+        { label: '_ssMarker',   data: new Array(pts.length).fill(null), showLine: false, backgroundColor: '#e05e00', pointRadius: 8, pointHoverRadius: 10 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } } },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 }, filter: item => !item.text.startsWith('_') } }
+      },
       scales: {
         x: { ticks: { maxTicksLimit: 8, font: { size: 10 } }, title: { display: true, text: 'Threshold', font: { size: 11 } } },
         y: { min: 0, max: 1, ticks: { font: { size: 10 } }, title: { display: true, text: 'Value', font: { size: 11 } } }
       }
     }
   });
+  window._ssPts = pts;
 }
 
 function drawPVChart(sens, spec) {
-  document.getElementById('rpt-pvcurve').style.display = '';
-  const nPts = 100, prevLabels = [], ppvArr = [], npvArr = [];
-  for (let i = 0; i <= nPts; i++) {
+  const DEFAULT_PREV = 0.20;
+  const nPts = 100, prevArr = [], prevLabels = [], ppvArr = [], npvArr = [];
+  for (let i = 1; i <= nPts; i++) {
     const prev = i / nPts;
+    prevArr.push(prev);
     prevLabels.push((prev * 100).toFixed(0) + '%');
     const ppvDenom = sens * prev + (1 - spec) * (1 - prev);
     const npvDenom = spec * (1 - prev) + (1 - sens) * prev;
     ppvArr.push(ppvDenom > 0 ? (sens * prev) / ppvDenom : 0);
     npvArr.push(npvDenom > 0 ? (spec * (1 - prev)) / npvDenom : 0);
   }
+
+  // Current prevalence marker at DEFAULT_PREV
+  const pvIdx = Math.round(DEFAULT_PREV * nPts) - 1;
+  const pvPPV = ppvArr[pvIdx], pvNPV = npvArr[pvIdx];
+  document.getElementById('pvSubtitle').textContent =
+    `At ${(DEFAULT_PREV * 100).toFixed(0)}% prevalence: PPV = ${pct(pvPPV)}  NPV = ${pct(pvNPV)}`;
+
   if (pvChartInst) { pvChartInst.destroy(); pvChartInst = null; }
   const ctx = document.getElementById('pvCanvas').getContext('2d');
   pvChartInst = new Chart(ctx, {
@@ -1014,12 +1122,16 @@ function drawPVChart(sens, spec) {
       labels: prevLabels,
       datasets: [
         { label: 'PPV', data: ppvArr, borderColor: '#e11d48', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-        { label: 'NPV', data: npvArr, borderColor: '#2b6cb0', borderWidth: 2, pointRadius: 0, tension: 0.3 }
+        { label: 'NPV', data: npvArr, borderColor: '#2b6cb0', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+        { label: `Current (${(DEFAULT_PREV*100).toFixed(0)}%)`, data: prevArr.map((p, i) => i === pvIdx ? ppvArr[i] : null), showLine: false, backgroundColor: '#f59e0b', pointRadius: 7, pointHoverRadius: 9 },
+        { label: '_pvNPV', data: prevArr.map((p, i) => i === pvIdx ? npvArr[i] : null), showLine: false, backgroundColor: '#f59e0b', pointRadius: 7, pointHoverRadius: 9 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } } },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 }, filter: item => !item.text.startsWith('_') } }
+      },
       scales: {
         x: { ticks: { maxTicksLimit: 10, font: { size: 10 } }, title: { display: true, text: 'Disease prevalence', font: { size: 11 } } },
         y: { min: 0, max: 1, ticks: { font: { size: 10 } }, title: { display: true, text: 'Predictive value', font: { size: 11 } } }
@@ -1028,44 +1140,25 @@ function drawPVChart(sens, spec) {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// KPI PANEL
-// ─────────────────────────────────────────────────────────────────────────────
-
-function renderKpis(analResults, combined, labels) {
-  document.getElementById('rpt-kpis').style.display = '';
-  const primary = combined ?? analResults[0];
-  if (!primary?.roc) return;
-  const yPt   = youdenPoint(primary.roc);
-  const st    = cutoffStats(primary.scores, labels, yPt.thresh);
-  const auc   = primary.roc.auc;
-  const gradeText = auc >= 0.9 ? 'Excellent (≥ 0.90)' : auc >= 0.8 ? 'Good (0.80–0.89)' : auc >= 0.7 ? 'Fair (0.70–0.79)' : 'Poor (< 0.70)';
-
-  const kpis = [
-    {k: 'AUC',                v: auc.toFixed(3),                               sub: gradeText,                    cls: auc >= 0.8 ? 'good' : auc < 0.7 ? 'warn' : ''},
-    {k: '95% CI',             v: `[${primary.ci[0].toFixed(3)}, ${primary.ci[1].toFixed(3)}]`, sub: 'bootstrap 600 iterations'},
-    {k: 'Youden cut-off',     v: typeof yPt.thresh === 'number' ? fmtN(yPt.thresh) : '—', sub: `J = ${(yPt.tpr - yPt.fpr).toFixed(3)}`},
-    {k: 'Sensitivity',        v: pct(st.sens),                                 sub: 'at Youden cut-off',          cls: st.sens >= 0.8 ? 'good' : st.sens < 0.7 ? 'warn' : ''},
-    {k: 'Specificity',        v: pct(st.spec),                                 sub: 'at Youden cut-off',          cls: st.spec >= 0.8 ? 'good' : st.spec < 0.7 ? 'warn' : ''},
-    {k: 'PPV',                v: pct(st.ppv),                                  sub: 'positive predictive value'},
-    {k: 'NPV',                v: pct(st.npv),                                  sub: 'negative predictive value'},
-    {k: 'LR+',                v: isFinite(st.lrp) ? st.lrp.toFixed(2) : '∞',  sub: 'likelihood ratio pos.',      cls: st.lrp >= 10 ? 'good' : ''},
-    {k: 'LR−',                v: st.lrn.toFixed(2),                            sub: 'likelihood ratio neg.',      cls: st.lrn <= 0.1 ? 'good' : ''},
-  ];
-
-  document.getElementById('kpiSubtitle').textContent = combined ? 'combined — logistic regression' : primary.col;
-  document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
-    `<div class="kpi">
-      <div class="kpi-k">${k.k}</div>
-      <div class="kpi-v ${k.cls || ''}">${k.v}</div>
-      <div class="kpi-sub">${k.sub || ''}</div>
-    </div>`
-  ).join('');
-
-  document.getElementById('interpBox').innerHTML =
-    `<b>At the Youden cut-off:</b> ${st.tp} TP · ${st.fp} FP · ${st.tn} TN · ${st.fn} FN.<br>
-    <b>AUC ${auc.toFixed(3)}</b> — ${gradeText}. Probability that a randomly chosen positive patient
-    scores higher than a randomly chosen negative patient = ${(auc * 100).toFixed(1)}%.`;
+function refreshPVChart(sens, spec) {
+  if (!pvChartInst) return;
+  const DEFAULT_PREV = 0.20;
+  const nPts = 100, ppvArr = [], npvArr = [];
+  for (let i = 1; i <= nPts; i++) {
+    const prev = i / nPts;
+    const ppvDenom = sens * prev + (1 - spec) * (1 - prev);
+    const npvDenom = spec * (1 - prev) + (1 - sens) * prev;
+    ppvArr.push(ppvDenom > 0 ? (sens * prev) / ppvDenom : 0);
+    npvArr.push(npvDenom > 0 ? (spec * (1 - prev)) / npvDenom : 0);
+  }
+  const pvIdx = Math.round(DEFAULT_PREV * nPts) - 1;
+  pvChartInst.data.datasets[0].data = ppvArr;
+  pvChartInst.data.datasets[1].data = npvArr;
+  pvChartInst.data.datasets[2].data = ppvArr.map((v, i) => i === pvIdx ? v : null);
+  pvChartInst.data.datasets[3].data = npvArr.map((v, i) => i === pvIdx ? v : null);
+  pvChartInst.update('none');
+  document.getElementById('pvSubtitle').textContent =
+    `At ${(DEFAULT_PREV * 100).toFixed(0)}% prevalence: PPV = ${pct(ppvArr[pvIdx])}  NPV = ${pct(npvArr[pvIdx])}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1126,6 +1219,14 @@ function setupCutoffExplorer(analResults, combined, labels) {
   refreshCutoff(yPt.thresh);
 }
 
+function toggleCutoffKpis() {
+  const wrap = document.getElementById('cutoffKpisWrap');
+  const lbl  = document.getElementById('cutoffKpisToggle');
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : '';
+  lbl.textContent = open ? 'Show details ▼' : 'Hide details ▲';
+}
+
 function onCutoffSlider() {
   const slider = document.getElementById('cutoffSlider');
   const t = slider._mn + (slider.value / 1000) * (slider._mx - slider._mn);
@@ -1162,7 +1263,7 @@ function refreshCutoff(t) {
     </div>`
   ).join('');
 
-  // Move dot on ROC chart + threshold line on distribution chart
+  // Move ROC marker, dist threshold, SS marker
   if (roc) {
     let closest = roc.pts[0], bestD = Infinity;
     roc.pts.forEach(p => {
@@ -1171,6 +1272,21 @@ function refreshCutoff(t) {
     });
     moveMarker(closest.fpr, closest.tpr);
     moveDistThreshold(t);
+    refreshPVChart(st.sens, st.spec);
+    // Update dist subtitle
+    const distSub = document.getElementById('distSubtitle');
+    if (distSub) distSub.textContent = `Threshold = ${fmtN(t)}  |  Sens = ${pct(st.sens)}  |  Spec = ${pct(st.spec)}`;
+    // Move SS chart orange dot
+    if (ssChartInst && window._ssPts) {
+      const ssPts = window._ssPts;
+      let ssIdx = 0, ssBest = Infinity;
+      ssPts.forEach((p, i) => { const d = Math.abs(p.thresh - t); if (d < ssBest) { ssBest = d; ssIdx = i; } });
+      const markerDs = ssChartInst.data.datasets.find(d => d.label === '_ssMarker');
+      if (markerDs) {
+        markerDs.data = ssPts.map((_, i) => i === ssIdx ? (st.sens + st.spec - 1) : null);
+        ssChartInst.update('none');
+      }
+    }
   }
 }
 
@@ -1281,8 +1397,11 @@ function loadSampleData() {
 document.addEventListener('DOMContentLoaded', loadSampleData);
 
 function addToReport() {
-  var analyte = document.getElementById('analyteName')?.value || 'ROC Analysis';
-  if (collectAndAddToReport('ROC & Diagnostic Performance', analyte)) {
+  var analyte = document.getElementById('analyteName')?.value ||
+    (parsedData?.headers?.filter(function(h){ return colRoles[h] === 'analyte'; }).join(', ')) ||
+    'ROC Analysis';
+  var comment = (document.getElementById('lab-comment')?.value || '').trim();
+  if (collectAndAddToReport('ROC & Diagnostic Performance', analyte, comment)) {
     rptBtnFeedback('add-report-btn');
   }
 }

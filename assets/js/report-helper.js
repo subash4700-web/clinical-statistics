@@ -65,12 +65,19 @@ function collectAndAddToReport(toolName, analyte, chartMap) {
     if (body) {
       var canvases = body.querySelectorAll('canvas');
       canvases.forEach(function(canvas) {
+        // Skip canvases inside hidden data-acr elements (would produce blank images)
+        var acrParent = canvas.closest('[data-acr="hide"]');
+        if (acrParent && acrParent.style.display === 'none') return;
         try {
           content += '<img src="' + canvas.toDataURL('image/png') + '" style="max-width:100%;margin:8px 0;">';
         } catch(e) {}
       });
       // Add non-canvas content
       var clone = body.cloneNode(true);
+      // Remove elements hidden by accreditation view (data-acr="hide" with display:none)
+      clone.querySelectorAll('[data-acr="hide"]').forEach(function(el) {
+        if (el.style.display === 'none') el.remove();
+      });
       clone.querySelectorAll('canvas').forEach(function(c){ c.remove(); });
       if (clone.innerHTML.trim()) content += clone.innerHTML;
     }

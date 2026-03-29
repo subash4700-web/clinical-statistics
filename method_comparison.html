@@ -366,7 +366,7 @@
           <select id="regressionMethod">
             <option value="ols">Ordinary Least Squares (OLS)</option>
             <option value="deming">Deming Regression</option>
-            <option value="pb">Passing-Bablok</option>
+            <option value="pb" selected>Passing-Bablok</option>
           </select>
         </div>
         <div>
@@ -539,7 +539,7 @@
 
     <div class="btn-row" style="justify-content:flex-start;">
       <button class="btn-primary" onclick="generateAnalysis()" style="padding:12px 24px; font-size:14px;">
-        Generate Analysis
+        Calculate
       </button>
       <button class="btn-ghost" onclick="clearAll()">Clear data</button>
     </div>
@@ -549,6 +549,13 @@
 
   <!-- ========================================================= TAB 2: ANALYSIS -->
   <div id="analysisTab" class="tab-content">
+
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
+      </div>
+    </div>
 
     <div class="btn-row" style="margin-bottom:16px; justify-content:flex-start;">
       <button class="btn-success" onclick="exportToExcel()">Export to Excel</button>
@@ -576,13 +583,13 @@
           </div>
         </div>
         <div id="statsDisplay"></div>
-        <div id="ttestDisplay" style="margin-bottom:16px;"></div>
-        <div id="cvDiffDisplay" style="margin-bottom:16px;"></div>
+        <div id="ttestDisplay" data-acr="hide" style="margin-bottom:16px;"></div>
+        <div id="cvDiffDisplay" data-acr="hide" style="margin-bottom:16px;"></div>
       </div>
     </div>
 
     <!-- Interpretation (collapsible) -->
-    <div class="collapsible">
+    <div class="collapsible" data-acr="hide">
       <div class="coll-header" onclick="toggleSection('interpretation')">
         <h3>Interpretation</h3>
         <span id="interpretation-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
@@ -594,7 +601,7 @@
     </div>
 
     <!-- Normality -->
-    <div class="collapsible">
+    <div class="collapsible" data-acr="hide">
       <div class="coll-header" onclick="toggleSection('normality')">
         <h3>Normality Analysis of Differences</h3>
         <span id="normality-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
@@ -659,7 +666,7 @@
     </div>
 
     <!-- Data review + outliers -->
-    <div class="collapsible">
+    <div class="collapsible" data-acr="hide">
       <div class="coll-header" onclick="toggleSection('datatable')">
         <h3>Data Review &amp; Outlier Exclusion</h3>
         <span id="datatable-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
@@ -761,6 +768,28 @@
                 toggle.textContent = '▼';
                 if (badge) { badge.textContent = 'In report'; badge.className = 'rpt-sec-badge rpt-badge-in'; }
             }
+        }
+
+        // ── Accreditation view toggle ──────────────────────────────
+        var _acrMode = false;
+        function setAcrView(mode) {
+          _acrMode = mode === 'accreditation';
+          document.querySelectorAll('.view-toggle-btn').forEach(function(btn, i) {
+            btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+          });
+          // collapsible sections
+          document.querySelectorAll('.collapsible[data-acr="hide"]').forEach(function(sec) {
+            var body = sec.querySelector('.coll-body');
+            var toggle = sec.querySelector('.coll-toggle');
+            var badge = sec.querySelector('.rpt-sec-badge');
+            if (body) { body.style.display = _acrMode ? 'none' : ''; if (_acrMode) body.classList.add('collapsed'); else body.classList.remove('collapsed'); }
+            if (toggle) toggle.textContent = _acrMode ? '▶' : '▼';
+            if (badge) { badge.textContent = _acrMode ? 'Excluded' : 'In report'; badge.className = 'rpt-sec-badge ' + (_acrMode ? 'rpt-badge-ex' : 'rpt-badge-in'); }
+          });
+          // plain elements (including TAE parts inside statsDisplay)
+          document.querySelectorAll('[data-acr="hide"]:not(.collapsible)').forEach(function(el) {
+            el.style.display = _acrMode ? 'none' : '';
+          });
         }
 
         function switchTab(tabName, clickedEl) {
@@ -982,7 +1011,7 @@
                       <div style="font-size:13px;font-weight:800;color:#111827;">${loaStr}</div>
                       <div style="font-size:10px;color:#9ca3af;">95% of differences</div>
                     </div>
-                    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
+                    <div data-acr="hide" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">
                       <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Within TAE</div>
                       <div style="font-size:18px;font-weight:800;color:#111827;">${tePct}%</div>
                       <div style="font-size:10px;color:#9ca3af;">pairs within ±${teaFmt}${suffix}</div>
@@ -1014,6 +1043,7 @@
                       <div style="font-size:11px;color:#6b7280;margin-bottom:14px;">${biasPctUsed}% of allowable bias used</div>`;
                     })()}
 
+                    <div data-acr="hide">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                       <div>
                         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification (TAE)</span>
@@ -1031,6 +1061,7 @@
                     <div style="font-size:11px;color:#6b7280;margin-bottom:10px;">${barPct}% of allowable limit used</div>
                     <div class="verdict ${pass ? 'pass' : 'fail'}">
                       ${pass ? 'PASS' : 'FAIL'} — Calculated TE ${pass ? 'within' : 'exceeds'} TAE: ${teCalc.toFixed(3)}${suffix} ${pass ? '≤' : '>'} ±${teaFmt}${suffix}
+                    </div>
                     </div>
                   </div>
                 </div>`;
@@ -1097,6 +1128,8 @@
 
             const stats = calculateStats(includedData, useRelative, designation, newMethod);
             currentStats = stats;
+            window._mcStats = stats;
+            window._mcMeta = { suffix: useRelative ? '%' : '' };
 
             // Fill study header
             const m1 = document.getElementById('method1Name').value || 'Method 1';
@@ -1632,11 +1665,21 @@
             }
 
             if (_isOpen('summary')) {
-              var stats = document.getElementById('statsDisplay');
+              var statsEl = document.getElementById('statsDisplay');
               var ttest = document.getElementById('ttestDisplay');
               var cvd   = document.getElementById('cvDiffDisplay');
+              var statsHtml = '';
+              if (statsEl) {
+                if (_acrMode) {
+                  var clone = statsEl.cloneNode(true);
+                  clone.querySelectorAll('[data-acr="hide"]').forEach(function(el) { el.remove(); });
+                  statsHtml = clone.innerHTML;
+                } else {
+                  statsHtml = statsEl.innerHTML;
+                }
+              }
               html += _sec('Summary & Statistics',
-                (stats ? stats.innerHTML : '') + (ttest ? ttest.innerHTML : '') + (cvd ? cvd.innerHTML : ''));
+                statsHtml + (_acrMode ? '' : (ttest ? ttest.innerHTML : '')) + (_acrMode ? '' : (cvd ? cvd.innerHTML : '')));
             }
             if (_isOpen('interpretation')) {
               var interp = document.getElementById('interpretationContent');
@@ -1646,7 +1689,29 @@
               html += _sec('Normality Analysis of Differences', _chartImg(qqChart) + _chartImg(histChart));
             }
             if (_isOpen('blandaltman')) {
-              html += _sec('Bland-Altman Plot', _chartImg(chart));
+              var baStats = '';
+              var s = window._mcStats || currentStats;
+              if (s) {
+                var useRel = document.getElementById('relativeBlandAltman') ? document.getElementById('relativeBlandAltman').checked : false;
+                var suffix = useRel ? '%' : '';
+                var td  = 'padding:4px 8px;border:1px solid #e2e8f0;font-size:12px;';
+                var tdh = 'padding:4px 8px;border:1px solid #e2e8f0;font-size:12px;font-weight:600;background:#f8fafc;width:40%;';
+                var biasPass = s.maxBias > 0 ? Math.abs(s.meanDiff) <= s.maxBias : null;
+                var verdictHtml = biasPass !== null
+                  ? '<tr><td style="' + tdh + '">Bias verdict</td><td style="' + td + 'font-weight:700;color:' + (biasPass ? '#166534' : '#991b1b') + ';">'
+                    + (biasPass ? '✓ Bias within specification' : '✗ Bias exceeds specification (' + Math.abs(s.meanDiff).toFixed(3) + suffix + ' > ±' + s.maxBias.toFixed(3) + suffix + ')')
+                    + '</td></tr>'
+                  : '';
+                baStats = '<table style="width:100%;border-collapse:collapse;margin-top:8px;">'
+                  + '<tr><td style="' + tdh + '">Mean Bias</td><td style="' + td + '">' + s.meanDiff.toFixed(3) + suffix + '</td></tr>'
+                  + '<tr><td style="' + tdh + '">SD of differences</td><td style="' + td + '">' + s.sd.toFixed(3) + suffix + '</td></tr>'
+                  + '<tr><td style="' + tdh + '">Upper LoA (Z=' + s.zValue + ')</td><td style="' + td + '">' + s.loa_upper.toFixed(3) + suffix + '</td></tr>'
+                  + '<tr><td style="' + tdh + '">Lower LoA (Z=' + s.zValue + ')</td><td style="' + td + '">' + s.loa_lower.toFixed(3) + suffix + '</td></tr>'
+                  + (s.maxBias > 0 ? '<tr><td style="' + tdh + '">Allowable bias</td><td style="' + td + '">±' + s.maxBias.toFixed(3) + suffix + '</td></tr>' : '')
+                  + verdictHtml
+                  + '</table>';
+              }
+              html += _sec('Bland-Altman Plot', _chartImg(chart) + baStats);
             }
             if (_isOpen('xyplot')) {
               var regStats = document.getElementById('regressionStats');
@@ -1740,14 +1805,14 @@
                 datasets.push({
                     label: `Upper LoA (+${stats.zValue}SD): ${stats.loa_upper.toFixed(3)}${suffix}`,
                     data: [{ x: Math.min(...stats.xValues), y: stats.loa_upper }, { x: Math.max(...stats.xValues), y: stats.loa_upper }],
-                    type: 'line', borderColor: '#FF6600', borderWidth: 2,
+                    type: 'line', borderColor: '#3b82f6', borderWidth: 2,
                     pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
                     fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 3
                 });
                 datasets.push({
                     label: `Lower LoA (-${stats.zValue}SD): ${stats.loa_lower.toFixed(3)}${suffix}`,
                     data: [{ x: Math.min(...stats.xValues), y: stats.loa_lower }, { x: Math.max(...stats.xValues), y: stats.loa_lower }],
-                    type: 'line', borderColor: '#FF6600', borderWidth: 2,
+                    type: 'line', borderColor: '#3b82f6', borderWidth: 2,
                     pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20,
                     fill: false, borderDash: [2, 8], borderCapStyle: 'round', order: 4
                 });
@@ -2556,6 +2621,9 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab')[1].classList.add('active');
             document.getElementById('analysisTab').classList.add('active');
+            document.getElementById('acr-toggle-bar').style.display = 'flex';
+            setAcrView('full');
+            window.scrollTo(0, 0);
         }
 
         function exportToExcel() {

@@ -131,12 +131,12 @@
             <span class="tg-badge tg-design">Repeated measures</span>
             <span class="tg-badge tg-std">CLSI EP05-A3 · EP15-A3</span>
           </div>
-          <div class="tg-when">Full precision validation (EP05) before clinical implementation, or verification of manufacturer claims (EP15). Required for ISO 15189 accreditation and new method introduction.</div>
+          <div class="tg-when">Full precision study (EP05) before clinical implementation, or verification of manufacturer claims (EP15). Required for ISO 15189 accreditation and new method introduction.</div>
           <details class="tg-details">
             <summary>Details</summary>
             <div class="tg-body">
               <div class="tg-row"><span class="tg-label">Material</span><span>Stable patient pools at 2 concentration levels covering clinical decision points (e.g. normal + elevated)</span></div>
-              <div class="tg-row"><span class="tg-label">EP05</span><span>20 days × 2 runs/day × 2 replicates = 80 results per level — full validation</span></div>
+              <div class="tg-row"><span class="tg-label">EP05</span><span>20 days × 2 runs/day × 2 replicates = 80 results per level — full precision study</span></div>
               <div class="tg-row"><span class="tg-label">EP15</span><span>5 days × 2 runs/day × 2 replicates = 20 results per level — manufacturer claim verification</span></div>
               <div class="tg-row"><span class="tg-label">Output</span><span>CVw (within-run), CVb (between-run), CVt (total precision), ANOVA variance decomposition</span></div>
             </div>
@@ -313,6 +313,12 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
+      </div>
+    </div>
     <div id="ep-results"></div>
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
@@ -940,16 +946,57 @@ function calculateEP() {
     });
   });
 
+  // Show toggle bar and reset to full view
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  setAcrView('full');
+
   // Switch to results tab
   document.querySelector('[data-tab="tab-results"]').click();
+  window.scrollTo(0, 0);
+}
+
+// ─────────────────────────────────────────────
+// Accreditation view toggle
+// ─────────────────────────────────────────────
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'accreditation';
+  document.querySelectorAll('.view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  // ep-rpt-sections
+  document.querySelectorAll('.ep-rpt-section[data-acr="hide"]').forEach(function(sec) {
+    var body = sec.querySelector('.ep-rpt-body');
+    var badge = sec.querySelector('.ep-rpt-badge');
+    sec.dataset.open = _acrMode ? 'false' : 'true';
+    if (body) body.style.display = _acrMode ? 'none' : '';
+    if (badge) badge.textContent = _acrMode ? 'Excluded' : 'In report';
+    var hdr = sec.querySelector('.ep-rpt-hdr');
+    if (hdr) hdr.style.opacity = _acrMode ? '0.45' : '';
+  });
+  // plain elements (Within-run Diffs, Summary)
+  document.querySelectorAll('[data-acr="hide"]:not(.ep-rpt-section)').forEach(function(el) {
+    el.style.display = _acrMode ? 'none' : '';
+  });
+  // In accreditation view: expand Run Means & Westgard collapsibles
+  if (_acrMode) {
+    document.querySelectorAll('#ep-results .coll-header').forEach(function(hdr) {
+      var body = hdr.nextElementSibling;
+      var arrow = hdr.querySelector('.coll-arrow');
+      if (body && (body.style.display === 'none' || body.style.display === '')) {
+        body.style.display = 'block';
+        if (arrow) arrow.classList.add('open');
+      }
+    });
+  }
 }
 
 // ─────────────────────────────────────────────
 // Report section wrappers
 // ─────────────────────────────────────────────
-function epSection(title, content, openByDefault) {
+function epSection(title, content, openByDefault, acrHide) {
   var open = openByDefault !== false;
-  return '<div class="ep-rpt-section" data-open="' + open + '">'
+  return '<div class="ep-rpt-section" data-open="' + open + '"' + (acrHide ? ' data-acr="hide"' : '') + '>'
     + '<div class="ep-rpt-hdr" onclick="epToggleSection(this)">'
     + '<div class="ep-rpt-hdr-left"><span class="ep-rpt-hdr-arrow">&#9660;</span><span>' + title + '</span></div>'
     + '<span class="ep-rpt-badge">' + (open ? 'In report' : 'Excluded') + '</span>'
@@ -1138,6 +1185,7 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   var sbPct  = stats.St2 > 0 ? Math.min(100, stats.Sb2 / stats.St2 * 100) : 0;
   // Ensure sum = 100 for display
   var sbPctDisplay = Math.max(0, 100 - swPct);
+  html += '<div data-acr="hide">';
   html += '<div class="section-header">Variance Decomposition</div>';
   html += '<div class="card" style="padding:12px;">';
   html += '<div class="var-decomp-bar">';
@@ -1153,27 +1201,30 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   html += '<span style="color:#7c3aed;font-weight:700;">&#9632; Between-run (Sb²) ' + fmt(stats.Sb2, 6) + ' — ' + sbPctDisplay.toFixed(1) + '%</span>';
   html += '</div>';
   html += '</div>';
+  html += '</div>';
 
   // Westgard panel
-  html += '<div class="section-header">Westgard Rules</div>';
+  html += '<div class="section-header">Westgard Rules' + (totalLevels > 1 ? ' — Level ' + (lvl + 1) : '') + '</div>';
   html += wgPanelHtml(wgVio);
 
   html += '</div>'; // close ep-stats-lvl
 
+  var lvlSuffix = totalLevels > 1 ? ' — Level ' + (lvl + 1) : '';
+
   // Levey-Jennings chart
-  html += epSection('Levey-Jennings Chart',
+  html += epSection('Levey-Jennings Chart' + lvlSuffix,
     '<div class="card" style="padding:12px;"><canvas id="lj-chart-' + lvl + '"></canvas></div>');
 
   // Individual measurements by day
-  html += epSection('Individual Measurements by Day',
-    '<div class="card" style="padding:12px;"><canvas id="dot-chart-' + lvl + '" style="height:250px;"></canvas></div>');
+  html += epSection('Individual Measurements by Day' + lvlSuffix,
+    '<div class="card" style="padding:12px;"><canvas id="dot-chart-' + lvl + '" style="height:250px;"></canvas></div>', true, true);
 
   // Distribution + CV bar side by side
-  html += epSection('Repeatability vs Intermediate Precision',
+  html += epSection('Repeatability vs Intermediate Precision' + lvlSuffix,
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'
     + '<div class="card" style="padding:12px;"><canvas id="dist-chart-' + lvl + '" style="height:200px;"></canvas></div>'
     + '<div class="card" style="padding:12px;"><canvas id="cv-chart-' + lvl + '" style="height:200px;"></canvas></div>'
-    + '</div>');
+    + '</div>', true, false);
 
   html += '<div id="ep-collaps-lvl-' + lvl + '">';
 
@@ -1181,11 +1232,14 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   html += '<div class="card" style="padding:10px 14px;">';
   html += '<div class="coll-header" onclick="toggleColl(this)">';
   html += '<span class="coll-arrow">&#9654;</span>';
-  html += '<span>Run Means &amp; Westgard</span>';
+  html += '<span>Run Means &amp; Westgard' + (totalLevels > 1 ? ' — Level ' + (lvl + 1) : '') + '</span>';
   html += '</div>';
   html += '<div class="coll-body">';
   html += '<div class="table-wrap"><table>';
-  html += '<thead><tr><th>Day</th><th>Run</th><th class="num">Mean</th><th>Westgard</th></tr></thead><tbody>';
+  // Build rep header columns
+  var repHeaders = '';
+  for (var ri2 = 0; ri2 < stats.m; ri2++) repHeaders += '<th class="num">Rep ' + (ri2 + 1) + '</th>';
+  html += '<thead><tr><th>Day</th><th>Run</th>' + repHeaders + '<th class="num">Mean</th><th>Westgard</th></tr></thead><tbody>';
   stats.completeRuns.forEach(function(r, ri) {
     var vio = wgVio[ri] || [];
     var hasReject = vio.some(function(rule) { return WG_RULES[rule] && WG_RULES[rule].type === 'reject'; });
@@ -1195,6 +1249,7 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
     html += '<tr class="' + rowCls + '">';
     html += '<td>' + r.day + '</td>';
     html += '<td>' + r.run + '</td>';
+    r.reps.forEach(function(v) { html += '<td class="num">' + fmt(v, 4) + '</td>'; });
     html += '<td class="num">' + fmt(stats.runMeans[ri], 4) + '</td>';
     html += '<td>' + badges + '</td>';
     html += '</tr>';
@@ -1204,7 +1259,7 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
 
   // Collapsible: Within-run Differences (m=2 only)
   if (stats.m === 2 && stats.diffs) {
-    html += '<div class="card" style="padding:10px 14px;">';
+    html += '<div class="card" data-acr="hide" style="padding:10px 14px;">';
     html += '<div class="coll-header" onclick="toggleColl(this)">';
     html += '<span class="coll-arrow">&#9654;</span>';
     html += '<span>Within-run Differences (Rep1 &#8722; Rep2)</span>';
@@ -1232,10 +1287,10 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   }
 
   // Summary box
-  html += '<div class="section-header">Summary</div>';
+  html += '<div data-acr="hide"><div class="section-header">Summary</div>';
   html += '<div class="summary-box">';
   html += summaryText(stats, cfg, wgVio, usingFixed, ctrlMu, ctrlS, hasAllowCV, pass);
-  html += '</div>';
+  html += '</div></div>'; // close summary-box, data-acr wrapper
 
   html += '</div>'; // close ep-collaps-lvl
   html += '</div>'; // main card
@@ -1818,7 +1873,7 @@ window.exportToExcel = function() {
     ['EP05/EP15 Precision Analysis'],
     ['Generated: ' + new Date().toLocaleString()],
     [],
-    ['Level', 'Label', 'Mean', 'Unit', 'Runs (n)', 'Reps', 'CVw % (Repeatability)', 'CVb % (Between-run)', 'CVt % (Reproducibility)', 'CVt 95% CI Lower', 'CVt 95% CI Upper', 'Allowable CV%', 'Verdict']
+    ['Level', 'Label', 'Mean', 'Unit', 'Runs (n)', 'Reps', 'CVw % (Repeatability)', 'CVb % (Between-run)', 'CVt % (Intermediate Precision)', 'CVt 95% CI Lower', 'CVt 95% CI Upper', 'Allowable CV%', 'Verdict']
   ];
 
   _levelsData.forEach(function(ld, idx) {
@@ -2028,27 +2083,11 @@ async function addEP05ToReport() {
     return;
   }
 
-  // Also collect stats and collapsibles panels (always included if they exist)
+  // Build report level by level to keep content grouped correctly
   var reportParts = [];
 
-  // For each level, grab stats panel
-  _levelsData.forEach(function(ld, lvl) {
-    var statsEl = document.getElementById('ep-stats-lvl-' + lvl);
-    if (statsEl) reportParts.push('<div class="level-block">' + statsEl.outerHTML + '</div>');
-  });
-
-  // Grab each expanded section, replacing canvas with image
-  sections.forEach(function(section) {
-    var clone = section.cloneNode(true);
-    // Remove toggle header — just show content
-    var hdr = clone.querySelector('.ep-rpt-hdr');
-    if (hdr) {
-      var titleEl = hdr.querySelector('.ep-rpt-hdr-left span:last-child');
-      var titleText = titleEl ? titleEl.textContent : '';
-      hdr.outerHTML = '<h3 style="font-size:13px;font-weight:700;color:#374151;margin:16px 0 8px;">' + titleText + '</h3>';
-    }
-    // Replace canvas elements with captured images
-    clone.querySelectorAll('canvas').forEach(function(canvas) {
+  function replaceCanvases(el) {
+    el.querySelectorAll('canvas').forEach(function(canvas) {
       var img = chartImages[canvas.id];
       if (img) {
         var imgEl = document.createElement('img');
@@ -2059,13 +2098,118 @@ async function addEP05ToReport() {
         canvas.parentNode.replaceChild(imgEl, canvas);
       }
     });
-    reportParts.push(clone.querySelector('.ep-rpt-body').innerHTML);
-  });
+  }
 
-  // Collapsibles that are open
+  function fmtR(v, d) { return isNaN(v) ? '—' : (+v).toFixed(d); }
+
   _levelsData.forEach(function(ld, lvl) {
-    var collEl = document.getElementById('ep-collaps-lvl-' + lvl);
-    if (collEl) reportParts.push(collEl.innerHTML);
+    // 1. Compact stats table (replaces large interactive KPI cards)
+    var s = ld.stats, c = ld.cfg;
+    var unit = c.unit || '';
+    var analyte = c.analyte || ('Level ' + (lvl + 1));
+    var title = _levelsData.length > 1 ? 'Level ' + (lvl + 1) + ' — ' + analyte : analyte;
+    var allowCV = parseFloat(c.allowableCV);
+    var pass = !isNaN(allowCV) && allowCV > 0 ? s.CVt <= allowCV : null;
+    var verdictStyle = pass === true ? 'color:#166534;font-weight:700;' : pass === false ? 'color:#991b1b;font-weight:700;' : '';
+    var verdictText = pass === true ? '✓ Within spec — CVt ' + fmtR(s.CVt,2) + '% ≤ ' + fmtR(allowCV,1) + '%'
+                    : pass === false ? '✗ Exceeds spec — CVt ' + fmtR(s.CVt,2) + '% > ' + fmtR(allowCV,1) + '%' : '';
+    var ciLo = document.querySelector('#ep-stats-lvl-' + lvl + ' .kpi') ? '' : '';
+    // Get CI from rendered element if available
+    var ciText = '';
+    try {
+      var ciEl = document.querySelector('#ep-stats-lvl-' + lvl);
+      var allKpis = ciEl ? ciEl.querySelectorAll('.kpi') : [];
+      allKpis.forEach(function(k) {
+        var sub = k.querySelector('.sub');
+        if (sub && sub.textContent.indexOf('95% CI') > -1 && sub.textContent.indexOf('CV') > -1) ciText = sub.textContent.trim();
+      });
+    } catch(e) {}
+
+    var statsBlock = '<div style="margin-bottom:16px;">'
+      + '<div style="font-size:13px;font-weight:800;color:#0f172a;border-bottom:2px solid #e2e8f0;padding-bottom:6px;margin-bottom:10px;">' + title + (unit ? ' <span style="font-weight:400;font-size:11px;color:#6b7280;">(' + unit + ')</span>' : '') + '</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;">'
+      + '<tbody>'
+      + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;width:45%;">Grand Mean</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + fmtR(s.grandMean,4) + (unit ? ' ' + unit : '') + '</td></tr>'
+      + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:600;">Sw — Within-run SD</td><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;">' + fmtR(s.Sw,4) + ' &nbsp;<span style="color:#6b7280;">CV ' + fmtR(s.CVw,2) + '%</span></td></tr>'
+      + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;">Sb — Between-run SD</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + fmtR(s.Sb,4) + ' &nbsp;<span style="color:#6b7280;">CV ' + fmtR(s.CVb,2) + '%</span></td></tr>'
+      + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:600;">St — Total IP SD</td><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;">' + fmtR(s.St,4) + ' &nbsp;<span style="color:#6b7280;">CV ' + fmtR(s.CVt,2) + '%' + (ciText ? ' · ' + ciText : '') + '</span></td></tr>'
+      + (!isNaN(allowCV) && allowCV > 0 ? '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;">Allowable CV%</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + fmtR(allowCV,1) + '%</td></tr>' : '')
+      + (verdictText ? '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:600;">Verdict</td><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;' + verdictStyle + '">' + verdictText + '</td></tr>' : '')
+      + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;">Study design</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + s.n + ' runs · ' + s.m + ' replicates/run · ' + (s.n * s.m) + ' total measurements</td></tr>'
+      + '</tbody></table>';
+
+    // Comparison bar (only when allowable CV is set)
+    if (!isNaN(allowCV) && allowCV > 0) {
+      var ratio = s.CVt / allowCV;
+      var pctUsed = Math.round(ratio * 100);
+      var barColor = pass ? '#16a34a' : '#dc2626';
+      statsBlock += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:8px;">'
+        + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Comparison — measured vs specification</div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#111827;margin-bottom:6px;">'
+        + '<span>CV<sub>t</sub> = ' + fmtR(s.CVt,2) + '%</span>'
+        + '<span style="font-weight:400;color:#6b7280;">Allowable = ' + fmtR(allowCV,1) + '%</span>'
+        + '</div>'
+        + '<div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:4px;">'
+        + '<div style="height:100%;width:' + Math.min(ratio,1)*100 + '%;background:' + barColor + ';border-radius:4px;"></div>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#6b7280;">' + pctUsed + '% of allowable limit used</div>'
+        + '</div>';
+    }
+
+    // Westgard result (text only)
+    var wgEl = document.querySelector('#ep-stats-lvl-' + lvl + ' .wg-panel');
+    if (wgEl) statsBlock += '<div style="font-size:11px;padding:6px 10px;border-radius:6px;background:#f0fdf4;border:1px solid #86efac;color:#166534;margin-bottom:8px;">' + wgEl.textContent.trim() + '</div>';
+
+    statsBlock += '</div>';
+    reportParts.push(statsBlock);
+
+    // 2. Expanded ep-rpt-sections belonging to this level's card
+    var cardEl = document.getElementById('ep-card-lvl-' + lvl);
+    if (cardEl) {
+      cardEl.querySelectorAll('.ep-rpt-section[data-open="true"]').forEach(function(section) {
+        var clone = section.cloneNode(true);
+        var hdr = clone.querySelector('.ep-rpt-hdr');
+        if (hdr) {
+          var titleEl = hdr.querySelector('.ep-rpt-hdr-left span:last-child');
+          var titleText = titleEl ? titleEl.textContent : '';
+          hdr.outerHTML = '<h3 style="font-size:13px;font-weight:700;color:#374151;margin:16px 0 8px;">' + titleText + '</h3>';
+        }
+        replaceCanvases(clone);
+        var body = clone.querySelector('.ep-rpt-body');
+        if (body) reportParts.push(body.innerHTML);
+      });
+    }
+
+    // 3. Run Means & Westgard table — built directly from data
+    var repHeaders = '';
+    for (var ri = 0; ri < s.m; ri++) repHeaders += '<th style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-size:11px;text-transform:uppercase;">Rep ' + (ri + 1) + '</th>';
+    var ctrlMu = (c.targetMean && !isNaN(parseFloat(c.targetMean))) ? parseFloat(c.targetMean) : s.grandMean;
+    var ctrlS  = (c.targetSD  && !isNaN(parseFloat(c.targetSD)))  ? parseFloat(c.targetSD)  : s.St;
+    var wgVios = checkWestgard(s.runMeans, ctrlMu, ctrlS);
+    var runRows = '';
+    s.completeRuns.forEach(function(r, ri) {
+      var wgVio = wgVios[ri] ? Array.from(wgVios[ri]) : [];
+      var wgText = wgVio.length ? wgVio.join(', ') : '—';
+      var rowBg = wgVio.length ? 'background:#fffbeb;' : '';
+      runRows += '<tr style="' + rowBg + '">'
+        + '<td style="padding:4px 8px;border:1px solid #e2e8f0;font-size:11px;">' + r.day + '</td>'
+        + '<td style="padding:4px 8px;border:1px solid #e2e8f0;font-size:11px;">' + r.run + '</td>';
+      r.reps.forEach(function(v) { runRows += '<td style="padding:4px 8px;border:1px solid #e2e8f0;font-size:11px;text-align:right;">' + fmtR(v, 4) + '</td>'; });
+      runRows += '<td style="padding:4px 8px;border:1px solid #e2e8f0;font-size:11px;text-align:right;font-weight:600;">' + fmtR(s.runMeans[ri], 4) + '</td>'
+        + '<td style="padding:4px 8px;border:1px solid #e2e8f0;font-size:11px;color:' + (wgVio.length ? '#b45309' : '#9ca3af') + ';">' + wgText + '</td>'
+        + '</tr>';
+    });
+    var runMeansBlock = '<div style="margin-bottom:12px;">'
+      + '<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Run Means &amp; Westgard' + ((_levelsData.length > 1) ? ' — Level ' + (lvl + 1) : '') + '</div>'
+      + '<table style="width:100%;border-collapse:collapse;">'
+      + '<thead><tr>'
+      + '<th style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-size:11px;text-transform:uppercase;">Day</th>'
+      + '<th style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-size:11px;text-transform:uppercase;">Run</th>'
+      + repHeaders
+      + '<th style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-size:11px;text-transform:uppercase;">Mean</th>'
+      + '<th style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-size:11px;text-transform:uppercase;">Westgard</th>'
+      + '</tr></thead><tbody>' + runRows + '</tbody></table></div>';
+    reportParts.push(runMeansBlock);
   });
 
   var analyte = (_levelsData[0] && _levelsData[0].cfg.analyte) || 'Precision Study';

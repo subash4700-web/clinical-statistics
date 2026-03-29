@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stability &amp; Time — Concepts &amp; Theory</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 12px 20px 80px; }
+
+    .font-toolbar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 6px; justify-content: flex-end; padding: 8px 0 10px; background: #f4f6f8; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .ft-label { font-size: 11px; color: #9ca3af; font-weight: 600; letter-spacing: .04em; margin-right: 2px; }
+    .ft-btn { padding: 3px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-weight: 700; color: #374151; font-family: inherit; transition: background .12s; }
+    .ft-btn:hover { background: #f3f4f6; }
+    .ft-size { font-size: 11px; color: #6b7280; min-width: 28px; text-align: center; }
+
+    h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.02em; }
+    .lead { color: #6b7280; font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+
+    .index { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 20px; margin-bottom: 36px; }
+    .index h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: #6b7280; font-weight: 800; }
+    .index ol { margin: 0; padding-left: 18px; }
+    .index li { margin: 5px 0; }
+    .index a { color: #4338ca; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .index a:hover { text-decoration: underline; }
+
+    .section { margin-bottom: 44px; scroll-margin-top: 16px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #4338ca; padding-left: 10px; }
+    .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
+    .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul, .section ol { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; padding-left: 20px; }
+    .section li { margin-bottom: 4px; }
+
+    .callout { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #312e81; margin: 14px 0; }
+    .callout b { color: #3730a3; }
+    .warn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #7c2d12; margin: 14px 0; }
+    .warn b { color: #9a3412; }
+    .good { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #14532d; margin: 14px 0; }
+    .good b { color: #166534; }
+    .info { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #1e3a8a; margin: 14px 0; }
+    .info b { color: #1d4ed8; }
+    .contrast-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin: 16px 0; }
+    .contrast-box .cb-row { display: grid; grid-template-columns: 1fr 1fr; }
+    .contrast-box .cb-header { display: grid; grid-template-columns: 1fr 1fr; }
+    .contrast-box .cb-col { padding: 14px 16px; font-size: 13px; line-height: 1.7; color: #374151; border-right: 1px solid #e5e7eb; }
+    .contrast-box .cb-col:last-child { border-right: none; }
+    .contrast-box .cb-col-h { padding: 10px 16px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; border-right: 1px solid #e5e7eb; }
+    .contrast-box .cb-col-h:last-child { border-right: none; }
+    .cb-h-ap { background: #0d9488; color: #fff; }
+    .cb-h-st { background: #4338ca; color: #fff; }
+    .contrast-box .cb-divider { border: none; border-top: 1px solid #f3f4f6; margin: 0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; border-radius: 10px; overflow: hidden; }
+    th { background: #4338ca; color: white; padding: 10px 13px; text-align: left; font-weight: 700; }
+    td { padding: 10px 13px; border-bottom: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .formula-box { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 14px 18px; font-size: 13px; font-family: monospace; line-height: 2; margin: 14px 0; }
+    .formula-box .f-label { color: #94a3b8; font-size: 11px; display: block; margin-bottom: -6px; }
+    .formula-box .f-correct { color: #86efac; }
+
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 40px 0; }
+    .back-top { display: inline-block; margin-top: 8px; font-size: 12px; color: #4338ca; text-decoration: none; font-weight: 600; }
+    .back-top:hover { text-decoration: underline; }
+
+    .tag { display: inline-block; border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+    .tag-purple { background: #ede9fe; color: #4c1d95; }
+    .tag-teal   { background: #ccfbf1; color: #134e4a; }
+    .tag-red    { background: #fee2e2; color: #b42318; }
+    .tag-amber  { background: #fef3c7; color: #92400e; }
+  </style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+<div class="font-toolbar">
+  <span class="ft-label">Text size</span>
+  <button class="ft-btn" onclick="changeFontSize(-1)" style="font-size:12px;">A−</button>
+  <span class="ft-size" id="ftSize"></span>
+  <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
+</div>
+
+  <h1>Stability &amp; Time — Concepts &amp; Theory</h1>
+  <p class="lead">A guide to stability testing for clinical laboratory scientists — what stability studies measure, why they are fundamentally different from analytical performance studies, and how to design, run, and interpret them according to CLSI EP25-A.</p>
+
+  <div class="index">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#distinction">The fundamental distinction — material vs method</a></li>
+      <li><a href="#what-is-stability">What is a stability study?</a></li>
+      <li><a href="#why-separate">Why stability is not part of analytical performance</a></li>
+      <li><a href="#design">Study design — CLSI EP25-A</a></li>
+      <li><a href="#analytical-noise">The role of analytical imprecision in stability studies</a></li>
+      <li><a href="#quant">Quantitative stability — % change from T0</a></li>
+      <li><a href="#qual">Qualitative stability — Kappa and McNemar over time</a></li>
+      <li><a href="#expiry">Functional expiry — definition and determination</a></li>
+      <li><a href="#criteria">Acceptance criteria</a></li>
+      <li><a href="#summary">Summary table</a></li>
+      <li><a href="#references">References</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="distinction">
+    <h2>1. The fundamental distinction — material vs method</h2>
+    <p>Analytical performance studies and stability studies look superficially similar — both involve repeated measurements of the same material. But they ask completely different questions, and the logic behind each is opposite.</p>
+
+    <div class="contrast-box">
+      <div class="cb-header">
+        <div class="cb-col-h cb-h-ap">Analytical Performance</div>
+        <div class="cb-col-h cb-h-st">Stability &amp; Time</div>
+      </div>
+      <div class="cb-row">
+        <div class="cb-col"><b>Question:</b><br>Is my <em>method</em> good enough?</div>
+        <div class="cb-col"><b>Question:</b><br>Is my <em>material</em> still the same?</div>
+      </div>
+      <hr class="cb-divider">
+      <div class="cb-row">
+        <div class="cb-col"><b>What is fixed:</b><br>The material — you use a stable QC control, CRM, or EQA sample that you assume does not change.</div>
+        <div class="cb-col"><b>What is fixed:</b><br>The method — you use the same analyser, same operator, same conditions. The method must be as stable as possible.</div>
+      </div>
+      <hr class="cb-divider">
+      <div class="cb-row">
+        <div class="cb-col"><b>What varies:</b><br>The method — repeated measurements reveal how much the method fluctuates (precision) or offsets (bias).</div>
+        <div class="cb-col"><b>What varies:</b><br>The material — aliquots are aged under defined conditions. Measurements reveal whether the material itself has changed.</div>
+      </div>
+      <hr class="cb-divider">
+      <div class="cb-row">
+        <div class="cb-col"><b>Key outputs:</b><br>CV%, SD, bias%, sigma metric — all describe method behaviour.</div>
+        <div class="cb-col"><b>Key outputs:</b><br>% change from baseline, Kappa over time, functional expiry — all describe material behaviour.</div>
+      </div>
+      <hr class="cb-divider">
+      <div class="cb-row">
+        <div class="cb-col"><b>Acceptance criterion:</b><br>Based on biological variation (CVi), clinical decision limits, or regulatory requirements for the method.</div>
+        <div class="cb-col"><b>Acceptance criterion:</b><br>Based on EP25-A recommendations (typically ±10%), clinical impact of a shift, or manufacturer specification for the material.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Core principle:</b> In analytical performance studies, the material is the control — you assume it is stable and study the method. In stability studies, the method is the control — you assume it is stable and study the material. Swap these assumptions and you will draw the wrong conclusion.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2 -->
+  <div class="section" id="what-is-stability">
+    <h2>2. What is a stability study?</h2>
+    <p>
+      A stability study (holdbarhedsforsøg) tests whether a <strong>reagent, calibrator, biological sample panel, or test kit</strong> maintains its intended performance over time under defined storage conditions.
+    </p>
+    <p>
+      You are not asking whether your method is precise or accurate. You are asking whether the <em>material</em> — the thing your method measures — is still behaving the same way it did when it was fresh. If it is not, the results produced by any method applied to that material will be wrong — not because the method is bad, but because the material has changed.
+    </p>
+    <h3>When do you need a stability study?</h3>
+    <ul>
+      <li>Verifying that stored patient samples remain stable long enough for repeat testing or add-on testing</li>
+      <li>Validating shelf-life claims for reagents or calibrators after opening, or under non-ideal storage conditions (e.g. 2–8°C vs −20°C)</li>
+      <li>Assessing stability of QC material or proficiency testing samples before use</li>
+      <li>Confirming that a biobank or sample panel is still suitable after long-term frozen storage</li>
+      <li>ISO 15189 and CAP accreditation documentation for sample handling procedures</li>
+    </ul>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3 -->
+  <div class="section" id="why-separate">
+    <h2>3. Why stability is not part of analytical performance</h2>
+    <p>
+      Precision, bias, total error, and sigma all describe properties of the <strong>measurement method</strong>. They assume that the material being measured is stable — that the true value does not change between replicates or between days. If the material is not stable, these metrics become meaningless or misleading.
+    </p>
+
+    <h3>You cannot apply sigma metrics to stability results</h3>
+    <p>
+      Sigma is calculated as: <em>Sigma = (TAE − |Bias%|) / CV%</em>. Every term in this formula describes the method. If you see 8% change at T6 in a stability study, that 8% is a <em>material signal</em> — it means the material changed 8%, not that your method has 8% bias. Calculating sigma on this number would be meaningless.
+    </p>
+
+    <h3>Stability change is not analytical error</h3>
+    <p>
+      If a reagent loses 12% reactivity over 6 months, the resulting 12% shift in patient results is not caused by the method — it is caused by the reagent. Improving the method's precision would not fix it. The only solution is to use fresh reagent. This is why stability failure and analytical error require completely different corrective actions.
+    </p>
+
+    <h3>The design is fundamentally different</h3>
+    <p>
+      Analytical performance studies use <em>one sample repeated many times</em> to study method variability.
+      Stability studies use <em>a panel of many samples measured at intervals over time</em> to study material change.
+      The panel design is deliberate — a single sample cannot distinguish material change from biological variation or analytical noise with enough statistical power.
+    </p>
+
+    <div class="warn">
+      <b>Common mistake:</b> Using precision CV% as the acceptance criterion for a stability study, or concluding that a method's precision is poor when the QC material itself has degraded. Always confirm material stability before interpreting precision results — a degraded QC gives an artificially poor CV% that will improve immediately when a fresh lot is opened.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4 -->
+  <div class="section" id="design">
+    <h2>4. Study design — CLSI EP25-A</h2>
+    <p>
+      CLSI EP25-A (<em>Stability Studies of Diagnostics Reagents</em>) is the guideline that defines how stability should be studied for in-vitro diagnostic reagents. The principles apply equally to patient sample stability verification.
+    </p>
+
+    <h3>Core design principles</h3>
+    <ul>
+      <li><b>Fixed panel of samples:</b> Select 10–20 samples for quantitative studies, 20–60 for qualitative studies, spanning the clinically relevant range. The <em>same</em> panel must be used at every time point.</li>
+      <li><b>T0 = fresh reference:</b> All samples are measured at baseline before any aging begins. T0 is the reference against which all later time points are compared. T0 must be measured under ideal, controlled conditions.</li>
+      <li><b>Paired design:</b> Each aged sample at T<sub>i</sub> is compared directly to the same sample at T0. This pairing cancels out between-sample biological variation and dramatically increases sensitivity to detect real material change.</li>
+      <li><b>Time points:</b> Pre-define based on the intended shelf-life. Common choices: T0, T1, T3, T6, T9, T12 months. For patient sample stability: T0, T4h, T8h, T24h, T48h, T7d depending on the expected storage period.</li>
+      <li><b>Pre-define all criteria:</b> The acceptance criterion and the decision rule must be documented in the study protocol before collecting data. Changing them after seeing results invalidates the study.</li>
+      <li><b>Same method throughout:</b> Use the same analyser, same reagent lot, same calibration, same operator. Any change in the method introduces a confound — you will not know whether a result change is due to material aging or method change.</li>
+    </ul>
+
+    <div class="good">
+      <b>Paired design advantage:</b> Patient samples naturally vary in concentration. If sample A has glucose 5.2 mmol/L and sample B has 14.7 mmol/L, comparing them directly tells you nothing about stability. But comparing each sample to its own T0 value cancels this out completely — a 3% change in sample A and a 3% change in sample B both mean the same thing: 3% material change.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 5 -->
+  <div class="section" id="analytical-noise">
+    <h2>5. The role of analytical imprecision in stability studies</h2>
+    <p>
+      Even with a perfectly stable material, your measurements at T6 will not be identical to T0 — because the method itself has imprecision (CV%). This is the background noise on top of which you are trying to detect a real material signal.
+    </p>
+    <p>
+      This is why a single sample is not enough. If your method has CV% = 4% and you measure one sample at T0 and T6, a difference of 4% could easily be pure measurement noise — you cannot tell. But if you measure a panel of 20 samples and every single one is 4% lower at T6, that pattern is very unlikely to be random noise. The paired t-test formalises this logic.
+    </p>
+
+    <h3>Analytical imprecision and study power</h3>
+    <p>
+      Higher analytical CV% means you need either more samples or a larger material change before you can reliably detect it. The relationship is:
+    </p>
+    <ul>
+      <li>Low CV% (tight method) → can detect small material changes with a small sample panel</li>
+      <li>High CV% (noisy method) → need more samples to achieve the same detection power</li>
+    </ul>
+    <p>
+      This is why CLSI EP25-A recommends 10–20 samples for quantitative stability — it provides enough statistical power to detect clinically meaningful changes even with typical laboratory CV% values of 3–8%.
+    </p>
+
+    <div class="info">
+      <b>Key insight:</b> The analytical CV% in a stability study is not something you are evaluating — it is a nuisance parameter you are accounting for. If your method is imprecise, it makes the stability study harder to interpret, not invalid. A method with poor precision is a separate problem to solve with a precision study.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 6 -->
+  <div class="section" id="quant">
+    <h2>6. Quantitative stability — % change from T0</h2>
+    <p>
+      For analytes that produce a measured value (glucose, HbA1c, troponin, etc.), material change is tracked as the <strong>% change from the T0 baseline</strong> for each sample.
+    </p>
+
+    <div class="formula-box">
+      <span class="f-label">% change for sample j at time point T<sub>i</sub>:</span>
+      % change<sub>ij</sub> = (T<sub>i,j</sub> − T0<sub>j</sub>) / T0<sub>j</sub> × 100
+    </div>
+
+    <h3>Analysis at each time point</h3>
+    <ul>
+      <li>Calculate the <b>mean % change</b> across all samples in the panel</li>
+      <li>Calculate the <b>95% CI</b> of the mean % change using a one-sample paired t-test (testing whether the mean differs significantly from 0)</li>
+      <li>A time point <b>passes</b> if the mean % change is within the acceptance criterion (e.g. ±10%)</li>
+      <li>The <b>functional expiry</b> is the last time point that passes</li>
+    </ul>
+
+    <h3>Drift direction</h3>
+    <table>
+      <tr><th>Drift direction</th><th>What it means</th><th>Typical cause</th></tr>
+      <tr><td><b>Negative (reading lower)</b></td><td>Loss of reactivity — the material measures less than it should</td><td>Antibody degradation, enzyme denaturation, analyte breakdown, pH shift</td></tr>
+      <tr><td><b>Positive (reading higher)</b></td><td>Overcall / false elevation — the material triggers a higher signal than it should</td><td>Degradation products cross-reacting with the assay, contamination</td></tr>
+    </table>
+
+    <h3>Trend analysis — drift rate</h3>
+    <p>
+      Regressing mean % change against time (months) gives a <strong>drift rate</strong> (% per month). A statistically significant slope confirms progressive degradation. The regression line can be extrapolated to estimate when the material would cross the acceptance limit — but extrapolation beyond measured time points is indicative only.
+    </p>
+
+    <div class="callout">
+      <b>Important:</b> The paired t-test p-value tells you whether the mean change is statistically distinguishable from zero. But statistical significance alone is not the acceptance criterion — the <em>magnitude</em> of the change (mean % change vs your pre-defined limit) is what determines pass or fail. A large panel can detect a 1% change with p &lt; 0.05, even if 1% is clinically irrelevant.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 7 -->
+  <div class="section" id="qual">
+    <h2>7. Qualitative stability — Kappa and McNemar over time</h2>
+    <p>
+      For pos/neg methods (blood group typing, infectious disease screening, rapid antigen tests, etc.), there is no continuous measured value to track. Instead, stability is assessed by comparing classifications at each time point to the T0 reference using two complementary statistics.
+    </p>
+
+    <h3>Cohen's Kappa (κ) — overall agreement</h3>
+    <p>
+      At each time point T<sub>i</sub>, a 2×2 table is constructed: T0 result (rows) vs T<sub>i</sub> result (columns). Kappa measures the proportion of agreement beyond what would be expected by chance alone.
+    </p>
+    <ul>
+      <li>κ = 1.0 → perfect agreement (identical classification at T<sub>i</sub> and T0)</li>
+      <li>κ ≥ 0.80 → strong agreement; common stability pass threshold</li>
+      <li>κ &lt; 0.80 → degraded agreement; material is classifying differently from fresh</li>
+      <li>Declining κ over time = material is becoming inconsistent</li>
+    </ul>
+
+    <h3>McNemar's test — systematic tilt</h3>
+    <p>
+      Kappa measures overall agreement but does not tell you the <em>direction</em> of disagreement. McNemar's test asks whether discordant results are symmetrical (random) or skewed in one direction (systematic).
+    </p>
+    <ul>
+      <li><b>McNemar p ≥ 0.05</b> → discordant results are balanced; no systematic tilt</li>
+      <li><b>McNemar p &lt; 0.05 with b &gt; c</b> → aged material calling fewer positives than T0 = loss of sensitivity (dangerous in screening)</li>
+      <li><b>McNemar p &lt; 0.05 with c &gt; b</b> → aged material calling more positives than T0 = false elevation (overcall)</li>
+    </ul>
+
+    <div class="warn">
+      <b>Clinical relevance of tilt direction:</b> For an infectious disease screening test, a loss of sensitivity (b &gt; c) means truly positive samples are being called negative by the aged reagent. This is the most clinically dangerous failure mode. Kappa alone can miss early systematic tilt if the overall agreement is still high — always use both tests together.
+    </div>
+
+    <h3>Pass criterion</h3>
+    <p>A time point passes when <em>both</em> conditions are met:</p>
+    <ul>
+      <li>κ ≥ minimum acceptable Kappa (pre-defined; commonly 0.80)</li>
+      <li>McNemar p ≥ 0.05 (no systematic tilt)</li>
+    </ul>
+    <p>The functional expiry is the last time point meeting both criteria.</p>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 8 -->
+  <div class="section" id="expiry">
+    <h2>8. Functional expiry — definition and determination</h2>
+    <p>
+      The <strong>functional expiry</strong> is the last time point at which the material still meets all acceptance criteria. It is the operationally safe storage period under the tested conditions.
+    </p>
+    <ul>
+      <li>If T0, T1, T3 pass and T6 fails → functional expiry = T3 months</li>
+      <li>If all tested time points pass → functional expiry is at least the last tested time point (you have not yet found the limit)</li>
+      <li>If T0 itself fails → the study is invalid; investigate the T0 measurement or the material preparation before proceeding</li>
+    </ul>
+
+    <h3>Functional expiry is not the same as the labelled shelf-life</h3>
+    <p>
+      The manufacturer's labelled expiry is based on their testing under their specified storage conditions. Your functional expiry verifies that the material is still acceptable under <em>your</em> storage conditions. If your freezer runs at −15°C instead of −20°C, or if samples have undergone repeated freeze-thaw cycles, your functional expiry may be shorter than the label.
+    </p>
+
+    <div class="callout">
+      <b>Document the conditions:</b> Functional expiry is only valid for the exact storage conditions tested. If you test stability at 2–8°C, the result does not apply to room temperature storage. Record temperature, light exposure, container type, and number of freeze-thaw cycles in the study protocol.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 9 -->
+  <div class="section" id="criteria">
+    <h2>9. Acceptance criteria</h2>
+    <p>The acceptance criterion must be defined <strong>before</strong> data collection begins. It should be clinically motivated — the largest change that would not affect clinical decisions or cause the material to fail its intended purpose.</p>
+
+    <table>
+      <tr><th>Source</th><th>Criterion</th><th>When to use</th></tr>
+      <tr><td><b>CLSI EP25-A general recommendation</b></td><td>±10% mean % change from T0</td><td>Default for most quantitative analytes if no analyte-specific data exists</td></tr>
+      <tr><td><b>Biological variation (desirable bias, EFLM)</b></td><td>≤ 0.25 × √(CV<sub>I</sub>² + CV<sub>G</sub>²)</td><td>Analyte-specific; more stringent than ±10% for high-precision analytes</td></tr>
+      <tr><td><b>Clinical decision limit</b></td><td>Shift must not move results across a clinical decision threshold</td><td>When the analyte has a critical cut-off (e.g. troponin 99th percentile, HbA1c 48 mmol/mol)</td></tr>
+      <tr><td><b>Manufacturer specification</b></td><td>As stated in the IFU / package insert</td><td>Minimum — acceptable only if the manufacturer's criterion is at least as stringent as your clinical requirement</td></tr>
+      <tr><td><b>Qualitative — Kappa threshold</b></td><td>κ ≥ 0.80 + McNemar p ≥ 0.05</td><td>Standard qualitative stability pass criterion</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>Do not change criteria after seeing data.</b> If you define ±10% before the study and T6 gives 11%, the study fails at T6. Retrospectively loosening the criterion to ±12% is scientifically invalid and conflicts with ISO 15189 and EP25-A documentation requirements. Define criteria based on clinical need, not on convenience after seeing results.
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 -->
+  <div class="section" id="summary">
+    <h2>10. Summary table</h2>
+    <table>
+      <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
+      <tr><td><b>Quantitative stability</b></td><td>Whether a material's measured value changes from baseline over time</td><td>Mean % change from T0 · 95% CI · drift rate · functional expiry</td><td>Quantitative Stability Study</td></tr>
+      <tr><td><b>Qualitative stability</b></td><td>Whether a material's pos/neg classification agrees with the fresh T0 reference over time</td><td>Kappa over time · McNemar p-value · functional expiry</td><td>Qualitative Stability Study</td></tr>
+      <tr><td><b>T0 reference</b></td><td>Baseline measurement of the fresh material — the reference all later time points are compared against</td><td>Mean ± SD (quant) or classification (qual)</td><td>Both</td></tr>
+      <tr><td><b>Functional expiry</b></td><td>The last time point at which the material still meets the acceptance criterion</td><td>Months or days under tested storage conditions</td><td>Both</td></tr>
+      <tr><td><b>Drift rate</b></td><td>Rate of progressive material change over time (quantitative)</td><td>% change per month (from regression slope)</td><td>Quantitative Stability Study</td></tr>
+      <tr><td><b>Kappa (κ)</b></td><td>Overall pos/neg agreement between aged material and T0, corrected for chance</td><td>κ (0–1) · 95% CI</td><td>Qualitative Stability Study</td></tr>
+      <tr><td><b>McNemar's test</b></td><td>Systematic directional tilt — whether aged material systematically misses positives or generates false positives</td><td>p-value · b vs c cell direction</td><td>Qualitative Stability Study</td></tr>
+    </table>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 11 -->
+  <div class="section" id="references">
+    <h2>11. References</h2>
+    <ul>
+      <li>CLSI EP25-A. <em>Stability Studies of Diagnostics Reagents.</em> Clinical and Laboratory Standards Institute, 2009.</li>
+      <li>CLSI EP05-A3. <em>Evaluation of Precision of Quantitative Measurement Procedures.</em> Clinical and Laboratory Standards Institute, 2014.</li>
+      <li>ISO 15189:2022. <em>Medical laboratories — Requirements for quality and competence.</em></li>
+      <li>Jennings ER. <em>Relative specimen stability.</em> J Clin Lab Analysis, 1987.</li>
+      <li>EFLM Biological Variation Database. Available at: biologicalvariation.eu</li>
+    </ul>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+</div>
+
+<script>
+  var BASE_SIZE = 14;
+  var currentSize = BASE_SIZE;
+  document.getElementById('ftSize').textContent = BASE_SIZE + 'px';
+
+  function changeFontSize(delta) {
+    currentSize = Math.min(20, Math.max(11, currentSize + delta));
+    document.getElementById('wrap').style.fontSize = currentSize + 'px';
+    document.getElementById('ftSize').textContent = currentSize + 'px';
+  }
+</script>
+</body>
+</html>

@@ -264,6 +264,12 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
+      </div>
+    </div>
     <div id="results-area">
 
       <!-- Section 1: Sigma Metric & Results -->
@@ -386,6 +392,7 @@
                 <div class="sig-value" id="sigValue">—</div>
                 <div class="sig-label">Sigma metric</div>
                 <div class="sig-level" id="sigLevel">—</div>
+                <div class="sig-verdict" id="sigVerdict" style="font-size:12px;font-weight:700;margin-top:4px;opacity:.85;">—</div>
               </div>
             </div>
             <div id="level2-sigma-col" style="flex:1;min-width:0;display:none;">
@@ -394,6 +401,7 @@
                 <div class="sig-value" id="sigValue2">—</div>
                 <div class="sig-label">Sigma metric</div>
                 <div class="sig-level" id="sigLevel2">—</div>
+                <div class="sig-verdict" id="sigVerdict2" style="font-size:12px;font-weight:700;margin-top:4px;opacity:.85;">—</div>
               </div>
             </div>
           </div>
@@ -415,7 +423,7 @@
               <div class="ss" id="stat-verdict-sub">—</div>
             </div>
           </div>
-          <div id="insight-box" class="insight-box insight-blue" style="margin-top:8px;"></div>
+          <div id="insight-box" class="insight-box insight-blue" data-acr="hide" style="margin-top:8px;"></div>
           <p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>
         </div>
       </div>
@@ -489,6 +497,27 @@
 <script>
 var distChart = null, budgetChart = null;
 
+// ── Accreditation view toggle ──────────────────────────────
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'accreditation';
+  document.querySelectorAll('.view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  document.querySelectorAll('.rpt-section[data-acr="hide"]').forEach(function(sec) {
+    var body = sec.querySelector('.rpt-sec-body');
+    var badge = sec.querySelector('.rpt-sec-badge');
+    var arrow = sec.querySelector('.rpt-sec-arrow');
+    sec.setAttribute('data-open', _acrMode ? 'false' : 'true');
+    if (body) body.style.display = _acrMode ? 'none' : '';
+    if (badge) { badge.textContent = _acrMode ? 'Excluded' : 'In report'; badge.className = 'rpt-sec-badge ' + (_acrMode ? 'rpt-badge-ex' : 'rpt-badge-in'); }
+    if (arrow) arrow.textContent = _acrMode ? '▶' : '▼';
+  });
+  document.querySelectorAll('[data-acr="hide"]:not(.rpt-section)').forEach(function(el) {
+    el.style.display = _acrMode ? 'none' : '';
+  });
+}
+
 function fmt(v, d) {
   if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return '—';
   return Number(v).toFixed(d === undefined ? 2 : d);
@@ -517,6 +546,12 @@ function getSigmaLevel(sigma) {
   if (sigma >= 4) return 'Sigma 4–6';
   if (sigma >= 3) return 'Sigma 3–4';
   return 'Sigma < 3';
+}
+function getSigmaVerdict(sigma) {
+  if (sigma >= 6) return 'World Class';
+  if (sigma >= 4) return 'Acceptable';
+  if (sigma >= 3) return 'Marginal — tight QC required';
+  return 'Unacceptable — review method';
 }
 
 function showError(msg) {
@@ -621,10 +656,13 @@ function calculate() {
   // Show results panel, switch tab
   document.getElementById('export-row').style.display = 'flex';
   document.getElementById('tae-add-report-btn').style.display = 'block';
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  setAcrView('full');
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
   document.querySelector('[data-tab="tab-results"]').classList.add('active');
   document.getElementById('tab-results').classList.add('active');
+  window.scrollTo(0, 0);
 
   // ── Analyte header + spec row ──
   var analyteEl = document.getElementById('inp-analyte');
@@ -725,11 +763,13 @@ function calculate() {
   badge.className = 'sigma-badge ' + getSigmaClass(sigma1);
   document.getElementById('sigValue').textContent = fmt(sigma1, 2);
   document.getElementById('sigLevel').textContent = getSigmaLevel(sigma1);
+  document.getElementById('sigVerdict').textContent = getSigmaVerdict(sigma1);
 
   if (isMultiLevel) {
     document.getElementById('sigmaBadge2').className = 'sigma-badge ' + getSigmaClass(sigma2);
     document.getElementById('sigValue2').textContent = fmt(sigma2, 2);
     document.getElementById('sigLevel2').textContent = getSigmaLevel(sigma2);
+    document.getElementById('sigVerdict2').textContent = getSigmaVerdict(sigma2);
   }
 
   // ── Stats (Level 1) ──
@@ -781,7 +821,9 @@ function calculate() {
     biasPct: absBias, cvPct, cvPct2: isMultiLevel ? cvPct2 : null, taePct,
     te1, sigma1, passes1, pctOut1,
     te2: isMultiLevel ? te2 : null, sigma2: isMultiLevel ? sigma2 : null,
-    passes2: isMultiLevel ? passes2 : null, isMultiLevel
+    passes2: isMultiLevel ? passes2 : null, isMultiLevel,
+    biasMaxPct: hasBiasMax ? biasMaxPct : null,
+    biasPass: hasBiasMax ? biasPass : null
   };
 }
 
@@ -1017,12 +1059,10 @@ function exportExcel() {
       details += `<strong>CV% Level 1 = ${precL1.cv}%</strong>`;
       if (hasL2) details += ` · <strong>Level 2 = ${prec.levels[1].cv}%</strong>`;
       details += ` from Precision (${prec.type || 'EP05'})${precL1.analyte ? ' · ' + precL1.analyte : ''}`;
-      if (precL1.tae) details += ` · <strong>TAE = ${precL1.tae}%</strong>`;
       details += '<br>';
     }
     if (bias) {
       details += `<strong>Measured Bias% = ${bias.bias}%</strong> from ${bias.source === 'method_comparison' ? 'Method Comparison' : 'Bias study'}${bias.analyte ? ' · ' + bias.analyte : ''}`;
-      if (bias.tae && !(precL1 && precL1.tae)) details += ` · <strong>TAE = ${bias.tae}%</strong>`;
     }
 
     document.getElementById('wf-import-details').innerHTML = details;
@@ -1208,13 +1248,42 @@ function addTAEToReport() {
   var html = '';
 
   if (_isOpen('rpt-sec-results')) {
-    var sigRow    = document.getElementById('sigma-row');
-    var statGrid  = document.querySelector('#rpt-sec-results .stat-grid-3');
-    var insightEl = document.getElementById('insight-box');
-    html += _sec('Sigma Metric & Results',
-      (sigRow   ? sigRow.outerHTML   : '') +
-      (statGrid ? statGrid.outerHTML : '') +
-      (insightEl && insightEl.textContent.trim() ? insightEl.outerHTML : ''));
+    var r = window._taeResult;
+    if (r) {
+      var td = 'style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;"';
+      var tdh = 'style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:600;background:#f8fafc;width:40%;"';
+      var sigmaLabel = function(s) { return s >= 6 ? 'Sigma ≥ 6' : s >= 4 ? 'Sigma 4–6' : s >= 3 ? 'Sigma 3–4' : 'Sigma < 3'; };
+      var sigmaVerdict = function(s) { return s >= 6 ? 'World Class' : s >= 4 ? 'Acceptable' : s >= 3 ? 'Marginal — tight QC required' : 'Unacceptable — review method'; };
+      var sigmaColor = function(s) { return s >= 6 ? '#166534' : s >= 4 ? '#92400e' : s >= 3 ? '#1e40af' : '#991b1b'; };
+      var verdictColor = r.passes1 ? '#166534' : '#991b1b';
+      var rows = '<table style="width:100%;border-collapse:collapse;margin-bottom:8px;">'
+        + '<thead><tr>'
+        + '<th ' + tdh + '>Parameter</th>'
+        + (r.isMultiLevel ? '<th ' + tdh + '>Level 1</th><th ' + tdh + '>Level 2</th>' : '<th ' + tdh + '>Value</th>')
+        + '</tr></thead><tbody>'
+        + '<tr><td ' + tdh + '>Sigma metric</td>'
+        + '<td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + sigmaColor(r.sigma1) + ';">' + (+r.sigma1).toFixed(2) + ' — ' + sigmaLabel(r.sigma1) + '</td>'
+        + (r.isMultiLevel ? '<td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + sigmaColor(r.sigma2) + ';">' + (+r.sigma2).toFixed(2) + ' — ' + sigmaLabel(r.sigma2) + '</td>' : '')
+        + '</tr>'
+        + '<tr><td ' + tdh + '>Sigma verdict</td>'
+        + '<td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + sigmaColor(r.sigma1) + ';">' + sigmaVerdict(r.sigma1) + '</td>'
+        + (r.isMultiLevel ? '<td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + sigmaColor(r.sigma2) + ';">' + sigmaVerdict(r.sigma2) + '</td>' : '')
+        + '</tr>'
+        + '<tr><td ' + tdh + '>|Bias%|</td><td ' + td + ' colspan="' + (r.isMultiLevel ? 2 : 1) + '">' + (+r.biasPct).toFixed(2) + '%</td></tr>'
+        + '<tr><td ' + tdh + '>CV%</td>'
+        + '<td ' + td + '>' + (+r.cvPct).toFixed(2) + '%</td>'
+        + (r.isMultiLevel ? '<td ' + td + '>' + (+r.cvPct2).toFixed(2) + '%</td>' : '')
+        + '</tr>'
+        + '<tr><td ' + tdh + '>Total Error (TE)</td>'
+        + '<td ' + td + '>' + (+r.te1).toFixed(2) + '%</td>'
+        + (r.isMultiLevel ? '<td ' + td + '>' + (+r.te2).toFixed(2) + '%</td>' : '')
+        + '</tr>'
+        + '<tr><td ' + tdh + '>TAE specification</td><td ' + td + ' colspan="' + (r.isMultiLevel ? 2 : 1) + '">±' + (+r.taePct).toFixed(2) + '%</td></tr>'
+        + '<tr><td ' + tdh + '>TE verdict</td><td ' + td + ' colspan="' + (r.isMultiLevel ? 2 : 1) + '" style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + verdictColor + ';">' + (r.passes1 ? '✓ TE meets TAE specification' : '✗ TE exceeds TAE specification') + '</td></tr>'
+        + (r.biasMaxPct !== null ? '<tr><td ' + tdh + '>Bias verdict</td><td ' + td + ' colspan="' + (r.isMultiLevel ? 2 : 1) + '" style="padding:5px 10px;border:1px solid #e2e8f0;font-size:12px;font-weight:700;color:' + (r.biasPass ? '#166534' : '#991b1b') + ';">' + (r.biasPass ? '✓ Bias within specification (' + (+r.biasPct).toFixed(2) + '% ≤ ±' + (+r.biasMaxPct).toFixed(2) + '%)' : '✗ Bias exceeds specification (' + (+r.biasPct).toFixed(2) + '% > ±' + (+r.biasMaxPct).toFixed(2) + '%)') + '</td></tr>' : '')
+        + '</tbody></table>';
+      html += _sec('Sigma Metric & Results', rows);
+    }
   }
 
   if (_isOpen('rpt-sec-formula')) {
@@ -1226,7 +1295,7 @@ function addTAEToReport() {
 
   if (_isOpen('rpt-sec-qc')) {
     var qcEl = document.getElementById('qc-box');
-    if (qcEl) html += _sec('QC Strategy', qcEl.outerHTML);
+    if (qcEl) html += _sec('QC Strategy', '<div style="font-size:12px;line-height:1.6;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">' + qcEl.innerHTML + '</div>');
   }
 
   if (_isOpen('rpt-sec-dist')) {

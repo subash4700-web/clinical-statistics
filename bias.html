@@ -228,6 +228,12 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
+      </div>
+    </div>
     <div id="results-body"></div>
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
@@ -371,9 +377,9 @@ function parsePairs(raw){
 }
 
 // ── Report sections ──
-function rptSection(title, contentHtml, open) {
+function rptSection(title, contentHtml, open, acrHide) {
   var o = open !== false;
-  return '<div class="rpt-section" data-open="' + o + '">'
+  return '<div class="rpt-section" data-open="' + o + '"' + (acrHide ? ' data-acr="hide"' : '') + '>'
     + '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
     + '<span class="rpt-sec-title">' + title + '</span>'
     + '<div style="display:flex;align-items:center;gap:6px;">'
@@ -382,6 +388,30 @@ function rptSection(title, contentHtml, open) {
     + '</div></div>'
     + '<div class="rpt-sec-body" style="display:' + (o ? 'block' : 'none') + ';">' + contentHtml + '</div>'
     + '</div>';
+}
+
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'accreditation';
+  document.querySelectorAll('#acr-toggle-bar .view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  document.querySelectorAll('#results-body .rpt-section[data-acr="hide"]').forEach(function(sec) {
+    var body = sec.querySelector('.rpt-sec-body');
+    var badge = sec.querySelector('.rpt-sec-badge');
+    var arrow = sec.querySelector('.rpt-sec-arrow');
+    if (_acrMode) {
+      sec.dataset.open = 'false';
+      if (body) body.style.display = 'none';
+      if (badge) { badge.textContent = 'Excluded'; badge.className = 'rpt-sec-badge rpt-badge-ex'; }
+      if (arrow) arrow.textContent = '▶';
+    } else {
+      sec.dataset.open = 'true';
+      if (body) body.style.display = 'block';
+      if (badge) { badge.textContent = 'In report'; badge.className = 'rpt-sec-badge rpt-badge-in'; }
+      if (arrow) arrow.textContent = '▼';
+    }
+  });
 }
 function toggleRptSection(hdr) {
   var sec = hdr.parentElement;
@@ -568,7 +598,7 @@ function _doCalculateBias(pairs){
 
   // ── Section 2: Distribution chart ──
   html += rptSection('Distribution of Results vs Reference',
-    '<div class="card" style="padding:12px;"><canvas id="dist-chart" style="height:220px;"></canvas></div>', true);
+    '<div class="card" style="padding:12px;"><canvas id="dist-chart" style="height:220px;"></canvas></div>', true, true);
 
   // ── Section 3: Individual bias chart ──
   html += rptSection('Individual % Bias per Sample',
@@ -631,6 +661,8 @@ function _doCalculateBias(pairs){
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
   html+=`<button id="bias-add-report-btn" onclick="addBiasToReport()" class="btn-report">+ Add to Report</button>`;
 
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  setAcrView('full');
   document.getElementById('results-body').innerHTML=html;
 
   // Draw chart
@@ -801,6 +833,7 @@ function _doCalculateBias(pairs){
 
   window._lastResult={analyte,unit,n,meanBias,sdBias,ciLo,ciHi,t,df,pVal,sig,allowable,pass,biases,nExcl};
   document.querySelector('[data-tab="tab-results"]').click();
+  window.scrollTo(0, 0);
 }
 
 function kpiGrid(items){

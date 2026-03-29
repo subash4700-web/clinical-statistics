@@ -288,6 +288,12 @@
 
   <!-- RESULTS TAB -->
   <div id="tab-results" class="tab-content">
+    <div id="acr-toggle-bar" class="view-toggle-bar" style="display:none;">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" onclick="setAcrView('full')">Full view</button>
+        <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
+      </div>
+    </div>
     <div class="rpt-section" data-open="true" data-sec-id="precision-results">
       <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
         <span class="rpt-sec-title">Precision Results</span>
@@ -589,6 +595,17 @@ function _wfNextCard(step, nextTool, savedMsg, page, title) {
   </div>`;
 }
 
+var _acrMode = false;
+function setAcrView(mode) {
+  _acrMode = mode === 'accreditation';
+  document.querySelectorAll('#acr-toggle-bar .view-toggle-btn').forEach(function(btn, i) {
+    btn.classList.toggle('active', _acrMode ? i === 1 : i === 0);
+  });
+  document.querySelectorAll('#results-body [data-acr="hide"]').forEach(function(el) {
+    el.style.display = _acrMode ? 'none' : '';
+  });
+}
+
 function calculate(){
   showError('');
   destroyCharts();
@@ -602,6 +619,8 @@ function calculate(){
   const allowable= parseFloat(document.getElementById('inp-allowable').value);
   _lastMeta = {analyte,unit,allowable};
   _lastCalcType = type;
+  document.getElementById('acr-toggle-bar').style.display = 'flex';
+  setAcrView('full');
   if(type==='repeatability'){
     _baseVals = parseRepeatability(raw);
     renderRepeatability();
@@ -610,6 +629,7 @@ function calculate(){
     renderIntermediate();
   }
   document.querySelector('[data-tab="tab-results"]').click();
+  window.scrollTo(0, 0);
 }
 
 function rerunCalc(){
@@ -974,11 +994,11 @@ function renderIntermediate(){
   ]);
 
   // Variance components
-  html+=`<div class="section-header">Variance Components</div>`;
+  html+=`<div data-acr="hide"><div class="section-header">Variance Components</div>`;
   html+=`<div class="card"><div class="var-bar-wrap">`;
   html+=varBar('Within-run (Sw²)',Sw2,St2,'#1976d2');
   html+=varBar('Between-run (Sb²)',Sb2,St2,'#7c3aed');
-  html+=`</div></div>`;
+  html+=`</div></div></div>`;
 
   // Westgard on group means
   html+=`<div class="section-header">Westgard Rule Check — Group Means</div>`;
@@ -1023,6 +1043,7 @@ function renderIntermediate(){
   html+=`<div class="section-header">Group Means with Total SD Limits</div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="ip-chart"></canvas></div>`;
 
+  html+=`<div data-acr="hide">`;
   html+=`<div class="section-header" style="display:flex;justify-content:space-between;align-items:center;">
     Measurements by Group
     <label style="font-size:12px;font-weight:400;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -1034,6 +1055,7 @@ function renderIntermediate(){
     </label>
   </div>`;
   html+=`<div class="card" style="padding:12px;"><canvas id="ip-dot-chart" style="height:280px;"></canvas></div>`;
+  html+=`</div>`;
 
   html+=`<div class="section-header">Repeatability vs Intermediate Precision</div>`;
   html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">

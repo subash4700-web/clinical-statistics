@@ -104,7 +104,7 @@
       <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
       <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
       <li><a href="#sigma">The Sigma metric</a></li>
-      <li><a href="#ep05">EP05 — Precision validation protocol</a></li>
+      <li><a href="#ep05">EP05 — Precision study protocol</a></li>
       <li><a href="#ep15">EP15 — Precision verification protocol</a></li>
       <li><a href="#ep09">EP09 — Method comparison and bias estimation</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
@@ -583,7 +583,7 @@
 
   <!-- 15 -->
   <div class="section" id="ep05">
-    <h2>15. EP05 — Precision Validation Protocol (CLSI EP05-A3)</h2>
+    <h2>15. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
     <p>
       CLSI EP05 defines the standard protocol for evaluating the precision of a quantitative measurement procedure.
       Its purpose is to estimate <strong>repeatability (Sw)</strong> and <strong>intermediate precision (St)</strong>
@@ -853,6 +853,16 @@
   <!-- 21 -->
   <div class="section" id="stability">
     <h2>21. Stability Studies — CLSI EP25-A</h2>
+
+    <div class="warn">
+      <b>Stability testing is conceptually separate from analytical performance.</b>
+      All other sections in this document evaluate the <em>method</em> — assuming the material is stable.
+      Stability testing evaluates the <em>material</em> — assuming the method is stable.
+      A stability result (e.g. 8% change at T6) is a material signal, not an analytical error.
+      You cannot apply sigma metrics or compare stability % change against your TAE.
+      See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
+    </div>
+
     <p>
       A stability study (holdbarhedsforsøg) evaluates whether a reagent, test kit, or biological material
       maintains its intended performance over time under defined storage conditions.
@@ -930,7 +940,7 @@
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
-      <tr><td><b>Intermediate precision</b></td><td>Within-lab variation across days</td><td>St = √(Sw²+Sb²), CVt%</td><td>EP05/EP15 — Validation</td></tr>
+      <tr><td><b>Intermediate precision</b></td><td>Within-lab variation across days</td><td>St = √(Sw²+Sb²), CVt%</td><td>Precision (EP05/EP15)</td></tr>
       <tr><td><b>Reproducibility</b></td><td>Between-laboratory variation</td><td>SD, CV%</td><td>External scheme / EQAS</td></tr>
       <tr><td><b>Bias</b></td><td>Systematic error vs true value</td><td>Absolute, %</td><td>Bias — CRM / EQA</td></tr>
       <tr><td><b>Total Error (TE)</b></td><td>Bias + random error combined</td><td>TE = |Bias| + 1.65 × SD</td><td>—</td></tr>
@@ -965,7 +975,7 @@
           <p style="margin:0 0 6px 0;">Run your method repeatedly under controlled conditions to quantify random error. Use <strong>intermediate precision</strong> (day-to-day) rather than repeatability for a realistic CV%.</p>
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
             <li><strong>Quick study</strong> — 20+ patient samples or QC material over multiple days → use the <em>Precision — Quick</em> tool</li>
-            <li><strong>Full validation</strong> — CLSI EP05 design (5 days × 2 runs × 2 replicates minimum) → use the <em>EP05 — Validation</em> tool</li>
+            <li><strong>Full precision study</strong> — CLSI EP05 design (5 days × 2 runs × 2 replicates minimum) → use the <em>Precision (EP05)</em> tool</li>
           </ul>
           <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% (total intermediate precision)</div>
         </div>
