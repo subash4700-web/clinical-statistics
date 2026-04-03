@@ -24,10 +24,10 @@ window.CLINICAL_TERMS = [
     def:'Intra-individual biological variation. The natural fluctuation of an analyte within the same healthy person over time — due to circadian rhythm, posture, hydration, and other physiological factors. Used to set quality goals for imprecision.' },
   { id:'cvg',  label:'CVg',                  category:'Biological variation',
     def:'Inter-individual biological variation. The natural differences in analyte set-points between healthy individuals. Used together with CVi to set quality goals for bias and TAE.' },
-  { id:'rcv',  label:'RCV',                  category:'Biological variation',
-    def:'Reference Change Value. The minimum difference between two consecutive results from the same patient that represents a real biological change (not analytical noise): RCV = 2.77 × √(CVa² + CVi²).' },
   { id:'index-of-individuality', label:'Index of Individuality', category:'Biological variation',
     def:'II = CVi / CVg. When II < 0.6, population reference intervals are poor at detecting changes within an individual. Low-II analytes (CRP, ferritin, troponin) benefit more from personal baselines.' },
+  { id:'circadian-effect', label:'Circadian effect', category:'Biological variation',
+    def:'The predictable, ~24-hour biological rhythm that causes analyte concentrations to rise and fall at consistent times of day. Cortisol peaks in the early morning; potassium and iron show daytime variation. Circadian effects contribute to within-individual biological variation (CVi) and are one reason why specimen collection time should be standardised — particularly for analytes with large diurnal variation.' },
 
   /* ── Bias & Error ── */
   { id:'bias', label:'Bias',                 category:'Bias & Error',
@@ -66,6 +66,8 @@ window.CLINICAL_TERMS = [
     def:'A systematic error that increases (or decreases) with the concentration of the analyte. Detected by Passing-Bablok regression as a slope significantly different from 1.0. Example: method B reads 5% higher than method A across the entire range.' },
   { id:'constant-bias', label:'Constant bias', category:'Method comparison',
     def:'A fixed systematic difference between two methods that does not change with concentration. Detected by Passing-Bablok regression as an intercept significantly different from 0. Example: method B consistently reads 2 units higher than method A.' },
+  { id:'heteroscedasticity', label:'Heteroscedasticity', category:'Method comparison',
+    def:'Unequal variance across the measurement range — the spread of differences between two methods (or residuals in regression) increases at higher concentrations. Common in clinical chemistry because analytical imprecision is often proportional to concentration (constant CV%). The opposite, homoscedasticity, means variance is constant across the range. Bland-Altman plots reveal heteroscedasticity as a funnel-shaped pattern in the difference plot.' },
 
   /* ── EP protocols ── */
   { id:'ep05', label:'EP05', category:'EP protocols',
@@ -76,6 +78,9 @@ window.CLINICAL_TERMS = [
     def:'CLSI EP09-A3: Measurement Procedure Comparison and Bias Estimation. Defines the design for comparing two measurement methods using patient samples. Recommends ≥ 40 samples spanning the measurement range, measured in duplicate by both methods.' },
   { id:'ep25', label:'EP25', category:'EP protocols',
     def:'CLSI EP25-A: Evaluation of Stability of In Vitro Diagnostic Reagents. Defines protocols for assessing how long a reagent or sample remains stable. Outputs include % change from baseline, confidence intervals, and functional expiry.' },
+
+  { id:'lyophilized', label:'Lyophilized', category:'Reference materials',
+    def:'Freeze-dried. A preservation process in which material is frozen and then water is removed by sublimation under vacuum, leaving a dry powder. Lyophilized QC material and calibrators are reconstituted with a diluent before use. The reconstitution process introduces an additional source of variation and potential matrix effects — the dried matrix may not behave identically to fresh patient samples on all analysers.' },
 
   /* ── Stability ── */
   { id:'functional-expiry', label:'Functional expiry', category:'Stability',

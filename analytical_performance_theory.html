@@ -99,8 +99,8 @@
       <li><a href="#bias">Bias — systematic error</a></li>
       <li><a href="#crm-eqa">CRM vs EQA — two ways to detect bias</a></li>
       <li><a href="#matrix">Matrix effects</a></li>
-      <li><a href="#allowable">Allowable error — where limits come from</a></li>
       <li><a href="#bioval">Biological variation — CVi and CVg explained</a></li>
+      <li><a href="#allowable">Allowable error — where limits come from</a></li>
       <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
       <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
       <li><a href="#sigma">The Sigma metric</a></li>
@@ -150,6 +150,9 @@
     <div class="warn">
       <b>Precision ≠ accuracy.</b> A method can be very precise (low CV%) but systematically biased. Think of a scale that always reads 0.5 kg too high — consistent but wrong. Both precision and bias must be evaluated independently.
     </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -181,6 +184,10 @@
 
     <p>Intermediate precision is always <b>≥ repeatability</b> because it includes all the within-run variation <em>plus</em> additional between-day sources.</p>
 
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision</a><br>
+      → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -190,9 +197,9 @@
   <div class="section" id="study-design">
     <h2>4. Practical study design — the duplicate method</h2>
     <p>The simplest precision study is to measure the same sample many times in one run and calculate the SD. This gives you <b>repeatability</b> — but nothing more.</p>
-    <p>In practice, the most common design used in clinical laboratories is:</p>
+    <p>To capture real-world laboratory performance, you need to spread measurements across multiple days and runs. The formal protocol for this is CLSI EP05-A3:</p>
     <div class="info">
-      <b>The duplicate design:</b> Measure 2 patient samples in duplicate each day, over 10 days = 20 samples × 2 replicates = 40 measurements total. This is the approach described in CLSI EP05-A3.
+      <b>CLSI EP05-A3 design:</b> Measure at least 2 concentration levels over <b>20 days × 2 runs/day × 2 replicates/run</b> = 80 measurements per level. This structured design allows nested ANOVA to partition within-run variation (Sw) from between-run variation (Sb).
     </div>
     <p>What this gives you depends on how the days are spread:</p>
     <table>
@@ -200,9 +207,12 @@
       <tr><td>All measurements on <b>one day</b></td><td>Repeatability only (Sw)</td><td>Best-case precision estimate</td></tr>
       <tr><td>Measurements spread across <b>multiple days</b></td><td>Intermediate precision (St = √(Sw² + Sb²))</td><td>Real-world performance estimate</td></tr>
     </table>
-    <p>The duplicates within each day give you the <b>within-run SD (Sw)</b>. The variation of the day means around the grand mean gives you the <b>between-day component (Sb)</b>. Combined, they give you the <b>intermediate precision SD (St)</b>.</p>
+    <p>The replicates within each run give you the <b>within-run SD (Sw)</b>. The variation of run means around the grand mean gives you the <b>between-run component (Sb)</b>. Combined, they give you the <b>intermediate precision SD (St)</b>.</p>
     <div class="good">
       <b>Recommendation:</b> Always spread your precision study across multiple days. A one-day study will make your method look more precise than it actually is under real laboratory conditions.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -226,9 +236,12 @@
       <li>Wrong: 2.0 + 2.0 = <b>4.0</b></li>
       <li>Correct: √(2.0² + 2.0²) = √8 = <b>2.83</b></li>
     </ul>
-    <p>The incorrect addition gives a result <b>41% higher</b> than the correct value. This is not a small rounding difference — it is a fundamental statistical error.</p>
+    <p>In this example the incorrect addition gives a result <b>41% higher</b> than the correct value. The overestimate depends on the relative size of the two components — it is largest when they are equal, and smaller when one dominates — but it is always an overestimate. This is not a small rounding difference — it is a fundamental statistical error.</p>
     <div class="callout">
       <b>Rule:</b> Variances add. Standard deviations do not. This applies everywhere in statistics — not just to precision calculations.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision — exercise: Why you cannot add SDs</a>
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -283,6 +296,10 @@
     <div class="callout">
       <b>Bias vs imprecision:</b> Bias shifts the entire distribution of results. Imprecision spreads it. A biased method gives results that cluster around the wrong value. An imprecise method gives results scattered around the right value. Total error combines both effects.
     </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('bias_learning.html','Understanding Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Bias</a><br>
+      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -301,7 +318,7 @@
     </ul>
 
     <h3>External Quality Assessment (EQA)</h3>
-    <p>Also called proficiency testing or EQAS (e.g. DEKS in Denmark, UKNEQAS in the UK). The same sample is sent to hundreds of laboratories. Your result is compared against the peer group mean or an assigned target value.</p>
+    <p>Also called proficiency testing (e.g. DEKS in Denmark, UKNEQAS in the UK). The same sample is sent to all participating laboratories. Your result is compared against the peer group mean or an assigned target value.</p>
     <ul>
       <li><b>Advantage:</b> Independent external check. Reveals systematic bias that internal QC would never detect — because internal QC only tells you if <em>you</em> are consistent, not if you are <em>correct</em>.</li>
       <li><b>Limitation:</b> EQA materials are often lyophilized or stabilized. Their matrix may differ from real patient samples, so apparent bias may be a matrix effect rather than a true analytical problem.</li>
@@ -309,6 +326,9 @@
 
     <div class="info">
       <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
     </div>
 
     <a href="#" class="back-top">↑ Back to top</a>
@@ -330,38 +350,8 @@
   <hr class="divider">
 
   <!-- 10 -->
-  <div class="section" id="allowable">
-    <h2>10. Allowable error — where limits come from</h2>
-    <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
-    <table>
-      <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
-      <tr>
-        <td><b>Biological variation</b><br><span class="tag tag-green">Recommended</span></td>
-        <td>Derived from intra-individual (CVi) and inter-individual (CVg) biological variation. Published in the EFLM biological variation database.</td>
-        <td>Allowable CV% = 0.5 × CVi<br>Allowable bias% = 0.25 × √(CVi² + CVg²)</td>
-      </tr>
-      <tr>
-        <td><b>Regulatory / external requirements</b></td>
-        <td>Fixed limits set by national or international bodies (e.g. ISO 15189, CLIA, Danish accreditation).</td>
-        <td>HbA1c: ≤ 6 mmol/mol or ≤ 6%</td>
-      </tr>
-      <tr>
-        <td><b>State of the art</b></td>
-        <td>What the best methods in the field can achieve. Used when biological variation goals are not achievable with current technology.</td>
-        <td>Peer group CV from EQA scheme</td>
-      </tr>
-    </table>
-    <div class="callout">
-      <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, your results are clinically useful.
-    </div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- CVi / CVg -->
   <div class="section" id="bioval">
-    <h2>Biological variation — CVi and CVg explained</h2>
+    <h2>10. Biological variation — CVi and CVg explained</h2>
     <p>Biological variation describes the natural fluctuation in analyte concentrations in the human body. It has two components:</p>
 
     <h3>CVi — Intra-individual biological variation</h3>
@@ -380,8 +370,13 @@
     </div>
 
     <h3>Why CVi and CVg matter for analytical quality</h3>
-    <p>If your analytical imprecision is large compared to CVi, you cannot reliably detect clinically meaningful changes within a patient over time. If your bias is large compared to CVi and CVg together, the result shifts relative to the population reference range in a clinically significant way.</p>
-    <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive specific, clinically meaningful allowable limits:</p>
+    <p>CVi and CVg are used to derive allowable limits for your analytical method — this is about setting <strong>quality goals for your analyser</strong>, not about interpreting individual patient results.</p>
+    <p>The reasoning behind the formulas:</p>
+    <ul>
+      <li><strong>Imprecision vs CVi:</strong> If your analytical CV% is large relative to CVi, analytical noise will obscure real biological signals — you cannot tell whether a change in a patient's result reflects true biology or measurement variation. The goal CVa ≤ 0.5 × CVi ensures your analytical noise is less than half the natural biological noise within a person.</li>
+      <li><strong>Bias vs CVi + CVg:</strong> If your method has systematic bias, it shifts results away from the true value. If that shift is large relative to the combined biological variation (CVi and CVg), it can displace results incorrectly relative to the population reference range. The goal Bias ≤ 0.25 × √(CVi² + CVg²) keeps bias small enough not to distort clinical interpretation.</li>
+    </ul>
+    <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive these specific, clinically meaningful allowable limits:</p>
     <div class="formula-box">
       <span class="f-label">Allowable imprecision (desirable goal):</span>
       <span class="f-correct">CVa ≤ 0.5 × CVi</span>
@@ -406,14 +401,51 @@
     <div class="warn">
       <b>Index of Individuality (II) = CVi / CVg:</b> When II &lt; 0.6, population-based reference intervals are poor at detecting changes within an individual patient. In this case, individual baseline values (reference change values) are more clinically useful than population reference ranges. Low II analytes include CRP, ferritin, and troponin.
     </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
   <hr class="divider">
 
   <!-- 11 -->
+  <div class="section" id="allowable">
+    <h2>11. Allowable error — where limits come from</h2>
+    <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
+    <table>
+      <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
+      <tr>
+        <td><b>Biological variation</b><br><span class="tag tag-green">Recommended</span></td>
+        <td>Derived from intra-individual (CVi) and inter-individual (CVg) biological variation. Published in the EFLM biological variation database.</td>
+        <td>Allowable CV% = 0.5 × CVi<br>Allowable bias% = 0.25 × √(CVi² + CVg²)</td>
+      </tr>
+      <tr>
+        <td><b>Regulatory / external requirements</b></td>
+        <td>Fixed limits set by national or international bodies (e.g. ISO 15189, CLIA, Danish accreditation).</td>
+        <td>HbA1c: ≤ 6 mmol/mol or ≤ 6%</td>
+      </tr>
+      <tr>
+        <td><b>State of the art</b></td>
+        <td>What the best methods in the field can achieve. Used when biological variation goals are not achievable with current technology.</td>
+        <td>Peer group CV from EQA scheme</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, analytical imprecision is not the dominant driver of variability between consecutive results — the patient's own physiology is.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('tae_learning.html','Understanding TAE');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding TAE</a><br>
+      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
+    </div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 12 -->
   <div class="section" id="tae">
-    <h2>11. Total Allowable Error (TAE) and Total Error (TE)</h2>
+    <h2>12. Total Allowable Error (TAE) and Total Error (TE)</h2>
     <p>A patient result contains both random and systematic error. <b>Total Error</b> is the maximum likely error in any single result, accounting for both bias and imprecision together.</p>
 
     <h3>Total Allowable Error (TAE)</h3>
@@ -476,6 +508,10 @@
       <tr><td>TAE (allowable)</td><td>6.0%</td></tr>
       <tr><td>Verdict</td><td><span class="tag tag-green">PASS — TE &lt; TAE</span></td></tr>
     </table>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('tae_learning.html','Understanding TAE');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding TAE</a><br>
+      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
+    </div>
 
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -517,20 +553,11 @@
       <tr><th>Factor</th><th>Question to ask</th><th>Effect on TAE</th></tr>
       <tr><td><strong>Clinical decision limits</strong></td><td>At what concentration does clinical action change? How large an error at that point is acceptable?</td><td>Tighter TAE if the decision limit is clinically critical</td></tr>
       <tr><td><strong>Concentration level</strong></td><td>Is the error requirement the same across the measurement range, or does it vary?</td><td>May need separate TAE at low, medium, high concentrations</td></tr>
-      <tr><td><strong>Within-patient monitoring</strong></td><td>Are results used to detect trends over time in the same patient?</td><td>TAE should be ≤ Reference Change Value (RCV = 2.77 × √(CVa² + CVi²)) to detect real change</td></tr>
+      <tr><td><strong>Within-patient monitoring</strong></td><td>Are results used to detect trends over time in the same patient?</td><td>Tighter TAE is needed — analytical imprecision must not mask real biological change</td></tr>
       <tr><td><strong>Method capability</strong></td><td>What is the best CV% achievable with available instruments?</td><td>TAE must be achievable — unachievable goals are not useful</td></tr>
       <tr><td><strong>Available reference materials</strong></td><td>Can bias be verified against a certified reference? Or is EQA the only option?</td><td>Affects certainty of bias estimate; uncertainty propagates to TAE</td></tr>
       <tr><td><strong>Regulatory floor</strong></td><td>What is the mandatory minimum? Local goals cannot be looser than this.</td><td>TAE ≥ regulatory minimum; can be stricter</td></tr>
     </table>
-
-    <h3>Reference Change Value (RCV)</h3>
-    <p>The RCV is the minimum difference between two consecutive results (from the same patient) that can be considered a real biological change — not just analytical noise:</p>
-    <div class="formula-box">
-      <span class="f-label">RCV (95% confidence, bidirectional):</span>
-      <span class="f-correct">RCV = 2.77 × √(CVa² + CVi²)</span>
-      <br/>
-      <span class="f-label">If your TE approaches the RCV, you cannot reliably detect real changes within a patient.</span>
-    </div>
 
     <div class="good">
       <b>Practical recommendation:</b> Start with the EFLM desirable goal. If it is achievable, use it. If not, check regulatory requirements and use state-of-the-art data. Document your rationale — ISO 15189 requires that quality goals are defined and justified. A locally set TAE with clear clinical reasoning is better than an unachievable external goal that is ignored in practice.
@@ -575,6 +602,9 @@
     <div class="callout">
       <b>Practical use:</b> The Sigma metric is a single number that summarises the overall quality of your method. It can be used to design a rational QC strategy — methods with high Sigma need less QC, methods with low Sigma need more.
     </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
+    </div>
 
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -609,6 +639,28 @@
       <b>Why 20 days?</b> Precision is estimated under routine conditions — including normal day-to-day sources of variation such as reagent changes, different operators, maintenance, and environmental drift. Fewer days underestimates this variation.
     </div>
 
+    <h3>Why nested ANOVA — not one-way or two-way?</h3>
+    <p>
+      You may already know <strong>one-way ANOVA</strong> (one grouping factor, e.g. compare means across days)
+      and <strong>two-way ANOVA</strong> (two crossed factors, e.g. day × operator — every combination measured).
+      EP05 uses neither. It uses <strong>nested ANOVA</strong>, and the reason matters:
+    </p>
+    <table>
+      <tr><th>Design</th><th>Structure</th><th>Problem for EP05</th></tr>
+      <tr><td><strong>One-way ANOVA</strong></td><td>Groups days only</td><td>Lumps within-run and between-run variation together — you cannot separate Sw from Sb</td></tr>
+      <tr><td><strong>Two-way ANOVA</strong></td><td>Day × run, fully crossed</td><td>Requires the same run labels to mean the same thing across days — they don't. "Run 1" on day 1 is not the same run as "Run 1" on day 3</td></tr>
+      <tr><td><strong>Nested ANOVA</strong></td><td>Replicates inside runs, runs inside days</td><td>— correct model. Runs are unique within each day; replicates are unique within each run</td></tr>
+    </table>
+    <p>
+      The nested structure reflects reality: each run is a distinct analytical session that happens to fall on a particular day.
+      The calculation partitions variance into <strong>within-run (Sw)</strong> — from the replicate pairs — and
+      <strong>between-run (Sb)</strong> — from how run means scatter around the grand mean.
+      This is the only way to get both components separately, which is exactly what EP05 requires.
+    </p>
+    <div class="callout">
+      <b>In practice:</b> you never need to run nested ANOVA yourself — the EP05 tool does it automatically when you enter your data. Understanding the structure just helps you design the study correctly: replicates must be measured within the same run, and runs must be genuinely separate analytical sessions.
+    </div>
+
     <h3>Acceptance criteria</h3>
     <p>Compare your CV% against the allowable imprecision derived from your performance specification:</p>
     <ul>
@@ -616,6 +668,9 @@
       <li><strong>EFLM / manufacturer claim</strong>: stated CV% from the IFU or EFLM database</li>
       <li><strong>Sigma-based</strong>: CV% ≤ (TAE − |Bias|) / desired sigma level</li>
     </ul>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -663,6 +718,9 @@
     <div class="warn">
       <b>EP15 does not replace EP05.</b> If no manufacturer claim exists, or if you are modifying the method, or if the method is developed in-house, a full validation (EP05 or equivalent) is required.
     </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
+    </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -691,6 +749,50 @@
       <li><strong>Regression analysis</strong> — Passing-Bablok regression is preferred (non-parametric, no distributional assumptions). Deming regression is acceptable when both methods have similar imprecision. OLS is not appropriate when both methods have random error</li>
     </ol>
 
+    <h3>Bland-Altman assumptions</h3>
+    <p>Bland-Altman assumes the <strong>differences</strong> between the two methods are approximately normally distributed. This matters because the limits of agreement (mean ± 1.96 × SD) rely on the normal distribution — if the differences are skewed or contain outliers, the 1.96 factor is no longer valid and the LoA will be misleading.</p>
+    <table>
+      <tr><th>Assumption</th><th>Why it matters</th><th>How to check</th></tr>
+      <tr>
+        <td><strong>Normality of differences</strong></td>
+        <td>LoA = mean ± 1.96 × SD requires normality. Skewed differences produce LoA that do not capture 95% of cases.</td>
+        <td>Shapiro-Wilk test on the differences; histogram or Q-Q plot</td>
+      </tr>
+      <tr>
+        <td><strong>Homoscedasticity</strong></td>
+        <td>A single SD is only meaningful if the spread of differences is constant across the range. A funnel shape (larger differences at higher concentrations) means the SD is understated at high values and overstated at low values.</td>
+        <td>Bland-Altman plot — look for a funnel shape. If present, use log-transformed data or express differences as % of the mean (proportional Bland-Altman).</td>
+      </tr>
+    </table>
+    <div class="note">The method is fairly robust to mild departures from normality, especially with n &gt; 40. The Shapiro-Wilk test in the tool tests the differences directly — if it fails, inspect the plot before reporting LoA at face value.</div>
+
+    <h3>Which regression method — OLS, Passing-Bablok, or Deming?</h3>
+    <p>All three methods calculate a slope and intercept, but they differ in their assumptions about measurement error:</p>
+    <table>
+      <tr><th>Method</th><th>Assumes error in</th><th>Use when</th><th>Appropriate for method comparison?</th></tr>
+      <tr>
+        <td><strong>OLS</strong><br><span style="font-size:11px;color:#6b7280;">Ordinary Least Squares</span></td>
+        <td>Y only — X is assumed exact</td>
+        <td>X is a known standard or reference value with negligible error</td>
+        <td><span style="color:#dc2626;font-weight:600;">No</span> — both methods have random error; OLS underestimates the true slope</td>
+      </tr>
+      <tr>
+        <td><strong>Passing-Bablok</strong></td>
+        <td>Both X and Y — no assumption about the ratio</td>
+        <td>Routine clinical method comparison where the error ratio is unknown</td>
+        <td><span style="color:#16a34a;font-weight:600;">Yes — preferred</span> — non-parametric, robust to outliers, no distributional assumptions</td>
+      </tr>
+      <tr>
+        <td><strong>Deming</strong></td>
+        <td>Both X and Y — requires a specified error ratio (λ = σx² / σy²)</td>
+        <td>When the CV% of both methods is known (e.g. from precision studies)</td>
+        <td><span style="color:#16a34a;font-weight:600;">Yes</span> — parametric; gives narrower CIs than Passing-Bablok when assumptions are met</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <strong>The identity line:</strong> If slope = 1 and intercept = 0, the regression equation becomes y = x — the line of identity. This means the two methods give the same result at every concentration. Slope ≠ 1 signals proportional bias; intercept ≠ 0 signals constant bias. Lin's CCC measures how close the data are to this identity line, combining both correlation and agreement into a single coefficient.
+    </div>
+
     <h3>Acceptance criteria</h3>
     <p>Define criteria <strong>before</strong> the study. A method passes when:</p>
     <ul>
@@ -707,6 +809,10 @@
 
     <div class="callout">
       <b>EP09 vs method comparison in general:</b> EP09 is specifically for patient sample comparisons. If you are comparing against a certified reference material (CRM), use EP15 (trueness verification) instead. EP09 is appropriate when both methods measure real patient samples under routine conditions.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('method_comparison_learning.html','Understanding Method Comparison');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Method Comparison</a><br>
+      → <a href="#" onclick="window.parent.loadTool('method_comparison.html','Method Comparison');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Method Comparison</a>
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -834,7 +940,7 @@
       Low κ + non-significant McNemar = random but frequent disagreement.
     </div>
 
-    <h3>Application: qualitative holdbarhedsforsøg (stability studies)</h3>
+    <h3>Application: qualitative stability studies</h3>
     <p>
       For qualitative stability studies, the same panel of known samples is tested at T0 (fresh reference) and at each storage time point
       (T1, T3, T6, T12 months). Each time point produces one 2×2 table — run the full Kappa + McNemar analysis at each.
@@ -864,7 +970,7 @@
     </div>
 
     <p>
-      A stability study (holdbarhedsforsøg) evaluates whether a reagent, test kit, or biological material
+      A stability study evaluates whether a reagent, test kit, or biological material
       maintains its intended performance over time under defined storage conditions.
       The goal is to <strong>determine functional expiry</strong> — the point at which performance is no longer acceptable.
     </p>
@@ -941,7 +1047,7 @@
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
       <tr><td><b>Intermediate precision</b></td><td>Within-lab variation across days</td><td>St = √(Sw²+Sb²), CVt%</td><td>Precision (EP05/EP15)</td></tr>
-      <tr><td><b>Reproducibility</b></td><td>Between-laboratory variation</td><td>SD, CV%</td><td>External scheme / EQAS</td></tr>
+      <tr><td><b>Reproducibility</b></td><td>Between-laboratory variation</td><td>SD, CV%</td><td>EQA scheme</td></tr>
       <tr><td><b>Bias</b></td><td>Systematic error vs true value</td><td>Absolute, %</td><td>Bias — CRM / EQA</td></tr>
       <tr><td><b>Total Error (TE)</b></td><td>Bias + random error combined</td><td>TE = |Bias| + 1.65 × SD</td><td>—</td></tr>
       <tr><td><b>TAE</b></td><td>Maximum acceptable total error</td><td>% (from EFLM / regulatory)</td><td>All tools</td></tr>

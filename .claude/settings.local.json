@@ -23,7 +23,11 @@
       "WebFetch(domain:brouwern.github.io)",
       "WebFetch(domain:www.amazon.com)",
       "Bash(grep -rn \"clearAll\\\\|clearData\\\\|clear-btn\\\\|clearMC\\\\|Clear data\\\\|clear data\\\\|clearToolData\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html --include=\"*.html\")",
-      "Bash(grep -rn \"clearAll\\\\|clearData\\\\|clearEPData\\\\|clearMCData\\\\|clearAllPrimers\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html)"
+      "Bash(grep -rn \"clearAll\\\\|clearData\\\\|clearEPData\\\\|clearMCData\\\\|clearAllPrimers\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html)",
+      "Bash(head -5 grep -n \"\\\\.assumptions-panel\\\\|\\\\.assump\" /Users/subashsundaralingam/Documents/app/clinical-statistics/assets/css/components.css)",
+      "Bash(head -20 grep -n \"tg-card\\\\|tg-details\\\\|tg-body\\\\|tg-row\\\\|tg-badges\\\\|tg-when\\\\|tg-label\" /Users/subashsundaralingam/Documents/app/clinical-statistics/method_comparison.html)",
+      "Bash(grep -n \"sel-type-top\\\\|tbl-ip-config\\\\|gen-ip-opts\\\\|type===''intermediate''\\\\|type === ''intermediate''\\\\|renderIntermediate\\\\|buildIPTable\\\\|intermediate\" /Users/subashsundaralingam/Documents/app/clinical-statistics/precision.html)",
+      "Bash(grep -rn \"hundreds\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html /Users/subashsundaralingam/Documents/app/clinical-statistics/assets/js/terms.js)"
     ]
   }
 }

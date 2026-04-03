@@ -218,11 +218,11 @@
             <option value="10">10 days</option>
           </select>
 
-          <label>Samples per day (duplicates each)</label>
+          <label>Concentration levels (duplicates each)</label>
           <select id="samplesPerDay" onchange="simulate()">
-            <option value="2" selected>2 samples × 2 replicates</option>
-            <option value="3">3 samples × 2 replicates</option>
-            <option value="4">4 samples × 2 replicates</option>
+            <option value="2" selected>2 levels × 2 replicates</option>
+            <option value="3">3 levels × 2 replicates</option>
+            <option value="4">4 levels × 2 replicates</option>
           </select>
 
           <div class="btn-row">
@@ -231,7 +231,8 @@
           </div>
 
           <div class="note-box" style="margin-top:12px;">
-            <b>Study design:</b> Each day, <span id="noteDesign">2 patient samples</span> are measured in <b>duplicate</b>. Spread over <span id="noteDays">5 days</span> = <span id="noteTotal">20 measurements</span> total.
+            <b>Study design:</b> You have <span id="noteDesign">2 concentration levels</span> — the <b>same materials</b>, measured in duplicate each day, repeated over <span id="noteDays">5 days</span> = <span id="noteTotal">20 measurements</span> per level.<br>
+            <span style="color:#b42318;font-weight:700;">Important:</span> You do not use a different patient each day. The same QC material or pooled sample is re-measured repeatedly — only the method varies.
           </div>
 
         </div>
@@ -254,6 +255,9 @@
             <span class="f-correct">Correct: St = √(Sw² + Sb²)</span>
           </div>
           <div id="formulaValues" style="margin-top:8px;font-size:12px;color:#344054;line-height:1.8;"></div>
+          <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+            → <a href="#" onclick="window.parent.loadTool('analytical_performance_theory.html','Analytical Performance — Concepts &amp; Theory');return false;" style="color:#1e40af;font-weight:600;">Read theory: Concepts &amp; Theory — Why you cannot add SDs</a>
+          </div>
         </div>
       </div>
     </div>
@@ -265,7 +269,7 @@
       <div class="chart-panel">
         <div class="chart-hd">
           Measurements by day
-          <span id="dotSubtitle">duplicates shown per sample per day</span>
+          <span id="dotSubtitle">same material re-measured in duplicate each day</span>
         </div>
         <div class="chart-bd">
           <canvas id="dotCanvas" style="width:100%;height:260px;"></canvas>
@@ -378,7 +382,7 @@ function simulate() {
   var spd     = parseInt(document.getElementById('samplesPerDay').value) || 2; // samples per day
 
   // Update notes
-  document.getElementById('noteDesign').textContent = spd + ' patient sample' + (spd > 1 ? 's' : '');
+  document.getElementById('noteDesign').textContent = spd + ' concentration level' + (spd > 1 ? 's' : '');
   document.getElementById('noteDays').textContent = nDays + ' day' + (nDays > 1 ? 's' : '');
   document.getElementById('noteTotal').textContent = (nDays * spd * 2) + ' measurements';
 
@@ -592,7 +596,13 @@ function drawDotChart(days) {
         }
       },
       scales: {
-        x: { display: false },
+        x: {
+          display: true,
+          title: { display: true, text: 'Each cluster = one day · same material measured in duplicate · day-to-day variation is between-day (Sb)', font: { size: 10 }, color: '#6b7280' },
+          ticks: { display: false },
+          grid: { display: false },
+          border: { display: false }
+        },
         y: {
           title: { display: true, text: 'Measured value', font: { size: 11 } },
           ticks: { font: { size: 11 } }

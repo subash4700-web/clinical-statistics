@@ -150,14 +150,30 @@
         <span class="tg-badge tg-std">ROC · AUC · Logistic Regression</span>
       </div>
       <div class="tg-when">Evaluate the diagnostic accuracy of a continuous biomarker or test result. Find the optimal cut-off that balances sensitivity and specificity for your clinical context. Combine multiple analytes into a single diagnostic score using logistic regression.</div>
-      <details class="tg-details">
-        <summary>Details</summary>
-        <div class="tg-body">
-          <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples with a confirmed binary outcome per sample (disease yes/no, based on a gold standard independent of the test being evaluated)</span></div>
-          <div class="tg-row"><span class="tg-label">Design</span><span>Each sample has a continuous test result and a known true status. The ROC curve plots true positive rate vs false positive rate across all possible cut-offs</span></div>
-          <div class="tg-row"><span class="tg-label">Output</span><span>AUC, optimal cut-off (Youden index), sensitivity, specificity, LR+, LR−, PPV, NPV. When multiple analytes are entered: logistic regression score with combined ROC curve</span></div>
-          <div class="tg-row"><span class="tg-label">Note</span><span>AUC 0.5 = no better than chance; AUC 1.0 = perfect discrimination. Clinical acceptance typically requires AUC ≥ 0.80. The cut-off depends on clinical purpose — screening favours high sensitivity, confirmation favours high specificity</span></div>
-          <div class="tg-row"><span class="tg-label">Warning</span><span>The gold standard must be confirmed independently of the test being evaluated. Using the test itself to define disease status causes incorporation bias and artificially inflates AUC</span></div>
+      <details class="assumptions-panel" open>
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Each sample has a verified true status</strong><br /><span class="small">Disease/healthy classification confirmed by reference standard — independent of the test being evaluated</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Continuous test result on all samples</strong><br /><span class="small">The biomarker/score is numeric and measured on all subjects</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Sufficient positive and negative cases</strong><br /><span class="small">Both disease and healthy groups represented — heavily imbalanced data inflates AUC</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Reference standard applied independently</strong><br /><span class="small">Not influenced by the test result being evaluated (avoids incorporation bias)</span></span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Material: patient samples with known disease status · Design: continuous test result + binary outcome per sample</span>
+          </div>
         </div>
       </details>
     </div>

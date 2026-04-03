@@ -279,8 +279,124 @@
       <li><strong>One extreme residual</strong> — potential outlier; investigate before removing</li>
     </ul>
     <div class="good">
-      <b>Always plot residuals.</b> A residual plot reveals problems that R² alone hides. Two datasets with the same R² can have very different residual patterns (see Anscombe's quartet).
+      <b>Always plot residuals.</b> A residual plot reveals problems that R² alone hides. Two datasets with the same R² can have very different residual patterns — as Anscombe's Quartet demonstrates below.
     </div>
+
+    <h3>Anscombe's Quartet — why you must always plot your data</h3>
+    <p>These four datasets have nearly identical summary statistics: same mean, same variance, same correlation coefficient (r ≈ 0.82), and the same regression line. But they are fundamentally different:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
+
+      <!-- Dataset I -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px;">Dataset I — Normal linear relationship</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">r = 0.82 · ŷ = 3.0 + 0.5x</div>
+        <svg viewBox="0 0 200 150" style="width:100%;height:auto;">
+          <rect width="200" height="150" fill="#f9fafb" rx="6"/>
+          <!-- axes -->
+          <line x1="28" y1="10" x2="28" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="130" x2="195" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <!-- regression line: y = 3 + 0.5x, x range 4-14, map x: 28+(x-4)*16.3, y: 130-(y-3)*9 -->
+          <line x1="28" y1="112" x2="195" y2="30" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
+          <!-- points: (10,8.04),(8,6.95),(13,7.58),(9,8.81),(11,8.33),(14,9.96),(6,7.24),(4,4.26),(12,10.84),(7,4.82),(5,5.68) -->
+          <circle cx="128" cy="67" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="95" cy="76" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="177" cy="70" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="111" cy="57" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="144" cy="62" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="193" cy="42" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="61" cy="74" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="28" cy="107" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="161" cy="33" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="103" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="44" cy="91" r="4" fill="#3b82f6" opacity="0.85"/>
+        </svg>
+        <div style="font-size:11px;color:#16a34a;margin-top:6px;">✓ Linear relationship. Regression is appropriate.</div>
+      </div>
+
+      <!-- Dataset II -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px;">Dataset II — Curved (non-linear) relationship</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">r = 0.82 · same regression line</div>
+        <svg viewBox="0 0 200 150" style="width:100%;height:auto;">
+          <rect width="200" height="150" fill="#f9fafb" rx="6"/>
+          <line x1="28" y1="10" x2="28" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="130" x2="195" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="112" x2="195" y2="30" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
+          <!-- parabola points -->
+          <circle cx="28" cy="98" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="44" cy="71" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="61" cy="50" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="37" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="95" cy="32" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="111" cy="34" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="128" cy="44" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="144" cy="60" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="161" cy="84" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="177" cy="105" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="193" cy="120" r="4" fill="#3b82f6" opacity="0.85"/>
+        </svg>
+        <div style="font-size:11px;color:#dc2626;margin-top:6px;">✗ Clearly curved. Linear regression is wrong — transform the data or use a non-linear model.</div>
+      </div>
+
+      <!-- Dataset III -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px;">Dataset III — Outlier distorting the line</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">r = 0.82 · same regression line</div>
+        <svg viewBox="0 0 200 150" style="width:100%;height:auto;">
+          <rect width="200" height="150" fill="#f9fafb" rx="6"/>
+          <line x1="28" y1="10" x2="28" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="130" x2="195" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="112" x2="195" y2="30" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
+          <!-- tight cluster of points -->
+          <circle cx="44" cy="107" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="61" cy="97" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="88" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="95" cy="80" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="111" cy="73" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="128" cy="65" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="144" cy="58" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="161" cy="51" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="177" cy="44" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="193" cy="37" r="4" fill="#3b82f6" opacity="0.85"/>
+          <!-- outlier -->
+          <circle cx="128" cy="18" r="5" fill="#ef4444" opacity="0.95"/>
+          <text x="136" y="16" font-size="9" fill="#dc2626" font-weight="700">outlier</text>
+        </svg>
+        <div style="font-size:11px;color:#dc2626;margin-top:6px;">✗ One outlier (red) pulls the regression line. Remove or investigate before fitting.</div>
+      </div>
+
+      <!-- Dataset IV -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px;">Dataset IV — Leverage point driving correlation</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">r = 0.82 · same regression line</div>
+        <svg viewBox="0 0 200 150" style="width:100%;height:auto;">
+          <rect width="200" height="150" fill="#f9fafb" rx="6"/>
+          <line x1="28" y1="10" x2="28" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="130" x2="195" y2="130" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="28" y1="112" x2="195" y2="30" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
+          <!-- vertical cluster at x=8 -->
+          <circle cx="78" cy="68" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="74" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="80" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="86" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="92" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="98" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="104" r="4" fill="#3b82f6" opacity="0.85"/>
+          <circle cx="78" cy="110" r="4" fill="#3b82f6" opacity="0.85"/>
+          <!-- single high-leverage point far right -->
+          <circle cx="193" cy="26" r="5" fill="#ef4444" opacity="0.95"/>
+          <text x="158" y="22" font-size="9" fill="#dc2626" font-weight="700">leverage</text>
+        </svg>
+        <div style="font-size:11px;color:#dc2626;margin-top:6px;">✗ One high-leverage point (red) creates the apparent correlation. Without it, r ≈ 0. No real linear relationship exists.</div>
+      </div>
+
+    </div>
+
+    <div class="warn">
+      <b>The lesson:</b> Summary statistics (r, slope, R²) are identical across all four datasets. Only the plot reveals the truth. In method comparison and regression, <strong>always inspect the scatter plot and residual plot</strong> — never rely on statistics alone.
+    </div>
+
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
   <hr class="divider"/>

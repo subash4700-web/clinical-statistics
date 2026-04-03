@@ -101,16 +101,30 @@
           <span class="tg-badge tg-std">CLSI EP23-A · Six Sigma</span>
         </div>
         <div class="tg-when">Use after completing Precision and Bias/Method Comparison studies. Combines both results into a sigma metric to guide QC strategy design. No raw data entry — enter the summary statistics from your studies. Supports two concentration levels.</div>
-        <details class="tg-details">
-          <summary>Details &amp; Concepts</summary>
-          <div class="tg-body">
-            <div class="tg-row"><span class="tg-label">Input</span><span>CV% from precision study (per level) + Bias% from trueness or method comparison study + TAE% from EFLM, CLIA, or your specification</span></div>
-            <div class="tg-row"><span class="tg-label">Formula</span><span>TE = |Bias%| + 1.65 × CV% &nbsp;·&nbsp; Sigma = (TAE% − |Bias%|) / CV%</span></div>
-            <div class="tg-row"><span class="tg-label">TAE</span><span>Total Allowable Error — the maximum combined error (systematic + random) that a patient result may have before it affects clinical decisions. Set from EFLM biological variation, CLIA proficiency limits, or your laboratory's own quality goals.</span></div>
-            <div class="tg-row"><span class="tg-label">Sigma</span><span>Sigma metric quantifies how much of the TAE budget is consumed by your method's bias and imprecision. Sigma ≥ 6 = world class. 4–6 = good. 3–4 = marginal — intensive QC needed. &lt; 3 = poor — root-cause investigation required before release.</span></div>
-            <div class="tg-row"><span class="tg-label">Two levels</span><span>CV% often differs between concentration levels — typically higher (%) at low concentrations. Both levels must independently meet TAE. Bias is assumed constant across levels unless proportional bias was found in method comparison (slope ≠ 1), in which case enter level-specific bias manually.</span></div>
-            <div class="tg-row"><span class="tg-label">QC strategy</span><span>Sigma drives your QC rule selection (Westgard). High sigma = simple rules, low frequency. Low sigma = tight multirules, frequent runs. The goal is to detect errors before they affect patient results.</span></div>
-            <div class="tg-row"><span class="tg-label">Output</span><span>TE%, sigma metric per level, QC rule recommendation, patient result distribution chart</span></div>
+        <details class="assumptions-panel" open>
+          <summary>Assumptions &amp; Study Context</summary>
+          <div class="assumptions-body">
+            <div class="assump-grid">
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Precision and bias from the same concentration level</strong><br /><span class="small">Do not mix CV% from level 1 with bias from level 2</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Precision evaluated as intermediate precision (not repeatability)</strong><br /><span class="small">Day-to-day CV% reflects real-world performance — repeatability underestimates total error</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Allowable TE defined before analysis</strong><br /><span class="small">Based on biological variation, regulatory specification, or clinical decision impact — not chosen after seeing results</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Both precision and bias measured under routine conditions</strong><br /><span class="small">Not under optimised or best-case conditions</span></span>
+              </label>
+            </div>
+            <div style="margin-top:10px;">
+              <span class="pill">Inputs: CV% (intermediate precision) + bias% · Output: TE%, sigma metric, QC strategy</span>
+            </div>
           </div>
         </details>
       </div>

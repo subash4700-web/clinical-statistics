@@ -149,14 +149,30 @@
         <span class="tg-badge tg-std">ISO 15189 · Kappa · McNemar</span>
       </div>
       <div class="tg-when">Compare two qualitative (pos/neg) methods on the same patient samples. Measures overall agreement beyond chance (Kappa) and detects systematic directional disagreement (McNemar). Use when introducing a new rapid test, point-of-care device, or alternative platform alongside an existing reference method.</div>
-      <details class="tg-details">
-        <summary>Details</summary>
-        <div class="tg-body">
-          <div class="tg-row"><span class="tg-label">Material</span><span>The same patient samples tested by both methods — ideally simultaneously or in close succession to avoid biological change between measurements</span></div>
-          <div class="tg-row"><span class="tg-label">Design</span><span>Enter paired results as a 2×2 contingency table: a = both positive, b = A+/B−, c = A−/B+, d = both negative. Minimum n ≥ 40 samples recommended; include both positive and negative cases</span></div>
-          <div class="tg-row"><span class="tg-label">Output</span><span>Cohen's Kappa with 95% CI, McNemar χ² (systematic bias direction), positive and negative concordance rates, and positive/negative agreement percentages</span></div>
-          <div class="tg-row"><span class="tg-label">Note</span><span>Kappa ≥ 0.80 is generally acceptable for clinical diagnostic methods (ISO 15189). Kappa can be misleadingly low when prevalence is very high or very low — always report raw agreement rates alongside Kappa</span></div>
-          <div class="tg-row"><span class="tg-label">Quantitative?</span><span>For continuous methods (e.g. two glucose analysers) use <strong>Quantitative Method Comparison</strong> — Bland-Altman, Passing-Bablok, and Deming regression</span></div>
+      <details class="assumptions-panel" open>
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Same patient samples tested on both methods</strong><br /><span class="small">Paired design — same aliquot or split sample, not different patients</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Both methods classify the same measurand</strong><br /><span class="small">Same analyte as positive/negative — not different target antigens or cut-offs</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Sufficient positive and negative samples</strong><br /><span class="small">n ≥ 40 recommended · both categories must be represented</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Reference standard applied independently</strong><br /><span class="small">If using a reference method, its result must not influence the test method result</span></span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Material: patient samples · Design: paired pos/neg classification on ≥ 40 samples</span>
+          </div>
         </div>
       </details>
     </div>

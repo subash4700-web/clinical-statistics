@@ -124,14 +124,30 @@
           <span class="tg-badge tg-std">CLSI EP25-A</span>
         </div>
         <div class="tg-when">Determine how long patient material remains stable at defined storage conditions. Used for pooled QC material, residual samples, or biobank validation. All time points are compared back to T0.</div>
-        <details class="tg-details">
-          <summary>Details</summary>
-          <div class="tg-body">
-            <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples stored under defined conditions: −80°C, −20°C, 2–8°C, or room temperature</span></div>
-            <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 10 samples measured at T0 (fresh), then at T1, T3, T6, T9, T12 months (or custom intervals)</span></div>
-            <div class="tg-row"><span class="tg-label">Output</span><span>% change from T0 per time point, paired t-test, trend regression, functional expiry date</span></div>
-            <div class="tg-row"><span class="tg-label">Note</span><span>Functional expiry = last time point where all samples pass the acceptance criterion (e.g. ±10% change)</span></div>
-            <div class="tg-row"><span class="tg-label">Qualitative?</span><span>For pos/neg methods use <strong>Categorical Method Comparison</strong> — enter Kappa + McNemar results per time point</span></div>
+        <details class="assumptions-panel" open>
+          <summary>Assumptions &amp; Study Context</summary>
+          <div class="assumptions-body">
+            <div class="assump-grid">
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Same material lot throughout the entire study</strong><br /><span class="small">No lot changes — each time point measures from the same original batch</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Analytical method stable throughout</strong><br /><span class="small">No calibration changes, reagent lot changes, or maintenance between time points</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Baseline (T0) measured before storage begins</strong><br /><span class="small">T0 is the reference — all subsequent changes are relative to it</span></span>
+              </label>
+              <label class="assump-item">
+                <input type="checkbox" checked />
+                <span><strong>Identical analytical conditions at each time point</strong><br /><span class="small">Same operator, same analyser, same reagents as far as possible</span></span>
+              </label>
+            </div>
+            <div style="margin-top:10px;">
+              <span class="pill">Material: patient sample aliquots or QC material · Design: measure same material at T0, T1, T2… under defined storage conditions</span>
+            </div>
           </div>
         </details>
       </div>

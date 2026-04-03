@@ -192,13 +192,30 @@
         <span class="tg-badge tg-std">CLSI EP09-A3 · ISO 5725</span>
       </div>
       <div class="tg-when">Compare a new analytical method to a reference method before clinical use. Same patient sample measured on both methods — ideally same day to eliminate biological variation.</div>
-      <details class="tg-details">
-        <summary>Details</summary>
-        <div class="tg-body">
-          <div class="tg-row"><span class="tg-label">Material</span><span>Patient samples — same aliquot measured on both methods the same day (or within 2 hours)</span></div>
-          <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 40 samples, cover low / normal / high concentrations across the full clinical range</span></div>
-          <div class="tg-row"><span class="tg-label">Output</span><span>Bland-Altman LoA, mean bias, Passing-Bablok regression, Deming regression, paired t-test, Lin's CCC</span></div>
-          <div class="tg-row"><span class="tg-label">Note</span><span>High Pearson r does NOT confirm agreement — always use Bland-Altman. See Understanding Method Comparison.</span></div>
+      <details class="assumptions-panel" open>
+        <summary>Assumptions &amp; Study Context</summary>
+        <div class="assumptions-body">
+          <div class="assump-grid">
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Same patient sample on both methods</strong><br /><span class="small">Split aliquot or sequential measurement — not different patients</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Measured same day (within 2 hours)</strong><br /><span class="small">Eliminates biological variation between measurements</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Samples span the full clinical range</strong><br /><span class="small">Include low, normal, and high concentrations · n ≥ 40 (CLSI EP09)</span></span>
+            </label>
+            <label class="assump-item">
+              <input type="checkbox" checked />
+              <span><strong>Both methods measure the same measurand</strong><br /><span class="small">Same analyte, same units — not two different assay formats without commutability verification</span></span>
+            </label>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="pill">Material: fresh patient samples · Design: n ≥ 40 paired measurements across the full clinical range</span>
+          </div>
         </div>
       </details>
     </div>
@@ -1366,8 +1383,32 @@
                 </tr>`;
             }
 
-            const slopeRow     = biasVerdict('Slope',     regression.slope,     regression.slopeLower     ?? null, regression.slopeUpper     ?? null, 1, 'slope = 1');
-            const interceptRow = biasVerdict('Intercept', regression.intercept, regression.interceptLower ?? null, regression.interceptUpper ?? null, 0, 'intercept = 0');
+            const slopeRow     = biasVerdict('Slope — proportional bias',   regression.slope,     regression.slopeLower     ?? null, regression.slopeUpper     ?? null, 1, 'slope = 1');
+            const interceptRow = biasVerdict('Intercept — constant bias',  regression.intercept, regression.interceptLower ?? null, regression.interceptUpper ?? null, 0, 'intercept = 0');
+
+            // Summary banner
+            const slopePass     = regression.slopeLower != null && regression.slopeLower <= 1 && 1 <= regression.slopeUpper;
+            const interceptPass = regression.interceptLower != null && regression.interceptLower <= 0 && 0 <= regression.interceptUpper;
+            const hasCIs        = regression.slopeLower != null && regression.interceptLower != null;
+            let summaryBanner = '';
+            if (hasCIs) {
+                let msg, bg, border, color;
+                if (slopePass && interceptPass) {
+                    msg = 'No significant systematic bias detected — slope includes 1 and intercept includes 0 within 95% CI.';
+                    bg = '#f0fdf4'; border = '#86efac'; color = '#166534';
+                } else if (!slopePass && !interceptPass) {
+                    msg = 'Both proportional bias (slope ≠ 1) and constant bias (intercept ≠ 0) detected. The difference between methods varies with concentration and includes a fixed offset.';
+                    bg = '#fef2f2'; border = '#fca5a5'; color = '#991b1b';
+                } else if (!slopePass) {
+                    msg = 'Proportional bias detected (slope ≠ 1) — the difference between methods increases or decreases with concentration.';
+                    bg = '#fef2f2'; border = '#fca5a5'; color = '#991b1b';
+                } else {
+                    msg = 'Constant bias detected (intercept ≠ 0) — a fixed offset exists between methods at all concentrations.';
+                    bg = '#fef2f2'; border = '#fca5a5'; color = '#991b1b';
+                }
+                summaryBanner = `<div style="margin-top:10px;padding:8px 12px;background:${bg};border:1px solid ${border};border-radius:7px;font-size:12px;color:${color};">${msg}</div>`;
+            }
+
             const analysisCard = (slopeRow || interceptRow) ? `
                 <div class="card" style="margin-top:12px;">
                     <div class="section-title">Slope &amp; Intercept Analysis — Systematic Bias</div>
@@ -1383,6 +1424,7 @@
                             <style>.bias-tbl td{padding:7px 8px;border:1px solid var(--line);vertical-align:top;}</style>
                             <tbody class="bias-tbl">${slopeRow}${interceptRow}</tbody>
                     </table></div>
+                    ${summaryBanner}
                 </div>` : '';
 
             const html = `

@@ -90,14 +90,30 @@
       <span class="tg-badge tg-std">CLSI EP25-A · Kappa · McNemar</span>
     </div>
     <div class="tg-when">Use when validating the stability of a qualitative (pos/neg) assay over time — testing a frozen panel of samples at multiple time points and comparing agreement with T0 (fresh).</div>
-    <details class="tg-details">
-      <summary>▶ Details</summary>
-      <div class="tg-body">
-        <div class="tg-row"><span class="tg-label">Material</span><span>Stored patient panel (e.g. frozen aliquots) tested fresh at T0 and re-tested at each subsequent time point</span></div>
-        <div class="tg-row"><span class="tg-label">Design</span><span>Same samples at each time point. Enter 2×2 table (Tx vs T0) per time point. T0 is the reference.</span></div>
-        <div class="tg-row"><span class="tg-label">Outputs</span><span>Cohen's Kappa + 95% CI per time point; McNemar p-value; direction (degradation vs overcall); functional expiry</span></div>
-        <div class="tg-row"><span class="tg-label">Decision</span><span>Pass = κ ≥ criterion AND McNemar p ≥ α (no systematic bias). Functional expiry = last passing time point.</span></div>
-        <div class="tg-row"><span class="tg-label">Quantitative?</span><span>For measurable analytes use <strong>Quantitative Stability Study</strong> — % change from T0 and paired t-test</span></div>
+    <details class="assumptions-panel" open>
+      <summary>Assumptions &amp; Study Context</summary>
+      <div class="assumptions-body">
+        <div class="assump-grid">
+          <label class="assump-item">
+            <input type="checkbox" checked />
+            <span><strong>Same material lot at every time point</strong><br /><span class="small">No lot changes — each aliquot comes from the same original batch</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked />
+            <span><strong>Method stable throughout the study</strong><br /><span class="small">No calibration or reagent changes between time points</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked />
+            <span><strong>Both positive and negative samples in the panel</strong><br /><span class="small">Include samples near the cut-off — most sensitive to stability-induced changes</span></span>
+          </label>
+          <label class="assump-item">
+            <input type="checkbox" checked />
+            <span><strong>Baseline (T0) classified before storage</strong><br /><span class="small">T0 result is the reference — κ and McNemar compare each subsequent time point against T0</span></span>
+          </label>
+        </div>
+        <div style="margin-top:10px;">
+          <span class="pill">Material: patient sample aliquots · Design: pos/neg classification at T0, T1, T2… under defined storage conditions</span>
+        </div>
       </div>
     </details>
   </div>

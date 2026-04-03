@@ -1033,8 +1033,8 @@
           <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
           <div class="sidebar-sep"></div>
-          <button onclick="loadTool('precision.html','Precision', this)">Precision — Quick<span class="btn-hint">Daily monitoring · run-to-run · patient samples or QC material</span></button>
-          <button onclick="loadTool('precision_ep05.html','EP05 Precision Study', this)">Precision (EP05)<span class="btn-hint">Full precision study · CLSI EP05/EP15 · 2×2×20 design</span></button>
+          <button onclick="loadTool('precision.html','Precision Monitor', this)">Precision Monitor<span class="btn-hint">Daily QC monitoring · within-run repeatability</span></button>
+          <button onclick="loadTool('precision_ep05.html','Precision Study (EP05 / EP15)', this)">Precision Study (EP05 / EP15)<span class="btn-hint">Validate (EP05) or verify (EP15) · ANOVA variance decomposition</span></button>
           <button onclick="loadTool('bias.html','Bias', this)">Bias (CRM / EQA)<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
           <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)">Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
           <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
@@ -1050,8 +1050,8 @@
           <button class="learn-btn" onclick="loadTool('stability_theory.html','Concepts &amp; Theory — Stability &amp; Time', this)">📚 Concepts &amp; Theory<span class="btn-hint">Material vs method · stability vs analytical performance</span></button>
           <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
           <div class="sidebar-sep"></div>
-          <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
-          <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
+          <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability (EP25-A)<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
+          <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability (EP25-A)<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
         </div>
       </div>
 
@@ -1850,8 +1850,8 @@
             tc('categorical_method_comparison_learning.html', 'Understanding Categorical Method Comparison', 'Kappa paradox · McNemar bias direction · pos/neg methods'),
           ]),
           grp('Quantitative', [
-            tc('precision.html',         'Precision — Quick / QC',            'Daily monitoring · run-to-run statistics'),
-            tc('precision_ep05.html',    'Precision (EP05/EP15)',               'Full precision study · CLSI EP05/EP15 · 2×2×20 design'),
+            tc('precision.html',         'Precision Monitor',                  'Daily QC monitoring · within-run repeatability'),
+            tc('precision_ep05.html',    'Precision Study (EP05 / EP15)',       'Validate (EP05) or verify (EP15) · ANOVA variance decomposition'),
             tc('bias.html',              'Bias (CRM / EQA)',                    'Known reference value vs your method'),
             tc('method_comparison.html', 'Quantitative Method Comparison',     'Bland-Altman · Passing-Bablok · Deming · paired samples'),
             tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
@@ -1983,8 +1983,8 @@
     { file:'tae_learning.html',                  name:'Understanding Total Error & Sigma',section:'Analytical Performance › Learning' },
     { file:'method_comparison_learning.html',    name:'Understanding Method Comparison',          section:'Analytical Performance › Learning' },
     { file:'categorical_method_comparison_learning.html',   name:'Understanding Categorical Method Comparison',      section:'Analytical Performance › Learning' },
-    { file:'precision.html',                     name:'Precision — Quick / QC',           section:'Analytical Performance › Quantitative' },
-    { file:'precision_ep05.html',                name:'Precision (EP05/EP15)',             section:'Analytical Performance › Quantitative' },
+    { file:'precision.html',                     name:'Precision Monitor',                section:'Analytical Performance › Quantitative' },
+    { file:'precision_ep05.html',                name:'Precision Study (EP05 / EP15)',    section:'Analytical Performance › Quantitative' },
     { file:'bias.html',                          name:'Bias (CRM / EQA)',                  section:'Analytical Performance › Quantitative' },
     { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Quantitative' },
     { file:'method_comparison.html',             name:'Quantitative Method Comparison',   section:'Analytical Performance › Quantitative' },
@@ -2074,7 +2074,7 @@
     } else {
       el.innerHTML = top.map((r, i) =>
         `<div class="search-result-item" data-idx="${i}"
-          onclick="searchSelect('${r.file.replace(/'/g,"\\'")}','${r.name.replace(/'/g,"\\'")}')">
+          onclick="searchSelect('${r.file.replace(/'/g,"\\'")}','${r.name.replace(/'/g,"\\'")}','${term.replace(/'/g,"\\'")}')">
           <div class="sr-name">${r.name}</div>
           <div class="sr-section">${r.section} · ${r.count} match${r.count > 1 ? 'es' : ''}</div>
           ${r.snippet ? `<div class="sr-hint" style="margin-top:3px;font-size:10px;line-height:1.5;">${r.snippet}</div>` : ''}
@@ -2120,9 +2120,17 @@
     items.forEach((el, i) => el.style.background = i === searchHighlight ? 'rgba(255,255,255,0.12)' : '');
   }
 
-  function searchSelect(file, name) {
+  function searchSelect(file, name, term) {
     loadTool(file, name, null);
     closeSearch();
+    if (term) {
+      var iframe = document.getElementById('toolIframe');
+      if (iframe) {
+        iframe.addEventListener('load', function() {
+          try { this.contentWindow.find(term); } catch(e) {}
+        }, { once: true });
+      }
+    }
   }
 
   function closeSearch() {
@@ -2193,7 +2201,7 @@
       'tool.chiGOF':'Chi-Square GOF','tool.chiIndep':'Chi-Square Independence',
       'tool.mcnemar':'McNemar Test','tool.fisher':"Fisher's Exact Test",
       'tool.kappa':'Kappa','tool.weightedKappa':'Weighted Kappa',
-      'tool.precision':'Precision — Quick / QC','tool.ep05':'Precision (EP05/EP15)','tool.bias':'Bias (CRM / EQA)','tool.methodComp':'Quantitative Method Comparison',
+      'tool.precision':'Precision Monitor','tool.ep05':'Precision Study (EP05 / EP15)','tool.bias':'Bias (CRM / EQA)','tool.methodComp':'Quantitative Method Comparison',
       'tool.linReg':'Linear Regression','tool.logReg':'ROC & Diagnostic Performance','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Setup','tool.primerDil':'Primer Dilution',
       'tool.dilution':'Dilution Calculator','tool.molarity':'Molarity & Solution Prep',
@@ -2240,7 +2248,7 @@
       'tool.chiGOF':'Chi-i-anden tilpasningstest','tool.chiIndep':'Chi-i-anden uafhængighedstest',
       'tool.mcnemar':'McNemars test','tool.fisher':'Fishers eksakte test',
       'tool.kappa':'Kappa','tool.weightedKappa':'Vægtet Kappa',
-      'tool.precision':'Præcision — Hurtig / QC','tool.ep05':'EP05/EP15 Præcision — Validering','tool.bias':'Bias','tool.methodComp':'Metodekomparing',
+      'tool.precision':'Præcision Monitor','tool.ep05':'Præcisionsstudie (EP05 / EP15)','tool.bias':'Bias','tool.methodComp':'Metodekomparing',
       'tool.linReg':'Lineær Regression','tool.logReg':'ROC & Diagnostisk Præstation','tool.pcr':'In Silico PCR',
       'tool.pcrSetup':'PCR Opsætning','tool.primerDil':'Primerfortynding',
       'tool.dilution':'Fortyndingsberegner','tool.molarity':'Molaritet & Opløsningsfremstilling',

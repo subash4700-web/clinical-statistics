@@ -115,6 +115,7 @@ function renderEFLMInfoBar(containerId, key, tier) {
       '<span style="color:#6b7280;font-size:12px;">' + a.unit + '</span>' +
       (refStr ? '<span style="color:#6b7280;font-size:12px;">· Ref: ' + refStr + '</span>' : '') +
       '<span style="color:#6b7280;font-size:12px;">· CV<sub>I</sub> ' + a.cvi + '% · CV<sub>G</sub> ' + a.cvg + '%</span>' +
+      (function(){ var ii = (a.cvi / a.cvg).toFixed(2); return '<span style="color:#6b7280;font-size:12px;">· II ' + ii + (parseFloat(ii) < 0.6 ? ' <span style="color:#b45309;font-weight:600;">(personal baseline preferred)</span>' : '') + '</span>'; })() +
     '</div>' +
     '<div style="font-size:12px;color:' + colors[tc] + ';">' +
       '<strong>' + tc.charAt(0).toUpperCase() + tc.slice(1) + ':</strong> ' +

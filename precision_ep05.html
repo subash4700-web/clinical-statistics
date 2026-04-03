@@ -104,13 +104,13 @@
 
   <!-- Header -->
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
-    <h1 style="margin:0;">EP05 Precision Study</h1>
-    <span style="display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">
+    <h1 style="margin:0;">Precision Study</h1>
+    <span id="purpose-badge" style="display:inline-flex;align-items:center;gap:5px;background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       CLSI EP05-A3
     </span>
   </div>
-  <p class="subtitle">Repeatability and intermediate precision via duplicate/replicate variance decomposition — aligned with CLSI EP05-A3 guidelines.</p>
+  <p id="purpose-subtitle" class="subtitle">Full precision validation — establish repeatability and intermediate precision via nested ANOVA. 20 days × 2 runs × 2 replicates per level.</p>
 
   <div class="tabs">
     <div class="tab active" data-tab="tab-input">Data &amp; Options</div>
@@ -119,6 +119,22 @@
 
   <!-- INPUT TAB -->
   <div id="tab-input" class="tab-content active">
+
+    <!-- Study purpose selector — top of page -->
+    <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Step 1 — What is the purpose of this study?</div>
+      <div style="display:flex;gap:10px;">
+        <button id="purposeBtn-validate" class="view-toggle-btn active" style="flex:1;padding:10px 12px;font-size:13px;text-align:left;" onclick="setStudyPurpose('validate')">
+          <div style="font-weight:800;">Validate <span style="font-size:11px;font-weight:500;opacity:.8;">EP05-A3</span></div>
+          <div style="font-size:11px;font-weight:400;opacity:.75;margin-top:3px;">New method or instrument — establish your lab's own CV from scratch</div>
+        </button>
+        <button id="purposeBtn-verify" class="view-toggle-btn" style="flex:1;padding:10px 12px;font-size:13px;text-align:left;" onclick="setStudyPurpose('verify')">
+          <div style="font-weight:800;">Verify <span style="font-size:11px;font-weight:500;opacity:.8;">EP15-A3</span></div>
+          <div style="font-size:11px;font-weight:400;opacity:.75;margin-top:3px;">After lot change or maintenance — confirm the method still meets the manufacturer's claimed CV</div>
+        </button>
+      </div>
+    </div>
+
     <div class="grid-2">
 
       <!-- Left column: Settings -->
@@ -131,44 +147,37 @@
             <span class="tg-badge tg-design">Repeated measures</span>
             <span class="tg-badge tg-std">CLSI EP05-A3 · EP15-A3</span>
           </div>
-          <div class="tg-when">Full precision study (EP05) before clinical implementation, or verification of manufacturer claims (EP15). Required for ISO 15189 accreditation and new method introduction.</div>
-          <details class="tg-details">
-            <summary>Details</summary>
-            <div class="tg-body">
-              <div class="tg-row"><span class="tg-label">Material</span><span>Stable patient pools at 2 concentration levels covering clinical decision points (e.g. normal + elevated)</span></div>
-              <div class="tg-row"><span class="tg-label">EP05</span><span>20 days × 2 runs/day × 2 replicates = 80 results per level — full precision study</span></div>
-              <div class="tg-row"><span class="tg-label">EP15</span><span>5 days × 2 runs/day × 2 replicates = 20 results per level — manufacturer claim verification</span></div>
-              <div class="tg-row"><span class="tg-label">Output</span><span>CVw (within-run), CVb (between-run), CVt (total precision), ANOVA variance decomposition</span></div>
-            </div>
+          <div class="tg-when"><strong>Validate (EP05-A3):</strong> new method or instrument — establish your own CV from scratch over 20 days. <strong>Verify (EP15-A3):</strong> commercial method after installation, lot change, or maintenance — confirm the method still meets the manufacturer's claimed CV over 5 days. Select the study purpose above before entering data.</div>
+          <details class="assumptions-panel" open>
+            <summary>Assumptions &amp; Study Context</summary>
+            <div class="assumptions-body" id="ep05AssumptionsBody"></div>
           </details>
         </div>
 
         <!-- EFLM card — top -->
-        <div class="card">
-          <div class="section-title">EFLM Performance Specifications</div>
-          <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable imprecision from the EFLM biological variation database (Ricos et al. 2014).</p>
-          <label class="field-label">Analyte</label>
-          <select id="ep05-eflm-analyte" onchange="ep05OnAnalyteChange()">
-            <option value="">— Select analyte —</option>
-          </select>
-          <div id="ep05-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+        <div id="eflm-section-wrap">
+          <div class="card">
+            <div class="section-title">EFLM Performance Specifications</div>
+            <p class="note" style="margin-bottom:10px;">Select an analyte to apply allowable imprecision from the EFLM biological variation database (Ricos et al. 2014).</p>
+            <label class="field-label">Analyte</label>
+            <select id="ep05-eflm-analyte" onchange="ep05OnAnalyteChange()">
+              <option value="">— Select analyte —</option>
+            </select>
+            <div id="ep05-eflm-tier-cards" style="display:none;margin-top:12px;"></div>
+          </div>
+          <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
         </div>
-        <div id="eflm-info-bar" style="display:none;border:1px solid;border-radius:10px;padding:10px 14px;margin-bottom:12px;"></div>
 
         <div class="card">
           <div class="section-title">Study Design</div>
 
-          <label class="field-label">Study purpose</label>
-          <div class="radio-group" style="margin-bottom:10px;">
-            <label><input type="radio" name="study-purpose" value="establish" checked onchange="onPurposeChange()"> Establish <span style="font-size:11px;color:var(--muted);">(EP05-A3)</span></label>
-            <label><input type="radio" name="study-purpose" value="verify" onchange="onPurposeChange()"> Verify <span style="font-size:11px;color:var(--muted);">(EP15-A3)</span></label>
-          </div>
-          <div id="purpose-note" style="display:none;" class="note" style="margin-bottom:8px;">EP15-A3 verification: typical design is 5 days × 1 run × 3 replicates. Manufacturer claims required per level.</div>
+          <input type="hidden" name="study-purpose" id="study-purpose-hidden" value="validate">
+          <div id="purpose-note" style="display:none;" class="note" style="margin-bottom:8px;">EP15-A3 verification: confirm the method meets the manufacturer's claimed CV. Manufacturer claims required per level.</div>
 
           <div class="settings-grid-3">
             <div>
               <label class="field-label">Days</label>
-              <input type="number" id="inp-days" value="5" min="2" step="1" onchange="onDesignChange()">
+              <input type="number" id="inp-days" value="20" min="2" step="1" onchange="onDesignChange()">
             </div>
             <div>
               <label class="field-label">Runs per day</label>
@@ -180,7 +189,19 @@
             </div>
           </div>
 
-          <label class="field-label">Number of levels</label>
+          <div style="margin-top:10px;" id="conditions-varied-section">
+            <label class="field-label">Conditions varied <span style="font-weight:400;">(required for reporting)</span></label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;" id="ip-conditions-checkboxes">
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ipc-days" checked> Days</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ipc-runs"> Runs</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ipc-operators"> Operators</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ipc-reagents"> Reagent lots</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="ipc-calibrations"> Calibrations</label>
+            </div>
+            <p class="note" style="margin:0;">Intermediate precision is only meaningful when the conditions varied are clearly stated — e.g. day-to-day intermediate precision differs from operator-to-operator precision.</p>
+          </div>
+
+          <label class="field-label" style="margin-top:10px;">Number of levels</label>
           <div class="radio-group">
             <label><input type="radio" name="lvl-count" value="1" checked onchange="onLevelCountChange()"> 1 Level</label>
             <label><input type="radio" name="lvl-count" value="2" onchange="onLevelCountChange()"> 2 Levels</label>
@@ -222,11 +243,13 @@
     <!-- Scenario cards -->
     <div class="card">
       <div class="section-title">Load a scenario</div>
-      <div class="ex-grid">
+
+      <!-- EP05 (Validate) scenarios -->
+      <div id="scenarios-validate" class="ex-grid">
         <div class="ex-card" id="ep05-sc1">
-          <div class="ex-num">Scenario 1</div>
+          <div class="ex-num">EP05 · Scenario 1</div>
           <div class="ex-title">Glucose — passes</div>
-          <div class="ex-obj">Two-level EP05 study. Both concentrations show excellent precision, well within allowable imprecision.</div>
+          <div class="ex-obj">Two-level validation. Both concentrations show excellent precision, well within allowable imprecision.</div>
           <div class="ex-params">
             <span class="ex-param">Glucose · mmol/L</span>
             <span class="ex-param">2 levels</span>
@@ -235,9 +258,9 @@
           <button class="ex-btn" onclick="loadScenarioEP05(1)">Load scenario</button>
         </div>
         <div class="ex-card" id="ep05-sc2">
-          <div class="ex-num">Scenario 2</div>
+          <div class="ex-num">EP05 · Scenario 2</div>
           <div class="ex-title">HbA1c — borderline</div>
-          <div class="ex-obj">Single level study. Intermediate precision sits close to the allowable limit — inspect the between-run component.</div>
+          <div class="ex-obj">Single level validation. Intermediate precision sits close to the allowable limit — inspect the between-run component.</div>
           <div class="ex-params">
             <span class="ex-param">HbA1c · mmol/mol</span>
             <span class="ex-param">1 level</span>
@@ -246,15 +269,41 @@
           <button class="ex-btn" onclick="loadScenarioEP05(2)">Load scenario</button>
         </div>
         <div class="ex-card" id="ep05-sc3">
-          <div class="ex-num">Scenario 3</div>
+          <div class="ex-num">EP05 · Scenario 3</div>
           <div class="ex-title">Troponin — fails low level</div>
-          <div class="ex-obj">Two-level study. High-sensitivity troponin shows unacceptable imprecision at the low medical decision level.</div>
+          <div class="ex-obj">Two-level validation. High-sensitivity troponin shows unacceptable imprecision at the low medical decision level.</div>
           <div class="ex-params">
             <span class="ex-param">Troponin · ng/L</span>
             <span class="ex-param">2 levels</span>
             <span class="ex-param fail">CV ≈ 9.1%</span>
           </div>
           <button class="ex-btn" onclick="loadScenarioEP05(3)">Load scenario</button>
+        </div>
+      </div>
+
+      <!-- EP15 (Verify) scenarios -->
+      <div id="scenarios-verify" class="ex-grid" style="display:none;">
+        <div class="ex-card" id="ep05-sc4">
+          <div class="ex-num">EP15 · Scenario 1</div>
+          <div class="ex-title">Glucose — passes verification</div>
+          <div class="ex-obj">5-day verification. Observed CV is well within the manufacturer's claimed CV — method confirmed.</div>
+          <div class="ex-params">
+            <span class="ex-param">Glucose · mmol/L</span>
+            <span class="ex-param">1 level</span>
+            <span class="ex-param pass">CV ≈ 0.7% vs claim 1.5%</span>
+          </div>
+          <button class="ex-btn" onclick="loadScenarioEP05(4)">Load scenario</button>
+        </div>
+        <div class="ex-card" id="ep05-sc5">
+          <div class="ex-num">EP15 · Scenario 2</div>
+          <div class="ex-title">HbA1c — fails verification</div>
+          <div class="ex-obj">5-day verification after reagent lot change. Observed CV exceeds the manufacturer's claim — investigation required.</div>
+          <div class="ex-params">
+            <span class="ex-param">HbA1c · mmol/mol</span>
+            <span class="ex-param">1 level</span>
+            <span class="ex-param fail">CV ≈ 3.8% vs claim 2.5%</span>
+          </div>
+          <button class="ex-btn" onclick="loadScenarioEP05(5)">Load scenario</button>
         </div>
       </div>
     </div>
@@ -332,6 +381,7 @@
 // Chart instance registry
 // ─────────────────────────────────────────────
 var _epCharts = {};
+var _hiddenDayNums = {}; // tracks excluded days per level
 
 function destroyChart(id) {
   if (_epCharts[id]) {
@@ -464,9 +514,78 @@ function getDesign() {
   return { days: days, runs: runs, reps: reps, levels: lvls, totalRuns: days * runs };
 }
 
+function getConditionsVaried() {
+  var map = { 'ipc-days': 'Days', 'ipc-runs': 'Runs', 'ipc-operators': 'Operators', 'ipc-reagents': 'Reagent lots', 'ipc-calibrations': 'Calibrations' };
+  var checked = Object.keys(map).filter(function(id) { var el = document.getElementById(id); return el && el.checked; });
+  return checked.map(function(id) { return map[id]; }).join(', ') || 'Not specified';
+}
+
 function getStudyPurpose() {
-  var el = document.querySelector('input[name="study-purpose"]:checked');
-  return el ? el.value : 'establish';
+  var el = document.getElementById('study-purpose-hidden');
+  return el ? el.value : 'validate';
+}
+
+var EP05_ASSUMP = {
+  validate: {
+    items: [
+      ['Same material throughout all 20 days', 'Same QC lot or pooled patient batch — a new patient each day invalidates the study'],
+      ['At least 2 concentration levels', 'Cover the clinical decision range — low and high medical decision points'],
+      ['20 days × 2 runs/day × 2 replicates/run', 'Fewer days reduces reliability of variance component estimates — this is the full EP05-A3 design'],
+      ['No pre-analytical changes between days', 'Same preparation, storage conditions, and handling throughout']
+    ],
+    pill: 'EP05-A3 · 20 days × 2 runs × 2 replicates = 80 measurements per level'
+  },
+  verify: {
+    items: [
+      ['Same material throughout all 5 days', 'Same QC lot or pooled patient batch — consistent material is essential for valid verification'],
+      ['Manufacturer\'s claimed CV available', 'EP15-A3 tests whether your observed precision is consistent with the manufacturer\'s claim at 95% confidence'],
+      ['5 days × 2 runs/day × 3 replicates/run', 'Standard EP15-A3 verification design — shorter than EP05 but sufficient to detect meaningful deviations'],
+      ['No known instrument or reagent issues during study', 'Document and exclude any affected runs before calculating']
+    ],
+    pill: 'EP15-A3 · 5 days × 2 runs × 3 replicates = 30 measurements per level'
+  }
+};
+
+function setStudyPurpose(purpose) {
+  var el = document.getElementById('study-purpose-hidden');
+  if (el) el.value = purpose;
+
+  // Update buttons
+  document.getElementById('purposeBtn-validate').classList.toggle('active', purpose === 'validate');
+  document.getElementById('purposeBtn-verify').classList.toggle('active', purpose === 'verify');
+
+  // Update badge and subtitle
+  var badge = document.getElementById('purpose-badge');
+  var subtitle = document.getElementById('purpose-subtitle');
+  if (purpose === 'validate') {
+    badge.textContent = 'CLSI EP05-A3';
+    subtitle.textContent = 'Full precision validation — establish repeatability and intermediate precision via nested ANOVA. 20 days × 2 runs × 2 replicates per level.';
+  } else {
+    badge.textContent = 'CLSI EP15-A3';
+    subtitle.textContent = 'Precision verification — confirm the method meets the manufacturer\'s claimed CV at 95% confidence. 5 days × 2 runs × 3 replicates per level.';
+  }
+
+  // Update assumptions panel
+  var a = EP05_ASSUMP[purpose];
+  var html = '<div class="assump-grid">';
+  a.items.forEach(function(item) {
+    html += '<label class="assump-item"><input type="checkbox" checked /><span><strong>' + item[0] + '</strong><br /><span class="small">' + item[1] + '</span></span></label>';
+  });
+  html += '</div><div style="margin-top:10px;"><span class="pill">' + a.pill + '</span></div>';
+  document.getElementById('ep05AssumptionsBody').innerHTML = html;
+
+  var condSection = document.getElementById('conditions-varied-section');
+  if (condSection) condSection.style.display = purpose === 'validate' ? '' : 'none';
+
+  var scValidate = document.getElementById('scenarios-validate');
+  var scVerify   = document.getElementById('scenarios-verify');
+  if (scValidate) scValidate.style.display = purpose === 'validate' ? '' : 'none';
+  if (scVerify)   scVerify.style.display   = purpose === 'verify'   ? '' : 'none';
+
+  var eflmWrap = document.getElementById('eflm-section-wrap');
+  if (eflmWrap) eflmWrap.style.display = purpose === 'validate' ? '' : 'none';
+
+  onPurposeChange();
 }
 
 function getLevelConfig(lvl) {
@@ -592,19 +711,17 @@ function switchDataTab(lvl) {
 // ─────────────────────────────────────────────
 function onPurposeChange() {
   var verify = getStudyPurpose() === 'verify';
-  // Show/hide purpose note
   document.getElementById('purpose-note').style.display = verify ? '' : 'none';
-  // Show/hide claim fields for each level
-  var d = getDesign();
   for (var lvl = 0; lvl < 2; lvl++) {
     var el = document.getElementById('lc-claims-' + lvl);
     if (el) el.style.display = verify ? '' : 'none';
   }
-  // Update default design for EP15: 5 days × 1 run × 3 reps
   if (verify) {
-    document.getElementById('inp-runs').value = 1;
+    document.getElementById('inp-days').value = 5;
+    document.getElementById('inp-runs').value = 2;
     document.getElementById('inp-reps').value = 3;
   } else {
+    document.getElementById('inp-days').value = 20;
     document.getElementById('inp-runs').value = 2;
     document.getElementById('inp-reps').value = 2;
   }
@@ -1153,30 +1270,44 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   var isVerify = getStudyPurpose() === 'verify';
   if (isVerify && (!isNaN(claimCVw) || !isNaN(claimCVt))) {
     html += '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:14px;">';
-    html += '<div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:8px;">EP15-A3 Verification</div>';
-    html += '<p class="note" style="margin-bottom:8px;">Verification limit = Claimed CV × √(χ²<sub>df,0.95</sub> / df). Pass if observed CV ≤ verification limit.</p>';
+    html += '<div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:4px;">EP15-A3 Verification — Chi-Square Test</div>';
+    html += '<p class="note" style="margin-bottom:10px;">χ² = df × (CV<sub>observed</sub>² / CV<sub>claimed</sub>²). Pass if χ²<sub>observed</sub> ≤ χ²<sub>critical</sub> (0.95, df).</p>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;">';
+    html += '<thead><tr style="background:#e0f2fe;"><th style="padding:5px 8px;text-align:left;border:1px solid #bae6fd;">Component</th><th style="padding:5px 8px;border:1px solid #bae6fd;">CV observed</th><th style="padding:5px 8px;border:1px solid #bae6fd;">CV claimed</th><th style="padding:5px 8px;border:1px solid #bae6fd;">df</th><th style="padding:5px 8px;border:1px solid #bae6fd;">χ² observed</th><th style="padding:5px 8px;border:1px solid #bae6fd;">χ² critical</th><th style="padding:5px 8px;border:1px solid #bae6fd;">Verdict</th></tr></thead>';
+    html += '<tbody>';
     // Repeatability verification
     if (!isNaN(claimCVw) && claimCVw > 0) {
-      var vlW = claimCVw * Math.sqrt(jStat.chisquare.inv(0.95, stats.dfW) / stats.dfW);
-      var passW = stats.CVw <= vlW;
-      html += '<div class="verdict ' + (passW ? 'pass' : 'fail') + '" style="margin-bottom:8px;">';
-      html += (passW ? '&#10003; PASS' : '&#10007; FAIL');
-      html += ' &mdash; Repeatability: CV<sub>w</sub> ' + fmt(stats.CVw, 2) + '% ';
-      html += (passW ? '&le;' : '&gt;') + ' VL ' + fmt(vlW, 2) + '% ';
-      html += '<span style="font-weight:400;font-size:12px;">(claimed ' + fmt(claimCVw, 2) + '%, df=' + stats.dfW + ')</span>';
-      html += '</div>';
+      var chiCritW = jStat.chisquare.inv(0.95, stats.dfW);
+      var chiObsW  = stats.dfW * Math.pow(stats.CVw / claimCVw, 2);
+      var passW    = chiObsW <= chiCritW;
+      var vlW      = claimCVw * Math.sqrt(chiCritW / stats.dfW);
+      html += '<tr style="background:#fff;">';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:600;">Repeatability (CV<sub>w</sub>)</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(stats.CVw, 2) + '%</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(claimCVw, 2) + '%</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + stats.dfW + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:700;">' + fmt(chiObsW, 3) + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(chiCritW, 3) + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:700;color:' + (passW ? '#166534' : '#991b1b') + ';">' + (passW ? '&#10003; PASS' : '&#10007; FAIL') + '</td>';
+      html += '</tr>';
     }
     // Intermediate precision verification
     if (!isNaN(claimCVt) && claimCVt > 0) {
-      var vlT = claimCVt * Math.sqrt(jStat.chisquare.inv(0.95, stats.dfT) / stats.dfT);
-      var passT = stats.CVt <= vlT;
-      html += '<div class="verdict ' + (passT ? 'pass' : 'fail') + '" style="margin-bottom:0;">';
-      html += (passT ? '&#10003; PASS' : '&#10007; FAIL');
-      html += ' &mdash; Intermediate: CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% ';
-      html += (passT ? '&le;' : '&gt;') + ' VL ' + fmt(vlT, 2) + '% ';
-      html += '<span style="font-weight:400;font-size:12px;">(claimed ' + fmt(claimCVt, 2) + '%, df=' + stats.dfT + ')</span>';
-      html += '</div>';
+      var chiCritT = jStat.chisquare.inv(0.95, stats.dfT);
+      var chiObsT  = stats.dfT * Math.pow(stats.CVt / claimCVt, 2);
+      var passT    = chiObsT <= chiCritT;
+      var vlT      = claimCVt * Math.sqrt(chiCritT / stats.dfT);
+      html += '<tr style="background:#f0f9ff;">';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:600;">Intermediate (CV<sub>t</sub>)</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(stats.CVt, 2) + '%</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(claimCVt, 2) + '%</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + stats.dfT + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:700;">' + fmt(chiObsT, 3) + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;">' + fmt(chiCritT, 3) + '</td>';
+      html += '<td style="padding:5px 8px;border:1px solid #bae6fd;font-weight:700;color:' + (passT ? '#166534' : '#991b1b') + ';">' + (passT ? '&#10003; PASS' : '&#10007; FAIL') + '</td>';
+      html += '</tr>';
     }
+    html += '</tbody></table>';
     html += '</div>';
   }
 
@@ -1217,7 +1348,14 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
 
   // Individual measurements by day
   html += epSection('Individual Measurements by Day' + lvlSuffix,
-    '<div class="card" style="padding:12px;"><canvas id="dot-chart-' + lvl + '" style="height:250px;"></canvas></div>', true, true);
+    '<div class="card" style="padding:12px;">'
+    + '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px;">'
+    + '<label style="font-size:12px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:5px;">'
+    + '<input type="checkbox" id="hide-excluded-' + lvl + '" onchange="toggleHideExcluded(' + lvl + ')" style="cursor:pointer;">'
+    + 'Hide excluded days from chart'
+    + '</label></div>'
+    + '<div style="position:relative;height:250px;"><canvas id="dot-chart-' + lvl + '"></canvas></div>'
+    + '</div>', true, true);
 
   // Distribution + CV bar side by side
   html += epSection('Repeatability vs Intermediate Precision' + lvlSuffix,
@@ -1375,8 +1513,15 @@ function buildDotChart(stats, cfg, lvl) {
                 if (mMeta) mMeta.hidden = isHidden;
               }
             });
-            chart.update();
-            refreshEP05Level(lvl, hiddenDayNums);
+            _hiddenDayNums[lvl] = hiddenDayNums;
+            var hideChk = document.getElementById('hide-excluded-' + lvl);
+            if (hideChk && hideChk.checked) {
+              // Rebuild dot chart without excluded days entirely
+              refreshEP05Level(lvl, hiddenDayNums, true);
+            } else {
+              chart.update();
+              refreshEP05Level(lvl, hiddenDayNums);
+            }
           }
         },
         tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(4); } } }
@@ -1454,7 +1599,7 @@ function buildDistCVCharts(stats, cfg, lvl) {
 // ─────────────────────────────────────────────
 // Refresh stats for a level when days are toggled
 // ─────────────────────────────────────────────
-function refreshEP05Level(lvl, hiddenDayNums) {
+function refreshEP05Level(lvl, hiddenDayNums, rebuildDot) {
   var ld = _levelsData[lvl];
   if (!ld) return;
   var d = getDesign();
@@ -1487,9 +1632,52 @@ function refreshEP05Level(lvl, hiddenDayNums) {
   if (newStatsEl) statsPanel.innerHTML = newStatsEl.innerHTML;
   if (newCollapsEl) collapsPanel.innerHTML = newCollapsEl.innerHTML;
 
-  // Rebuild LJ and dist/CV charts with filtered stats (dot chart stays as-is)
+  // Rebuild LJ and dist/CV charts with filtered stats
   buildLJChart(newStats, ld.cfg, lvl);
   buildDistCVCharts(newStats, ld.cfg, lvl);
+
+  // Rebuild dot chart without excluded days when "hide excluded" is on
+  if (rebuildDot) {
+    buildDotChart(newStats, ld.cfg, lvl);
+  }
+}
+
+function toggleHideExcluded(lvl) {
+  var hiddenDays = _hiddenDayNums[lvl] || [];
+  var ld = _levelsData[lvl];
+  if (!ld) return;
+  var d = getDesign();
+  var hideChk = document.getElementById('hide-excluded-' + lvl);
+
+  if (hideChk && hideChk.checked) {
+    // Rebuild dot chart with only visible days (excluded days completely removed)
+    if (hiddenDays.length === 0) return; // nothing excluded, no change needed
+    var filteredRunData = ld.runData.filter(function(r) {
+      return hiddenDays.indexOf(r.day) === -1;
+    });
+    var newStats = computeEP05(filteredRunData, d.reps);
+    if (newStats) buildDotChart(newStats, ld.cfg, lvl);
+  } else {
+    // Rebuild dot chart with full data, then re-apply Chart.js hidden state
+    var allRunData = ld.runData.filter(function(r) { return r.complete; });
+    var fullStats = computeEP05(allRunData, d.reps);
+    if (!fullStats) return;
+    buildDotChart(fullStats, ld.cfg, lvl);
+    // Re-hide excluded days via Chart.js
+    var dotChart = _epCharts['dot-chart-' + lvl];
+    if (dotChart && hiddenDays.length > 0) {
+      dotChart.data.datasets.forEach(function(ds, i) {
+        if (ds.label && ds.label.startsWith('Day ')) {
+          var dayNum = parseInt(ds.label.replace('Day ', ''));
+          var isHidden = hiddenDays.indexOf(dayNum) !== -1;
+          dotChart.getDatasetMeta(i).hidden = isHidden;
+          var mMeta = dotChart.getDatasetMeta(i + 1);
+          if (mMeta) mMeta.hidden = isHidden;
+        }
+      });
+      dotChart.update();
+    }
+  }
 }
 
 // Levey-Jennings chart builder
@@ -1771,7 +1959,7 @@ var ep05EFLMTier = 'desirable';
       sel.appendChild(opt);
     });
 })();
-eflmRestoreSelection('ep05-eflm-analyte');
+// Do not auto-restore EFLM — user must select explicitly each session
 
 function ep05OnAnalyteChange() {
   ep05EFLMKey = document.getElementById('ep05-eflm-analyte').value;
@@ -1860,8 +2048,7 @@ function ep05ClearAllowCV() {
 function ep05UpdateEFLM() {}
 
 (function init() {
-  buildLevelConfigs();
-  buildAllTables();
+  setStudyPurpose('validate');
 })();
 
 window.exportToExcel = function() {
@@ -1927,6 +2114,9 @@ function loadScenarioEP05(n) {
   document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
   document.getElementById('ep05-sc' + n).classList.add('active');
 
+  // Switch to the appropriate mode
+  setStudyPurpose(n <= 3 ? 'validate' : 'verify');
+
   if (n === 1) {
     // Glucose — 2 levels, passes
     document.querySelector('input[name="lvl-count"][value="2"]').checked = true;
@@ -1971,6 +2161,30 @@ function loadScenarioEP05(n) {
     document.getElementById('lc-analyte-1') && (document.getElementById('lc-analyte-1').value = 'Troponin');
     document.getElementById('lc-unit-1')    && (document.getElementById('lc-unit-1').value    = 'ng/L');
     document.getElementById('lc-allowcv-1') && (document.getElementById('lc-allowcv-1').value = '5.0');
+  } else if (n === 4) {
+    // Glucose EP15 — passes
+    document.querySelector('input[name="lvl-count"][value="1"]').checked = true;
+    onLevelCountChange();
+    document.getElementById('gen-mean-0').value = '5.5';
+    document.getElementById('gen-cvw-0').value  = '0.5';
+    document.getElementById('gen-cvb-0').value  = '0.5';
+    document.getElementById('lc-analyte-0')  && (document.getElementById('lc-analyte-0').value  = 'Glucose');
+    document.getElementById('lc-unit-0')     && (document.getElementById('lc-unit-0').value     = 'mmol/L');
+    document.getElementById('lc-allowcv-0')  && (document.getElementById('lc-allowcv-0').value  = '');
+    document.getElementById('lc-claimcvw-0') && (document.getElementById('lc-claimcvw-0').value = '1.0');
+    document.getElementById('lc-claimcvt-0') && (document.getElementById('lc-claimcvt-0').value = '1.5');
+  } else if (n === 5) {
+    // HbA1c EP15 — fails
+    document.querySelector('input[name="lvl-count"][value="1"]').checked = true;
+    onLevelCountChange();
+    document.getElementById('gen-mean-0').value = '52.0';
+    document.getElementById('gen-cvw-0').value  = '2.5';
+    document.getElementById('gen-cvb-0').value  = '3.0';
+    document.getElementById('lc-analyte-0')  && (document.getElementById('lc-analyte-0').value  = 'HbA1c');
+    document.getElementById('lc-unit-0')     && (document.getElementById('lc-unit-0').value     = 'mmol/mol');
+    document.getElementById('lc-allowcv-0')  && (document.getElementById('lc-allowcv-0').value  = '');
+    document.getElementById('lc-claimcvw-0') && (document.getElementById('lc-claimcvw-0').value = '1.5');
+    document.getElementById('lc-claimcvt-0') && (document.getElementById('lc-claimcvt-0').value = '2.5');
   }
 
   // Clear EFLM analyte selection
@@ -1993,17 +2207,17 @@ function getSaveData() {
   document.querySelectorAll('input[id^="ep-d"]').forEach(function(el) {
     if (el.value.trim()) cells[el.id] = el.value;
   });
-  var purposeEl = document.querySelector('input[name="study-purpose"]:checked');
   return {
     days:    d.days,
     runs:    d.runs,
     reps:    d.reps,
     levels:  d.levels,
-    purpose: purposeEl ? purposeEl.value : 'establish',
+    purpose: getStudyPurpose(),
     eflmKey: ep05EFLMKey || '',
     eflmTier: ep05EFLMTier || 'desirable',
     levelConfigs: lvlConfigs,
-    cells:   cells
+    cells:   cells,
+    conditionsVaried: { days: document.getElementById('ipc-days').checked, runs: document.getElementById('ipc-runs').checked, operators: document.getElementById('ipc-operators').checked, reagents: document.getElementById('ipc-reagents').checked, calibrations: document.getElementById('ipc-calibrations').checked }
   };
 }
 
@@ -2016,14 +2230,18 @@ function loadSaveData(d) {
   if (daysEl && d.days) daysEl.value = d.days;
   if (runsEl && d.runs) runsEl.value = d.runs;
   if (repsEl && d.reps) repsEl.value = d.reps;
+  if (d.conditionsVaried) {
+    var cv = d.conditionsVaried;
+    ['days','runs','operators','reagents','calibrations'].forEach(function(k) {
+      var el = document.getElementById('ipc-' + k);
+      if (el) el.checked = !!cv[k];
+    });
+  }
   if (d.levels) {
     var lvlRadio = document.querySelector('input[name="lvl-count"][value="' + d.levels + '"]');
     if (lvlRadio) { lvlRadio.checked = true; onLevelCountChange(); }
   }
-  if (d.purpose) {
-    var purposeRadio = document.querySelector('input[name="study-purpose"][value="' + d.purpose + '"]');
-    if (purposeRadio) { purposeRadio.checked = true; }
-  }
+  if (d.purpose) setStudyPurpose(d.purpose === 'establish' ? 'validate' : d.purpose);
   onDesignChange();
   // 2. Restore EFLM
   if (d.eflmKey) {
@@ -2136,6 +2354,7 @@ async function addEP05ToReport() {
       + (!isNaN(allowCV) && allowCV > 0 ? '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;">Allowable CV%</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + fmtR(allowCV,1) + '%</td></tr>' : '')
       + (verdictText ? '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:600;">Verdict</td><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;' + verdictStyle + '">' + verdictText + '</td></tr>' : '')
       + '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;font-weight:600;">Study design</td><td style="padding:4px 8px;border:1px solid #e2e8f0;">' + s.n + ' runs · ' + s.m + ' replicates/run · ' + (s.n * s.m) + ' total measurements</td></tr>'
+      + (lvl === 0 && getStudyPurpose() === 'validate' ? '<tr><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:600;">Conditions varied</td><td style="padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;">' + getConditionsVaried() + '</td></tr>' : '')
       + '</tbody></table>';
 
     // Comparison bar (only when allowable CV is set)

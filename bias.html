@@ -72,13 +72,30 @@
             <span class="tg-badge tg-std">CLSI EP15-A3 · ISO 17511</span>
           </div>
           <div class="tg-when">Quantify systematic error against a certified or consensus target value. Required for ISO 15189 accreditation. Use CRM or EQA material — do NOT use patient samples without a certified reference.</div>
-          <details class="tg-details">
-            <summary>Details</summary>
-            <div class="tg-body">
-              <div class="tg-row"><span class="tg-label">Material</span><span>Certified Reference Material (CRM), EQA sample with assigned value, or proficiency testing material</span></div>
-              <div class="tg-row"><span class="tg-label">Design</span><span>n ≥ 20 measurements against a known reference value (single or per-sample)</span></div>
-              <div class="tg-row"><span class="tg-label">Output</span><span>Mean % bias, 95% CI, one-sample t-test, individual pair table, outlier flags</span></div>
-              <div class="tg-row"><span class="tg-label">Note</span><span>Bias% feeds directly into the Total Error &amp; Sigma tool — run this first</span></div>
+          <details class="assumptions-panel" open>
+            <summary>Assumptions &amp; Study Context</summary>
+            <div class="assumptions-body">
+              <div class="assump-grid">
+                <label class="assump-item">
+                  <input type="checkbox" checked />
+                  <span><strong>Material has a known assigned reference value</strong><br /><span class="small">CRM (certified reference material), EQA sample, or manufacturer-assigned value with traceability</span></span>
+                </label>
+                <label class="assump-item">
+                  <input type="checkbox" checked />
+                  <span><strong>Same material lot throughout all measurements</strong><br /><span class="small">No instability or lot change between measurement days</span></span>
+                </label>
+                <label class="assump-item">
+                  <input type="checkbox" checked />
+                  <span><strong>Method in stable calibrated state</strong><br /><span class="small">No calibration changes, reagent lot changes, or maintenance during the study</span></span>
+                </label>
+                <label class="assump-item">
+                  <input type="checkbox" checked />
+                  <span><strong>Measured under routine laboratory conditions</strong><br /><span class="small">Same conditions as normal clinical use — not optimised best-case conditions</span></span>
+                </label>
+              </div>
+              <div style="margin-top:10px;">
+                <span class="pill">Material: CRM, EQA, or assigned-value QC · Design: ≥ 10–20 replicate measurements at each level</span>
+              </div>
             </div>
           </details>
         </div>
