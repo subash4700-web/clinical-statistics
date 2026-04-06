@@ -64,14 +64,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload EXE to GitHub release
+      - name: Upload EXE and MSI to GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.exe
+          files: |
+            dist/*.exe
+            dist/*.msi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload EXE to Cloudflare R2
+      - name: Upload EXE and MSI to Cloudflare R2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
@@ -81,4 +83,7 @@ jobs:
           pip install awscli
           $EXE = Get-ChildItem dist\*.exe | Where-Object { $_.Name -notlike "*.blockmap" } | Select-Object -First 1
           aws s3 cp $EXE.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics-latest-win.exe `
+            --endpoint-url https://$env:CF_ACCOUNT_ID.r2.cloudflarestorage.com
+          $MSI = Get-ChildItem dist\*.msi | Where-Object { $_.Name -notlike "*.blockmap" } | Select-Object -First 1
+          aws s3 cp $MSI.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics-latest-win.msi `
             --endpoint-url https://$env:CF_ACCOUNT_ID.r2.cloudflarestorage.com

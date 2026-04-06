@@ -1,6 +1,6 @@
 {
   "name": "electron-app",
-  "version": "2.0.18",
+  "version": "2.0.19",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -34,8 +34,16 @@
       "identity": null
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        "nsis",
+        "msi"
+      ],
       "icon": "icon.ico"
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": true,
+      "runAfterFinish": false
     }
   },
   "dependencies": {
