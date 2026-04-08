@@ -19,7 +19,7 @@
   "build": {
     "appId": "com.clinicalstats.app",
     "productName": "Clinical Statistics",
-    "artifactName": "Clinical-Statistics-${version}-${arch}.${ext}",
+    "artifactName": "Clinical-Statistics.${ext}",
     "mac": {
       "icon": "icon.icns",
       "target": [

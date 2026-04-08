@@ -42,7 +42,7 @@ jobs:
         run: |
           pip install awscli
           DMG=$(ls dist/*.dmg | grep -v blockmap | head -1)
-          aws s3 cp "$DMG" s3://clinical-statistics-downloads/mac/Clinical-Statistics-latest-mac.dmg \
+          aws s3 cp "$DMG" s3://clinical-statistics-downloads/mac/Clinical-Statistics.dmg \
             --endpoint-url https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com
 
   build-windows:
@@ -82,8 +82,8 @@ jobs:
         run: |
           pip install awscli
           $EXE = Get-ChildItem dist\*.exe | Where-Object { $_.Name -notlike "*.blockmap" } | Select-Object -First 1
-          aws s3 cp $EXE.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics-latest-win.exe `
+          aws s3 cp $EXE.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics.exe `
             --endpoint-url https://$env:CF_ACCOUNT_ID.r2.cloudflarestorage.com
           $MSI = Get-ChildItem dist\*.msi | Where-Object { $_.Name -notlike "*.blockmap" } | Select-Object -First 1
-          aws s3 cp $MSI.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics-latest-win.msi `
+          aws s3 cp $MSI.FullName s3://clinical-statistics-downloads/win/Clinical-Statistics.msi `
             --endpoint-url https://$env:CF_ACCOUNT_ID.r2.cloudflarestorage.com
