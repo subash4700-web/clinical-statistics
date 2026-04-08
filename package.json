@@ -1,6 +1,6 @@
 {
   "name": "electron-app",
-  "version": "2.0.19",
+  "version": "2.0.21",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -19,6 +19,7 @@
   "build": {
     "appId": "com.clinicalstats.app",
     "productName": "Clinical Statistics",
+    "artifactName": "Clinical-Statistics-${version}-${arch}.${ext}",
     "mac": {
       "icon": "icon.icns",
       "target": [
