@@ -40,41 +40,72 @@ document.addEventListener("DOMContentLoaded", () => {
     // Decision based on corrected statistic (recommended)
     const rejectH0 = chi2_corrected > chi2_crit;
 
+    // --- Effect size: Odds Ratio for discordant pairs ---
+    const oddsRatio = c > 0 ? b / c : Infinity;
+    const lnOR = c > 0 && b > 0 ? Math.log(b / c) : NaN;
+    const seLnOR = (b > 0 && c > 0) ? Math.sqrt(1/b + 1/c) : NaN;
+    const z95 = 1.96;
+    const orCILo = isFinite(lnOR) ? Math.exp(lnOR - z95 * seLnOR) : NaN;
+    const orCIHi = isFinite(lnOR) ? Math.exp(lnOR + z95 * seLnOR) : NaN;
+    const orStr = isFinite(oddsRatio) ? oddsRatio.toFixed(2) : '∞';
+    const orCIStr = (isFinite(orCILo) && isFinite(orCIHi)) ? `[${orCILo.toFixed(2)}, ${orCIHi.toFixed(2)}]` : '—';
+
+    // Direction of shift
+    const shiftDir = b > c ? 'Condition 1 → Condition 2' : b < c ? 'Condition 2 → Condition 1' : 'No directional shift';
+
     // --- Output ---
     resultsDiv.innerHTML = `
       <div class="results">
         <h3>McNemar Test Results</h3>
 
-        <p><strong>Discordant pairs:</strong><br>
-        b (Yes → No) = ${b}<br>
-        c (No → Yes) = ${c}</p>
+        <div class="section-title">Discordant Pairs</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+            <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">b (Yes → No)</div>
+            <div style="font-size:20px;font-weight:800;color:#111827;">${b}</div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+            <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">c (No → Yes)</div>
+            <div style="font-size:20px;font-weight:800;color:#111827;">${c}</div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+            <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Total discordant</div>
+            <div style="font-size:20px;font-weight:800;color:#111827;">${n}</div>
+          </div>
+        </div>
 
-        <hr>
+        <div class="section-title">Test Statistics</div>
+        <table>
+          <thead><tr><th>Statistic</th><th>Value</th><th>p-value</th></tr></thead>
+          <tbody>
+            <tr><td>χ² (without correction)</td><td>${chi2_uncorrected.toFixed(3)}</td><td>${p_uncorrected < 0.001 ? '< 0.001' : p_uncorrected.toFixed(4)}</td></tr>
+            <tr><td>χ² (with Yates' correction)</td><td>${chi2_corrected.toFixed(3)}</td><td>${p_corrected < 0.001 ? '< 0.001' : p_corrected.toFixed(4)}</td></tr>
+            <tr><td>χ²<sub>crit</sub> (df=1, α=${alpha})</td><td>${chi2_crit}</td><td>—</td></tr>
+          </tbody>
+        </table>
 
-        <p><strong>Without continuity correction:</strong><br>
-        χ² = ${chi2_uncorrected.toFixed(3)}<br>
-        p-value = ${p_uncorrected.toFixed(4)}</p>
+        <div class="section-title">Effect Size</div>
+        <table>
+          <thead><tr><th>Measure</th><th>Value</th><th>95% CI</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Odds Ratio (b/c)</strong></td><td>${orStr}</td><td>${orCIStr}</td></tr>
+            <tr><td>Direction of shift</td><td colspan="2">${shiftDir} (${b > c ? b + ' vs ' + c : c + ' vs ' + b})</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px;color:#6b7280;margin-top:4px;">Odds ratio = b/c. OR > 1 means more changes from Yes→No than No→Yes. OR = 1 means equal change in both directions. 95% CI excluding 1.0 indicates significant asymmetry.</p>
 
-        <p><strong>With continuity correction:</strong><br>
-        χ² = ${chi2_corrected.toFixed(3)}<br>
-        p-value = ${p_corrected.toFixed(4)}</p>
-
-        <hr>
-
-        <p><strong>Critical value:</strong><br>
-        χ²<sub>crit</sub> (df = 1, α = ${alpha}) = ${chi2_crit}</p>
-
-        <p><strong>Decision rule:</strong><br>
-        ${chi2_corrected.toFixed(3)} ${rejectH0 ? ">" : "≤"} ${chi2_crit}
-        </p>
-
-        <p><strong>Conclusion:</strong><br>
-        ${rejectH0
-          ? `Reject H₀: There is a statistically significant difference between paired proportions. The systematic shift is toward <strong>${b > c ? "No → Yes" : "Yes → No"}</strong> (${b > c ? c : b} vs. ${b > c ? b : c} discordant pairs).`
-          : "Fail to reject H₀: There is no statistically significant difference between paired proportions."}
-        </p>
+        <div class="section-title">Verdict</div>
+        <div style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:700;${rejectH0 ? 'background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;' : 'background:#f0fdf4;border:1px solid #86efac;color:#166534;'}">
+          ${rejectH0
+            ? `✗ Reject H₀ (p = ${p_corrected < 0.001 ? '< 0.001' : p_corrected.toFixed(4)}) — Significant systematic shift detected.<br>
+               <span style="font-weight:400;">The change is predominantly <strong>${b > c ? 'Yes → No' : 'No → Yes'}</strong> (OR = ${orStr}, 95% CI ${orCIStr}).</span>`
+            : `✓ Fail to reject H₀ (p = ${p_corrected < 0.001 ? '< 0.001' : p_corrected.toFixed(4)}) — No significant difference between paired proportions.<br>
+               <span style="font-weight:400;">The discordant pairs are balanced (OR = ${orStr}, 95% CI ${orCIStr}).</span>`}
+        </div>
       </div>
     `;
+
+    if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('results');
 
     // Render heatmap after a brief delay to ensure canvas is ready
     setTimeout(() => {

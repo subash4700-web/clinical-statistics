@@ -278,49 +278,28 @@
     const beforePrev = parseFloat(document.getElementById("genBeforePrevalence").value) || 0.3;
     const noise = document.getElementById("genNoise").value;
 
-    // Generate probabilities based on pattern
-    // a = Yes→Yes, b = Yes→No, c = No→Yes, d = No→No
-    let pA, pB, pC, pD;
-    
+    // Generate counts directly — discordant pairs are what matter
+    // Discordant ratio (c/b) determines the effect; total discordant determines power
+    let discordantPct, ratio; // discordantPct = fraction of N that are discordant, ratio = c/b
+
     if (pattern === "no_change") {
-      // No systematic change, b ≈ c
-      pB = beforePrev * 0.1; // 10% of those with condition change to no
-      pC = beforePrev * 0.1; // 10% of those without develop condition
-      pA = beforePrev - pB;
-      pD = (1 - beforePrev) - pC;
+      discordantPct = 0.20; ratio = 1.0;   // b ≈ c
     } else if (pattern === "weak") {
-      // Weak improvement: slightly more b than c
-      pB = beforePrev * 0.12;
-      pC = beforePrev * 0.18; // More gain condition
-      pA = beforePrev - pB;
-      pD = (1 - beforePrev) - pC;
+      discordantPct = 0.25; ratio = 2.0;   // c = 2×b
     } else if (pattern === "moderate") {
-      // Moderate improvement
-      pB = beforePrev * 0.15;
-      pC = beforePrev * 0.3;
-      pA = beforePrev - pB;
-      pD = (1 - beforePrev) - pC;
+      discordantPct = 0.30; ratio = 3.5;   // c = 3.5×b
     } else { // strong
-      // Strong improvement
-      pB = beforePrev * 0.2;
-      pC = beforePrev * 0.5;
-      pA = beforePrev - pB;
-      pD = (1 - beforePrev) - pC;
+      discordantPct = 0.40; ratio = 6.0;   // c = 6×b, plenty of discordant pairs
     }
 
-    // Ensure valid probabilities
-    pA = Math.max(0, pA);
-    pB = Math.max(0, pB);
-    pC = Math.max(0, pC);
-    pD = Math.max(0, pD);
-    const sum = pA + pB + pC + pD;
-    pA /= sum; pB /= sum; pC /= sum; pD /= sum;
+    const totalDiscordant = Math.round(N * discordantPct);
+    let b = Math.max(1, Math.round(totalDiscordant / (1 + ratio)));
+    let c = totalDiscordant - b;
+    // Concordant pairs split by beforePrev
+    const concordant = N - b - c;
+    let a = Math.round(concordant * beforePrev);
+    let d = concordant - a;
 
-    // Generate counts
-    let a = Math.round(N * pA);
-    let b = Math.round(N * pB);
-    let c = Math.round(N * pC);
-    let d = Math.round(N * pD);
 
     // Apply noise
     if (noise !== "none") {

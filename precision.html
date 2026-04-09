@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Precision</title>
-  <script src="../assets/vendor/chart.umd.min.js"></script>
-  <script src="../assets/vendor/jstat.min.js"></script>
-  <script src="../assets/vendor/xlsx.full.min.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/vendor/jstat.min.js"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
   <script src="assets/js/eflm_db.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="assets/js/report-helper.js"></script>
@@ -268,16 +268,7 @@
         <button class="view-toggle-btn" onclick="setAcrView('accreditation')">Compressed view</button>
       </div>
     </div>
-    <div class="rpt-section" data-open="true" data-sec-id="precision-results">
-      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-        <span class="rpt-sec-title">Precision Results</span>
-        <span class="rpt-sec-badge rpt-badge-in">In report</span>
-        <span class="rpt-sec-arrow">▼</span>
-      </div>
-      <div class="rpt-sec-body">
-        <div id="results-body"></div>
-      </div>
-    </div>
+    <div id="results-body"></div>
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
       <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
@@ -503,6 +494,76 @@ function wgBadge(rule){
   return `<span class="wg-badge wg-${r.type==='reject'?'reject':'warn'}" title="${r.desc}">${r.label}</span>`;
 }
 
+// Post-process: wrap each .section-header + following content into rpt-section
+function wrapSectionsForReport(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var headers = container.querySelectorAll('.section-header');
+  headers.forEach(function(hdr) {
+    var title = hdr.textContent.trim();
+    var contentEls = [];
+    var next = hdr.nextElementSibling;
+    while (next && !next.classList.contains('section-header') && !next.classList.contains('rpt-section')) {
+      contentEls.push(next);
+      next = next.nextElementSibling;
+    }
+    // Create wrapper
+    var sec = document.createElement('div');
+    sec.className = 'rpt-section';
+    sec.setAttribute('data-open', 'true');
+    sec.setAttribute('data-sec-id', title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
+    sec.innerHTML = '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+      + '<span class="rpt-sec-arrow">▼</span>'
+      + '<span class="rpt-sec-title">' + title + '</span>'
+      + '<span class="rpt-sec-badge rpt-badge-in">In report</span>'
+      + '</div>';
+    var body = document.createElement('div');
+    body.className = 'rpt-sec-body';
+    contentEls.forEach(function(el) { body.appendChild(el); });
+    sec.appendChild(body);
+    hdr.replaceWith(sec);
+  });
+
+  // Also wrap the first block (summary card before any section-header) if it exists
+  var firstChild = container.firstElementChild;
+  if (firstChild && !firstChild.classList.contains('rpt-section')) {
+    var preContent = [];
+    var el = firstChild;
+    while (el && !el.classList.contains('rpt-section') && !el.classList.contains('section-header')) {
+      preContent.push(el);
+      el = el.nextElementSibling;
+    }
+    if (preContent.length > 0) {
+      var sec = document.createElement('div');
+      sec.className = 'rpt-section';
+      sec.setAttribute('data-open', 'true');
+      sec.setAttribute('data-sec-id', 'summary-verdict');
+      sec.innerHTML = '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+        + '<span class="rpt-sec-arrow">▼</span>'
+        + '<span class="rpt-sec-title">Summary & Verdict</span>'
+        + '<span class="rpt-sec-badge rpt-badge-in">In report</span>'
+        + '</div>';
+      var body = document.createElement('div');
+      body.className = 'rpt-sec-body';
+      preContent.forEach(function(p) { body.appendChild(p); });
+      sec.appendChild(body);
+      container.insertBefore(sec, container.firstElementChild);
+    }
+  }
+}
+
+function rptSec(title, content, open) {
+  var isOpen = open !== false;
+  return '<div class="rpt-section" data-open="' + isOpen + '" data-sec-id="' + title.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase() + '">'
+    + '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+    + '<span class="rpt-sec-arrow">' + (isOpen ? '▼' : '▶') + '</span>'
+    + '<span class="rpt-sec-title">' + title + '</span>'
+    + '<span class="rpt-sec-badge ' + (isOpen ? 'rpt-badge-in' : 'rpt-badge-ex') + '">' + (isOpen ? 'In report' : 'Excluded') + '</span>'
+    + '</div>'
+    + '<div class="rpt-sec-body"' + (isOpen ? '' : ' style="display:none;"') + '>' + content + '</div>'
+    + '</div>';
+}
+
 function wgPanel(violations){
   // violations: array[n] of string arrays
   const allRules = violations.flat();
@@ -641,12 +702,13 @@ function renderRepeatability(){
 
   let html='';
 
-  // ── Analyte header ──
+  // ── Analyte header (always shown, not toggleable) ──
   html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:baseline;gap:8px;">
     <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Analyte</span>
     <span style="font-size:16px;font-weight:800;color:#0c4a6e;">${analyte}</span>
     ${unit?`<span style="font-size:13px;color:#0284c7;">(${unit})</span>`:''}
   </div>`;
+
 
   // ── Compact summary card ──
   html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
@@ -680,12 +742,12 @@ function renderRepeatability(){
       return `<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification</span>
-            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">Allowable CV% = ${fmt(allowable,1)}%</span>
-          </div>
-          <div>
             <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Measured CV%</span>
             <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(cv,2)}%</span>
+          </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Allowable CV%</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(allowable,1)}%</span>
           </div>
         </div>
         <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
@@ -710,27 +772,26 @@ function renderRepeatability(){
     html+=`<div class="excl-info"><strong>${_excludedSet.size} observation${_excludedSet.size!==1?'s':''} excluded</strong> from statistics. Showing full dataset below.</div>`;
   }
 
-  html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Full results</div>`;
-  html+=kpiGrid([
+  // Full results KPIs
+  html+=rptSec('Full Results', kpiGrid([
     {label:'n (active)',      value:n,                       sub:_excludedSet.size>0?`${_excludedSet.size} excluded`:'observations'},
     {label:'Mean',            value:fmt(mu,4),               sub:unit||''},
     {label:'SD (within-run)', value:fmt(s,4),                sub:`95% CI [${fmt(ciSD.lower,4)}, ${fmt(ciSD.upper,4)}]`},
     {label:'CV%',             value:fmt(cv,2)+'%',           sub:`95% CI [${fmt(ciCVLo,2)}%, ${fmt(ciCVHi,2)}%]`},
     {label:'95% CI (mean)',   value:`${fmt(ciMeanLo,4)} – ${fmt(ciMeanHi,4)}`, sub:unit||''},
     {label:'Min / Max',       value:`${fmt(Math.min(...activeVals),4)} / ${fmt(Math.max(...activeVals),4)}`, sub:'range'},
-  ]);
+  ]));
 
-  // Westgard summary panel
-  html+=`<div class="section-header">Westgard Rule Check</div>`;
-  html+=wgPanel(activeViolations);
-
-  // Levey-Jennings chart
-  html+=`<div class="section-header">Levey-Jennings Chart</div>`;
-  html+=`<div class="card" style="padding:12px;"><canvas id="lj-chart"></canvas></div>`;
+  // Westgard + Levey-Jennings combined
+  html+=rptSec('Westgard & Levey-Jennings',
+    wgPanel(activeViolations)
+    + '<div class="card" style="padding:12px;margin-top:10px;"><canvas id="lj-chart"></canvas></div>');
 
   // All observations table
-  html+=`<div class="section-header">Observations — toggle to exclude</div>`;
-  html+=`<div class="table-wrap"><table>
+  var obsHtml = `<div style="font-size:11px;color:#6b7280;margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;">
+    💡 Check the box to exclude an observation from calculations. Statistics and chart update automatically.
+  </div>`;
+  obsHtml += `<div class="table-wrap"><table>
     <thead><tr>
       <th>#</th><th class="num">Value (${unit||'—'})</th><th class="num">z-score</th>
       <th>Westgard violations</th><th style="text-align:center;">Exclude</th>
@@ -741,7 +802,7 @@ function renderRepeatability(){
     const z    = (v - ctrlMu)/ctrlS;
     const zStr = isFinite(z)?fmt(z,2):'—';
     const badges = vio.length ? vio.map(wgBadge).join('') : '<span style="font-size:11px;color:#9ca3af;">—</span>';
-    html+=`<tr class="${excl?'excl-row':''}">
+    obsHtml+=`<tr class="${excl?'excl-row':''}">
       <td>${i+1}</td>
       <td class="num">${fmt(v,4)}</td>
       <td class="num">${zStr}</td>
@@ -749,7 +810,8 @@ function renderRepeatability(){
       <td class="excl-cb-cell" style="text-align:center;"><input type="checkbox" class="cb-excl" ${excl?'checked':''} onchange="toggleExclude(${i})"></td>
     </tr>`;
   });
-  html+=`</tbody></table></div>`;
+  obsHtml+=`</tbody></table></div>`;
+  html+=rptSec('Observations', obsHtml, false);
 
   // Workflow: save result and show next-step card
   try { localStorage.setItem('wf_precision', JSON.stringify({ cv: +fmt(cv,2), analyte, unit, type:'repeatability' })); } catch(e) {}
@@ -757,6 +819,7 @@ function renderRepeatability(){
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
 
   document.getElementById('results-body').innerHTML=html;
+  wrapSectionsForReport('results-body');
 
   // Chart — all points shown; excluded = grey, violations = colored
   const labels=allVals.map((_,i)=>i+1);
@@ -1030,6 +1093,7 @@ function renderIntermediate(){
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
 
   document.getElementById('results-body').innerHTML=html;
+  wrapSectionsForReport('results-body');
 
   const ptBg=keys.map((_,ki)=>{
     const vio=wgVio[ki]||[];

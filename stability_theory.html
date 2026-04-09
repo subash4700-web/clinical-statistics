@@ -27,7 +27,7 @@
     .index a:hover { text-decoration: underline; }
 
     .section { margin-bottom: 44px; scroll-margin-top: 16px; }
-    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #4338ca; padding-left: 10px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #4338ca; padding-left: 10px; position: sticky; top: 38px; background: #f4f6f8; z-index: 10; padding-top: 10px; padding-bottom: 10px; }
     .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
     .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
     .section p:last-child { margin-bottom: 0; }
@@ -139,7 +139,7 @@
       </div>
     </div>
 
-    <div class="callout">
+    <div class="good">
       <b>Core principle:</b> In analytical performance studies, the material is the control — you assume it is stable and study the method. In stability studies, the method is the control — you assume it is stable and study the material. Swap these assumptions and you will draw the wrong conclusion.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -288,7 +288,7 @@
       Regressing mean % change against time (months) gives a <strong>drift rate</strong> (% per month). A statistically significant slope confirms progressive degradation. The regression line can be extrapolated to estimate when the material would cross the acceptance limit — but extrapolation beyond measured time points is indicative only.
     </p>
 
-    <div class="callout">
+    <div class="warn">
       <b>Important:</b> The paired t-test p-value tells you whether the mean change is statistically distinguishable from zero. But statistical significance alone is not the acceptance criterion — the <em>magnitude</em> of the change (mean % change vs your pre-defined limit) is what determines pass or fail. A large panel can detect a 1% change with p &lt; 0.05, even if 1% is clinically irrelevant.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -357,7 +357,7 @@
       The manufacturer's labelled expiry is based on their testing under their specified storage conditions. Your functional expiry verifies that the material is still acceptable under <em>your</em> storage conditions. If your freezer runs at −15°C instead of −20°C, or if samples have undergone repeated freeze-thaw cycles, your functional expiry may be shorter than the label.
     </p>
 
-    <div class="callout">
+    <div class="good">
       <b>Document the conditions:</b> Functional expiry is only valid for the exact storage conditions tested. If you test stability at 2–8°C, the result does not apply to room temperature storage. Record temperature, light exposure, container type, and number of freeze-thaw cycles in the study protocol.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>

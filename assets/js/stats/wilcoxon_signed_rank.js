@@ -361,6 +361,7 @@ function renderResults(res){
   }
 
   resultsDiv.innerHTML = html;
+  if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('resultsContent');
 
   // Show the Add to Report button row
   const rptBtnRow = el('report-btn-row');
@@ -371,65 +372,43 @@ function renderResults(res){
     try{
       // Add hypothesis visualization card wrapped in rpt-section
       const vizCard = document.createElement('div');
-      vizCard.className = 'rpt-section';
-      vizCard.setAttribute('data-open', 'true');
-      vizCard.setAttribute('data-sec-id', 'viz');
-      vizCard.style.marginTop = '10px';
+      vizCard.id = 'vizSections';
+      // Build three separate viz sections
+      let vizHTML = '';
 
-      let vizHTML = `
-        <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-          <span class="rpt-sec-title">Hypothesis Visualisation</span>
-          <span class="rpt-sec-badge rpt-badge-in">In report</span>
-          <span class="rpt-sec-arrow">▼</span>
-        </div>
-        <div class="rpt-sec-body">
-        <div class="card">
-        <div class="note"><strong>Paired comparison:</strong> Boxplots compare Before vs After measurements, showing medians, quartiles, and outliers.</div>
-        <div style="margin-top:12px;">
-          <canvas id="vizPairedBox" height="200"></canvas>
-        </div>
-        <div style="margin-top:16px;">
-          <div class="note"><strong>Difference distribution:</strong> Boxplot shows the distribution of differences (After - Before) that the test analyzes.</div>
-          <div style="margin-top:8px;">
-            <canvas id="vizDiffBox" height="180"></canvas>
-          </div>
-        </div>
-      `;
-      
-      // Only show normal approximation viz when actually using it
-      if(exactP === null){
-        vizHTML += `
-        <div style="margin-top:16px;">
-          <div class="note"><strong>Test statistic sampling distribution:</strong> This shows the theoretical distribution of the z-score <em>under the null hypothesis</em> (not the data distribution). When sample sizes are large enough, the signed-rank statistic follows an approximate normal distribution. Shaded areas show rejection regions at α = ${alpha}.</div>
-          <div style="margin-top:8px;">
-            <canvas id="vizCanvasWil" height="220"></canvas>
-          </div>
-          <div id="vizFooterWil" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:#6b7280;">—</div>
-        </div>
-        `;
+      // 1. Paired comparison boxplot
+      vizHTML += `<div class="section-title">Paired Comparison</div>`;
+      vizHTML += `<div class="card"><div class="note">Boxplots compare Before vs After measurements, showing medians, quartiles, and outliers.</div>`;
+      vizHTML += `<div style="margin-top:12px;"><canvas id="vizPairedBox" height="200"></canvas></div></div>`;
+
+      // 2. Difference distribution
+      vizHTML += `<div class="section-title">Difference Distribution</div>`;
+      vizHTML += `<div class="card"><div class="note">Boxplot shows the distribution of differences (After − Before) that the test analyzes. The red dashed line marks zero (H₀).</div>`;
+      vizHTML += `<div style="margin-top:8px;"><canvas id="vizDiffBox" height="180"></canvas></div></div>`;
+
+      // 3. Sampling distribution (only for normal approx)
+      if (exactP === null) {
+        vizHTML += `<div class="section-title">Sampling Distribution</div>`;
+        vizHTML += `<div class="card"><div class="note">Theoretical distribution of the z-score under H₀. Shaded areas show rejection regions at α = ${alpha}.</div>`;
+        vizHTML += `<div style="margin-top:8px;"><canvas id="vizCanvasWil" height="220"></canvas></div>`;
+        vizHTML += `<div id="vizFooterWil" style="margin-top:8px; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-align:center; background:#f1f5f9; color:#6b7280;">—</div></div>`;
       } else {
-        vizHTML += `
-        <div style="margin-top:16px; padding:12px; background:#f0f9ff; border-radius:10px; border:1px solid #bfdbfe;">
-          <div style="font-size:13px; color:#1e40af; font-weight:600;">ℹ️ Exact Method Used</div>
-          <div style="font-size:12px; color:#1e3a8a; margin-top:4px;">The p-value was calculated by enumerating all ${totalPerms.toLocaleString()} possible sign assignments. No approximation was needed, so no sampling distribution visualization is shown.</div>
-        </div>
-        `;
+        vizHTML += `<div style="margin-top:12px; padding:12px; background:#f0f9ff; border-radius:10px; border:1px solid #bfdbfe;">`;
+        vizHTML += `<div style="font-size:13px; color:#1e40af; font-weight:600;">Exact method used</div>`;
+        vizHTML += `<div style="font-size:12px; color:#1e3a8a; margin-top:4px;">P-value calculated by enumerating all ${totalPerms.toLocaleString()} possible sign assignments. No approximation needed.</div></div>`;
       }
-      
-      vizHTML += `
-        <div style="margin-top:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:10px 14px; font-size:12px; color:#78350f; line-height:1.6;">
-          <strong style="color:#92400e;">Accuracy &amp; limitations:</strong> Boxplots show the actual observed data and differences — these are exact representations of your sample. The normal approximation for the z-score (shown when using the large-sample method) is reliable for n ≥ 20 non-zero differences and becomes less accurate with many tied ranks or very small samples. For small samples the exact permutation p-value is used instead, and no sampling distribution is displayed. The Wilcoxon signed-rank test assumes the differences are symmetrically distributed around the median — if differences are strongly skewed, the sign test is a more assumption-free alternative.
-        </div>
-        </div></div>
-      `;
 
       vizCard.innerHTML = vizHTML;
       resultsDiv.appendChild(vizCard);
 
+      // Render charts first (they need canvas elements in DOM)
       renderDiffHistogram(before, after, diffs);
       if(exactP === null){
         renderNormalViz(z, significant, alpha, tail);
       }
+
+      // Then wrap into individual report sections (after canvases are drawn)
+      if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('vizSections');
     }catch(e){ console.warn('viz failed', e); }
   }
 }

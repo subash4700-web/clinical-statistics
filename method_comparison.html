@@ -6,10 +6,11 @@
   <title>Quantitative Method Comparison</title>
 
   <script src="assets/js/eflm_db.js"></script>
-  <script src="../assets/vendor/chart.umd.min.js"></script>
-  <script src="../assets/vendor/xlsx.full.min.js"></script>
-  <script src="../assets/vendor/jspdf.umd.min.js"></script>
-  <script src="../assets/vendor/html2canvas.min.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
+  <script src="assets/vendor/jspdf.umd.min.js"></script>
+  <script src="assets/vendor/html2canvas.min.js"></script>
+  <script src="assets/js/report-helper.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
 
   <style>
@@ -463,13 +464,17 @@
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
               <input type="radio" name="discrim-type" value="lower" onchange="updateDiscrimInputs()"> Lower (low = abnormal)
             </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="radio" name="discrim-type" value="both" onchange="updateDiscrimInputs()"> Both (reference interval)
+            </label>
           </div>
         </div>
 
         <div id="discrim-fields"></div>
 
-        <div class="alert warn" style="margin-top:8px;">
-          <strong>Quadrants:</strong> The crosshairs split the plot into four regions. If a gold-standard method is set:
+        <div class="alert warn" style="margin-top:8px;" id="discrim-quadrant-info">
+          <strong>Classification:</strong> Threshold lines split the plot into regions.<br>
+          <strong>Upper/Lower mode:</strong> 4 quadrants —
           <strong>TP</strong> = both above threshold &nbsp;
           <strong>TN</strong> = both below &nbsp;
           <strong>FP</strong> = test above, gold std below &nbsp;
@@ -574,13 +579,78 @@
       </div>
     </div>
 
-    <div class="btn-row" style="margin-bottom:16px; justify-content:flex-start;">
-      <button class="btn-success" onclick="exportToExcel()">Export to Excel</button>
-      <button class="btn-danger"  onclick="exportToPDF()">Export to PDF</button>
+
+
+    <!-- 1. Normality — check assumptions first -->
+    <div class="collapsible" data-acr="hide">
+      <div class="coll-header" onclick="toggleSection('normality')">
+        <h3>Normality Analysis of Differences</h3>
+        <span id="normality-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="coll-toggle" id="normality-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="normality-content">
+        <div id="normalityStats" style="margin-bottom:14px;"></div>
+        <div class="grid-2">
+          <div class="viz-wrap"><div class="chart-container short"><canvas id="qqPlotChart"></canvas></div></div>
+          <div class="viz-wrap"><div class="chart-container short"><canvas id="histogramChart"></canvas></div></div>
+        </div>
+      </div>
     </div>
 
+    <!-- 2. XY Plot + Regression -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('xyplot')">
+        <h3>XY Plot — Method Comparison</h3>
+        <span id="xyplot-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="coll-toggle" id="xyplot-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="xyplot-content">
+        <div class="viz-wrap"><div class="chart-container"><canvas id="xyPlotChart"></canvas></div></div>
+        <div id="regressionStats" style="margin-top:12px;"></div>
+        <details style="margin-top:10px;">
+          <summary style="font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;">Axis Controls</summary>
+          <div class="card" style="margin-top:8px;padding:12px;">
+            <div class="axis-grid">
+              <div><label for="xyXMin">X Min</label><input type="number" id="xyXMin" step="any" placeholder="Auto"></div>
+              <div><label for="xyXMax">X Max</label><input type="number" id="xyXMax" step="any" placeholder="Auto"></div>
+              <div><label for="xyYMin">Y Min</label><input type="number" id="xyYMin" step="any" placeholder="Auto"></div>
+              <div><label for="xyYMax">Y Max</label><input type="number" id="xyYMax" step="any" placeholder="Auto"></div>
+              <div><label for="xyXMajorTick">X Grid Interval</label><input type="number" id="xyXMajorTick" step="any" placeholder="Auto"></div>
+              <div><label for="xyYMajorTick">Y Grid Interval</label><input type="number" id="xyYMajorTick" step="any" placeholder="Auto"></div>
+            </div>
+            <button class="btn-ghost" onclick="updateChartAxes('xy')">Apply</button>
+          </div>
+        </details>
+      </div>
+    </div>
 
-    <!-- Summary & Statistics (collapsible) -->
+    <!-- 3. Bland-Altman — bias & agreement -->
+    <div class="collapsible">
+      <div class="coll-header" onclick="toggleSection('blandaltman')">
+        <h3>Bland-Altman Plot</h3>
+        <span id="blandaltman-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
+        <span class="coll-toggle" id="blandaltman-toggle">▼</span>
+      </div>
+      <div class="coll-body" id="blandaltman-content">
+        <div class="viz-wrap"><div class="chart-container"><canvas id="blandAltmanChart"></canvas></div></div>
+        <details style="margin-top:10px;">
+          <summary style="font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;">Axis Controls</summary>
+          <div class="card" style="margin-top:8px;padding:12px;">
+            <div class="axis-grid">
+              <div><label for="baXMin">X Min</label><input type="number" id="baXMin" step="any" placeholder="Auto"></div>
+              <div><label for="baXMax">X Max</label><input type="number" id="baXMax" step="any" placeholder="Auto"></div>
+              <div><label for="baYMin">Y Min</label><input type="number" id="baYMin" step="any" placeholder="Auto"></div>
+              <div><label for="baYMax">Y Max</label><input type="number" id="baYMax" step="any" placeholder="Auto"></div>
+              <div><label for="baXMajorTick">X Grid Interval</label><input type="number" id="baXMajorTick" step="any" placeholder="Auto"></div>
+              <div><label for="baYMajorTick">Y Grid Interval</label><input type="number" id="baYMajorTick" step="any" placeholder="Auto"></div>
+            </div>
+            <button class="btn-ghost" onclick="updateChartAxes('ba')">Apply</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- 4. Summary & Statistics — bias bars, TE, verdict -->
     <div class="collapsible">
       <div class="coll-header" onclick="toggleSection('summary')">
         <h3>Summary &amp; Statistics</h3>
@@ -588,7 +658,6 @@
         <span class="coll-toggle" id="summary-toggle">▼</span>
       </div>
       <div class="coll-body" id="summary-content">
-        <!-- Methods + specification header — filled on calculate -->
         <div id="mc-study-header" style="display:none;margin-bottom:14px;">
           <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
             <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Methods compared</span>
@@ -605,7 +674,7 @@
       </div>
     </div>
 
-    <!-- Interpretation (collapsible) -->
+    <!-- 5. Interpretation — clinical conclusion -->
     <div class="collapsible" data-acr="hide">
       <div class="coll-header" onclick="toggleSection('interpretation')">
         <h3>Interpretation</h3>
@@ -617,72 +686,7 @@
       </div>
     </div>
 
-    <!-- Normality -->
-    <div class="collapsible" data-acr="hide">
-      <div class="coll-header" onclick="toggleSection('normality')">
-        <h3>Normality Analysis of Differences</h3>
-        <span id="normality-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
-        <span class="coll-toggle" id="normality-toggle">▼</span>
-      </div>
-      <div class="coll-body" id="normality-content">
-        <div id="normalityStats" style="margin-bottom:14px;"></div>
-        <div class="grid-2">
-          <div class="viz-wrap"><div class="chart-container short"><canvas id="qqPlotChart"></canvas></div></div>
-          <div class="viz-wrap"><div class="chart-container short"><canvas id="histogramChart"></canvas></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bland-Altman -->
-    <div class="collapsible">
-      <div class="coll-header" onclick="toggleSection('blandaltman')">
-        <h3>Bland-Altman Plot</h3>
-        <span id="blandaltman-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
-        <span class="coll-toggle" id="blandaltman-toggle">▼</span>
-      </div>
-      <div class="coll-body" id="blandaltman-content">
-        <div class="card" style="margin-bottom:12px;">
-          <div class="section-title">Axis Controls</div>
-          <div class="axis-grid">
-            <div><label for="baXMin">X Min</label><input type="number" id="baXMin" step="any" placeholder="Auto"></div>
-            <div><label for="baXMax">X Max</label><input type="number" id="baXMax" step="any" placeholder="Auto"></div>
-            <div><label for="baYMin">Y Min</label><input type="number" id="baYMin" step="any" placeholder="Auto"></div>
-            <div><label for="baYMax">Y Max</label><input type="number" id="baYMax" step="any" placeholder="Auto"></div>
-            <div><label for="baXMajorTick">X Grid Interval</label><input type="number" id="baXMajorTick" step="any" placeholder="Auto"></div>
-            <div><label for="baYMajorTick">Y Grid Interval</label><input type="number" id="baYMajorTick" step="any" placeholder="Auto"></div>
-          </div>
-          <button class="btn-ghost" onclick="updateChartAxes('ba')">Apply Axis Settings</button>
-        </div>
-        <div class="viz-wrap"><div class="chart-container"><canvas id="blandAltmanChart"></canvas></div></div>
-      </div>
-    </div>
-
-    <!-- XY Plot -->
-    <div class="collapsible">
-      <div class="coll-header" onclick="toggleSection('xyplot')">
-        <h3>XY Plot — Method Comparison</h3>
-        <span id="xyplot-badge" class="rpt-sec-badge rpt-badge-in">In report</span>
-        <span class="coll-toggle" id="xyplot-toggle">▼</span>
-      </div>
-      <div class="coll-body" id="xyplot-content">
-        <div class="card" style="margin-bottom:12px;">
-          <div class="section-title">Axis Controls</div>
-          <div class="axis-grid">
-            <div><label for="xyXMin">X Min</label><input type="number" id="xyXMin" step="any" placeholder="Auto"></div>
-            <div><label for="xyXMax">X Max</label><input type="number" id="xyXMax" step="any" placeholder="Auto"></div>
-            <div><label for="xyYMin">Y Min</label><input type="number" id="xyYMin" step="any" placeholder="Auto"></div>
-            <div><label for="xyYMax">Y Max</label><input type="number" id="xyYMax" step="any" placeholder="Auto"></div>
-            <div><label for="xyXMajorTick">X Grid Interval</label><input type="number" id="xyXMajorTick" step="any" placeholder="Auto"></div>
-            <div><label for="xyYMajorTick">Y Grid Interval</label><input type="number" id="xyYMajorTick" step="any" placeholder="Auto"></div>
-          </div>
-          <button class="btn-ghost" onclick="updateChartAxes('xy')">Apply Axis Settings</button>
-        </div>
-        <div class="viz-wrap"><div class="chart-container"><canvas id="xyPlotChart"></canvas></div></div>
-        <div id="regressionStats" style="margin-top:12px;"></div>
-      </div>
-    </div>
-
-    <!-- Data review + outliers -->
+    <!-- 6. Data review + outliers -->
     <div class="collapsible" data-acr="hide">
       <div class="coll-header" onclick="toggleSection('datatable')">
         <h3>Data Review &amp; Outlier Exclusion</h3>
@@ -1046,30 +1050,33 @@
                       const biasBarColor = biasPass ? '#16a34a' : '#dc2626';
                       return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                         <div>
-                          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Allowable bias</span>
-                          <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${maxBiasFmt}${suffix}</span>
-                        </div>
-                        <div>
                           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">|Mean Bias|</span>
                           <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${absBias.toFixed(3)}${suffix}</span>
+                        </div>
+                        <div>
+                          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Allowable bias</span>
+                          <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${maxBiasFmt}${suffix}</span>
                         </div>
                       </div>
                       <div style="background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px;">
                         <div style="height:100%;width:${(Math.min(biasRatio,1)*100).toFixed(1)}%;background:${biasBarColor};border-radius:4px;transition:width .4s;"></div>
                       </div>
-                      <div style="font-size:11px;color:#6b7280;margin-bottom:14px;">${biasPctUsed}% of allowable bias used</div>`;
+                      <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">${biasPctUsed}% of allowable bias used</div>
+                      <div class="verdict ${biasPass ? 'pass' : 'fail'}">
+                        ${biasPass ? 'PASS' : 'FAIL'} — Mean bias ${biasPass ? 'within' : 'exceeds'} allowable: ${absBias.toFixed(3)}${suffix} ${biasPass ? '≤' : '>'} ±${maxBiasFmt}${suffix}
+                      </div>`;
                     })()}
 
                     <div data-acr="hide">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                       <div>
-                        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification (TAE)</span>
-                        <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${teaFmt}${suffix}</span>
-                      </div>
-                      <div>
                         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Calculated TE</span>
                         <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${teCalc.toFixed(3)}${suffix}</span>
                         <span style="font-size:11px;color:#6b7280;margin-left:4px;">(|Bias| + ${stats.zValueTE}·SD)</span>
+                      </div>
+                      <div>
+                        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification (TAE)</span>
+                        <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${teaFmt}${suffix}</span>
                       </div>
                     </div>
                     <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
@@ -1542,6 +1549,8 @@
               : '';
             let html = `<div class="interpretation"><h3>Clinical Interpretation Summary ${eflmBadge}</h3>`;
             
+            const srcRef = (section) => `<span style="font-size:11px;color:#6b7280;font-style:italic;"> — see ${section}</span>`;
+
             html += `<p><strong>Bias Assessment:</strong> The mean difference between ${method1Name} and ${method2Name} is ${stats.meanDiff.toFixed(3)}${suffix}. `;
             if (Math.abs(stats.meanDiff) < 0.1) {
                 html += `This suggests minimal systematic bias between the methods.`;
@@ -1550,13 +1559,13 @@
             } else {
                 html += `${testMethod} tends to read lower than ${refMethod}.`;
             }
-            html += `</p>`;
-            
+            html += srcRef('Bland-Altman Plot') + `</p>`;
+
             if (showLoA) {
                 const confidenceLevel = getConfidenceLevel(stats.zValue);
-                html += `<p><strong>Agreement:</strong> The limits of agreement (Z=${stats.zValue}) range from ${stats.loa_lower.toFixed(3)}${suffix} to ${stats.loa_upper.toFixed(3)}${suffix}. Approximately ${confidenceLevel}% of differences fall within this range. SD = ${stats.sd.toFixed(3)}${suffix}.</p>`;
+                html += `<p><strong>Agreement:</strong> The limits of agreement (Z=${stats.zValue}) range from ${stats.loa_lower.toFixed(3)}${suffix} to ${stats.loa_upper.toFixed(3)}${suffix}. Approximately ${confidenceLevel}% of differences fall within this range. SD = ${stats.sd.toFixed(3)}${suffix}.${srcRef('Bland-Altman Plot')}</p>`;
             }
-            
+
             html += `<p><strong>Total Error (two-sided):</strong> ${stats.te_percentage.toFixed(1)}% of measurements fall within the TAE of ±${stats.teaPercentage.toFixed(teaDec)}${suffix}. `;
             if (stats.te_percentage >= 95) {
                 html += `This excellent agreement suggests the methods are highly interchangeable.`;
@@ -1565,8 +1574,8 @@
             } else {
                 html += `This suggests limited agreement. Clinical evaluation is recommended before substitution.`;
             }
-            html += `</p>`;
-            
+            html += srcRef('Summary & Statistics') + `</p>`;
+
             const eflmSource = eflmName ? ` (EFLM ${eflmTier} for ${eflmName})` : '';
             html += `<p><strong>Calculated Total Error:</strong> TE (|Bias| + ${stats.zValueTE}×SD) = ${stats.te_calculated.toFixed(3)}${suffix}. `;
             if (stats.te_calculated <= stats.teaPercentage) {
@@ -1574,7 +1583,7 @@
             } else {
                 html += `Since this exceeds the TAE limit of ${stats.teaPercentage.toFixed(teaDec)}${suffix}${eflmSource}, consider whether the method meets your quality requirements.`;
             }
-            html += `</p>`;
+            html += srcRef('Summary & Statistics') + `</p>`;
 
             html += `<p><strong>Max Bias Assessment:</strong> The observed bias is ${stats.meanDiff.toFixed(3)}${suffix}. `;
             if (Math.abs(stats.meanDiff) <= stats.maxBias) {
@@ -1582,8 +1591,8 @@
             } else {
                 html += `This exceeds the maximum acceptable bias limit of ±${stats.maxBias.toFixed(maxBiasDec)}${suffix}${eflmSource}. Consider recalibration or correction factors.`;
             }
-            html += `</p>`;
-            
+            html += srcRef('Summary & Statistics') + `</p>`;
+
             html += `<p><strong>Correlation:</strong> R² = ${regressionStats.rSquared.toFixed(4)}, Spearman ρ = ${regressionStats.spearmanRho.toFixed(4)}. `;
             if (regressionStats.rSquared > 0.95) {
                 html += `Excellent correlation between methods.`;
@@ -1592,7 +1601,7 @@
             } else {
                 html += `Moderate correlation. Further investigation may be needed.`;
             }
-            html += `</p>`;
+            html += srcRef('XY Plot — Regression') + `</p>`;
 
             if (isFinite(stats.ccc)) {
                 html += `<p><strong>Lin's Concordance Correlation Coefficient (ρc):</strong> ρc = ${stats.ccc.toFixed(4)}. `;
@@ -1606,7 +1615,7 @@
                     html += `Poor agreement — methods should not be used interchangeably without further evaluation.`;
                 }
                 html += ` CCC combines both precision (Pearson r) and accuracy (proximity to the line of identity).`;
-                html += `</p>`;
+                html += srcRef('XY Plot — Regression') + `</p>`;
             }
             
             if (currentClassification) {
@@ -1618,7 +1627,7 @@
                 const fnr = sensitivity !== null ? 100 - sensitivity : null;
                 const fmt = v => v !== null ? v.toFixed(1) + '%' : 'n/a';
 
-                html += `<p><strong>Diagnostic Classification</strong> (thresholds: ${c.xLabel} = ${c.threshX}, ${c.yLabel} = ${c.threshY}): `;
+                html += `<p><strong>Diagnostic Classification</strong> (thresholds: ${c.xLabel} = ${c.threshX}, ${c.yLabel} = ${c.threshY})${srcRef('XY Plot — Discrimination Threshold')}: `;
                 html += `Of ${total} paired measurements, ${c.TP} TP, ${c.TN} TN, ${c.FP} FP, and ${c.FN} FN. `;
                 html += `<strong>False positive rate: ${fmt(fpr)}</strong>. <strong>False negative rate: ${fmt(fnr)}</strong>. `;
                 if (fpr !== null && fpr < 5) {
@@ -2078,31 +2087,69 @@
             const showThresh = document.getElementById('showDiscriminationThreshold').checked;
             const threshX = parseFloat(document.getElementById('thresholdX')?.value);
             const threshY = parseFloat(document.getElementById('thresholdY')?.value);
+            const threshXLo = parseFloat(document.getElementById('thresholdXLo')?.value);
+            const threshYLo = parseFloat(document.getElementById('thresholdYLo')?.value);
+            const discrimType = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+            const hasBoth = discrimType === 'both' && !isNaN(threshXLo) && !isNaN(threshYLo);
             currentClassification = null;
 
             if (showThresh && !isNaN(threshX) && !isNaN(threshY)) {
                 const minY = Math.min(...yData), maxY = Math.max(...yData);
                 const padY = (maxY - minY) * 0.1 || 1;
 
-                datasets.push({ label: `${xLabel} threshold = ${threshX}`, data: [{ x: threshX, y: minY - padY }, { x: threshX, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
-                datasets.push({ label: `${yLabel} threshold = ${threshY}`, data: [{ x: minX - padding, y: threshY }, { x: maxX + padding, y: threshY }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
+                // Upper threshold lines
+                datasets.push({ label: `${xLabel} upper = ${threshX}`, data: [{ x: threshX, y: minY - padY }, { x: threshX, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
+                datasets.push({ label: `${yLabel} upper = ${threshY}`, data: [{ x: minX - padding, y: threshY }, { x: maxX + padding, y: threshY }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
 
-                const tp = [], tn = [], fp = [], fn = [];
-                for (let i = 0; i < xData.length; i++) {
-                    const aboveX = xData[i] >= threshX, aboveY = yData[i] >= threshY;
-                    const pt = { x: xData[i], y: yData[i] };
-                    if (aboveX && aboveY) tp.push(pt);
-                    else if (!aboveX && !aboveY) tn.push(pt);
-                    else if (!aboveX && aboveY) fp.push(pt);
-                    else fn.push(pt);
+                // Lower threshold lines (both mode)
+                if (hasBoth) {
+                    datasets.push({ label: `${xLabel} lower = ${threshXLo}`, data: [{ x: threshXLo, y: minY - padY }, { x: threshXLo, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [3, 3], pointRadius: 0, fill: false });
+                    datasets.push({ label: `${yLabel} lower = ${threshYLo}`, data: [{ x: minX - padding, y: threshYLo }, { x: maxX + padding, y: threshYLo }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [3, 3], pointRadius: 0, fill: false });
                 }
 
-                currentClassification = { TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length, threshX, threshY, xLabel, yLabel };
-
-                if (tp.length) datasets.push({ label: `TP (${tp.length})`, data: tp, backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', pointRadius: 7, pointHoverRadius: 9 });
-                if (tn.length) datasets.push({ label: `TN (${tn.length})`, data: tn, backgroundColor: 'rgba(52,152,219,0.75)', borderColor: '#3498db', pointRadius: 7, pointHoverRadius: 9 });
-                if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
-                if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
+                // Classification
+                if (hasBoth) {
+                    // Both mode: classify as normal (within ref) vs abnormal (outside ref)
+                    // X-axis = gold standard, Y-axis = test method
+                    const tp = [], tn = [], fp = [], fn = [];
+                    for (let i = 0; i < xData.length; i++) {
+                        const pt = { x: xData[i], y: yData[i] };
+                        const xNormal = xData[i] >= threshXLo && xData[i] < threshX;
+                        const yNormal = yData[i] >= threshYLo && yData[i] < threshY;
+                        // TP = both abnormal (agree on abnormal)
+                        // TN = both normal (agree on normal)
+                        // FP = gold std normal but test says abnormal
+                        // FN = gold std abnormal but test says normal
+                        if (!xNormal && !yNormal) tp.push(pt);
+                        else if (xNormal && yNormal) tn.push(pt);
+                        else if (xNormal && !yNormal) fp.push(pt);
+                        else fn.push(pt);
+                    }
+                    currentClassification = {
+                        TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length,
+                        threshX, threshY, threshXLo, threshYLo, xLabel, yLabel, mode: 'both'
+                    };
+                    if (tp.length) datasets.push({ label: `TP (${tp.length})`, data: tp, backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', pointRadius: 7, pointHoverRadius: 9 });
+                    if (tn.length) datasets.push({ label: `TN (${tn.length})`, data: tn, backgroundColor: 'rgba(52,152,219,0.75)', borderColor: '#3498db', pointRadius: 7, pointHoverRadius: 9 });
+                    if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
+                    if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
+                } else {
+                    // Single threshold: 4 quadrants (TP/TN/FP/FN)
+                    const tp = [], tn = [], fp = [], fn = [];
+                    for (let i = 0; i < xData.length; i++) {
+                        const aboveX = xData[i] >= threshX, aboveY = yData[i] >= threshY;
+                        const pt = { x: xData[i], y: yData[i] };
+                        if (aboveX && aboveY) tp.push(pt);
+                        else if (!aboveX && !aboveY) tn.push(pt);
+                        else if (!aboveX && aboveY) fp.push(pt);
+                        else fn.push(pt);
+                    }
+                    currentClassification = { TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length, threshX, threshY, xLabel, yLabel };
+                    if (tp.length) datasets.push({ label: `TP (${tp.length})`, data: tp, backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', pointRadius: 7, pointHoverRadius: 9 });
+                    if (tn.length) datasets.push({ label: `TN (${tn.length})`, data: tn, backgroundColor: 'rgba(52,152,219,0.75)', borderColor: '#3498db', pointRadius: 7, pointHoverRadius: 9 });
+                    if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
+                    if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
+                }
 
                 datasets[0].pointRadius = 0; datasets[0].pointHoverRadius = 0;
             }
@@ -2446,22 +2493,45 @@
           }
         }
 
-        function applyRefToDiscrim() {
+        function applyRefToDiscrim(forceType) {
           const key = document.getElementById('eflm-analyte').value;
           if (!key || !EFLM_DB[key]?.ref) return;
           const ref = EFLM_DB[key].ref;
-          const type = document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
-          const val = type === 'lower' ? ref.lo : (ref.cutoff || ref.hi);
-          const loVal = ref.lo;
-          if (type === 'both') {
-            const xHi = document.getElementById('thresholdX'); if(xHi) xHi.value = ref.hi || ref.cutoff || '';
-            const yHi = document.getElementById('thresholdY'); if(yHi) yHi.value = ref.hi || ref.cutoff || '';
-            const xLo = document.getElementById('thresholdXLo'); if(xLo) xLo.value = ref.lo || '';
-            const yLo = document.getElementById('thresholdYLo'); if(yLo) yLo.value = ref.lo || '';
-          } else {
-            const x = document.getElementById('thresholdX'); if(x) x.value = val || '';
-            const y = document.getElementById('thresholdY'); if(y) y.value = val || '';
+          const currentType = forceType || document.querySelector('input[name="discrim-type"]:checked')?.value || 'upper';
+
+          // Determine best type based on available data if no user selection yet
+          var type = currentType;
+          if (forceType === 'auto') {
+            if (ref.cutoff != null && ref.dir) type = ref.dir; // use analyte-specific direction
+            else if (ref.cutoff != null) type = 'upper'; // default cutoff direction
+            else if (ref.lo != null && ref.hi != null) type = 'both';
+            else if (ref.hi != null) type = 'upper';
+            else if (ref.lo != null) type = 'lower';
           }
+
+          // Select the radio
+          var radio = document.querySelector('input[name="discrim-type"][value="' + type + '"]');
+          if (radio && !radio.checked) { radio.checked = true; updateDiscrimInputs(); }
+
+          setTimeout(function() {
+            if (type === 'both') {
+              var xHi = document.getElementById('thresholdX'); if(xHi) xHi.value = ref.cutoff || ref.hi || '';
+              var yHi = document.getElementById('thresholdY'); if(yHi) yHi.value = ref.cutoff || ref.hi || '';
+              var xLo = document.getElementById('thresholdXLo'); if(xLo) xLo.value = ref.lo || '';
+              var yLo = document.getElementById('thresholdYLo'); if(yLo) yLo.value = ref.lo || '';
+            } else if (type === 'lower') {
+              var val = ref.lo || ref.cutoff || ref.hi || '';
+              var x = document.getElementById('thresholdX'); if(x) x.value = val;
+              var y = document.getElementById('thresholdY'); if(y) y.value = val;
+            } else {
+              // upper
+              var val = ref.cutoff || ref.hi || ref.lo || '';
+              var x = document.getElementById('thresholdX'); if(x) x.value = val;
+              var y = document.getElementById('thresholdY'); if(y) y.value = val;
+            }
+            // Refresh charts with new thresholds
+            if (typeof recomputeAndRender === 'function') recomputeAndRender();
+          }, 100);
         }
 
         function applyEFLMSpecs() {
@@ -2985,14 +3055,29 @@
             var ty = document.getElementById('thresholdY'); if (ty) ty.value = '5.0';
           }
 
+          // Set Reference Method as gold standard (Method 2 = Reference)
+          document.getElementById('methodDesignation').value = 'method2';
+          if (typeof toggleNewMethodSelection === 'function') toggleNewMethodSelection();
+
           // Show TAE and max bias lines since values are set
           document.getElementById('showTEBands').checked = true;
           document.getElementById('showMaxBias').checked = true;
           document.getElementById('showLoA').checked = true;
 
-          // Clear EFLM analyte selection
+          // Auto-select matching EFLM analyte + desirable tier + apply thresholds
+          var eflmMap = { 1: 'glucose', 2: 'potassium', 3: 'cholesterol' };
           var eflmSel = document.getElementById('eflm-analyte');
-          if (eflmSel) { eflmSel.value = ''; updateEFLMSpecs(); }
+          if (eflmSel && eflmMap[n]) {
+            eflmSel.value = eflmMap[n];
+            var tierSel = document.getElementById('eflm-tier');
+            if (tierSel) tierSel.value = 'desirable';
+            updateEFLMSpecs();
+            // Enable discrimination first so inputs are rendered
+            var discrimCheck = document.getElementById('showDiscriminationThreshold');
+            if (discrimCheck && !discrimCheck.checked) { discrimCheck.checked = true; discrimCheck.dispatchEvent(new Event('change')); }
+            // Apply thresholds after inputs are visible — auto-detect best mode
+            setTimeout(function() { applyRefToDiscrim('auto'); }, 100);
+          }
 
           generateSampleData();
           useSampleData();

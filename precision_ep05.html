@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>EP05 Precision Study</title>
   <script src="assets/js/eflm_db.js"></script>
-  <script src="../assets/vendor/chart.umd.min.js"></script>
-  <script src="../assets/vendor/jstat.min.js"></script>
-  <script src="../assets/vendor/xlsx.full.min.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/vendor/jstat.min.js"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <style>
     td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
@@ -382,6 +382,41 @@
 // ─────────────────────────────────────────────
 var _epCharts = {};
 var _hiddenDayNums = {}; // tracks excluded days per level
+var _excludedRuns = {};  // { lvl: { 'day-run': { note: '...' } } }
+
+function excludeRun(lvl, runKey) {
+  if (!_excludedRuns[lvl]) _excludedRuns[lvl] = {};
+  // Show inline note input
+  var existing = document.getElementById('excl-note-' + lvl + '-' + runKey.replace(/[^a-zA-Z0-9]/g,'_'));
+  if (existing) { existing.remove(); }
+  var btn = event.target;
+  var td = btn.parentElement;
+  var noteDiv = document.createElement('div');
+  noteDiv.id = 'excl-note-' + lvl + '-' + runKey.replace(/[^a-zA-Z0-9]/g,'_');
+  noteDiv.innerHTML = '<input type="text" placeholder="Note (optional)" style="width:100%;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:10px;margin-top:4px;">'
+    + '<div style="display:flex;gap:4px;margin-top:3px;">'
+    + '<button style="flex:1;font-size:10px;padding:2px 6px;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Confirm</button>'
+    + '<button style="flex:1;font-size:10px;padding:2px 6px;background:#e5e7eb;color:#374151;border:none;border-radius:4px;cursor:pointer;">Cancel</button>'
+    + '</div>';
+  td.appendChild(noteDiv);
+  var input = noteDiv.querySelector('input');
+  input.focus();
+  var btns = noteDiv.querySelectorAll('button');
+  btns[0].onclick = function() {
+    _excludedRuns[lvl][runKey] = { note: input.value.trim() };
+    calculateEP();
+  };
+  btns[1].onclick = function() { noteDiv.remove(); };
+  input.onkeydown = function(e) {
+    if (e.key === 'Enter') btns[0].click();
+    if (e.key === 'Escape') btns[1].click();
+  };
+}
+
+function includeRun(lvl, runKey) {
+  if (_excludedRuns[lvl]) delete _excludedRuns[lvl][runKey];
+  calculateEP();
+}
 
 function destroyChart(id) {
   if (_epCharts[id]) {
@@ -998,13 +1033,20 @@ function calculateEP() {
   _levelsData = [];
 
   for (var lvl = 0; lvl < d.levels; lvl++) {
-    var runData = readLevelData(lvl);
+    var allRunData = readLevelData(lvl);
+    // Filter out excluded runs for calculation, but keep all for display
+    var lvlExcl = _excludedRuns[lvl] || {};
+    var runData = Object.keys(lvlExcl).length > 0
+      ? allRunData.filter(function(r) { return !lvlExcl[r.day + '-' + r.run]; })
+      : allRunData;
     var cfg = getLevelConfig(lvl);
     var stats = computeEP05(runData, d.reps);
     if (!stats) {
       showEPError('Level ' + (lvl + 1) + ': At least 2 complete runs are required for calculations.');
       return;
     }
+    // Store all runs in stats for display (including excluded)
+    stats.allRuns = allRunData;
     stats.outlierCells = _findEPOutliers(lvl, runData, stats, d);
     _levelsData.push({ stats: stats, cfg: cfg, runData: runData });
   }
@@ -1174,40 +1216,32 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   html += '</div>';
 
   // ── Measured from data ──
-  html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:6px;">Measured from data</div>';
-  html += '<div class="kpi-grid">';
-  html += kpi('n (samples)', stats.n * stats.m, 'total measurements');
-  html += kpi('Days', d.days, 'study days');
-  html += kpi('Runs', stats.n, 'complete runs');
-  html += kpi('S<sub>w</sub> (within-run SD)', fmt(stats.Sw, 4), 'CV<sub>w</sub> ' + fmt(stats.CVw, 2) + '%');
-  html += kpi('S<sub>t</sub> (total SD)', fmt(stats.St, 4), 'CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '%');
-  html += '</div>';
+  html += epSection('Measured from Data' + (totalLevels > 1 ? ' — Level ' + (lvl+1) : ''),
+    '<div class="kpi-grid">'
+    + kpi('n (samples)', stats.n * stats.m, 'total measurements')
+    + kpi('Days', d.days, 'study days')
+    + kpi('Runs', stats.n, 'complete runs')
+    + kpi('S<sub>w</sub> (within-run SD)', fmt(stats.Sw, 4), 'CV<sub>w</sub> ' + fmt(stats.CVw, 2) + '%')
+    + kpi('S<sub>t</sub> (total SD)', fmt(stats.St, 4), 'CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '%')
+    + '</div>', true, false);
 
   // ── Acceptance specification + comparison (only if allowable CV entered) ──
   if (hasAllowCV) {
-    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Acceptance specification</div>';
-    html += '<div class="kpi-grid">';
-    html += kpi('Allowable CV%', fmt(allowableCV, 1) + '%', 'total intermediate precision limit');
-    html += '</div>';
-
     var ratio = stats.CVt / allowableCV;
     var pctUsed = Math.round(ratio * 100);
     var barColor = pass ? '#16a34a' : '#dc2626';
-    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:16px 0 6px;">Comparison \u2014 measured vs specification</div>';
-    html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:10px;">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">';
-    html += '<span><strong>CV<sub>t</sub></strong> = ' + fmt(stats.CVt, 2) + '%</span>';
-    html += '<span style="color:#6b7280;font-size:12px;">Allowable = ' + fmt(allowableCV, 1) + '%</span>';
-    html += '</div>';
-    html += '<div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">';
-    html += '<div style="height:100%;width:' + Math.min(ratio, 1) * 100 + '%;background:' + barColor + ';border-radius:4px;"></div>';
-    html += '</div>';
-    html += '<div style="font-size:11px;color:#6b7280;">' + pctUsed + '% of allowable limit used</div>';
-    html += '</div>';
-    html += '<div class="verdict ' + (pass ? 'pass' : 'fail') + '">';
-    html += (pass ? '&#10003; Within spec' : '&#10007; Exceeds allowable');
-    html += ' \u2014 CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% ' + (pass ? '\u2264' : '>') + ' allowable ' + fmt(allowableCV, 1) + '%';
-    html += '</div>';
+    var specContent = '<div class="kpi-grid">' + kpi('Allowable CV%', fmt(allowableCV, 1) + '%', 'total intermediate precision limit') + '</div>'
+      + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin:10px 0;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px;">'
+      + '<span><strong>CV<sub>t</sub></strong> = ' + fmt(stats.CVt, 2) + '%</span>'
+      + '<span style="color:#6b7280;font-size:12px;">Allowable = ' + fmt(allowableCV, 1) + '%</span></div>'
+      + '<div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:5px;">'
+      + '<div style="height:100%;width:' + Math.min(ratio, 1) * 100 + '%;background:' + barColor + ';border-radius:4px;"></div></div>'
+      + '<div style="font-size:11px;color:#6b7280;">' + pctUsed + '% of allowable limit used</div></div>'
+      + '<div class="verdict ' + (pass ? 'pass' : 'fail') + '">'
+      + (pass ? '&#10003; Within spec' : '&#10007; Exceeds allowable')
+      + ' \u2014 CV<sub>t</sub> ' + fmt(stats.CVt, 2) + '% ' + (pass ? '\u2264' : '>') + ' allowable ' + fmt(allowableCV, 1) + '%</div>';
+    html += epSection('Acceptance Specification' + (totalLevels > 1 ? ' — Level ' + (lvl+1) : ''), specContent, true, false);
   }
 
   // Fixed limits note
@@ -1243,13 +1277,14 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
   }
 
   // KPI grid
-  html += '<div class="kpi-grid">';
-  html += kpi('Grand Mean', fmt(stats.grandMean, 4), unit);
-  html += kpi('Sw (within-run)', fmt(stats.Sw, 4), 'CV ' + fmt(stats.CVw, 2) + '%');
-  html += kpi('Sb (between-run)', fmt(stats.Sb, 4), 'CV ' + fmt(stats.CVb, 2) + '%');
-  html += kpi('St (total IP)', fmt(stats.St, 4),
+  var kpiContent = '<div class="kpi-grid">'
+    + kpi('Grand Mean', fmt(stats.grandMean, 4), unit)
+    + kpi('Sw (within-run)', fmt(stats.Sw, 4), 'CV ' + fmt(stats.CVw, 2) + '%')
+    + kpi('Sb (between-run)', fmt(stats.Sb, 4), 'CV ' + fmt(stats.CVb, 2) + '%');
+  kpiContent += kpi('St (total IP)', fmt(stats.St, 4),
     'CV ' + fmt(stats.CVt, 2) + '% | 95% CI [' + fmt(stats.ciCVtLo, 2) + '%, ' + fmt(stats.ciCVtHi, 2) + '%]');
-  html += '</div>';
+  kpiContent += '</div>';
+  html += epSection('Precision Results' + (totalLevels > 1 ? ' — Level ' + (lvl+1) : ''), kpiContent, true, false);
 
   // EP05 PASS/FAIL (establish mode) — verdict shown in comparison section above
   if (hasAllowCV) {
@@ -1313,122 +1348,131 @@ function renderLevelResults(stats, cfg, lvl, totalLevels) {
 
   // Variance decomposition bar
   var swPct  = stats.St2 > 0 ? Math.min(100, stats.MSw / stats.St2 * 100) : 0;
-  var sbPct  = stats.St2 > 0 ? Math.min(100, stats.Sb2 / stats.St2 * 100) : 0;
-  // Ensure sum = 100 for display
   var sbPctDisplay = Math.max(0, 100 - swPct);
-  html += '<div data-acr="hide">';
-  html += '<div class="section-header">Variance Decomposition</div>';
-  html += '<div class="card" style="padding:12px;">';
-  html += '<div class="var-decomp-bar">';
-  html += '<div class="var-decomp-seg" style="background:#1976d2;width:' + swPct.toFixed(1) + '%;">';
-  if (swPct > 8) html += 'Sw² ' + swPct.toFixed(1) + '%';
-  html += '</div>';
-  html += '<div class="var-decomp-seg" style="background:#7c3aed;width:' + sbPctDisplay.toFixed(1) + '%;">';
-  if (sbPctDisplay > 8) html += 'Sb² ' + sbPctDisplay.toFixed(1) + '%';
-  html += '</div>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:16px;font-size:11px;margin-top:4px;">';
-  html += '<span style="color:#1976d2;font-weight:700;">&#9632; Within-run (Sw²) ' + fmt(stats.MSw, 6) + ' — ' + swPct.toFixed(1) + '%</span>';
-  html += '<span style="color:#7c3aed;font-weight:700;">&#9632; Between-run (Sb²) ' + fmt(stats.Sb2, 6) + ' — ' + sbPctDisplay.toFixed(1) + '%</span>';
-  html += '</div>';
-  html += '</div>';
-  html += '</div>';
-
-  // Westgard panel
-  html += '<div class="section-header">Westgard Rules' + (totalLevels > 1 ? ' — Level ' + (lvl + 1) : '') + '</div>';
-  html += wgPanelHtml(wgVio);
+  var varContent = '<div class="card" style="padding:12px;">'
+    + '<div class="var-decomp-bar">'
+    + '<div class="var-decomp-seg" style="background:#1976d2;width:' + swPct.toFixed(1) + '%;">' + (swPct > 8 ? 'Sw² ' + swPct.toFixed(1) + '%' : '') + '</div>'
+    + '<div class="var-decomp-seg" style="background:#7c3aed;width:' + sbPctDisplay.toFixed(1) + '%;">' + (sbPctDisplay > 8 ? 'Sb² ' + sbPctDisplay.toFixed(1) + '%' : '') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:16px;font-size:11px;margin-top:4px;">'
+    + '<span style="color:#1976d2;font-weight:700;">&#9632; Within-run (Sw²) ' + fmt(stats.MSw, 6) + ' — ' + swPct.toFixed(1) + '%</span>'
+    + '<span style="color:#7c3aed;font-weight:700;">&#9632; Between-run (Sb²) ' + fmt(stats.Sb2, 6) + ' — ' + sbPctDisplay.toFixed(1) + '%</span>'
+    + '</div></div>';
+  html += epSection('Variance Decomposition' + (totalLevels > 1 ? ' — Level ' + (lvl+1) : ''), varContent, true, false);
 
   html += '</div>'; // close ep-stats-lvl
 
   var lvlSuffix = totalLevels > 1 ? ' — Level ' + (lvl + 1) : '';
 
-  // Levey-Jennings chart
-  html += epSection('Levey-Jennings Chart' + lvlSuffix,
-    '<div class="card" style="padding:12px;"><canvas id="lj-chart-' + lvl + '"></canvas></div>');
+  // Levey-Jennings chart + Westgard rules combined
+  html += epSection('Levey-Jennings & Westgard' + lvlSuffix,
+    wgPanelHtml(wgVio)
+    + '<div class="card" style="padding:12px;margin-top:10px;"><canvas id="lj-chart-' + lvl + '"></canvas></div>');
 
   // Individual measurements by day
   html += epSection('Individual Measurements by Day' + lvlSuffix,
     '<div class="card" style="padding:12px;">'
+    + '<div style="font-size:11px;color:#6b7280;margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;">'
+    + '💡 Click a day in the legend below to exclude it from the chart. Check <strong>Hide excluded</strong> to remove excluded days entirely and recalculate statistics.'
+    + '</div>'
     + '<div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:6px;">'
     + '<label style="font-size:12px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:5px;">'
     + '<input type="checkbox" id="hide-excluded-' + lvl + '" onchange="toggleHideExcluded(' + lvl + ')" style="cursor:pointer;">'
     + 'Hide excluded days from chart'
     + '</label></div>'
-    + '<div style="position:relative;height:250px;"><canvas id="dot-chart-' + lvl + '"></canvas></div>'
+    + '<div style="position:relative;height:300px;"><canvas id="dot-chart-' + lvl + '"></canvas></div>'
     + '</div>', true, true);
 
   // Distribution + CV bar side by side
-  html += epSection('Repeatability vs Intermediate Precision' + lvlSuffix,
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">'
+  html += epSection('Distribution & CV% Comparison' + lvlSuffix,
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
     + '<div class="card" style="padding:12px;"><canvas id="dist-chart-' + lvl + '" style="height:200px;"></canvas></div>'
     + '<div class="card" style="padding:12px;"><canvas id="cv-chart-' + lvl + '" style="height:200px;"></canvas></div>'
-    + '</div>', true, false);
+    + '</div>',
+    true, false);
 
   html += '<div id="ep-collaps-lvl-' + lvl + '">';
 
-  // Collapsible: Run Means & Westgard
-  html += '<div class="card" style="padding:10px 14px;">';
-  html += '<div class="coll-header" onclick="toggleColl(this)">';
-  html += '<span class="coll-arrow">&#9654;</span>';
-  html += '<span>Run Means &amp; Westgard' + (totalLevels > 1 ? ' — Level ' + (lvl + 1) : '') + '</span>';
-  html += '</div>';
-  html += '<div class="coll-body">';
-  html += '<div class="table-wrap"><table>';
-  // Build rep header columns
+  // Run Means & Westgard table
+  var rmContent = '<div class="table-wrap"><table>';
   var repHeaders = '';
   for (var ri2 = 0; ri2 < stats.m; ri2++) repHeaders += '<th class="num">Rep ' + (ri2 + 1) + '</th>';
-  html += '<thead><tr><th>Day</th><th>Run</th>' + repHeaders + '<th class="num">Mean</th><th>Westgard</th></tr></thead><tbody>';
-  stats.completeRuns.forEach(function(r, ri) {
-    var vio = wgVio[ri] || [];
+  var lvlExcl = _excludedRuns[lvl] || {};
+  rmContent += '<div style="font-size:11px;color:#6b7280;margin-bottom:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;">'
+    + '💡 Click <strong>Exclude</strong> on any run to remove it from calculations. Add an optional note explaining why (e.g. instrument error, QC failure). Excluded runs are shown in grey. Click <strong>Include</strong> to restore.'
+    + '</div>';
+  rmContent += '<thead><tr><th>Day</th><th>Run</th>' + repHeaders + '<th class="num">Mean</th><th>Westgard</th><th style="min-width:120px;">Action</th></tr></thead><tbody>';
+  var allRuns = stats.allRuns || stats.completeRuns;
+  // Build Westgard map for non-excluded runs only
+  var wgMap = {};
+  var calcIdx = 0;
+  allRuns.forEach(function(r) {
+    var rk = r.day + '-' + r.run;
+    if (!lvlExcl[rk]) { wgMap[rk] = wgVio[calcIdx] || []; calcIdx++; }
+  });
+  allRuns.forEach(function(r, ri) {
+    var runKey = r.day + '-' + r.run;
+    var isExcluded = !!lvlExcl[runKey];
+    var note = isExcluded ? (lvlExcl[runKey].note || '') : '';
+    var vio = isExcluded ? [] : (wgMap[runKey] || []);
     var hasReject = vio.some(function(rule) { return WG_RULES[rule] && WG_RULES[rule].type === 'reject'; });
     var hasWarn   = vio.some(function(rule) { return WG_RULES[rule] && WG_RULES[rule].type === 'warn'; });
-    var rowCls = hasReject ? 'wg-reject-row' : (hasWarn ? 'wg-warn-row' : '');
+    var rowCls = isExcluded ? '' : (hasReject ? 'wg-reject-row' : (hasWarn ? 'wg-warn-row' : ''));
+    var rowStyle = isExcluded ? 'opacity:0.4;text-decoration:line-through;' : '';
     var badges = vio.length ? vio.map(wgBadge).join('') : '<span style="font-size:11px;color:#9ca3af;">—</span>';
-    html += '<tr class="' + rowCls + '">';
-    html += '<td>' + r.day + '</td>';
-    html += '<td>' + r.run + '</td>';
-    r.reps.forEach(function(v) { html += '<td class="num">' + fmt(v, 4) + '</td>'; });
-    html += '<td class="num">' + fmt(stats.runMeans[ri], 4) + '</td>';
-    html += '<td>' + badges + '</td>';
-    html += '</tr>';
+    rmContent += '<tr class="' + rowCls + '" style="' + rowStyle + '">';
+    rmContent += '<td>' + r.day + '</td>';
+    rmContent += '<td>' + r.run + '</td>';
+    r.reps.forEach(function(v) { rmContent += '<td class="num">' + fmt(v, 4) + '</td>'; });
+    var rowMean = r.reps.reduce(function(s,v){return s+v;},0) / r.reps.length;
+    rmContent += '<td class="num">' + fmt(rowMean, 4) + '</td>';
+    rmContent += '<td>' + (isExcluded ? '<span style="text-decoration:none;opacity:1;">—</span>' : badges) + '</td>';
+    if (isExcluded) {
+      rmContent += '<td style="text-decoration:none;opacity:1;">'
+        + '<button onclick="includeRun(' + lvl + ',\'' + runKey + '\')" style="font-size:10px;padding:2px 8px;background:#10b981;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Include</button>'
+        + (note ? '<div style="font-size:10px;color:#6b7280;margin-top:2px;font-style:italic;" title="' + note.replace(/"/g,'&quot;') + '">📝 ' + (note.length > 25 ? note.substring(0,25) + '…' : note) + '</div>' : '')
+        + '</td>';
+    } else {
+      rmContent += '<td>'
+        + '<button onclick="excludeRun(' + lvl + ',\'' + runKey + '\')" style="font-size:10px;padding:2px 8px;background:#ef4444;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:600;">Exclude</button>'
+        + '</td>';
+    }
+    rmContent += '</tr>';
   });
-  html += '</tbody></table></div>';
-  html += '</div></div>'; // coll-body, card
+  rmContent += '</tbody></table></div>';
+  var nExcluded = Object.keys(lvlExcl).length;
+  if (nExcluded > 0) {
+    rmContent += '<div style="font-size:12px;color:#ef4444;font-weight:600;margin-top:6px;">⚠ ' + nExcluded + ' run' + (nExcluded > 1 ? 's' : '') + ' excluded from calculations</div>';
+  }
+  html += epSection('Run Means & Westgard' + lvlSuffix, rmContent, false, false);
 
-  // Collapsible: Within-run Differences (m=2 only)
+  // Within-run Differences (m=2 only)
   if (stats.m === 2 && stats.diffs) {
-    html += '<div class="card" data-acr="hide" style="padding:10px 14px;">';
-    html += '<div class="coll-header" onclick="toggleColl(this)">';
-    html += '<span class="coll-arrow">&#9654;</span>';
-    html += '<span>Within-run Differences (Rep1 &#8722; Rep2)</span>';
-    html += '</div>';
-    html += '<div class="coll-body">';
-    html += '<div class="table-wrap"><table>';
-    html += '<thead><tr><th>Day</th><th>Run</th><th class="num">Rep 1</th><th class="num">Rep 2</th><th class="num">d<sub>i</sub></th><th class="num">d<sub>i</sub>&#178;</th></tr></thead><tbody>';
+    var diffContent = '<div class="table-wrap"><table>';
+    diffContent += '<thead><tr><th>Day</th><th>Run</th><th class="num">Rep 1</th><th class="num">Rep 2</th><th class="num">d<sub>i</sub></th><th class="num">d<sub>i</sub>&#178;</th></tr></thead><tbody>';
     stats.diffs.forEach(function(d) {
-      html += '<tr>';
-      html += '<td>' + d.day + '</td>';
-      html += '<td>' + d.run + '</td>';
-      html += '<td class="num">' + fmt(d.rep1, 4) + '</td>';
-      html += '<td class="num">' + fmt(d.rep2, 4) + '</td>';
-      html += '<td class="num">' + fmt(d.di, 4) + '</td>';
-      html += '<td class="num">' + fmt(d.di2, 6) + '</td>';
-      html += '</tr>';
+      diffContent += '<tr>';
+      diffContent += '<td>' + d.day + '</td>';
+      diffContent += '<td>' + d.run + '</td>';
+      diffContent += '<td class="num">' + fmt(d.rep1, 4) + '</td>';
+      diffContent += '<td class="num">' + fmt(d.rep2, 4) + '</td>';
+      diffContent += '<td class="num">' + fmt(d.di, 4) + '</td>';
+      diffContent += '<td class="num">' + fmt(d.di2, 6) + '</td>';
+      diffContent += '</tr>';
     });
-    html += '<tr style="font-weight:700;background:#f9fafb;">';
-    html += '<td colspan="5" style="text-align:right;">&#931;d<sub>i</sub>&#178;</td>';
-    html += '<td class="num">' + fmt(stats.diffs.sumDi2, 6) + '</td>';
-    html += '</tr>';
-    html += '</tbody></table></div>';
-    html += '<p class="note" style="margin-top:6px;">S<sub>w</sub> check = &#8730;(&#931;d<sub>i</sub>&#178; / 2n) = &#8730;(' + fmt(stats.diffs.sumDi2, 6) + ' / ' + (2 * stats.n) + ') = <strong>' + fmt(stats.diffs.SwCheck, 4) + '</strong> ' + escHtml(unit) + '</p>';
-    html += '</div></div>'; // coll-body, card
+    diffContent += '<tr style="font-weight:700;background:#f9fafb;">';
+    diffContent += '<td colspan="5" style="text-align:right;">&#931;d<sub>i</sub>&#178;</td>';
+    diffContent += '<td class="num">' + fmt(stats.diffs.sumDi2, 6) + '</td>';
+    diffContent += '</tr>';
+    diffContent += '</tbody></table></div>';
+    diffContent += '<p class="note" style="margin-top:6px;">S<sub>w</sub> check = &#8730;(&#931;d<sub>i</sub>&#178; / 2n) = &#8730;(' + fmt(stats.diffs.sumDi2, 6) + ' / ' + (2 * stats.n) + ') = <strong>' + fmt(stats.diffs.SwCheck, 4) + '</strong> ' + escHtml(unit) + '</p>';
+    html += epSection('Within-run Differences (Rep1 − Rep2)', diffContent, false, false);
   }
 
-  // Summary box
-  html += '<div data-acr="hide"><div class="section-header">Summary</div>';
-  html += '<div class="summary-box">';
-  html += summaryText(stats, cfg, wgVio, usingFixed, ctrlMu, ctrlS, hasAllowCV, pass);
-  html += '</div></div>'; // close summary-box, data-acr wrapper
+  // Summary box (collapsed by default)
+  html += epSection('Summary',
+    '<div class="summary-box">' + summaryText(stats, cfg, wgVio, usingFixed, ctrlMu, ctrlS, hasAllowCV, pass) + '</div>',
+    false, true);
 
   html += '</div>'; // close ep-collaps-lvl
   html += '</div>'; // main card
@@ -1458,33 +1502,34 @@ function buildDotChart(stats, cfg, lvl) {
   var dotDatasets = [];
   var xPos = 0;
   var xTicks = [], xTickLabels = [];
+  // Scale spacing: fewer days = more room each, many days = tighter
+  var maxRepsPerDay = Math.max.apply(null, days.map(function(d){ return dayMap[d].reduce(function(s,r){return s+r.reps.length;},0); }));
+  var ptGap = Math.max(0.06, Math.min(0.14, 8 / (days.length * maxRepsPerDay)));
+  var dayGap = ptGap * 2;
 
   days.forEach(function(day, di) {
     var runs = dayMap[day];
     var col = grpColors[di % grpColors.length];
     var dayPts = [];
 
-    runs.forEach(function(r, ri) {
-      r.reps.forEach(function(v, repI) {
-        var x = xPos + repI * 0.12 + ri * (r.reps.length * 0.14 + 0.1);
-        dayPts.push({ x: x, y: v });
-      });
-      xPos += r.reps.length * 0.14 + 0.2;
+    var dayCenterX = xPos;
+    var allReps = [];
+    runs.forEach(function(r) { allReps = allReps.concat(r.reps); });
+    allReps.forEach(function(v, i) {
+      // Small horizontal jitter so overlapping points are visible
+      var jitter = (i - (allReps.length - 1) / 2) * ptGap;
+      dayPts.push({ x: dayCenterX + jitter, y: v });
     });
 
-    var dayVals = runs.reduce(function(acc,r){ return acc.concat(r.reps); }, []);
-    var dayMean = dayVals.reduce(function(s,v){return s+v;},0) / dayVals.length;
-    var xs = dayPts.map(function(p){return p.x;});
-    var minX = Math.min.apply(null,xs) - 0.05;
-    var maxX = Math.max.apply(null,xs) + 0.05;
+    var dayMean = allReps.reduce(function(s,v){return s+v;},0) / allReps.length;
+    var halfWidth = Math.max(allReps.length * ptGap / 2, 0.05);
 
     dotDatasets.push({ label: 'Day ' + day, data: dayPts, backgroundColor: col, pointRadius: 5, pointHoverRadius: 7, showLine: false });
-    dotDatasets.push({ label: '_m' + di, data: [{x:minX,y:dayMean},{x:maxX,y:dayMean}], borderColor: col, borderWidth: 1.5, borderDash:[4,3], pointRadius:0, showLine:true, fill:false });
+    dotDatasets.push({ label: '_m' + di, data: [{x:dayCenterX-halfWidth,y:dayMean},{x:dayCenterX+halfWidth,y:dayMean}], borderColor: col, borderWidth: 2.5, borderDash:[], pointRadius:0, showLine:true, fill:false });
 
-    var midX = (minX + maxX) / 2;
-    xTicks.push(midX);
-    xTickLabels.push('Day ' + day);
-    xPos += 0.3;
+    xTicks.push(dayCenterX);
+    xTickLabels.push('D' + day);
+    xPos += 1;
   });
 
   dotDatasets.push({ label: 'Grand mean', data:[{x:-0.3,y:stats.grandMean},{x:xPos,y:stats.grandMean}],
@@ -1495,9 +1540,21 @@ function buildDotChart(stats, cfg, lvl) {
     data: { datasets: dotDatasets },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { left: 0, right: 4, top: 0, bottom: 0 } },
       plugins: {
         legend: {
-          labels: { filter: function(item){ return !item.text.startsWith('_m') && item.text !== 'Grand mean'; }, font:{size:11} },
+          display: true,
+          position: 'bottom',
+          align: 'center',
+          labels: {
+            filter: function(item){ return !item.text.startsWith('_m') && item.text !== 'Grand mean'; },
+            font: { size: 9 },
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 6,
+            boxHeight: 6,
+            padding: 5
+          },
           onClick: function(e, legendItem, legend) {
             Chart.defaults.plugins.legend.onClick.call(this, e, legendItem, legend);
             var chart = legend.chart;
@@ -1527,8 +1584,25 @@ function buildDotChart(stats, cfg, lvl) {
         tooltip: { callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(4); } } }
       },
       scales: {
-        x: { display: false },
-        y: { title: { display: true, text: unit, font:{size:11} }, ticks: { font:{size:11} } }
+        x: {
+          display: true,
+          min: xTicks.length > 0 ? xTicks[0] - 0.5 : -0.5,
+          max: xTicks.length > 0 ? xTicks[xTicks.length - 1] + 0.5 : xPos + 0.5,
+          ticks: {
+            callback: function(value) {
+              var idx = xTicks.indexOf(value);
+              if (idx === -1) { for (var i=0;i<xTicks.length;i++) { if (Math.abs(xTicks[i]-value)<0.3) { idx=i; break; } } }
+              return idx >= 0 ? xTickLabels[idx] : '';
+            },
+            autoSkip: false, maxRotation: 0, font: { size: 10, weight: '600' },
+            color: function(ctx) {
+              return grpColors[ctx.index % grpColors.length];
+            }
+          },
+          afterBuildTicks: function(axis) { axis.ticks = xTicks.map(function(v){ return {value:v}; }); },
+          grid: { display: false }
+        },
+        y: { title: { display: true, text: unit, font:{size:10}, padding: {bottom: 2} }, ticks: { font:{size:10}, padding: 2, mirror: false } }
       }
     }
   });

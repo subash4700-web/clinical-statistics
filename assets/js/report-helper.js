@@ -116,3 +116,59 @@ function rptBtnFeedback(btnId) {
     btn.style.borderColor = '';
   }, 1800);
 }
+
+// Post-process: wrap each .section-header + following content into toggleable rpt-section
+function wrapSectionsForReport(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var headers = container.querySelectorAll('.section-header, .section-title');
+  headers.forEach(function(hdr) {
+    var title = hdr.textContent.trim();
+    var contentEls = [];
+    var next = hdr.nextElementSibling;
+    while (next && !next.classList.contains('section-header') && !next.classList.contains('rpt-section')) {
+      contentEls.push(next);
+      next = next.nextElementSibling;
+    }
+    var sec = document.createElement('div');
+    sec.className = 'rpt-section';
+    sec.setAttribute('data-open', 'true');
+    sec.setAttribute('data-sec-id', title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
+    sec.innerHTML = '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+      + '<span class="rpt-sec-arrow">\u25BC</span>'
+      + '<span class="rpt-sec-title">' + title + '</span>'
+      + '<span class="rpt-sec-badge rpt-badge-in">In report</span>'
+      + '</div>';
+    var body = document.createElement('div');
+    body.className = 'rpt-sec-body';
+    contentEls.forEach(function(el) { body.appendChild(el); });
+    sec.appendChild(body);
+    hdr.replaceWith(sec);
+  });
+  // Wrap pre-header content (summary card) as "Summary & Verdict"
+  var firstChild = container.firstElementChild;
+  if (firstChild && !firstChild.classList.contains('rpt-section')) {
+    var preContent = [];
+    var el = firstChild;
+    while (el && !el.classList.contains('rpt-section') && !el.classList.contains('section-header')) {
+      preContent.push(el);
+      el = el.nextElementSibling;
+    }
+    if (preContent.length > 0) {
+      var sec = document.createElement('div');
+      sec.className = 'rpt-section';
+      sec.setAttribute('data-open', 'true');
+      sec.setAttribute('data-sec-id', 'summary-verdict');
+      sec.innerHTML = '<div class="rpt-sec-hdr" onclick="toggleRptSection(this)">'
+        + '<span class="rpt-sec-arrow">\u25BC</span>'
+        + '<span class="rpt-sec-title">Summary &amp; Verdict</span>'
+        + '<span class="rpt-sec-badge rpt-badge-in">In report</span>'
+        + '</div>';
+      var body = document.createElement('div');
+      body.className = 'rpt-sec-body';
+      preContent.forEach(function(p) { body.appendChild(p); });
+      sec.appendChild(body);
+      container.insertBefore(sec, container.firstElementChild);
+    }
+  }
+}

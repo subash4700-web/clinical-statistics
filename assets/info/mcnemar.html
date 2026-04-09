@@ -68,10 +68,17 @@
   <h3 id="mc-df">Degrees of Freedom</h3>
   <p><strong>df = 1</strong></p>
 
-  <h3 id="mc-effect">Effect Size</h3>
-  <p>The <strong>odds ratio</strong> of discordant pairs describes the asymmetry of change:</p>
+  <h3 id="mc-effect">Effect Size — Odds Ratio</h3>
+  <p>The p-value tells you <em>whether</em> the shift is significant. The <strong>odds ratio</strong> tells you <em>how large</em> it is:</p>
   <p><strong>OR = b / c</strong></p>
-  <p>OR &gt; 1: more subjects changed from negative to positive than vice versa. OR &lt; 1: the reverse.</p>
+  <table border="1" cellpadding="8" cellspacing="0" style="margin-bottom:10px; font-size:13px;">
+    <tr><th>OR</th><th>Meaning</th></tr>
+    <tr><td><strong>OR = 1</strong></td><td>Equal change in both directions — no systematic shift</td></tr>
+    <tr><td><strong>OR &gt; 1</strong></td><td>More changes from positive → negative (b dominates)</td></tr>
+    <tr><td><strong>OR &lt; 1</strong></td><td>More changes from negative → positive (c dominates)</td></tr>
+  </table>
+  <p><strong>95% CI:</strong> If the confidence interval excludes 1.0, the asymmetry is statistically significant.</p>
+  <p><strong>Example:</strong> b = 15 (cured), c = 3 (relapsed) → OR = 5.0 — patients are <strong>5 times more likely to improve than worsen</strong>. This is the clinical magnitude that the p-value alone cannot tell you.</p>
   <p>Alternatively, the <strong>proportion of change</strong> can be reported: (b − c) / N.</p>
 
   <h3 id="mc-assumptions">Assumptions</h3>

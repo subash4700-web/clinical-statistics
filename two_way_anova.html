@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Two-Way ANOVA</title>
-<script src="../assets/vendor/jstat.min.js"></script>
-<script src="../assets/vendor/xlsx.full.min.js"></script>
+<script src="assets/vendor/jstat.min.js"></script>
+<script src="assets/vendor/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="assets/css/components.css">
 <script src="assets/js/report-helper.js"></script>
 <style>
@@ -157,8 +157,9 @@ First 5 rows → Factor A level 1.  Next 5 rows → Factor A level 2."></textare
       <div style="margin-top:12px;">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <div>
-            <label class="small" style="font-weight:800;">Sample size per cell (n)</label>
+            <label class="small" style="font-weight:800;">Replications per cell (n)</label>
             <input type="number" id="genCellSize" value="5" min="1" max="100" step="1" style="width:100%;"/>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">n = 1: without replication (no interaction test). n ≥ 2: with replication (can test interaction).</div>
           </div>
           <div>
             <label class="small" style="font-weight:800;">Distribution</label>
@@ -167,6 +168,19 @@ First 5 rows → Factor A level 1.  Next 5 rows → Factor A level 2."></textare
               <option value="uniform">Uniform</option>
             </select>
           </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <label class="small" style="font-weight:800;">Scenario (auto-fills cell parameters)</label>
+          <select id="genScenario" onchange="applyGenScenario()" style="width:100%;">
+            <option value="">— Manual (set values below) —</option>
+            <option value="no_effect">No effect — all means equal</option>
+            <option value="factor_a">Factor A significant — rows differ, columns equal</option>
+            <option value="factor_b">Factor B significant — columns differ, rows equal</option>
+            <option value="both_main">Both main effects — rows and columns differ, no interaction</option>
+            <option value="interaction">Interaction — effect of A depends on B</option>
+            <option value="all_sig">All significant — main effects + interaction</option>
+          </select>
         </div>
 
         <div class="section-title" style="margin-top:16px;">Parameters for each cell</div>
@@ -1061,6 +1075,47 @@ function rebuildCellParams(){
   }
   
   grid.appendChild(table);
+}
+
+function applyGenScenario() {
+  const scenario = el("genScenario").value;
+  if (!scenario) return;
+  const a = parseInt(el("aLevels").value) || 2;
+  const b = parseInt(el("bLevels").value) || 2;
+  const baseMean = 50;
+  const baseSD = 2.0;
+  const effectSize = 10; // difference between levels
+
+  for (let i = 0; i < a; i++) {
+    for (let j = 0; j < b; j++) {
+      const meanEl = el(`cellMean_${i}_${j}`);
+      const sdEl = el(`cellSD_${i}_${j}`);
+      if (!meanEl || !sdEl) continue;
+
+      let mean = baseMean;
+
+      if (scenario === 'no_effect') {
+        mean = baseMean;
+      } else if (scenario === 'factor_a') {
+        mean = baseMean + i * effectSize; // rows differ
+      } else if (scenario === 'factor_b') {
+        mean = baseMean + j * effectSize; // columns differ
+      } else if (scenario === 'both_main') {
+        mean = baseMean + i * effectSize + j * (effectSize * 0.7); // both differ, no interaction
+      } else if (scenario === 'interaction') {
+        // Crossover: A1 higher at B1, A2 higher at B2
+        if (i === 0) mean = baseMean + j * (-effectSize);
+        else mean = baseMean + j * effectSize;
+      } else if (scenario === 'all_sig') {
+        mean = baseMean + i * effectSize + j * (effectSize * 0.5);
+        // Add interaction: extra boost for specific combinations
+        if (i === a - 1 && j === b - 1) mean += effectSize;
+      }
+
+      meanEl.value = mean.toFixed(1);
+      sdEl.value = baseSD.toFixed(1);
+    }
+  }
 }
 
 function generateTwoWayData(){

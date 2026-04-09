@@ -9,9 +9,11 @@
 
   <style>
     /* ---------- GLOBAL ---------- */
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #F4F6F8;
     }
@@ -1033,13 +1035,13 @@
           <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
           <div class="sidebar-sep"></div>
-          <button onclick="loadTool('precision.html','Precision Monitor', this)">Precision Monitor<span class="btn-hint">Daily QC monitoring · within-run repeatability</span></button>
+          <button onclick="loadTool('precision.html','Precision Monitor', this)">Precision Monitor<span class="btn-hint">Daily QC · within-run repeatability</span></button>
           <button onclick="loadTool('precision_ep05.html','Precision Study (EP05 / EP15)', this)">Precision Study (EP05 / EP15)<span class="btn-hint">Validate (EP05) or verify (EP15) · ANOVA variance decomposition</span></button>
-          <button onclick="loadTool('bias.html','Bias', this)">Bias (CRM / EQA)<span class="btn-hint">Known reference value vs your method · CRM or EQA material</span></button>
-          <button onclick="loadTool('method_comparison.html','Quantitative Method Comparison', this)">Method Comparison<span class="btn-hint">Bland-Altman · Passing-Bablok · Deming · paired patient samples</span></button>
-          <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC implications · uses Precision + Bias results</span></button>
+          <button onclick="loadTool('bias.html','Bias (EP15-A3)', this)">Bias (CRM / EQA)<span class="btn-hint">EP15-A3 · Known reference value vs your method</span></button>
+          <button onclick="loadTool('method_comparison.html','Method Comparison (EP09-A3)', this)">Method Comparison (EP09)<span class="btn-hint">EP09-A3 · Bland-Altman · Passing-Bablok · Deming</span></button>
+          <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC design · uses Precision + Bias</span></button>
           <div class="sidebar-sep"></div>
-          <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison', this)">Categorical Method Comparison<span class="btn-hint">Kappa · McNemar · pos/neg methods · 2×2 table</span></button>
+          <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison (EP12-A2)', this)">Categorical Method Comparison (EP12)<span class="btn-hint">EP12-A2 · Kappa · McNemar · pos/neg agreement</span></button>
         </div>
       </div>
 
@@ -2192,7 +2194,7 @@
       'cat.quantitativeTests':'Quantitative Tests','cat.nonparametric':'Nonparametric Tests','cat.qualitative':'Categorical Tests',
       'sub.tests':'Tests','cat.analytical':'Analytical Performance',
       'cat.stability':'Stability & Time',
-      'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools',
+      'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
       'tool.normalDist':'Normal Distribution','tool.fDist':'F Distribution',
       'tool.oneSampleT':'One-Sample T-Test','tool.pairedT':'Paired T-Test',
       'tool.independentT':'Independent T-Test','tool.oneWayAnova':'One-Way ANOVA',
@@ -2239,7 +2241,7 @@
       'cat.quantitativeTests':'Kvantitative Test','cat.nonparametric':'Ikke-parametriske Test','cat.qualitative':'Kategoriske Test',
       'sub.tests':'Test','cat.analytical':'Analytisk Præstation',
       'cat.stability':'Stabilitet & Tid',
-      'cat.correlation':'Korrelation & Regression','cat.lab':'Laboratorieværktøjer',
+      'cat.correlation':'Korrelation & Regression','cat.lab':'Laboratorieværktøjer <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
       'tool.normalDist':'Normalfordeling','tool.fDist':'F-fordeling',
       'tool.oneSampleT':'Én-stikprøve T-test','tool.pairedT':'Parret T-test',
       'tool.independentT':'Uafhængig T-test','tool.oneWayAnova':'Envejs ANOVA',
@@ -2302,6 +2304,8 @@
         if (hint) {
           el.childNodes.forEach(n => { if (n !== hint) n.remove ? n.remove() : el.removeChild(n); });
           el.insertBefore(document.createTextNode(val), hint);
+        } else if (val.includes('<')) {
+          el.innerHTML = val;
         } else {
           el.textContent = val;
         }
@@ -2972,6 +2976,7 @@ function openReportPanel() {
 function closeReportPanel() {
   document.getElementById('report-panel').style.display = 'none';
   document.getElementById('report-panel-backdrop').style.display = 'none';
+  fixLayout();
 }
 
 function previewFullReport() {
@@ -3063,6 +3068,7 @@ function _rpInsertNote(zone) {
 
 function closeReportPreview() {
   document.getElementById('report-preview-modal').style.display = 'none';
+  fixLayout();
 }
 
 var _rpZoom = 100;
@@ -3074,10 +3080,33 @@ function adjustReportZoom(delta) {
 
 function printReportPreview() {
   window.print();
+  // Safety: ensure layout resets after print dialog
+  setTimeout(function() {
+    document.body.style.overflow = '';
+    document.querySelector('.app-shell').style.height = '100vh';
+  }, 500);
+}
+
+function fixLayout() {
+  // Multiple approaches to force Electron/Chromium to recalculate layout
+  window.scrollTo(0, 0);
+  document.documentElement.style.zoom = '0.999';
+  requestAnimationFrame(function() {
+    document.documentElement.style.zoom = '';
+  });
 }
 
 // Init on load
 updateReportBtn();
+
+// Move report modals outside app-shell to prevent layout side-effects
+(function() {
+  var els = ['report-panel-backdrop', 'report-panel', 'report-preview-modal'];
+  els.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) document.body.appendChild(el);
+  });
+})();
 </script>
 
 </body>

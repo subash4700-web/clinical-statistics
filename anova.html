@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>One-Way ANOVA</title>
 
-  <script src="../assets/vendor/jstat.min.js"></script>
-  <script src="../assets/vendor/xlsx.full.min.js"></script>
+  <script src="assets/vendor/jstat.min.js"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="assets/js/report-helper.js"></script>
 
@@ -824,7 +824,7 @@ function renderAnovaViz({ groupData, groupNames, means, grandMean, MSW, alpha, p
   // --- F badge (below all within rows) ---
   ctx.save();
   ctx.font="bold 11px system-ui,sans-serif"; ctx.fillStyle="#111827"; ctx.textAlign="center";
-  ctx.fillText(`F(${dfB},${dfW}) = ${fmt(F,3)}   p = ${fmtP(p)}`, padL+plotW/2, withinStartY + k*rowH + 30);
+  ctx.fillText(`F(${dfB},${dfW}) = ${fmt(F,3)}   p = ${fmtP(p)}`, padL+plotW/2, withinStartY + k*withinRowH + 30);
   ctx.restore();
 
   // --- x-axis tick labels ---

@@ -499,7 +499,7 @@ canvas { max-width: 100%; display: block; }
 .assumptions-panel summary::-webkit-details-marker { display: none; }
 
 .assumptions-panel summary::after {
-  content: '›';
+  content: '\203A';
   margin-left: auto;
   font-size: 16px;
   transition: transform .2s;

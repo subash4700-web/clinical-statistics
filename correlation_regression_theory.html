@@ -29,7 +29,7 @@
     .index a:hover { text-decoration: underline; }
 
     .section { margin-bottom: 44px; scroll-margin-top: 16px; }
-    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #e11d48; padding-left: 10px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #e11d48; padding-left: 10px; position: sticky; top: 38px; background: #f4f6f8; z-index: 10; padding-top: 10px; padding-bottom: 10px; }
     .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
     .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
     .section p:last-child { margin-bottom: 0; }
@@ -128,7 +128,7 @@
     <h2>1. What is correlation?</h2>
     <p>Correlation measures the <strong>strength and direction of the linear relationship</strong> between two continuous variables. It answers: when one variable goes up, does the other tend to go up too (positive), go down (negative), or show no consistent pattern (near zero)?</p>
     <p>Correlation does <em>not</em> tell you which variable causes which, and it does not tell you how much one variable changes when the other changes. It only measures how tightly the two move together.</p>
-    <div class="callout">
+    <div class="warn">
       <b>Classic mistake:</b> Correlation is not causation. Two variables can be strongly correlated because they are both driven by a third factor you have not measured. Always think about the biology before interpreting a correlation.
     </div>
     <p><strong>Examples in the laboratory:</strong></p>
@@ -168,6 +168,82 @@
       <tr><td>0.60 – 0.79</td><td>Strong</td><td>eGFR vs cystatin C</td></tr>
       <tr><td>0.80 – 1.00</td><td>Very strong</td><td>Two glucose methods on the same patients</td></tr>
     </table>
+    <h3>The quadrant intuition — how correlation works</h3>
+    <p>The numerator of Pearson r is Σ(xᵢ − x̄)(yᵢ − ȳ). To understand what this means, draw the mean lines x̄ (vertical) and ȳ (horizontal) on a scatter plot. This creates <b>four quadrants</b>:</p>
+
+    <!-- Quadrant diagram -->
+    <div style="display:flex;justify-content:center;margin:16px 0;">
+      <svg viewBox="0 0 420 320" style="max-width:500px;width:100%;height:auto;font-family:system-ui,sans-serif;">
+        <!-- Background quadrants -->
+        <rect x="40" y="10" width="170" height="140" fill="#fef2f2" rx="4"/><!-- Q1 top-left: negative -->
+        <rect x="210" y="10" width="170" height="140" fill="#f0fdf4" rx="4"/><!-- Q2 top-right: positive -->
+        <rect x="40" y="150" width="170" height="140" fill="#f0fdf4" rx="4"/><!-- Q3 bottom-left: positive -->
+        <rect x="210" y="150" width="170" height="140" fill="#fef2f2" rx="4"/><!-- Q4 bottom-right: negative -->
+        <!-- Mean lines -->
+        <line x1="210" y1="10" x2="210" y2="290" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+        <line x1="40" y1="150" x2="380" y2="150" stroke="#10b981" stroke-width="2" stroke-dasharray="6,4"/>
+        <!-- Axis labels -->
+        <text x="210" y="305" text-anchor="middle" font-size="12" font-weight="700" fill="#374151">x̄</text>
+        <text x="395" y="154" font-size="12" font-weight="700" fill="#374151">ȳ</text>
+        <!-- Quadrant labels -->
+        <text x="125" y="40" text-anchor="middle" font-size="28" font-weight="800" fill="#fca5a5">1</text>
+        <text x="295" y="40" text-anchor="middle" font-size="28" font-weight="800" fill="#86efac">2</text>
+        <text x="125" y="270" text-anchor="middle" font-size="28" font-weight="800" fill="#86efac">3</text>
+        <text x="295" y="270" text-anchor="middle" font-size="28" font-weight="800" fill="#fca5a5">4</text>
+        <!-- Quadrant sign labels -->
+        <text x="125" y="60" text-anchor="middle" font-size="10" fill="#dc2626">(−)(+) = negative</text>
+        <text x="295" y="60" text-anchor="middle" font-size="10" fill="#16a34a">(+)(+) = positive</text>
+        <text x="125" y="250" text-anchor="middle" font-size="10" fill="#16a34a">(−)(−) = positive</text>
+        <text x="295" y="250" text-anchor="middle" font-size="10" fill="#dc2626">(+)(−) = negative</text>
+        <!-- Data points (positive correlation example) -->
+        <circle cx="80" cy="230" r="6" fill="#3b82f6" opacity="0.85"/><!-- low x, low y → Q3 -->
+        <circle cx="120" cy="200" r="6" fill="#3b82f6" opacity="0.85"/><!-- low x, low y → Q3 -->
+        <circle cx="150" cy="180" r="6" fill="#3b82f6" opacity="0.85"/><!-- below x̄, near ȳ -->
+        <circle cx="190" cy="120" r="6" fill="#3b82f6" opacity="0.85"/><!-- near x̄, above ȳ → Q1 -->
+        <circle cx="250" cy="100" r="6" fill="#3b82f6" opacity="0.85"/><!-- above x̄, above ȳ → Q2 -->
+        <circle cx="300" cy="70" r="6" fill="#3b82f6" opacity="0.85"/><!-- high x, high y → Q2 -->
+        <circle cx="350" cy="40" r="6" fill="#3b82f6" opacity="0.85"/><!-- high x, high y → Q2 -->
+        <!-- Regression line hint -->
+        <line x1="60" y1="240" x2="370" y2="30" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.4"/>
+        <!-- Legend -->
+        <text x="42" y="306" font-size="9" fill="#6b7280">Points in green quadrants (2,3) → positive r</text>
+      </svg>
+    </div>
+
+    <table>
+      <tr><th>Quadrant</th><th>Position</th><th>(xᵢ − x̄)</th><th>(yᵢ − ȳ)</th><th>Product</th><th>Contributes to</th></tr>
+      <tr><td><b>1</b> (top-left)</td><td>x below mean, y above mean</td><td>negative</td><td>positive</td><td><b style="color:#dc2626;">negative</b></td><td>Negative correlation</td></tr>
+      <tr><td><b>2</b> (top-right)</td><td>x above mean, y above mean</td><td>positive</td><td>positive</td><td><b style="color:#16a34a;">positive</b></td><td>Positive correlation</td></tr>
+      <tr><td><b>3</b> (bottom-left)</td><td>x below mean, y below mean</td><td>negative</td><td>negative</td><td><b style="color:#16a34a;">positive</b></td><td>Positive correlation</td></tr>
+      <tr><td><b>4</b> (bottom-right)</td><td>x above mean, y below mean</td><td>positive</td><td>negative</td><td><b style="color:#dc2626;">negative</b></td><td>Negative correlation</td></tr>
+    </table>
+
+    <div class="good">
+      <b>The key insight:</b> If points cluster in quadrants 2 and 3 (both high or both low) → the sum of products is positive → <b>positive correlation</b>. If points cluster in quadrants 1 and 4 (one high, one low) → the sum is negative → <b>negative correlation</b>. If points are spread evenly across all four quadrants → the positives and negatives cancel → <b>r ≈ 0</b>.
+    </div>
+
+    <div class="callout">
+      <b>Worked example — 5 data points:</b><br><br>
+      <table>
+        <tr><th>Patient</th><th>x (age)</th><th>y (systolic BP)</th><th>xᵢ − x̄</th><th>yᵢ − ȳ</th><th>Product</th></tr>
+        <tr><td>1</td><td>30</td><td>120</td><td>−15</td><td>−16</td><td style="color:#16a34a;">+240</td></tr>
+        <tr><td>2</td><td>40</td><td>130</td><td>−5</td><td>−6</td><td style="color:#16a34a;">+30</td></tr>
+        <tr><td>3</td><td>45</td><td>135</td><td>0</td><td>−1</td><td>0</td></tr>
+        <tr><td>4</td><td>55</td><td>145</td><td>+10</td><td>+9</td><td style="color:#16a34a;">+90</td></tr>
+        <tr><td>5</td><td>55</td><td>150</td><td>+10</td><td>+14</td><td style="color:#16a34a;">+140</td></tr>
+        <tr style="font-weight:700;background:#f9fafb;"><td colspan="2">x̄ = 45</td><td>ȳ = 136</td><td colspan="2" style="text-align:right;">Σ products =</td><td><b>500</b></td></tr>
+      </table>
+      All products are positive (or zero) → points cluster in quadrants 2 and 3 → <b>positive correlation</b>.<br><br>
+      Σ(xᵢ − x̄)² = 450, &nbsp; Σ(yᵢ − ȳ)² = 590<br>
+      r = 500 / √(450 × 590) = 500 / 515.4 = <b>0.97</b> — very strong positive correlation.<br>
+      R² = 0.94 — 94% of the variation in blood pressure is explained by age in this sample.
+    </div>
+
+    <div class="callout">
+      <b>Negative correlation example:</b><br><br>
+      If we measured exercise hours (x) vs resting heart rate (y), more exercise → lower heart rate. Points would cluster in quadrants 1 and 4: high x with low y, and low x with high y. The products would be mostly negative → r &lt; 0.
+    </div>
+
     <div class="warn">
       <b>Important:</b> A statistically significant p-value does not mean the correlation is clinically meaningful. With n = 500, even r = 0.09 will be statistically significant, but it explains less than 1% of the variance. Always report r alongside the p-value and sample size.
     </div>
@@ -191,7 +267,123 @@
       <tr><td><strong>r = 0.50</strong></td><td>Moderate relationship</td><td>BMI and total cholesterol — related, but many other factors involved</td></tr>
       <tr><td><strong>R² = 0.25</strong></td><td>Only 25% of variance explained</td><td>BMI alone is a weak predictor of cholesterol — do not use it as the sole predictor</td></tr>
     </table>
+    <h3>How R² is calculated — SST, SSE, and the key formula</h3>
+    <p>R² compares two models: (1) just using the mean to predict everything, vs (2) using the regression line. How much better does the line do?</p>
+
+    <!-- SST vs SSE side-by-side diagram -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;">
+      <!-- SST diagram -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">SST = 346.9</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">Variation around the <b>mean</b></div>
+        <svg viewBox="0 0 240 160" style="width:100%;height:auto;">
+          <rect width="240" height="160" fill="#f9fafb" rx="6"/>
+          <!-- Axes -->
+          <line x1="30" y1="140" x2="230" y2="140" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="30" y1="10" x2="30" y2="140" stroke="#d1d5db" stroke-width="1"/>
+          <!-- Mean line (horizontal) -->
+          <line x1="30" y1="70" x2="230" y2="70" stroke="#10b981" stroke-width="2"/>
+          <text x="232" y="68" font-size="9" fill="#10b981" font-weight="700">ȳ = 126.1</text>
+          <!-- Data points with residual lines to mean -->
+          <circle cx="50" cy="82" r="4" fill="#3b82f6"/>
+          <line x1="50" y1="82" x2="50" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="75" cy="92" r="4" fill="#3b82f6"/>
+          <line x1="75" y1="92" x2="75" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="85" cy="68" r="4" fill="#3b82f6"/>
+          <line x1="85" y1="68" x2="85" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="115" cy="60" r="4" fill="#3b82f6"/>
+          <line x1="115" y1="60" x2="115" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="140" cy="78" r="4" fill="#3b82f6"/>
+          <line x1="140" y1="78" x2="140" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="175" cy="52" r="4" fill="#3b82f6"/>
+          <line x1="175" y1="52" x2="175" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="190" cy="42" r="4" fill="#3b82f6"/>
+          <line x1="190" y1="42" x2="190" y2="70" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <!-- Labels -->
+          <text x="120" y="155" text-anchor="middle" font-size="9" fill="#6b7280">Age</text>
+          <text x="120" y="130" text-anchor="middle" font-size="8" fill="#ef4444">Red lines = (yᵢ − ȳ)²</text>
+        </svg>
+      </div>
+      <!-- SSE diagram -->
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">SSE = 146.5</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">Variation around the <b>regression line</b></div>
+        <svg viewBox="0 0 240 160" style="width:100%;height:auto;">
+          <rect width="240" height="160" fill="#f9fafb" rx="6"/>
+          <!-- Axes -->
+          <line x1="30" y1="140" x2="230" y2="140" stroke="#d1d5db" stroke-width="1"/>
+          <line x1="30" y1="10" x2="30" y2="140" stroke="#d1d5db" stroke-width="1"/>
+          <!-- Regression line -->
+          <line x1="35" y1="95" x2="210" y2="35" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,3"/>
+          <!-- Data points with residual lines to regression line -->
+          <circle cx="50" cy="82" r="4" fill="#3b82f6"/>
+          <line x1="50" y1="82" x2="50" y2="90" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="75" cy="92" r="4" fill="#3b82f6"/>
+          <line x1="75" y1="92" x2="75" y2="82" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="85" cy="68" r="4" fill="#3b82f6"/>
+          <line x1="85" y1="68" x2="85" y2="79" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="115" cy="60" r="4" fill="#3b82f6"/>
+          <line x1="115" y1="60" x2="115" y2="68" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="140" cy="78" r="4" fill="#3b82f6"/>
+          <line x1="140" y1="78" x2="140" y2="58" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="175" cy="52" r="4" fill="#3b82f6"/>
+          <line x1="175" y1="52" x2="175" y2="45" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <circle cx="190" cy="42" r="4" fill="#3b82f6"/>
+          <line x1="190" y1="42" x2="190" y2="40" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <!-- Labels -->
+          <text x="120" y="155" text-anchor="middle" font-size="9" fill="#6b7280">Age</text>
+          <text x="120" y="130" text-anchor="middle" font-size="8" fill="#6366f1">Purple lines = (yᵢ − ŷᵢ)²</text>
+        </svg>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:13px;font-weight:700;color:#374151;">R² = (346.9 − 146.5) / 346.9 = <b>0.578</b> — the regression line reduces the variation by 57.8%</p>
+
+    <div class="formula-box">
+      <span class="f-label">R²</span>
+      <span class="f-correct">R² = (SST − SSE) / SST = 1 − SSE / SST</span>
+    </div>
+
+    <table>
+      <tr><th>Term</th><th>Full name</th><th>What it measures</th><th>Formula</th></tr>
+      <tr><td><b>SST</b></td><td>Sum of Squares Total</td><td>Total variation — how far each point is from the <b>mean</b> (ȳ)</td><td>Σ(yᵢ − ȳ)²</td></tr>
+      <tr><td><b>SSE</b></td><td>Sum of Squares Error</td><td>Unexplained variation — how far each point is from the <b>regression line</b> (ŷᵢ)</td><td>Σ(yᵢ − ŷᵢ)²</td></tr>
+      <tr><td><b>SSR</b></td><td>Sum of Squares Regression</td><td>Explained variation — how much the regression line improves over the mean</td><td>SST − SSE</td></tr>
+    </table>
+
     <div class="callout">
+      <b>Worked example — Age vs blood pressure (7 patients):</b><br><br>
+
+      <b>Step 1: SST — variation around the mean</b><br>
+      Mean BP (ȳ) = (120+115+127+130+122+132+137)/7 = <b>126.1</b> mmHg<br><br>
+      <table>
+        <tr><th>BP (y)</th><th>Age (x)</th><th>ȳ</th><th>(y − ȳ)²</th></tr>
+        <tr><td>120</td><td>22</td><td>126.1</td><td>37.7</td></tr>
+        <tr><td>115</td><td>33</td><td>126.1</td><td>124.2</td></tr>
+        <tr><td>127</td><td>35</td><td>126.1</td><td>0.7</td></tr>
+        <tr><td>130</td><td>44</td><td>126.1</td><td>14.9</td></tr>
+        <tr><td>122</td><td>52</td><td>126.1</td><td>17.2</td></tr>
+        <tr><td>132</td><td>62</td><td>126.1</td><td>34.3</td></tr>
+        <tr><td>137</td><td>65</td><td>126.1</td><td>117.9</td></tr>
+        <tr style="font-weight:700;background:#f9fafb;"><td colspan="3" style="text-align:right;">SST =</td><td><b>346.9</b></td></tr>
+      </table>
+      This is the total spread of BP values around the mean — the "baseline" variation without any model.<br><br>
+
+      <b>Step 2: SSE — variation around the regression line</b><br>
+      After fitting the regression line (ŷ = 104.4 + 0.36x), calculate how far each point is from the line:<br>
+      SSE = Σ(yᵢ − ŷᵢ)² = <b>146.5</b><br><br>
+
+      <b>Step 3: R²</b><br>
+      R² = (SST − SSE) / SST = (346.9 − 146.5) / 346.9 = 200.4 / 346.9 = <b>0.578</b><br><br>
+
+      <b>Interpretation:</b> The regression line explains <b>57.8%</b> of the variation in blood pressure. The remaining 42.2% is unexplained (due to other factors like diet, exercise, genetics, measurement error).
+    </div>
+
+    <div class="good">
+      <b>The key insight:</b> R² compares the variation around the <b>mean</b> (SST — a flat horizontal line) to the variation around the <b>regression line</b> (SSE — the best-fit line). If the regression line reduces the spread a lot → R² is high. If it barely improves over the mean → R² is low.<br><br>
+      When SSE increases (points spread further from the line), R² <b>falls</b>. When SSE decreases (points cluster tightly around the line), R² <b>rises</b>.
+    </div>
+
+    <div class="good">
       <b>Rule of thumb:</b> Always report R² when you are talking about prediction (regression). Report r when you are talking about the association between two variables. They are mathematically related but conceptually different.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -237,7 +429,7 @@
       <li><strong>R²:</strong> The proportion of variance in Y explained by X.</li>
       <li><strong>Residual standard error (Sy.x):</strong> Average size of the prediction errors.</li>
     </ul>
-    <div class="callout">
+    <div class="good">
       <b>In method comparison:</b> If method B perfectly agrees with method A, the regression line through the data should have a slope of 1.0 and an intercept of 0. Deviations from these values reveal proportional bias (slope ≠ 1) or constant bias (intercept ≠ 0).
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -278,6 +470,25 @@
       <li><strong>Fan shape (increasing spread)</strong> — heteroscedasticity; variance is not constant</li>
       <li><strong>One extreme residual</strong> — potential outlier; investigate before removing</li>
     </ul>
+    <div class="callout">
+      <b>Worked example — Residuals from age vs blood pressure:</b><br><br>
+      Regression line: ŷ = 100 + 0.5x (for every year of age, BP increases by 0.5 mmHg).<br><br>
+      <table>
+        <tr><th>Patient</th><th>Age (x)</th><th>Observed BP (y)</th><th>Predicted BP (ŷ)</th><th>Residual (y − ŷ)</th></tr>
+        <tr><td>1</td><td>25</td><td>120</td><td>112.5</td><td style="color:#16a34a;font-weight:700;">+7.5</td></tr>
+        <tr><td>2</td><td>35</td><td>116</td><td>117.5</td><td style="color:#dc2626;font-weight:700;">−1.5</td></tr>
+        <tr><td>3</td><td>35</td><td>127</td><td>117.5</td><td style="color:#16a34a;font-weight:700;">+9.5</td></tr>
+        <tr><td>4</td><td>45</td><td>128</td><td>122.5</td><td style="color:#16a34a;font-weight:700;">+5.5</td></tr>
+        <tr><td>5</td><td>50</td><td>123</td><td>125.0</td><td style="color:#dc2626;font-weight:700;">−2.0</td></tr>
+        <tr><td>6</td><td>55</td><td>131</td><td>127.5</td><td style="color:#16a34a;font-weight:700;">+3.5</td></tr>
+        <tr><td>7</td><td>65</td><td>137</td><td>132.5</td><td style="color:#16a34a;font-weight:700;">+4.5</td></tr>
+        <tr><td>8</td><td>70</td><td>136</td><td>135.0</td><td style="color:#16a34a;font-weight:700;">+1.0</td></tr>
+      </table>
+      <b>Positive residual</b> = point is <b>above</b> the regression line (observed &gt; predicted).<br>
+      <b>Negative residual</b> = point is <b>below</b> the line (observed &lt; predicted).<br><br>
+      The residual is the <b>vertical distance</b> from each point to the regression line. Regression finds the line that minimises the sum of squared residuals: Σ(yᵢ − ŷᵢ)² → minimum. This is why it's called <b>least squares</b> regression.
+    </div>
+
     <div class="good">
       <b>Always plot residuals.</b> A residual plot reveals problems that R² alone hides. Two datasets with the same R² can have very different residual patterns — as Anscombe's Quartet demonstrates below.
     </div>
@@ -462,7 +673,7 @@
       <li><strong>Specificity (True Negative Rate):</strong> The proportion of true negatives correctly identified. High specificity → few false alarms.</li>
       <li><strong>False Positive Rate (FPR) = 1 − Specificity:</strong> Plotted on the X-axis of the ROC curve.</li>
     </ul>
-    <div class="callout">
+    <div class="good">
       <b>The trade-off:</b> You cannot simultaneously maximise sensitivity and specificity by moving the threshold. Lowering the threshold catches more true positives (higher sensitivity) but also flags more false positives (lower specificity). The ROC curve makes this trade-off visible across all possible thresholds.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>

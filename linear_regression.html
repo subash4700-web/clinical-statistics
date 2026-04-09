@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Correlation & Linear Regression</title>
-  <script src="../assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/components.css">
   <script src="assets/js/report-helper.js"></script>
@@ -200,17 +200,8 @@
 
   <!-- ── RESULTS TAB ── -->
   <div id="results" class="tab-content">
-    <div class="rpt-section" data-open="true" data-sec-id="regression-results">
-      <div class="rpt-sec-hdr" onclick="toggleRptSection(this)">
-        <span class="rpt-sec-title">Regression Results</span>
-        <span class="rpt-sec-badge rpt-badge-in">In report</span>
-        <span class="rpt-sec-arrow">▼</span>
-      </div>
-      <div class="rpt-sec-body">
-        <div id="resultsContent">
-          <p class="note" style="text-align:center;padding:40px;">Run the analysis to see results.</p>
-        </div>
-      </div>
+    <div id="resultsContent">
+      <p class="note" style="text-align:center;padding:40px;">Run the analysis to see results.</p>
     </div>
     <div class="btn-row" style="margin-top:12px;">
       <button id="add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>

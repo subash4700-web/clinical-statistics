@@ -446,18 +446,65 @@
 
     const rejectH0 = res.p < alpha;
 
-    let html = `<div class="card">`;
-    html += `<div class="kpi-grid">`;
-    html += `<div class="kpi"><div class="lab">P-value</div><div class="val">${fmt(res.p, 6)}</div></div>`;
-    html += `<div class="kpi"><div class="lab">Odds ratio</div><div class="val">${Number.isFinite(res.OR) ? fmt(res.OR, 4) : (res.OR === Infinity ? "∞" : "—")}</div></div>`;
+    // OR confidence interval (Woolf's logit method)
+    const orVal = res.OR;
+    const orStr = Number.isFinite(orVal) ? fmt(orVal, 3) : (orVal === Infinity ? '∞' : '—');
+    let orCILo = NaN, orCIHi = NaN;
+    if (a > 0 && b > 0 && c > 0 && d > 0) {
+      const lnOR = Math.log(orVal);
+      const seLnOR = Math.sqrt(1/a + 1/b + 1/c + 1/d);
+      orCILo = Math.exp(lnOR - 1.96 * seLnOR);
+      orCIHi = Math.exp(lnOR + 1.96 * seLnOR);
+    }
+    const orCIStr = (isFinite(orCILo) && isFinite(orCIHi)) ? `[${fmt(orCILo, 3)}, ${fmt(orCIHi, 3)}]` : '—';
+    const ciExcludes1 = isFinite(orCILo) && isFinite(orCIHi) && (orCILo > 1 || orCIHi < 1);
+
+    // Expected cell counts (for chi-square validity note)
+    const e1 = res.row1 * res.col1 / N;
+    const e2 = res.row1 * res.col2 / N;
+    const e3 = res.row2 * res.col1 / N;
+    const e4 = res.row2 * res.col2 / N;
+    const minExpected = Math.min(e1, e2, e3, e4);
+
+    let html = '';
+
+    // Section: Test Results
+    html += `<div class="section-title">Test Results</div>`;
+    html += `<div class="card"><div class="kpi-grid">`;
+    html += `<div class="kpi"><div class="lab">P-value</div><div class="val">${res.p < 0.001 ? '< 0.001' : fmt(res.p, 4)}</div></div>`;
+    html += `<div class="kpi"><div class="lab">Odds Ratio</div><div class="val">${orStr}</div><div class="sub">95% CI ${orCIStr}</div></div>`;
     html += `<div class="kpi"><div class="lab">N</div><div class="val">${res.N}</div></div>`;
     html += `<div class="kpi"><div class="lab">Alternative</div><div class="val" style="font-size:16px;">${alt}</div></div>`;
+    html += `</div></div>`;
+
+    // Section: Effect Size
+    html += `<div class="section-title">Effect Size — Odds Ratio</div>`;
+    html += `<div class="card" style="padding:14px;">`;
+    html += `<table><thead><tr><th>Measure</th><th>Value</th><th>95% CI</th></tr></thead><tbody>`;
+    html += `<tr><td><strong>Odds Ratio (ad/bc)</strong></td><td>${orStr}</td><td>${orCIStr}</td></tr>`;
+    html += `</tbody></table>`;
+    html += `<p style="font-size:12px;color:#6b7280;margin-top:6px;">OR = 1: no association. OR > 1: ${r1} more likely in ${c1}. OR < 1: ${r1} less likely in ${c1}. 95% CI excluding 1.0 indicates significant association.</p>`;
     html += `</div>`;
-    html += `<p><strong style="color:${rejectH0 ? '#dc2626' : '#059669'};">${rejectH0 ? '✓ Reject H₀' : '✗ Fail to reject H₀'}</strong> at α = ${alpha}</p>`;
+
+    // Note about expected counts
+    html += `<div class="section-title">Test Validity</div>`;
+    html += `<div class="card" style="padding:14px;">`;
+    html += `<p style="font-size:13px;">Smallest expected cell count: <strong>${fmt(minExpected, 1)}</strong> ${minExpected < 5 ? '— <span style="color:#dc2626;font-weight:700;">Fisher\'s exact test is appropriate</span> (expected count < 5, chi-square unreliable)' : '— <span style="color:#059669;">Chi-square would also be valid</span> (all expected counts ≥ 5), but Fisher\'s exact is always valid'}</p>`;
     html += `<p class="note">Table: <span class="mono">${rowName}</span> (${r1}, ${r2}) × <span class="mono">${colName}</span> (${c1}, ${c2})</p>`;
     html += `</div>`;
 
+    // Section: Verdict
+    html += `<div class="section-title">Verdict</div>`;
+    html += `<div style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:700;${rejectH0 ? 'background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;' : 'background:#f0fdf4;border:1px solid #86efac;color:#166534;'}">`;
+    html += rejectH0
+      ? `✗ Reject H₀ (p = ${res.p < 0.001 ? '< 0.001' : fmt(res.p, 4)}) — Significant association detected.<br>
+         <span style="font-weight:400;">Odds ratio = ${orStr} (95% CI ${orCIStr})${ciExcludes1 ? ' — CI excludes 1.0' : ''}.</span>`
+      : `✓ Fail to reject H₀ (p = ${fmt(res.p, 4)}) — No significant association at α = ${alpha}.<br>
+         <span style="font-weight:400;">Odds ratio = ${orStr} (95% CI ${orCIStr})${!ciExcludes1 && orCIStr !== '—' ? ' — CI includes 1.0' : ''}.</span>`;
+    html += `</div>`;
+
     document.getElementById("out").innerHTML = html;
+    if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('out');
     
     // Switch to results
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));

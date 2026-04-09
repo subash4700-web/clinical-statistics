@@ -29,7 +29,7 @@
     .index a:hover { text-decoration: underline; }
 
     .section { margin-bottom: 44px; scroll-margin-top: 16px; }
-    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #0d9488; padding-left: 10px; }
+    .section h2 { font-size: 19px; margin: 0 0 10px; color: #111827; border-left: 4px solid #0d9488; padding-left: 10px; position: sticky; top: 38px; background: #f4f6f8; z-index: 10; padding-top: 10px; padding-bottom: 10px; }
     .section h3 { font-size: 15px; margin: 20px 0 8px; color: #1f2937; }
     .section p { font-size: 14px; line-height: 1.8; color: #374151; margin: 0 0 12px; }
     .section p:last-child { margin-bottom: 0; }
@@ -126,7 +126,7 @@
       <tr><td><b>Systematic error (bias)</b></td><td>Consistent shift in one direction. Results are always too high or always too low.</td><td>Mis-calibration, reagent lot change</td></tr>
       <tr><td><b>Total error</b></td><td>The combined effect of random and systematic error on any single patient result.</td><td>TE = |Bias| + z × SD</td></tr>
     </table>
-    <div class="callout">
+    <div class="good">
       <b>Key principle:</b> Precision addresses random error. Bias addresses systematic error. Total error addresses both together. You need all three to evaluate whether your method is fit for clinical use.
     </div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -178,7 +178,7 @@
       </div>
     </div>
 
-    <div class="callout">
+    <div class="warn">
       <b>Important:</b> There is no single "intermediate precision." What you vary defines what you measure. If you vary days only, you get day-to-day intermediate precision. If you also vary operators and reagent lots, you get a broader measure. Always state what conditions were varied when reporting intermediate precision.
     </div>
 
@@ -237,7 +237,7 @@
       <li>Correct: √(2.0² + 2.0²) = √8 = <b>2.83</b></li>
     </ul>
     <p>In this example the incorrect addition gives a result <b>41% higher</b> than the correct value. The overestimate depends on the relative size of the two components — it is largest when they are equal, and smaller when one dominates — but it is always an overestimate. This is not a small rounding difference — it is a fundamental statistical error.</p>
-    <div class="callout">
+    <div class="good">
       <b>Rule:</b> Variances add. Standard deviations do not. This applies everywhere in statistics — not just to precision calculations.
     </div>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
@@ -431,7 +431,7 @@
         <td>Peer group CV from EQA scheme</td>
       </tr>
     </table>
-    <div class="callout">
+    <div class="good">
       <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, analytical imprecision is not the dominant driver of variability between consecutive results — the patient's own physiology is.
     </div>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
@@ -485,7 +485,7 @@
       </tr>
     </table>
 
-    <div class="callout">
+    <div class="warn">
       <b>The one-tailed vs two-tailed distinction:</b> We use a <em>one-tailed</em> z-score because we care about errors in the worst direction (results that are too high OR too low — whichever pushes past the TAE limit). The bias is already included separately, so we only need to model how far random error can push a result in one additional direction. That is why 1.65 (not 1.96) corresponds to 95%.
     </div>
 
@@ -599,7 +599,7 @@
       <b>Even if bias and imprecision individually pass their allowable limits, the Sigma metric can still be poor</b> if they together consume too much of the error budget. A high Sigma means your QC can be simple. A low Sigma means you need to run more QC to protect patients.
     </div>
 
-    <div class="callout">
+    <div class="good">
       <b>Practical use:</b> The Sigma metric is a single number that summarises the overall quality of your method. It can be used to design a rational QC strategy — methods with high Sigma need less QC, methods with low Sigma need more.
     </div>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
@@ -657,7 +657,7 @@
       <strong>between-run (Sb)</strong> — from how run means scatter around the grand mean.
       This is the only way to get both components separately, which is exactly what EP05 requires.
     </p>
-    <div class="callout">
+    <div class="good">
       <b>In practice:</b> you never need to run nested ANOVA yourself — the EP05 tool does it automatically when you enter your data. Understanding the structure just helps you design the study correctly: replicates must be measured within the same run, and runs must be genuinely separate analytical sessions.
     </div>
 
@@ -712,7 +712,7 @@
       <li>If the upper 95% confidence limit of your observed CV% ≤ manufacturer's CV% → <strong>PASS</strong></li>
       <li>If the upper limit exceeds the claim → <strong>FAIL</strong> — investigate before clinical release</li>
     </ul>
-    <div class="callout">
+    <div class="good">
       <b>Practical note:</b> With only 15 measurements, the CI on your CV% is wide. A result that barely fails may still be acceptable — always evaluate the clinical impact alongside the statistical result. If the manufacturer's CV% is 2.0% and you observe 2.2%, the CI may overlap and the method may still be fit for purpose.
     </div>
     <div class="warn">
@@ -916,7 +916,7 @@
       <tr><td>0.61–0.80</td><td>Substantial</td></tr>
       <tr><td>0.81–1.00</td><td>Almost perfect</td></tr>
     </table>
-    <div class="callout">
+    <div class="warn">
       <b>Important:</b> Kappa is sensitive to prevalence. A low proportion of positives can produce a low κ even with high observed agreement.
       Always report P<sub>o</sub> (observed agreement %) alongside κ.
     </div>
@@ -934,7 +934,7 @@
       <li><b>p &lt; α, b &gt; c</b>: Method A calls more positives — may indicate lower specificity or genuine over-detection</li>
       <li><b>p &lt; α, c &gt; b</b>: Method B calls more positives</li>
     </ul>
-    <div class="callout">
+    <div class="good">
       <b>Key principle:</b> Kappa and McNemar answer different questions and must be read together.
       High κ + significant McNemar = systematic but small bias.
       Low κ + non-significant McNemar = random but frequent disagreement.
@@ -1030,7 +1030,7 @@
       <tr><td>ISO 15189 / regulatory</td><td>As required by accreditation body</td><td>Document rationale</td></tr>
     </table>
 
-    <div class="callout">
+    <div class="good">
       <b>CLSI EP25-A key principle:</b> Stability is a pass/fail decision based on pre-defined criteria.
       The study design, acceptance criteria, and number of time points must all be documented in the protocol
       before testing begins. Post-hoc changes to criteria are not acceptable.

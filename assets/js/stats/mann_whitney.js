@@ -194,9 +194,15 @@ function recomputeAndRender(){
   // Effect size: rank-biserial correlation = 2*U1/(n1*n2) - 1
   const r = 2*U1/(n1*n2) - 1;
 
+  // Medians
+  const sorted1 = [...g1].sort((a,b)=>a-b);
+  const sorted2 = [...g2].sort((a,b)=>a-b);
+  const median = arr => arr.length % 2 === 0 ? (arr[arr.length/2-1]+arr[arr.length/2])/2 : arr[Math.floor(arr.length/2)];
+  const medians = [median(sorted1), median(sorted2)];
+
   // Store result
-  state.res = {g1, g2, n1, n2, R1, U1, U2, U, z, pValue, exactP, totalPerms, 
-               alpha, tail, significant, r, showEffect, showViz, methodType};
+  state.res = {g1, g2, n1, n2, R1, U1, U2, U, z, pValue, exactP, totalPerms,
+               alpha, tail, significant, r, showEffect, showViz, methodType, medians};
   
   // Render results
   renderResults(state.res);
@@ -309,20 +315,21 @@ function renderResults(res){
         </div>
         <div class="card" style="margin-top:12px;">
           <div class="section-title">Hypothesis Test Result</div>
-          <div style="padding:12px; background:${significant ? '#ecfdf5' : '#f1f5f9'}; border-radius:10px; margin-bottom:12px;">
-            <div style="font-size:14px; font-weight:700; color:${significant ? '#15803d' : '#374151'};">
-              ${significant ? 'REJECT H₀' : 'FAIL TO REJECT H₀'}
-            </div>
-            <div style="font-size:12px; color:${significant ? '#14532d' : '#374151'}; margin-top:4px;">
-              ${tail === 'two' ? 'The distributions differ significantly' :
-                (tail === 'right' ? 'Group 1 is significantly greater than Group 2' :
-                                   'Group 1 is significantly less than Group 2')}
-            </div>
+          <div style="border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:700;${significant ? 'background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;' : 'background:#f0fdf4;border:1px solid #86efac;color:#166534;'}">
+            ${significant
+              ? `✗ Reject H₀ (p = ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(4)}) — ${
+                  tail === 'two' ? 'The two groups differ significantly.' :
+                  tail === 'right' ? 'Group 1 values are significantly greater than Group 2.' :
+                  'Group 1 values are significantly less than Group 2.'
+                }<br><span style="font-weight:400;">The groups do not come from the same distribution. ${
+                  res.medians ? 'Median Group 1 = ' + res.medians[0].toFixed(2) + ' vs Median Group 2 = ' + res.medians[1].toFixed(2) + '.' : ''
+                } Effect size: r = ${Math.abs(r).toFixed(3)} (${Math.abs(r) < 0.3 ? 'small' : Math.abs(r) < 0.5 ? 'medium' : 'large'}).</span>`
+              : `✓ Fail to reject H₀ (p = ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(4)}) — No significant difference between the two groups.<br><span style="font-weight:400;">The data do not provide sufficient evidence that the groups differ. Effect size: r = ${Math.abs(r).toFixed(3)} (${Math.abs(r) < 0.3 ? 'small' : Math.abs(r) < 0.5 ? 'medium' : 'large'}).</span>`
+            }
           </div>
           <div style="font-size:13px;">
-            <strong>p-value:</strong> ${pValue < 0.0001 ? '< 0.0001' : pValue.toFixed(6)}<br>
             <strong>Significance level (α):</strong> ${alpha}<br>
-            <strong>Test type:</strong> ${tail === 'two' ? 'Two-sided' : (tail === 'right' ? 'One-sided (Group 1 > Group 2)' : 'One-sided (Group 1 < Group 2)')}<br>
+            <strong>Test type:</strong> ${tail === 'two' ? 'Two-tailed' : (tail === 'right' ? 'One-tailed (Group 1 > Group 2)' : 'One-tailed (Group 1 < Group 2)')}<br>
             ${exactP !== null ? `<strong>Method:</strong> Exact (${totalPerms.toLocaleString()} permutations enumerated)` :
                                `<strong>Method:</strong> Normal approximation with tie correction`}
           </div>
@@ -353,6 +360,7 @@ function renderResults(res){
   }
 
   resultsDiv.innerHTML = html;
+  if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('resultsContent');
 
   // Show the Add to Report button row
   const rptBtnRow = el('report-btn-row');

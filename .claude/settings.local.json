@@ -27,7 +27,24 @@
       "Bash(head -5 grep -n \"\\\\.assumptions-panel\\\\|\\\\.assump\" /Users/subashsundaralingam/Documents/app/clinical-statistics/assets/css/components.css)",
       "Bash(head -20 grep -n \"tg-card\\\\|tg-details\\\\|tg-body\\\\|tg-row\\\\|tg-badges\\\\|tg-when\\\\|tg-label\" /Users/subashsundaralingam/Documents/app/clinical-statistics/method_comparison.html)",
       "Bash(grep -n \"sel-type-top\\\\|tbl-ip-config\\\\|gen-ip-opts\\\\|type===''intermediate''\\\\|type === ''intermediate''\\\\|renderIntermediate\\\\|buildIPTable\\\\|intermediate\" /Users/subashsundaralingam/Documents/app/clinical-statistics/precision.html)",
-      "Bash(grep -rn \"hundreds\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html /Users/subashsundaralingam/Documents/app/clinical-statistics/assets/js/terms.js)"
+      "Bash(grep -rn \"hundreds\" /Users/subashsundaralingam/Documents/app/clinical-statistics/*.html /Users/subashsundaralingam/Documents/app/clinical-statistics/assets/js/terms.js)",
+      "Bash(grep -l \"campus\" /Users/subashsundaralingam/Documents/app/skema-app/*.html /Users/subashsundaralingam/Documents/app/skema-app/*.js)",
+      "Bash(grep -n \"\\\\.campus\\\\s*=\" /Users/subashsundaralingam/Documents/app/skema-app/*.html)",
+      "Bash(grep -n \"function detectAllConflicts\\\\|detectAllConflicts.*=\" /Users/subashsundaralingam/Documents/app/skema-app/*.html)",
+      "Bash(npm start:*)",
+      "Bash(ls /Users/subashsundaralingam/Documents/app/skema-app/*.html /Users/subashsundaralingam/Documents/app/skema-app/assets/js/*.js)",
+      "Bash(perl -pi -e 's/campus-settings\\\\.html/lokation-settings.html/g' index.html)",
+      "Read(//Applications/**)",
+      "Read(//Users/subashsundaralingam/Applications/**)",
+      "Read(//private/tmp/**)",
+      "Bash(npx @electron/asar extract \"/Applications/Skematisk.app/Contents/Resources/app.asar\" skematisk-old)",
+      "Bash(grep -rn \"_ucOpenParams\" /Users/subashsundaralingam/Documents/app/skema-app/*.html)",
+      "Bash(grep -l \"globalLokationChanged\" /Users/subashsundaralingam/Documents/app/skema-app/*.html)",
+      "Bash(sed -i '' \"s/if \\(e\\\\.data?.type === 'globalLokationChanged'\\) { populateSemesterFilter\\(\\); detectConflicts\\(\\); renderWeekCalendar\\(\\); }/if \\(e.data?.type === 'globalLokationChanged' || e.data?.type === 'globalUddannelseChanged'\\) { populateSemesterFilter\\(\\); detectConflicts\\(\\); renderWeekCalendar\\(\\); }/\" /Users/subashsundaralingam/Documents/app/skema-app/conflicts.html)",
+      "Bash(sed -i '' \"s/if \\(e\\\\.data?.type === 'globalLokationChanged'\\) { populateSemesterFilter\\(\\); render\\(\\); }/if \\(e.data?.type === 'globalLokationChanged' || e.data?.type === 'globalUddannelseChanged'\\) { populateSemesterFilter\\(\\); render\\(\\); }/\" /Users/subashsundaralingam/Documents/app/skema-app/forloebsoversigt.html)"
+    ],
+    "additionalDirectories": [
+      "/Users/subashsundaralingam/Documents/app/skema-app"
     ]
   }
 }

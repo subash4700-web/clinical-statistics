@@ -638,6 +638,8 @@ function drawResiduals(reg) {
       }
     }
   });
+
+  if (typeof wrapSectionsForReport === 'function') wrapSectionsForReport('resultsContent');
 }
 
 // ── Main ──────────────────────────────────────────────────────

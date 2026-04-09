@@ -42,10 +42,16 @@
   /* ── Build lookup map ── */
   var terms = window.CLINICAL_TERMS || [];
   var lookup = {};   // label (lowercase) → term object
-  terms.forEach(function(t) { lookup[t.label.toLowerCase()] = t; });
+  // Skip terms marked noTooltip (glossary-only)
+  var tooltipTerms = terms.filter(function(t) { return !t.noTooltip; });
+  // Build lookup using match field (short symbol) or label
+  tooltipTerms.forEach(function(t) {
+    var key = (t.match || t.label).toLowerCase();
+    lookup[key] = t;
+  });
 
   /* Sorted labels longest-first to avoid partial matches */
-  var labels = terms.map(function(t){ return t.label; });
+  var labels = tooltipTerms.map(function(t){ return t.match || t.label; });
   labels.sort(function(a, b){ return b.length - a.length; });
 
   /* ── Auto-mark text nodes ── */
@@ -53,7 +59,7 @@
 
   /* Build one combined regex: longest patterns first */
   var pattern = labels.map(escapeRE).join('|');
-  var re = new RegExp('(' + pattern + ')(?![\\w%²])', 'g');
+  var re = new RegExp('(?<![\\w])(' + pattern + ')(?![\\w%²])', 'g');
 
   function markNode(textNode) {
     var text = textNode.nodeValue;

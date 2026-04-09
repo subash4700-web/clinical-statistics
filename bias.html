@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bias / Trueness</title>
   <script src="assets/js/eflm_db.js"></script>
-  <script src="../assets/vendor/chart.umd.min.js"></script>
-  <script src="../assets/vendor/jstat.min.js"></script>
-  <script src="../assets/vendor/xlsx.full.min.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/vendor/jstat.min.js"></script>
+  <script src="assets/vendor/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="assets/css/components.css">
   <style>
     td.num,th.num{text-align:right;font-family:ui-monospace,monospace;}
@@ -586,12 +586,12 @@ function _doCalculateBias(pairs){
       return `<div style="border-top:1px solid #e2e8f0;padding-top:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div>
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Acceptance specification</span>
-            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">Allowable Bias = ±${fmt(allowable,1)}%</span>
-          </div>
-          <div>
             <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">|Mean Bias|</span>
             <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">${fmt(Math.abs(meanBias),2)}%</span>
+          </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;">Allowable Bias</span>
+            <span style="font-size:15px;font-weight:800;color:#111827;margin-left:10px;">±${fmt(allowable,1)}%</span>
           </div>
         </div>
         <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden;margin-bottom:6px;">
