@@ -18,6 +18,11 @@ function parseVersion(version) {
 }
 
 function run() {
+  // Skip auto-bump in CI — version is set manually before tagging
+  if (process.env.CI) {
+    console.log('CI detected — skipping version bump');
+    return;
+  }
   const packageRaw = fs.readFileSync(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(packageRaw);
 
