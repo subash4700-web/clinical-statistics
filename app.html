@@ -288,6 +288,123 @@
       overflow: auto;
     }
 
+    /* ---------- COMMENTS PANEL ---------- */
+    .comments-panel {
+      width: 280px;
+      background: #fffbeb;
+      border-left: 1px solid #fde68a;
+      display: none;
+      flex-direction: column;
+      min-width: 0;
+      flex-shrink: 0;
+    }
+    .comments-panel.open {
+      display: flex;
+    }
+    .comments-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #fde68a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fef3c7;
+      flex-shrink: 0;
+    }
+    .comments-header span {
+      font-size: 13px;
+      font-weight: 800;
+      color: #92400e;
+    }
+    .comments-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .comment-card {
+      background: #fff;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      position: relative;
+    }
+    .comment-card:hover {
+      border-color: #f59e0b;
+      box-shadow: 0 2px 8px rgba(245,158,11,.15);
+    }
+    .comment-card.active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245,158,11,.2);
+    }
+    .comment-card .cc-text {
+      font-size: 11px;
+      color: #92400e;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 4px;
+      background: #fef9c3;
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .comment-card .cc-comment {
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .comment-card .cc-time {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .comment-card .cc-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: none;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      color: #d1d5db;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .comment-card .cc-delete:hover {
+      color: #ef4444;
+      background: #fef2f2;
+    }
+    .comments-empty {
+      text-align: center;
+      color: #d97706;
+      font-size: 12px;
+      padding: 32px 12px;
+      line-height: 1.6;
+    }
+    .comments-btn {
+      padding: 4px 10px;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .comments-btn:hover {
+      background: #fde68a;
+    }
+    .comments-btn.has-comments {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #fff;
+    }
+
     /* ---------- INFO PANEL ---------- */
     .info-panel {
       width: 380px;
@@ -447,6 +564,46 @@
       opacity: 0.72;
       line-height: 1.65;
       max-width: 540px;
+    }
+
+    .home-features {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .home-feat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 6px 14px;
+    }
+    .home-feat-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .home-feat-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.02em;
+    }
+    .home-feat-text span {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      margin-top: 1px;
+    }
+    .home-feat-arrow {
+      font-size: 18px;
+      color: rgba(255,255,255,0.4);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
     }
 
     .home-tools-grid {
@@ -1034,20 +1191,28 @@
           <button class="learn-btn" onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">📚 Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
           <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
+          <button class="learn-btn" onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">📚 ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
+          <button class="learn-btn" onclick="loadTool('reference_interval_learning.html','Understanding Reference Intervals', this)">📚 Reference Intervals<span class="btn-hint">Sample size · outliers · parametric vs non-parametric</span></button>
+          <button class="learn-btn" onclick="loadTool('antibiotic_learning.html','Understanding Antibiotic Susceptibility', this)">📚 Antibiotic Susceptibility<span class="btn-hint">VME · ME · agreement matrix · error rates</span></button>
+          <button class="learn-btn" onclick="loadTool('qualitative_lod_learning.html','Understanding Qualitative LoD', this)">📚 Qualitative LoD<span class="btn-hint">Hit rate · probit · replicates · concentration</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('precision.html','Precision Monitor', this)">Precision Monitor<span class="btn-hint">Daily QC · within-run repeatability</span></button>
           <button onclick="loadTool('precision_ep05.html','Precision Study (EP05 / EP15)', this)">Precision Study (EP05 / EP15)<span class="btn-hint">Validate (EP05) or verify (EP15) · ANOVA variance decomposition</span></button>
           <button onclick="loadTool('bias.html','Bias (EP15-A3)', this)">Bias (CRM / EQA)<span class="btn-hint">EP15-A3 · Known reference value vs your method</span></button>
           <button onclick="loadTool('method_comparison.html','Method Comparison (EP09-A3)', this)">Method Comparison (EP09)<span class="btn-hint">EP09-A3 · Bland-Altman · Passing-Bablok · Deming</span></button>
           <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC design · uses Precision + Bias</span></button>
+          <button onclick="loadTool('reference_interval.html','Reference Interval (EP28)', this)">Reference Interval (EP28) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">EP28-A3c · 2.5th/97.5th percentile · outlier detection</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison (EP12-A2)', this)">Categorical Method Comparison (EP12)<span class="btn-hint">EP12-A2 · Kappa · McNemar · pos/neg agreement</span></button>
+          <button onclick="loadTool('antibiotic_agreement.html','Antibiotic Susceptibility Agreement', this)">Antibiotic Susceptibility <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">EUCAST/CLSI · S/I/R · VME/ME error rates</span></button>
+          <button onclick="loadTool('qualitative_lod.html','Qualitative LoD (EP17)', this)">Qualitative LoD (EP17) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Hit rate testing · detection limit · probit</span></button>
+          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)">ROC &amp; Diagnostic Accuracy<span class="btn-hint">AUC · Sens/Spec · PPV/NPV · cut-off</span></button>
         </div>
       </div>
 
       <!-- Stability & Time -->
       <div class="collapsible-section">
-        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.stability">Stability &amp; Time</button>
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.stability">Stability &amp; Time <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></button>
         <div class="collapsible-content child-nav">
           <button class="learn-btn" onclick="loadTool('stability_theory.html','Concepts &amp; Theory — Stability &amp; Time', this)">📚 Concepts &amp; Theory<span class="btn-hint">Material vs method · stability vs analytical performance</span></button>
           <button class="learn-btn" onclick="loadTool('stability_learning.html','Understanding Stability Studies', this)">📚 Stability Studies<span class="btn-hint">Reagent stability · % change · Kappa over time</span></button>
@@ -1061,12 +1226,10 @@
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression</button>
         <div class="collapsible-content child-nav">
-          <button class="learn-btn" onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">r · R² · regression · ROC · AUC</span></button>
+          <button class="learn-btn" onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">r · R² · regression</span></button>
           <button class="learn-btn" onclick="loadTool('correlation_learning.html','Understanding Correlation &amp; Linear Regression', this)">📚 Correlation<span class="btn-hint">r · R² · scatter · residuals · outliers</span></button>
-          <button class="learn-btn" onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">📚 ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('linear_regression.html','Correlation &amp; Linear Regression', this)">Linear Regression<span class="btn-hint">r, R², prediction line · continuous outcome</span></button>
-          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)">ROC &amp; Diagnostic Performance<span class="btn-hint">AUC · cut-off · combine analytes via logistic regression</span></button>
         </div>
       </div>
 
@@ -1074,6 +1237,8 @@
       <div class="collapsible-section">
         <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.lab">Lab Tools</button>
         <div class="collapsible-content child-nav">
+          <button class="learn-btn" onclick="loadTool('bacterial_id.html','Bacterial Identification', this)">📚 Bacterial Identification <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Interactive flowchart · biochemical tests · ID</span></button>
+          <div class="sidebar-sep"></div>
           <div class="sub-category">PCR</div>
           <button onclick="loadTool('PCR.html','In Silico PCR', this)">In Silico PCR<span class="btn-hint">Primer design · simulation · melt curves</span></button>
           <!-- hidden: PCR-RFLP HFE C282Y (learning exercise, not ready) -->
@@ -1086,6 +1251,10 @@
           <div class="sub-category">Quantification</div>
           <button onclick="loadTool('lambert_beer.html','Photometry', this)">Photometry<span class="btn-hint">Beer-Lambert · absorbance · concentration</span></button>
           <button onclick="loadTool('nernst_ise.html','Potentiometry', this)">Potentiometry<span class="btn-hint">Nernst equation · ISE · mV → concentration</span></button>
+          <div class="sub-category">Microbiology</div>
+          <button onclick="loadTool('colony_count.html','Colony Count — CFU Calculator', this)">Colony Count (CFU) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Dilution series · plate count · ISO 7218</span></button>
+          <button onclick="loadTool('bacterial_growth.html','Bacterial Growth — Rate &amp; Doubling Time', this)">Growth Rate &amp; Doubling Time <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">OD/CFU · generation time · growth curve</span></button>
+          <button onclick="loadTool('enzyme_activity.html','Enzyme Activity — Michaelis-Menten', this)">Enzyme Activity <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">U/mL · Km · Vmax · Lineweaver-Burk</span></button>
         </div>
       </div>
     </div>
@@ -1104,6 +1273,7 @@
           <!-- Report -->
           <button class="report-btn" id="reportBtn" onclick="openReportPanel()">&#128196; Report</button>
           <!-- UI -->
+          <button class="comments-btn" id="commentsBtn" onclick="toggleComments()" title="Notes &amp; Comments">💬 Notes</button>
           <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">🇩🇰 DA</button>
           <button class="info-toggle" onclick="toggleInfo()" data-i18n="ui.info">Info</button>
         </div>
@@ -1310,6 +1480,17 @@
       </div>
     </div>
 
+    <!-- COMMENTS PANEL -->
+    <div class="comments-panel" id="commentsPanel">
+      <div class="comments-header">
+        <span>💬 Notes</span>
+        <button onclick="toggleComments()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#92400e;">✕</button>
+      </div>
+      <div class="comments-list" id="commentsList">
+        <div class="comments-empty">Select text on any page, right-click, and choose <strong>Add Comment</strong> to create a note.</div>
+      </div>
+    </div>
+
     <!-- INFO PANEL -->
     <div class="info-panel" id="infoPanel">
       <div class="info-header">
@@ -1359,9 +1540,23 @@
     document.getElementById("contentArea").innerHTML =
       `<iframe src="${page}" style="width:100%; height:100%; border:none;" id="toolIframe"></iframe>`;
 
-    // After iframe loads: restore state if editing a report entry
+    // After iframe loads: inject annotations script + restore state
     document.getElementById("toolIframe").addEventListener("load", function() {
       const win = this.contentWindow;
+
+      // Inject annotations script
+      try {
+        const doc = this.contentDocument || win.document;
+        if (doc && !doc.querySelector('script[data-annotations]')) {
+          const script = doc.createElement('script');
+          script.src = 'assets/js/annotations.js';
+          script.dataset.annotations = '1';
+          doc.body.appendChild(script);
+        }
+      } catch(e) { /* cross-origin or security restriction */ }
+
+      // Reset comments sidebar for new page
+      renderCommentsSidebar([]);
 
       if (_pendingRestore) {
         var state = _pendingRestore;
@@ -1433,6 +1628,106 @@
     const panel = document.getElementById("infoPanel");
     panel.style.display = (panel.style.display === "flex") ? "none" : "flex";
   }
+
+  // ─── COMMENTS / ANNOTATIONS ───────────────────────────────────────────────
+  function toggleComments() {
+    const panel = document.getElementById('commentsPanel');
+    panel.classList.toggle('open');
+  }
+
+  function renderCommentsSidebar(annotations) {
+    const list = document.getElementById('commentsList');
+    const btn = document.getElementById('commentsBtn');
+    if (!annotations || annotations.length === 0) {
+      list.innerHTML = '<div class="comments-empty">Select text on any page, right-click, and choose <strong>Add Comment</strong> to create a note.</div>';
+      btn.classList.remove('has-comments');
+      btn.textContent = '💬 Notes';
+      return;
+    }
+    btn.classList.add('has-comments');
+    btn.textContent = '💬 ' + annotations.length;
+
+    list.innerHTML = annotations.map(function(ann) {
+      const date = ann.timestamp ? new Date(ann.timestamp).toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+      const broken = ann.linked === false;
+      const brokenStyle = broken ? 'opacity:0.7;border-color:#fca5a5;background:#fef2f2;' : '';
+      const brokenBadge = broken ? '<div style="font-size:10px;color:#dc2626;font-weight:700;margin-bottom:4px;">🔗 Link broken — text not found in page</div>' : '';
+      return '<div class="comment-card" data-ann-id="' + ann.id + '" style="' + brokenStyle + '" onmouseenter="hoverComment(' + ann.id + ')" onmouseleave="unhoverComment(' + ann.id + ')" onclick="focusComment(' + ann.id + ')">' +
+        '<button class="cc-delete" onclick="event.stopPropagation();deleteComment(' + ann.id + ')" title="Remove">✕</button>' +
+        brokenBadge +
+        '<div class="cc-text">"' + escHtml(ann.text) + '"</div>' +
+        (ann.comment ? '<div class="cc-comment">' + escHtml(ann.comment) + '</div>' : '<div class="cc-comment" style="color:#9ca3af;font-style:italic;">No comment</div>') +
+        '<div class="cc-time">' + date + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function focusComment(id) {
+    var iframe = document.getElementById('toolIframe');
+    if (iframe) iframe.contentWindow.postMessage({ type: 'annotations:focusHighlight', id: id }, '*');
+    document.querySelectorAll('.comment-card.active').forEach(function(c) { c.classList.remove('active'); });
+    var card = document.querySelector('.comment-card[data-ann-id="' + id + '"]');
+    if (card) card.classList.add('active');
+  }
+
+  function hoverComment(id) {
+    var iframe = document.getElementById('toolIframe');
+    if (iframe) iframe.contentWindow.postMessage({ type: 'annotations:highlightHover', id: id }, '*');
+  }
+
+  function unhoverComment(id) {
+    var iframe = document.getElementById('toolIframe');
+    if (iframe) iframe.contentWindow.postMessage({ type: 'annotations:highlightUnhover', id: id }, '*');
+  }
+
+  function deleteComment(id) {
+    var iframe = document.getElementById('toolIframe');
+    if (iframe) iframe.contentWindow.postMessage({ type: 'annotations:deleteFromSidebar', id: id }, '*');
+  }
+
+  // Listen for messages from iframe annotations
+  window.addEventListener('message', function(e) {
+    if (!e.data || !e.data.type) return;
+
+    if (e.data.type === 'annotations:load') {
+      // Iframe requests its saved annotations
+      if (window.appAPI && window.appAPI.loadAnnotations) {
+        window.appAPI.loadAnnotations(e.data.page).then(function(data) {
+          var iframe = document.getElementById('toolIframe');
+          if (iframe) iframe.contentWindow.postMessage({ type: 'annotations:loaded', data: data }, '*');
+        });
+      }
+    } else if (e.data.type === 'annotations:save') {
+      // Iframe wants to persist annotations
+      if (window.appAPI && window.appAPI.saveAnnotations) {
+        window.appAPI.saveAnnotations(e.data.page, e.data.data);
+      }
+    } else if (e.data.type === 'annotations:update') {
+      // Iframe sends current annotations for sidebar rendering
+      renderCommentsSidebar(e.data.annotations);
+    } else if (e.data.type === 'annotations:scrollTo') {
+      // Highlight clicked in iframe — scroll sidebar to that card
+      var card = document.querySelector('.comment-card[data-ann-id="' + e.data.id + '"]');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.querySelectorAll('.comment-card.active').forEach(function(c) { c.classList.remove('active'); });
+        card.classList.add('active');
+      }
+      // Auto-open sidebar if closed
+      var panel = document.getElementById('commentsPanel');
+      if (!panel.classList.contains('open')) panel.classList.add('open');
+    } else if (e.data.type === 'annotations:hover') {
+      var card = document.querySelector('.comment-card[data-ann-id="' + e.data.id + '"]');
+      if (card) card.classList.add('active');
+    } else if (e.data.type === 'annotations:unhover') {
+      var card = document.querySelector('.comment-card[data-ann-id="' + e.data.id + '"]');
+      if (card) card.classList.remove('active');
+    }
+  });
 
   function reportIssue() {
     try {
@@ -1650,6 +1945,7 @@
     const svgBell   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 19 C5 19 7 19 9 13 C10.5 8 11 5 12 5 C13 5 13.5 8 15 13 C17 19 19 19 22 19"/><line x1="2" y1="19" x2="22" y2="19"/><line x1="12" y1="19" x2="12" y2="21"/></svg>`;
     const svgTarget = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>`;
     const svgROC    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="21" x2="21" y2="3" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/><path d="M3 21 C3 9 7 3 21 3"/></svg>`;
+    const svgScatter = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="3" y2="3"/><line x1="3" y1="21" x2="21" y2="21"/><line x1="4" y1="19" x2="20" y2="5" stroke-width="1.5" opacity="0.4"/><circle cx="6" cy="17" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="14" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="15" r="1.5" fill="currentColor" stroke="none"/><circle cx="13" cy="11" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="18" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="10" r="1.5" fill="currentColor" stroke="none"/></svg>`;
     const svgLab    = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M9 3v6.5L5 17a2 2 0 001.8 2.9h10.4A2 2 0 0019 17l-4-7.5V3"/><line x1="6.1" y1="14" x2="17.9" y2="14"/></svg>`;
     const svgClock  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><line x1="3.5" y1="5.5" x2="5.5" y2="3.5" stroke-width="1.5" opacity="0.5"/><line x1="20.5" y1="5.5" x2="18.5" y2="3.5" stroke-width="1.5" opacity="0.5"/></svg>`;
     const svgPerson = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
@@ -1659,6 +1955,22 @@
           <div class="home-hero-badge">${T('home.badge')}</div>
           <h1>${T('home.title')}</h1>
           <p>${T('home.subtitle')}</p>
+          <div class="home-features">
+            <div class="home-feat">
+              <div class="home-feat-icon">🧠📈</div>
+              <div class="home-feat-text">Interactive Simulations<span>Guided exercises with live charts</span></div>
+            </div>
+            <div class="home-feat-arrow">→</div>
+            <div class="home-feat">
+              <div class="home-feat-icon">✅</div>
+              <div class="home-feat-text">Validation Tools<span>EP05 · EP09 · EP17 · EP28</span></div>
+            </div>
+            <div class="home-feat-arrow">→</div>
+            <div class="home-feat">
+              <div class="home-feat-icon">📋</div>
+              <div class="home-feat-text">Report Builder<span>Compile results into structured reports</span></div>
+            </div>
+          </div>
         </div>
         <div class="home-tools-grid" style="grid-template-columns:repeat(2,1fr);">
           <div class="home-tool-card htc-blue" onclick="loadSection('inferential')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('inferential')">
@@ -1680,17 +1992,17 @@
           <div class="home-tool-card htc-indigo" onclick="loadSection('stability')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('stability')">
             <div class="htc-icon">${svgClock}</div>
             <div class="htc-body">
-              <h3>${T('home.stability')}</h3>
+              <h3>${T('home.stability')} <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></h3>
               <p>${T('home.stabilityDesc')}</p>
               <div class="htc-tags"><span>% Change from T0</span><span>Functional Expiry</span><span>Quantitative &amp; Qualitative</span><span>CLSI EP25-A</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-rose" onclick="loadSection('regression')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('regression')">
-            <div class="htc-icon">${svgROC}</div>
+            <div class="htc-icon">${svgScatter}</div>
             <div class="htc-body">
               <h3>${T('home.regression')}</h3>
               <p>${T('home.regressionDesc')}</p>
-              <div class="htc-tags"><span>Correlation · r · R²</span><span>Linear Regression</span><span>ROC Curves</span><span>AUC · Sensitivity · Specificity</span><span>Method Comparison</span></div>
+              <div class="htc-tags"><span>Correlation · r · R²</span><span>Linear Regression</span></div>
             </div>
           </div>
           <div class="home-tool-card htc-orange" onclick="loadSection('lab')" tabindex="0" onkeydown="if(event.key==='Enter')loadSection('lab')" style="grid-column:span 2;">
@@ -1698,7 +2010,7 @@
             <div class="htc-body">
               <h3>${T('home.labTools')}</h3>
               <p>${T('home.labDesc')}</p>
-              <div class="htc-tags"><span>PCR</span><span>Dilution Calculator</span><span>Molarity &amp; Solution Prep</span><span>Photometry</span><span>Potentiometry</span></div>
+              <div class="htc-tags"><span>PCR</span><span>Dilution Calculator</span><span>Molarity &amp; Solution Prep</span><span>Photometry</span><span>Potentiometry</span><span>Colony Count (CFU)</span><span>Growth Rate</span><span>Enzyme Activity</span><span>Bacterial ID</span></div>
             </div>
           </div>
         </div>
@@ -1850,6 +2162,10 @@
             tc('tae_learning.html', 'Understanding Total Error &amp; Sigma', 'TE · TAE · sigma metric · QC design'),
             tc('method_comparison_learning.html', 'Understanding Method Comparison', 'Bland-Altman · bias types · r trap · paired methods'),
             tc('categorical_method_comparison_learning.html', 'Understanding Categorical Method Comparison', 'Kappa paradox · McNemar bias direction · pos/neg methods'),
+            tc('roc_learning.html',                  'Understanding ROC',               'Sensitivity · specificity · AUC · cut-off'),
+            tc('reference_interval_learning.html',   'Understanding Reference Intervals','Sample size · outliers · parametric vs non-parametric'),
+            tc('antibiotic_learning.html',           'Understanding Antibiotic Susceptibility','VME · ME · agreement matrix · error rates'),
+            tc('qualitative_lod_learning.html',      'Understanding Qualitative LoD',   'Hit rate · probit · replicates · concentration'),
           ]),
           grp('Quantitative', [
             tc('precision.html',         'Precision Monitor',                  'Daily QC monitoring · within-run repeatability'),
@@ -1857,9 +2173,13 @@
             tc('bias.html',              'Bias (CRM / EQA)',                    'Known reference value vs your method'),
             tc('method_comparison.html', 'Quantitative Method Comparison',     'Bland-Altman · Passing-Bablok · Deming · paired samples'),
             tc('tae.html',               'Total Error &amp; Sigma',            'Sigma metric · QC implications'),
+            tc('reference_interval.html','Reference Interval (EP28) ⚡BETA', 'EP28-A3c · 2.5th/97.5th percentile · outlier detection'),
           ]),
           grp('Categorical', [
             tc('qualitative_agreement.html', 'Categorical Method Comparison',  'Kappa · McNemar · pos/neg methods · 2×2 table'),
+            tc('antibiotic_agreement.html',  'Antibiotic Susceptibility Agreement ⚡BETA', 'EUCAST/CLSI · S/I/R · VME/ME error rates'),
+            tc('qualitative_lod.html',       'Qualitative LoD (EP17) ⚡BETA',   'Hit rate testing · detection limit'),
+            tc('logistic_regression_roc.html','ROC &amp; Diagnostic Accuracy',   'AUC · Sens/Spec · PPV/NPV · cut-off'),
           ]),
         ].join(''),
       },
@@ -1890,13 +2210,11 @@
         backLabel: '← Home',
         body: [
           grp('📚 Learning', [
-            tc('correlation_regression_theory.html', 'Concepts &amp; Theory',           'r · R² · regression · ROC · AUC'),
+            tc('correlation_regression_theory.html', 'Concepts &amp; Theory',           'r · R² · regression'),
             tc('correlation_learning.html',          'Understanding Correlation',        'r · R² · scatter · residuals · outliers'),
-            tc('roc_learning.html',                  'Understanding ROC',               'Sensitivity · specificity · AUC · cut-off'),
           ]),
           grp('Tools', [
             tc('linear_regression.html',        'Linear Regression',            'r, R², prediction line · continuous outcome'),
-            tc('logistic_regression_roc.html',  'ROC &amp; Diagnostic Performance', 'AUC · cut-off · combine analytes via logistic regression'),
           ]),
         ].join(''),
       },
@@ -1928,6 +2246,12 @@
           grp('Quantification Tools', [
             tc('lambert_beer.html', 'Photometry',   'Beer-Lambert · absorbance · concentration'),
             tc('nernst_ise.html',   'Potentiometry','Nernst equation · ISE · mV → concentration'),
+          ]),
+          grp('Microbiology', [
+            tc('colony_count.html',    'Colony Count (CFU) ⚡BETA',         'Dilution series · plate count · ISO 7218'),
+            tc('bacterial_growth.html', 'Growth Rate &amp; Doubling Time ⚡BETA', 'OD/CFU · generation time · growth curve'),
+            tc('enzyme_activity.html',  'Enzyme Activity ⚡BETA',            'U/mL · Km · Vmax · Michaelis-Menten'),
+            tc('bacterial_id.html',     'Bacterial Identification ⚡BETA',    'Interactive flowchart · biochemical tests'),
           ]),
         ].join(''),
       },
@@ -1991,18 +2315,28 @@
     { file:'tae.html',                           name:'Total Error & Sigma',              section:'Analytical Performance › Quantitative' },
     { file:'method_comparison.html',             name:'Quantitative Method Comparison',   section:'Analytical Performance › Quantitative' },
     { file:'qualitative_agreement.html',         name:'Categorical Method Comparison',    section:'Analytical Performance › Categorical' },
+    { file:'antibiotic_agreement.html',          name:'Antibiotic Susceptibility Agreement', section:'Analytical Performance › Categorical' },
+    { file:'qualitative_lod.html',               name:'Qualitative LoD (EP17)',          section:'Analytical Performance › Categorical' },
+    { file:'reference_interval.html',            name:'Reference Interval (EP28)',       section:'Analytical Performance › Quantitative' },
+    { file:'logistic_regression_roc.html',       name:'ROC & Diagnostic Performance',    section:'Analytical Performance › Categorical' },
+    { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Analytical Performance › Learning' },
+    { file:'reference_interval_learning.html',   name:'Understanding Reference Intervals', section:'Analytical Performance › Learning' },
+    { file:'antibiotic_learning.html',           name:'Understanding Antibiotic Susceptibility', section:'Analytical Performance › Learning' },
+    { file:'qualitative_lod_learning.html',      name:'Understanding Qualitative LoD',  section:'Analytical Performance › Learning' },
     { file:'stability_theory.html',              name:'Concepts & Theory — Stability & Time', section:'Stability & Time › Learning' },
     { file:'stability_learning.html',            name:'Understanding Stability Studies',  section:'Stability & Time › Learning' },
     { file:'stability_study.html',               name:'Quantitative Stability Study',     section:'Stability & Time › Quantitative' },
     { file:'qualitative_stability.html',         name:'Qualitative Stability Study',      section:'Stability & Time › Qualitative' },
     { file:'correlation_regression_theory.html', name:'Concepts & Theory — Correlation',  section:'Correlation & Regression › Learning' },
     { file:'correlation_learning.html',          name:'Understanding Correlation',        section:'Correlation & Regression › Learning' },
-    { file:'roc_learning.html',                  name:'Understanding ROC',               section:'Correlation & Regression › Learning' },
     { file:'linear_regression.html',             name:'Linear Regression',               section:'Correlation & Regression' },
-    { file:'logistic_regression_roc.html',       name:'ROC & Diagnostic Performance',    section:'Correlation & Regression' },
     { file:'PCR.html',                           name:'In Silico PCR',                    section:'Lab Tools › PCR' },
     { file:'dilution_calculator.html',           name:'PCR Setup / Primer Dilution',      section:'Lab Tools › PCR' },
     { file:'molarity_solution_prep.html',        name:'Molarity & Solution Prep',         section:'Lab Tools › Prepare Solution' },
+    { file:'colony_count.html',                  name:'Colony Count (CFU)',               section:'Lab Tools › Microbiology' },
+    { file:'bacterial_growth.html',              name:'Growth Rate & Doubling Time',     section:'Lab Tools › Microbiology' },
+    { file:'enzyme_activity.html',               name:'Enzyme Activity',                  section:'Lab Tools › Microbiology' },
+    { file:'bacterial_id.html',                  name:'Bacterial Identification',         section:'Lab Tools › Microbiology' },
     { file:'lambert_beer.html',                  name:'Photometry',                       section:'Lab Tools › Quantification' },
     { file:'nernst_ise.html',                    name:'Potentiometry',                    section:'Lab Tools › Quantification' },
     { file:'test_guide.html',                    name:'Statistical Test Guide',           section:'Guide' },
@@ -2194,7 +2528,7 @@
       'cat.quantitativeTests':'Quantitative Tests','cat.nonparametric':'Nonparametric Tests','cat.qualitative':'Categorical Tests',
       'sub.tests':'Tests','cat.analytical':'Analytical Performance',
       'cat.stability':'Stability & Time',
-      'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
+      'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">BETA</span>',
       'tool.normalDist':'Normal Distribution','tool.fDist':'F Distribution',
       'tool.oneSampleT':'One-Sample T-Test','tool.pairedT':'Paired T-Test',
       'tool.independentT':'Independent T-Test','tool.oneWayAnova':'One-Way ANOVA',
@@ -2210,7 +2544,7 @@
       'cat.quantTools':'Quantification Tools','tool.photometry':'Photometry','tool.potentiometry':'Potentiometry',
       'ui.reportIssue':'Report Issue','ui.info':'Info','ui.toolInfo':'Tool Information','ui.pcr':'PCR',
       'home.badge':'Clinical Laboratory Statistics','home.title':'Statistics Toolkit',
-      'home.subtitle':'Interactive learning tools, statistical calculators, and method validation — built for clinical laboratory scientists and students.',
+      'home.subtitle':'Interactive simulations, validation tools, and report builder — built for clinical laboratory scientists and students.',
       'home.learningTools':'Learning Tools',
       'home.learningDesc':'Interactive simulations to build statistical intuition — explore p-value behaviour, sampling distributions, and inferential concepts.',
       'home.hypothesisTests':'Inferential Statistics',
@@ -2219,8 +2553,8 @@
       'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP05/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
       'home.stability':'Stability &amp; Time',
       'home.stabilityDesc':'Determine whether patient material or reagent lots remain stable over time. Calculate % change from baseline, detect trends, and document functional expiry.',
-      'home.regression':'Regression &amp; Diagnostics',
-      'home.regressionDesc':'Understand and apply correlation, linear regression, and diagnostic test performance — with interactive simulations for ROC curves, AUC, and cut-off selection.',
+      'home.regression':'Correlation &amp; Regression',
+      'home.regressionDesc':'Explore relationships between continuous variables — understand correlation coefficients, R², and build linear regression models.',
       'home.pcr':'PCR',
       'home.pcrDesc':'End-to-end PCR workflow: in silico primer design and validation, master mix calculator, and primer dilution planning.',
       'home.labTools':'Lab Tools',
@@ -2257,7 +2591,7 @@
       'cat.quantTools':'Kvantificeringsværktøjer','tool.photometry':'Fotometri','tool.potentiometry':'Potentiometri',
       'ui.reportIssue':'Rapportér problem','ui.info':'Info','ui.toolInfo':'Værktøjsinformation','ui.pcr':'PCR',
       'home.badge':'Klinisk Laboratorie Statistik','home.title':'Statistikværktøjer',
-      'home.subtitle':'Evidensbaserede værktøjer til analytisk ydeevne, hypotesetest og molekylærbiologiske arbejdsgange — bygget til kliniske laboratoriespecialister.',
+      'home.subtitle':'Interaktive simuleringer, valideringsværktøjer og rapportbygger — bygget til kliniske laboratoriespecialister og studerende.',
       'home.learningTools':'Læringsværktøjer',
       'home.learningDesc':'Interaktive simuleringer til at opbygge statistisk intuition — udforsk p-værdiers adfærd, stikprøvefordelinger og inferensstatistiske begreber.',
       'home.hypothesisTests':'Inferentiel Statistik',

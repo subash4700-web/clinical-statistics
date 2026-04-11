@@ -109,6 +109,10 @@
       <li><a href="#ep09">EP09 — Method comparison and bias estimation</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
       <li><a href="#categorical-mc">Categorical Method Comparison — Kappa and McNemar</a></li>
+      <li><a href="#antibiotic">Antibiotic Susceptibility Agreement — EUCAST <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span></a></li>
+      <li><a href="#qual-lod">Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span></a></li>
+      <li><a href="#ref-interval">Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span></a></li>
+      <li><a href="#roc">ROC &amp; Diagnostic Accuracy</a></li>
       <li><a href="#stability">Stability Studies — EP25-A</a></li>
       <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#summary">Summary table</a></li>
@@ -793,6 +797,24 @@
       <strong>The identity line:</strong> If slope = 1 and intercept = 0, the regression equation becomes y = x — the line of identity. This means the two methods give the same result at every concentration. Slope ≠ 1 signals proportional bias; intercept ≠ 0 signals constant bias. Lin's CCC measures how close the data are to this identity line, combining both correlation and agreement into a single coefficient.
     </div>
 
+    <h3>Residuals — what each method minimises <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h3>
+    <ul>
+      <li><b>OLS</b> — minimises the sum of squared <strong>vertical</strong> distances from each point to the line. Residuals are drawn as vertical lines from the data point to the regression line.</li>
+      <li><b>Deming</b> — minimises the sum of squared <strong>perpendicular (orthogonal)</strong> distances. Residuals are drawn at right angles to the regression line. This is correct because both X and Y have measurement error.</li>
+      <li><b>Passing-Bablok</b> — does not minimise any distance. The slope is the <strong>median of all pairwise slopes</strong>, making it robust to outliers. Residuals are typically shown as vertical distances for simplicity.</li>
+    </ul>
+
+    <h3>Confidence intervals — how each method estimates uncertainty <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h3>
+    <table>
+      <tr><th>Method</th><th>CI calculation</th><th>CI band shape</th></tr>
+      <tr><td><b>OLS</b></td><td>Based on residual variance (s²). Exact formula using t-distribution.</td><td>Hyperbolic — narrows at the mean of X, widens at the extremes.</td></tr>
+      <tr><td><b>Passing-Bablok</b></td><td>Non-parametric. Rank-based CI for slope; intercept CI derived from slope CI bounds.</td><td>Envelope formed by the upper/lower bounds of slope and intercept CIs.</td></tr>
+      <tr><td><b>Deming</b></td><td>Jackknife resampling. Leave-one-out estimates of slope and intercept → SD → 95% CI.</td><td>Envelope formed by jackknife-estimated slope and intercept CI bounds.</td></tr>
+    </table>
+    <div class="good">
+      <b>Key insight:</b> Each regression method produces its own CI that reflects its own assumptions. OLS confidence bands are always the narrowest (because they ignore X-error) — this does not mean OLS is more precise; it means OLS is overconfident.
+    </div>
+
     <h3>Acceptance criteria</h3>
     <p>Define criteria <strong>before</strong> the study. A method passes when:</p>
     <ul>
@@ -956,9 +978,306 @@
 
   <hr class="divider">
 
-  <!-- 21 -->
+  <!-- 21 — Antibiotic Susceptibility Agreement -->
+  <div class="section" id="antibiotic">
+    <h2>21. Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
+    </p>
+
+    <h3>The 3×3 agreement matrix</h3>
+    <p>
+      Results from the test method and the reference method are cross-tabulated in a <strong>3×3 matrix</strong>. Diagonal cells represent agreement; off-diagonal cells represent discrepancies classified by clinical severity:
+    </p>
+    <table>
+      <tr><th>Error type</th><th>Definition</th><th>Clinical impact</th></tr>
+      <tr><td><b>Very Major Error (VME)</b></td><td>Reference = R, Test = S</td><td>Most dangerous — a resistant organism is reported as susceptible. Patient may receive ineffective treatment.</td></tr>
+      <tr><td><b>Major Error (ME)</b></td><td>Reference = S, Test = R</td><td>Susceptible organism reported as resistant — patient denied effective, possibly first-line therapy.</td></tr>
+      <tr><td><b>Minor Error (mE)</b></td><td>Either method reports I when the other reports S or R</td><td>Less critical — treatment may still be appropriate but interpretation differs.</td></tr>
+    </table>
+
+    <h3>Key metrics</h3>
+    <ul>
+      <li><b>Category Agreement (CA)</b> — proportion of isolates where both methods agree on S/I/R. Target: ≥ 90%.</li>
+      <li><b>Essential Agreement (EA)</b> — proportion of MIC results within ±1 dilution of the reference. Applies only when MICs are available. Target: ≥ 90%.</li>
+      <li><b>VME rate</b> — calculated as VME / total Reference-R isolates. Target: ≤ 3%.</li>
+      <li><b>ME rate</b> — calculated as ME / total Reference-S isolates. Target: ≤ 3%.</li>
+      <li><b>mE rate</b> — calculated as mE / total isolates. Target: ≤ 10% (less stringent).</li>
+    </ul>
+
+    <div class="warn">
+      <b>VME and ME rates use different denominators.</b> VME is divided by the number of reference-R isolates, ME by the number of reference-S isolates — not total N. This means even a single VME can produce a high rate if few resistant isolates are tested.
+    </div>
+
+    <h3>Study design considerations</h3>
+    <ul>
+      <li>CLSI recommends testing at least <strong>100 isolates per species–drug combination</strong>, with a mix of S, I, and R organisms.</li>
+      <li>If resistant isolates are rare, the VME rate becomes unreliable — a single misclassification from 5 R isolates = 20% VME rate.</li>
+      <li>For disk diffusion vs. broth microdilution: classify MIC results using the same breakpoint table (EUCAST or CLSI) applied to both methods.</li>
+      <li>Report results per antibiotic and per organism — aggregate rates can mask species-specific problems.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Example:</b> 100 isolates tested. Reference: 50 S, 10 I, 40 R. Test method: 1 VME (R→S), 2 ME (S→R), 3 mE.
+      CA = 94/100 = 94% ✓ · VME = 1/40 = 2.5% ✓ · ME = 2/50 = 4.0% ✗ (exceeds 3%).
+      Even though overall agreement is high, the ME rate flags a systematic problem — investigate which drug–organism pairs are affected.
+    </div>
+
+    <div class="good">
+      <b>EUCAST vs CLSI breakpoints:</b> Both organisations define S/I/R categories but may use different MIC or zone-diameter cut-offs. Always state which breakpoint table you applied — mixing tables invalidates the comparison.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 22 — Qualitative LoD -->
+  <div class="section" id="qual-lod">
+    <h2>22. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
+    </p>
+
+    <h3>What LoD means for qualitative methods</h3>
+    <p>
+      CLSI EP17-A2 defines LoD as the concentration at which the method detects the analyte in a specified proportion of replicates — typically <strong>≥ 95% of the time</strong>. Unlike quantitative LoD (defined via precision at low concentrations), qualitative LoD is based on a <strong>hit rate</strong>: the fraction of positive results at each concentration level.
+    </p>
+
+    <h3>Hit rate testing — the basic approach</h3>
+    <ol>
+      <li>Prepare a series of concentration levels spanning the expected detection limit (e.g., 5–8 levels).</li>
+      <li>Test each level with multiple replicates (at least 20 per level recommended; more gives tighter confidence intervals).</li>
+      <li>Record the number of positive results at each level.</li>
+      <li>Calculate the hit rate: <strong>Hit rate = positives / total replicates × 100%</strong></li>
+      <li>The LoD is the lowest concentration at which the hit rate meets or exceeds the target (e.g., 95%).</li>
+    </ol>
+
+    <div class="formula-box">
+      <span class="f-label">Hit rate</span>
+      Hit rate (%) = (number of positive results / total replicates) × 100
+      <br><br>
+      <span class="f-label">LoD criterion</span>
+      LoD = lowest concentration where hit rate ≥ target (typically 95%)
+    </div>
+
+    <h3>Probit analysis (optional refinement)</h3>
+    <p>
+      Rather than picking the first level that crosses the 95% threshold, <strong>probit regression</strong> fits a sigmoid curve to the hit rate data. This models the probability of detection as a function of concentration and interpolates the exact concentration at which the predicted hit rate equals the target. Probit analysis:
+    </p>
+    <ul>
+      <li>Provides a more precise LoD estimate than simple inspection of hit rates</li>
+      <li>Produces a confidence interval around the LoD</li>
+      <li>Works best with 5+ concentration levels and ≥ 20 replicates per level</li>
+      <li>Requires at least some levels below and above the target hit rate for reliable curve fitting</li>
+    </ul>
+
+    <h3>Confidence intervals</h3>
+    <p>
+      Each hit rate is a proportion, so its uncertainty is estimated using a binomial confidence interval (e.g., Clopper-Pearson exact method). With only 20 replicates and 19 positives:
+    </p>
+    <div class="callout">
+      <b>Example:</b> 19/20 = 95% hit rate. But the 95% CI is approximately 75–100%.
+      With 60 replicates and 57 positives: 95% hit rate with 95% CI ≈ 86–99%.
+      More replicates → narrower CI → more confident that you have truly reached the LoD.
+    </div>
+
+    <h3>Study design considerations</h3>
+    <ul>
+      <li><b>Blank / negative samples</b> — always include a zero-concentration level to confirm specificity (false positive rate).</li>
+      <li><b>Concentration spacing</b> — use closely spaced levels near the expected LoD for precise estimation. Widely spaced levels may miss the true LoD.</li>
+      <li><b>Matrix</b> — use clinically relevant sample matrices (serum, urine, swab, etc.) rather than buffer. Matrix effects can shift the LoD.</li>
+      <li><b>Replicates</b> — EP17 recommends a minimum of 20 replicates per level, but 40–60 gives much better precision.</li>
+    </ul>
+
+    <div class="warn">
+      <b>Common pitfall:</b> Testing only 3–5 replicates per level. With so few replicates, the difference between 80% and 100% hit rate is just 1 result — the confidence interval is too wide to draw meaningful conclusions.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 23 — Reference Intervals -->
+  <div class="section" id="ref-interval">
+    <h2>23. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      A <strong>reference interval</strong> (commonly called "normal range") defines the central 95% of results expected from a healthy reference population. It is used every day in clinical laboratories to flag abnormal patient results. CLSI EP28-A3c describes how to establish and verify these intervals.
+    </p>
+
+    <h3>Establishing vs. verifying</h3>
+    <table>
+      <tr><th>Approach</th><th>When</th><th>Sample size</th><th>Method</th></tr>
+      <tr><td><b>Establishing (de novo)</b></td><td>New analyte, new population, no prior data</td><td>≥ 120 reference individuals</td><td>Calculate 2.5th and 97.5th percentiles directly</td></tr>
+      <tr><td><b>Verification (transference)</b></td><td>Adopting a manufacturer's or published interval</td><td>20 reference individuals</td><td>Check that ≤ 2 of 20 fall outside the claimed interval</td></tr>
+    </table>
+
+    <h3>Why 120 samples?</h3>
+    <p>
+      The 2.5th and 97.5th percentiles are estimated from the tails of the distribution. With fewer samples, the <strong>90% confidence intervals</strong> around these limits become very wide. CLSI EP28 requires 120 as the minimum for a non-parametric approach because this is the smallest n that gives acceptable confidence intervals around both limits.
+    </p>
+
+    <div class="formula-box">
+      <span class="f-label">Non-parametric reference interval</span>
+      Lower limit = rank position ⌊0.025 × (n + 1)⌋ of sorted data
+      <br>
+      Upper limit = rank position ⌈0.975 × (n + 1)⌉ of sorted data
+      <br><br>
+      <span class="f-label">Parametric reference interval (if data are Gaussian)</span>
+      Lower limit = mean − 1.96 × SD
+      <br>
+      Upper limit = mean + 1.96 × SD
+    </div>
+
+    <h3>Non-parametric vs. parametric</h3>
+    <ul>
+      <li><b>Non-parametric (rank-based)</b> — no assumption about data distribution. Simply sort values and pick the 2.5th and 97.5th percentile positions. Recommended by EP28 as the default method.</li>
+      <li><b>Parametric (mean ± 1.96 SD)</b> — assumes data follow a Gaussian (normal) distribution. Only use if normality is confirmed (e.g., Shapiro-Wilk test). Can be applied to transformed data (e.g., log-transformed) if the original data are skewed.</li>
+    </ul>
+
+    <h3>Outlier detection</h3>
+    <p>
+      Outliers in reference data can distort the calculated interval. EP28 recommends screening for outliers before calculating limits:
+    </p>
+    <ul>
+      <li><b>Tukey's method</b> — values below Q1 − 1.5 × IQR or above Q3 + 1.5 × IQR are flagged. Robust and widely used.</li>
+      <li><b>Dixon's Q test</b> — tests the most extreme value against the range of the data. Better for small sample sizes (n &lt; 30). Only tests one outlier at a time.</li>
+      <li>Always investigate flagged outliers clinically before removing — they may represent unrecognised pathology in a "healthy" individual.</li>
+    </ul>
+
+    <div class="warn">
+      <b>Outlier removal is not automatic.</b> If a value is flagged, check whether the individual truly met the inclusion criteria (healthy, fasting, no medication, etc.). Blindly removing statistical outliers can narrow the interval and increase false-positive flags in routine use.
+    </div>
+
+    <h3>Partitioning — when to split by subgroups</h3>
+    <p>
+      Many analytes differ by age, sex, or ethnicity. EP28 recommends testing for statistically and clinically significant differences between subgroups. If the difference is large enough, <strong>separate reference intervals</strong> should be established for each subgroup.
+    </p>
+    <ul>
+      <li>Common partitions: male/female, paediatric/adult/geriatric, pre-/post-menopausal</li>
+      <li>Each partition requires its own 120 reference individuals</li>
+      <li>If the difference between groups is &lt; 0.25 × combined range, a single interval may suffice</li>
+    </ul>
+
+    <h3>Verification with 20 samples</h3>
+    <p>
+      When adopting a published or manufacturer's reference interval, EP28 allows a simplified verification:
+    </p>
+    <ol>
+      <li>Collect samples from 20 healthy individuals matching the target population.</li>
+      <li>Analyse all samples with your method on your instrument.</li>
+      <li>Count how many results fall outside the claimed reference interval.</li>
+      <li><b>If ≤ 2 out of 20 are outside</b> → the interval is verified (acceptable for your laboratory).</li>
+      <li><b>If ≥ 3 out of 20 are outside</b> → the interval is not transferable. Investigate bias or establish your own interval.</li>
+    </ol>
+
+    <div class="callout">
+      <b>Example:</b> A reagent manufacturer claims glucose reference interval 4.1–5.9 mmol/L. You test 20 healthy volunteers: 18 fall within 4.1–5.9, 2 are outside → interval verified. If 4 are outside → interval not verified — check for systematic bias on your analyser.
+    </div>
+
+    <div class="good">
+      <b>Key insight:</b> Reference intervals are not just about statistics — they depend on the reference population, pre-analytical conditions (fasting, posture, time of day), and the analytical method. An interval established on one platform cannot be assumed valid on another without verification.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 24 — ROC & Diagnostic Accuracy -->
+  <div class="section" id="roc">
+    <h2>24. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
+    </p>
+
+    <h3>The 2×2 decision table</h3>
+    <p>
+      At any chosen cut-off, test results are classified into four categories:
+    </p>
+    <table>
+      <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
+      <tr><td><b>Test +</b></td><td>True Positive (TP)</td><td>False Positive (FP)</td></tr>
+      <tr><td><b>Test −</b></td><td>False Negative (FN)</td><td>True Negative (TN)</td></tr>
+    </table>
+
+    <h3>Key performance metrics</h3>
+    <ul>
+      <li><b>Sensitivity (TPR)</b> = TP / (TP + FN) — proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
+      <li><b>Specificity (TNR)</b> = TN / (TN + FP) — proportion of true negatives correctly identified. High specificity → few false alarms.</li>
+      <li><b>PPV (Positive Predictive Value)</b> = TP / (TP + FP) — probability that a positive result is truly positive. Depends on prevalence.</li>
+      <li><b>NPV (Negative Predictive Value)</b> = TN / (TN + FN) — probability that a negative result is truly negative. Depends on prevalence.</li>
+    </ul>
+
+    <div class="warn">
+      <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
+    </div>
+
+    <h3>The ROC curve</h3>
+    <p>
+      The ROC curve plots <strong>sensitivity (y-axis) vs 1 − specificity (x-axis)</strong> across all possible cut-off values. Each point on the curve represents one threshold. The curve shows the trade-off: moving the cut-off to catch more positives (higher sensitivity) inevitably increases false positives (lower specificity).
+    </p>
+    <ul>
+      <li>A <b>perfect test</b> passes through the top-left corner (100% sensitivity, 100% specificity) — AUC = 1.0</li>
+      <li>A <b>useless test</b> follows the diagonal — AUC = 0.5 (no better than coin-flip)</li>
+      <li>The further the curve bows towards the top-left, the better the discriminatory power</li>
+    </ul>
+
+    <h3>AUC — Area Under the Curve</h3>
+    <p>
+      The <strong>AUC</strong> summarises the overall discriminatory ability of the test in a single number between 0.5 and 1.0. It can be interpreted as: <em>the probability that a randomly chosen disease-positive individual has a higher test value than a randomly chosen disease-negative individual</em>.
+    </p>
+    <table>
+      <tr><th>AUC</th><th>Interpretation</th></tr>
+      <tr><td>0.90 – 1.00</td><td>Excellent discrimination</td></tr>
+      <tr><td>0.80 – 0.90</td><td>Good discrimination</td></tr>
+      <tr><td>0.70 – 0.80</td><td>Fair discrimination</td></tr>
+      <tr><td>0.60 – 0.70</td><td>Poor discrimination</td></tr>
+      <tr><td>0.50 – 0.60</td><td>Fail — no useful discrimination</td></tr>
+    </table>
+
+    <h3>Choosing an optimal cut-off</h3>
+    <p>
+      The "best" cut-off depends on the clinical context:
+    </p>
+    <ul>
+      <li><b>Youden's index</b> — maximises (sensitivity + specificity − 1). Gives the point on the ROC curve furthest from the diagonal. A balanced approach.</li>
+      <li><b>High sensitivity priority</b> — for screening tests where missing a case is dangerous (e.g., cancer screening). Accept more false positives.</li>
+      <li><b>High specificity priority</b> — for confirmatory tests where false positives have serious consequences (e.g., unnecessary surgery). Accept more false negatives.</li>
+      <li><b>Cost-based</b> — if you can quantify the cost of a false positive vs. a false negative, the optimal cut-off minimises total cost.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Example:</b> A biomarker for sepsis has AUC = 0.88. At Youden's optimal cut-off of 12.5 ng/mL: sensitivity = 85%, specificity = 80%. But for ICU screening, you might lower the cut-off to 8 ng/mL (sensitivity 95%, specificity 60%) — missing sepsis is worse than running extra confirmatory tests.
+    </div>
+
+    <h3>Comparing two ROC curves</h3>
+    <p>
+      When comparing two biomarkers or two methods, you can test whether their AUCs are significantly different using the <strong>DeLong test</strong>. This accounts for the correlation between the two curves when they are measured on the same patients.
+    </p>
+
+    <h3>Logistic regression and combined markers</h3>
+    <p>
+      When a single analyte has moderate discrimination, <strong>logistic regression</strong> can combine multiple analytes into a single predicted probability. The ROC curve of the combined model often outperforms any individual marker. The tool in this app supports entering multiple analytes and building a combined ROC curve.
+    </p>
+
+    <div class="good">
+      <b>Key insight:</b> AUC tells you how good a test <em>can</em> be — but clinical usefulness depends on the cut-off you choose, the prevalence in your population, and the consequences of errors. A test with AUC = 0.85 can be clinically useless if the prevalence is very low (PPV collapses) or if there is no actionable treatment for detected cases.
+    </div>
+
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 25 -->
   <div class="section" id="stability">
-    <h2>21. Stability Studies — CLSI EP25-A</h2>
+    <h2>25. Stability Studies — CLSI EP25-A</h2>
 
     <div class="warn">
       <b>Stability testing is conceptually separate from analytical performance.</b>
@@ -1042,7 +1361,7 @@
 
   <!-- 22 -->
   <div class="section" id="summary">
-    <h2>22. Summary table</h2>
+    <h2>26. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
@@ -1057,6 +1376,10 @@
       <tr><td><b>McNemar's test</b></td><td>Systematic tilt — whether one method calls more positives than the other</td><td>p-value; direction (b vs c)</td><td>Categorical Method Comparison</td></tr>
       <tr><td><b>Quantitative stability</b></td><td>% change from baseline over time (EP25-A)</td><td>Mean % change, 95% CI, drift rate, functional expiry</td><td>Quantitative Stability Study</td></tr>
       <tr><td><b>Qualitative stability</b></td><td>Agreement between fresh (T0) and aged material at each time point</td><td>κ vs time, McNemar p-value, functional expiry</td><td>Categorical Method Comparison</td></tr>
+      <tr><td><b>Antibiotic susceptibility</b></td><td>Agreement between AST test method and reference method (S/I/R)</td><td>CA%, VME%, ME%, mE%</td><td>Antibiotic Susceptibility</td></tr>
+      <tr><td><b>Qualitative LoD</b></td><td>Lowest concentration reliably detected by a qualitative method</td><td>Hit rate %, LoD concentration, probit curve</td><td>Qualitative LoD (EP17)</td></tr>
+      <tr><td><b>Reference interval</b></td><td>Central 95% range of a healthy reference population</td><td>2.5th–97.5th percentile, 90% CI</td><td>Reference Interval (EP28)</td></tr>
+      <tr><td><b>ROC / Diagnostic accuracy</b></td><td>Discriminatory ability of a quantitative test for a binary outcome</td><td>AUC, sensitivity, specificity, PPV, NPV</td><td>ROC &amp; Diagnostic Accuracy</td></tr>
     </table>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -1154,6 +1477,24 @@
         Bland, M. (2015). <em>An Introduction to Medical Statistics</em> (4th ed.). Oxford University Press.<br>
         <span style="font-size:12px; color:#64748b;">
           Bland-Altman method comparison &amp; limits of agreement: pp. 268–295 · Cohen's Kappa &amp; agreement: pp. 354–368 · McNemar's test: pp. 243–248
+        </span>
+      </li>
+      <li>
+        CLSI EP17-A2 (2012). <em>Evaluation of Detection Capability for Clinical Laboratory Measurement Procedures</em>. Clinical and Laboratory Standards Institute.<br>
+        <span style="font-size:12px; color:#64748b;">
+          Limit of detection (LoD) for qualitative methods · Hit rate testing · Probit analysis for LoD estimation
+        </span>
+      </li>
+      <li>
+        CLSI EP28-A3c (2010). <em>Defining, Establishing, and Verifying Reference Intervals in the Clinical Laboratory</em>. Clinical and Laboratory Standards Institute.<br>
+        <span style="font-size:12px; color:#64748b;">
+          Reference interval establishment (≥ 120 samples) · Verification/transference (20 samples) · Outlier detection · Non-parametric and parametric methods · Partitioning by subgroups
+        </span>
+      </li>
+      <li>
+        EUCAST (2021). <em>Routine and Extended Internal Quality Control for MIC Determination and Disk Diffusion</em>. European Committee on Antimicrobial Susceptibility Testing.<br>
+        <span style="font-size:12px; color:#64748b;">
+          AST error classification (VME, ME, mE) · Category agreement · Essential agreement · Acceptance criteria for method validation
         </span>
       </li>
     </ol>

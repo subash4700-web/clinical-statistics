@@ -1,0 +1,65 @@
+<h2>Bacterial Growth <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></h2>
+
+<h3>Growth Phases</h3>
+<ul>
+  <li><strong>Lag</strong> &mdash; Cells adapt to new medium. No increase in number. Duration depends on inoculum history.</li>
+  <li><strong>Log (exponential)</strong> &mdash; Constant doubling. Straight line on a semi-log plot. This is the phase you measure.</li>
+  <li><strong>Stationary</strong> &mdash; Growth = death. Nutrients depleted, waste accumulates.</li>
+  <li><strong>Death</strong> &mdash; Viable count declines. Cells lyse or become VBNC.</li>
+</ul>
+
+<h3>Growth Rate (r)</h3>
+<p style="font-weight:700; font-size:16px;">
+  r = (ln N&#8322; &minus; ln N&#8321;) / (t&#8322; &minus; t&#8321;)
+</p>
+<ul>
+  <li>Use data points from <strong>log phase only</strong>. Including lag or stationary phase will underestimate the true rate.</li>
+  <li>Units: per hour (h<sup>&minus;1</sup>) or per minute (min<sup>&minus;1</sup>).</li>
+</ul>
+
+<h3>Generation Time (Doubling Time)</h3>
+<p style="font-weight:700; font-size:16px;">
+  g = ln(2) / r &asymp; 0.693 / r
+</p>
+<ul>
+  <li><em>E. coli</em> &asymp; 20 min. <em>M. tuberculosis</em> &asymp; 15&ndash;20 hours. <em>S. aureus</em> &asymp; 30 min.</li>
+</ul>
+
+<h3>Measuring Growth</h3>
+<ul>
+  <li><strong>OD600 (turbidity)</strong> &mdash; Fast, real-time. Measures live + dead cells. Non-linear above OD &asymp; 1.0.</li>
+  <li><strong>CFU (viable count)</strong> &mdash; Gold standard for viable cells. Slow (overnight incubation).</li>
+  <li><strong>Direct count</strong> &mdash; Microscopy or flow cytometry. Includes dead cells unless using viability stain.</li>
+</ul>
+
+<h3>Semi-log Plot</h3>
+<ul>
+  <li>Plot ln(N) or log&#8321;&#8320;(N) vs time. Log phase appears as a <strong>straight line</strong>.</li>
+  <li>Slope of the linear region = growth rate (r for ln, or r/2.303 for log&#8321;&#8320;).</li>
+</ul>
+
+<h3>Log Phase Detection</h3>
+<ul>
+  <li>Identify the <strong>linear region</strong> on the ln(N) vs time plot &mdash; manually or by fitting.</li>
+  <li>Exclude lag phase (initial flat region) and stationary phase (plateau).</li>
+  <li>Minimum 3&ndash;4 points in the linear region for a reliable slope estimate.</li>
+</ul>
+
+<h3>Common Mistakes</h3>
+<ul>
+  <li><strong>Using all data points</strong> &mdash; must select log phase only. Including lag or stationary biases the rate.</li>
+  <li><strong>OD &gt; 1.0</strong> &mdash; Beer-Lambert breaks down. Dilute and re-measure, or use a calibration curve.</li>
+  <li><strong>Wrong log base</strong> &mdash; ln (base e) for growth rate. Mixing ln and log&#8321;&#8320; gives a 2.3&times; error.</li>
+  <li><strong>Inadequate time resolution</strong> &mdash; too few time points makes it hard to identify log phase boundaries.</li>
+</ul>
+
+<h3>Clinical Relevance</h3>
+<ul>
+  <li>Doubling time affects <strong>antibiotic dosing intervals</strong> &mdash; fast growers need more frequent dosing.</li>
+  <li>Slow growers (e.g. <em>M. tuberculosis</em>) require prolonged treatment courses.</li>
+  <li>Growth rate in blood culture systems predicts time-to-positivity, which correlates with bacterial load.</li>
+</ul>
+
+<p style="font-size:13px; color:#6B7280;">
+Educational use only; always verify with SOPs and validated methods.
+</p>

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Bacterial Identification — Interactive Flowchart</title>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    /* ── Orange Lab Tools header ── */
+    .tool-header{
+      background:linear-gradient(135deg,#431407 0%,#ea580c 100%);
+      color:#fff;padding:18px 22px 16px;border-radius:12px;margin:0 0 20px;
+    }
+    .tool-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .tool-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
+
+    /* ── Accent overrides (orange) ── */
+    :root{
+      --accent:#ea580c;
+      --accent-light:#fff7ed;
+    }
+
+    .beta-badge{
+      display:inline-block;font-size:10px;font-weight:800;
+      padding:2px 8px;border-radius:999px;
+      background:rgba(255,255,255,.2);color:#fff;
+      margin-left:8px;vertical-align:middle;letter-spacing:.06em;
+    }
+
+    /* ── Layout ── */
+    .id-layout{
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media(max-width:860px){
+      .id-layout{grid-template-columns:1fr;}
+    }
+
+    /* ── Left panel ── */
+    .left-panel .card{position:sticky;top:20px;}
+
+    .test-path{display:flex;flex-direction:column;gap:0;margin-bottom:16px;}
+    .path-step{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 10px;font-size:13px;
+      border-left:3px solid var(--line);
+      margin-left:10px;
+      position:relative;
+    }
+    .path-step::before{
+      content:'';position:absolute;left:-9px;top:50%;transform:translateY(-50%);
+      width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:#fff;
+    }
+    .path-step.pos{border-left-color:#16a34a;}
+    .path-step.pos::before{border-color:#16a34a;background:#dcfce7;}
+    .path-step.neg{border-left-color:#dc2626;}
+    .path-step.neg::before{border-color:#dc2626;background:#fee2e2;}
+    .path-step .step-test{font-weight:700;color:var(--ink);}
+    .path-step .step-result{
+      font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+    }
+    .result-pos{background:#dcfce7;color:#15803d;}
+    .result-neg{background:#fee2e2;color:#b91c1c;}
+
+    /* ── Current question ── */
+    .current-question{
+      background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;
+      padding:14px 16px;margin-bottom:14px;
+    }
+    .current-question .q-label{
+      font-size:11px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.05em;color:#9a3412;margin-bottom:6px;
+    }
+    .current-question .q-test{
+      font-size:15px;font-weight:800;color:#431407;margin-bottom:10px;
+    }
+    .current-question .q-desc{
+      font-size:12px;color:#78350f;line-height:1.5;margin-bottom:12px;
+    }
+    .answer-btns{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn-pos{
+      background:#16a34a;color:#fff;padding:9px 20px;font-size:13px;font-weight:700;
+      border:none;border-radius:8px;cursor:pointer;
+    }
+    .btn-pos:hover{opacity:.88;}
+    .btn-neg{
+      background:#dc2626;color:#fff;padding:9px 20px;font-size:13px;font-weight:700;
+      border:none;border-radius:8px;cursor:pointer;
+    }
+    .btn-neg:hover{opacity:.88;}
+    .btn-skip{
+      background:#fff;color:var(--muted);border:1px solid var(--line);
+      padding:9px 16px;font-size:13px;font-weight:700;
+      border-radius:8px;cursor:pointer;
+    }
+    .btn-skip:hover{border-color:var(--accent);color:var(--accent);}
+
+    .nav-btns{display:flex;gap:8px;margin-top:10px;}
+    .btn-back,.btn-reset{
+      background:#fff;color:var(--ink);border:1px solid var(--line);
+      padding:7px 14px;font-size:12px;font-weight:700;
+      border-radius:8px;cursor:pointer;flex:1;text-align:center;
+    }
+    .btn-back:hover,.btn-reset:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* ── Right panel ── */
+    .candidates-header{
+      font-size:11px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.05em;color:var(--muted);margin-bottom:10px;
+    }
+    .candidate-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .candidate-chip{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 12px;border-radius:8px;font-size:13px;
+      background:var(--subtle);border:1px solid var(--line);
+      font-style:italic;color:var(--ink);
+    }
+    .candidate-chip .gram-dot{
+      width:8px;height:8px;border-radius:50%;flex-shrink:0;
+    }
+    .gram-pos-dot{background:#7c3aed;}
+    .gram-neg-dot{background:#dc2626;}
+
+    /* ── Final ID card ── */
+    .id-result-card{
+      background:linear-gradient(135deg,#431407 0%,#ea580c 100%);
+      color:#fff;border-radius:14px;padding:22px 24px;margin-bottom:16px;
+    }
+    .id-result-card .org-name{
+      font-size:22px;font-weight:900;font-style:italic;margin-bottom:4px;
+    }
+    .id-result-card .org-key-tests{
+      font-size:13px;opacity:.85;margin-bottom:12px;
+    }
+    .id-detail{
+      background:rgba(255,255,255,.12);border-radius:10px;
+      padding:12px 14px;margin-top:10px;font-size:13px;line-height:1.6;
+    }
+    .id-detail strong{color:#fed7aa;}
+    .id-detail ul{margin:4px 0 0 16px;padding:0;}
+    .id-detail li{margin-bottom:2px;}
+
+    /* ── Info box ── */
+    .info-box{
+      background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;
+      padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.65;color:#78350f;
+    }
+    .info-box strong{color:#9a3412;}
+
+    /* ── Visual path (right panel) ── */
+    .visual-path{margin-bottom:16px;}
+    .vp-step{
+      display:flex;align-items:flex-start;gap:10px;position:relative;
+      padding-bottom:8px;
+    }
+    .vp-step:last-child{padding-bottom:0;}
+    .vp-dot-col{
+      display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0;
+    }
+    .vp-dot{
+      width:16px;height:16px;border-radius:50%;border:3px solid var(--line);
+      background:#fff;flex-shrink:0;position:relative;z-index:1;
+    }
+    .vp-line{width:2px;flex:1;background:var(--line);min-height:12px;}
+    .vp-dot.pos{border-color:#16a34a;background:#dcfce7;}
+    .vp-dot.neg{border-color:#dc2626;background:#fee2e2;}
+    .vp-dot.current{
+      border-color:#ea580c;background:#fff7ed;
+      animation:pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot{
+      0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.4);}
+      50%{box-shadow:0 0 0 6px rgba(234,88,12,0);}
+    }
+    .vp-content{padding-top:0;font-size:13px;line-height:1.4;}
+    .vp-test{font-weight:700;color:var(--ink);}
+    .vp-result{font-size:12px;color:var(--muted);}
+    .vp-result .pos-text{color:#16a34a;font-weight:700;}
+    .vp-result .neg-text{color:#dc2626;font-weight:700;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tool-header">
+      <h1>Bacterial Identification — Interactive Flowchart <span class="beta-badge">BETA</span></h1>
+      <p>Step through biochemical tests to identify clinically relevant bacteria — Gram stain, catalase, oxidase, and more</p>
+    </div>
+
+    <div class="info-box">
+      <strong>How to use:</strong> This tool guides you through a systematic identification of clinically relevant bacteria using a dichotomous key approach. Start with the Gram stain result, then answer each biochemical test as Positive or Negative. The tool narrows down candidates after each answer until a final identification is reached. Use <strong>Back</strong> to undo a step or <strong>Reset</strong> to start over.
+    </div>
+
+    <div class="id-layout">
+      <!-- Left panel -->
+      <div class="left-panel">
+        <div class="card">
+          <div style="font-weight:800;font-size:14px;margin-bottom:12px;">Test Path</div>
+          <div id="testPath" class="test-path"></div>
+          <div id="questionArea"></div>
+          <div class="nav-btns">
+            <button class="btn-back" id="btnBack" onclick="goBack()" disabled>Back</button>
+            <button class="btn-reset" id="btnReset" onclick="resetAll()">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div class="right-panel">
+        <div class="card" id="resultPanel">
+          <div class="candidates-header">Current candidates (<span id="candidateCount">0</span>)</div>
+          <div id="candidateList" class="candidate-list"></div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:800;font-size:14px;margin-bottom:12px;">Identification Path</div>
+          <div id="visualPath" class="visual-path"></div>
+        </div>
+
+        <div id="finalResult"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// Organism database
+// ════════════════════════════════════════════════════════
+const ORGANISMS = {
+  s_aureus: {
+    name: 'Staphylococcus aureus',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Most virulent staphylococcal species. Produces coagulase, protein A, and numerous toxins. Leading cause of healthcare-associated infections.',
+    keyTests: 'Gram+ cocci in clusters, Catalase +, Coagulase +',
+    commonInfections: ['Skin/soft tissue abscess', 'Bacteremia', 'Endocarditis', 'Osteomyelitis', 'Pneumonia', 'Surgical site infections'],
+    typicalResistance: 'MSSA susceptible to oxacillin/cefazolin. MRSA strains resistant to all beta-lactams — treat with vancomycin, daptomycin, or linezolid. Check for inducible clindamycin resistance (D-test).'
+  },
+  s_epidermidis: {
+    name: 'Staphylococcus epidermidis',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Most common coagulase-negative staphylococcus. Normal skin flora but major cause of device-related infections due to biofilm formation.',
+    keyTests: 'Gram+ cocci in clusters, Catalase +, Coagulase -, Novobiocin sensitive',
+    commonInfections: ['Prosthetic valve endocarditis', 'Central line infections', 'Prosthetic joint infections', 'CSF shunt infections'],
+    typicalResistance: 'Often methicillin-resistant. Vancomycin usually effective. High rates of resistance to multiple antibiotic classes.'
+  },
+  s_saprophyticus: {
+    name: 'Staphylococcus saprophyticus',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Second most common cause of uncomplicated UTI in young women after E. coli. Unique novobiocin resistance distinguishes it from S. epidermidis.',
+    keyTests: 'Gram+ cocci, Catalase +, Coagulase -, Novobiocin resistant',
+    commonInfections: ['Uncomplicated UTI (young women)', 'Cystitis'],
+    typicalResistance: 'Usually susceptible to most antibiotics used for UTI (TMP-SMX, nitrofurantoin, fluoroquinolones). Intrinsically novobiocin-resistant.'
+  },
+  s_pneumoniae: {
+    name: 'Streptococcus pneumoniae',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Lancet-shaped diplococci. Polysaccharide capsule is the major virulence factor. Leading cause of community-acquired pneumonia and meningitis.',
+    keyTests: 'Gram+ diplococci, Catalase -, Alpha-haemolytic, Optochin sensitive, Bile soluble',
+    commonInfections: ['Community-acquired pneumonia', 'Meningitis', 'Otitis media', 'Sinusitis', 'Bacteremia'],
+    typicalResistance: 'Increasing penicillin resistance (altered PBPs). Check MIC for meningitis isolates. Macrolide resistance common. Vaccine available (PCV13, PPSV23).'
+  },
+  viridans_strep: {
+    name: 'Viridans group streptococci',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Heterogeneous group (S. mutans, S. mitis, S. sanguinis, etc.). Normal oral flora. Important cause of subacute endocarditis.',
+    keyTests: 'Gram+ cocci in chains, Catalase -, Alpha-haemolytic, Optochin resistant',
+    commonInfections: ['Subacute bacterial endocarditis', 'Dental caries (S. mutans)', 'Brain abscess', 'Bacteremia in neutropenic patients'],
+    typicalResistance: 'Usually penicillin-susceptible but increasing resistance. Check MIC for endocarditis isolates. Generally susceptible to vancomycin.'
+  },
+  s_pyogenes: {
+    name: 'Streptococcus pyogenes (Group A Strep)',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Group A Streptococcus (GAS). Produces streptolysin O and S, hyaluronidase, streptokinase. Can cause post-infectious sequelae (rheumatic fever, glomerulonephritis).',
+    keyTests: 'Gram+ cocci in chains, Catalase -, Beta-haemolytic, Bacitracin sensitive, PYR +',
+    commonInfections: ['Pharyngitis', 'Cellulitis/erysipelas', 'Necrotizing fasciitis', 'Scarlet fever', 'Impetigo'],
+    typicalResistance: 'Universally susceptible to penicillin (no resistance reported). Macrolide resistance varies geographically. Penicillin is drug of choice.'
+  },
+  s_agalactiae: {
+    name: 'Streptococcus agalactiae (Group B Strep)',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Group B Streptococcus (GBS). Normal vaginal/GI flora. Major cause of neonatal sepsis and meningitis. Pregnant women screened at 35-37 weeks.',
+    keyTests: 'Gram+ cocci in chains, Catalase -, Beta-haemolytic, Bacitracin resistant, CAMP test +, Hippurate hydrolysis +',
+    commonInfections: ['Neonatal sepsis/meningitis', 'Chorioamnionitis', 'UTI in pregnancy', 'Bacteremia in elderly/diabetics'],
+    typicalResistance: 'Susceptible to penicillin (drug of choice). Clindamycin resistance increasing — perform susceptibility testing for penicillin-allergic patients.'
+  },
+  group_cg_strep: {
+    name: 'Group C/G Streptococcus',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Includes S. dysgalactiae subsp. equisimilis. Can cause pharyngitis and invasive infections similar to Group A Streptococcus.',
+    keyTests: 'Gram+ cocci in chains, Catalase -, Beta-haemolytic, Bacitracin resistant, CAMP test -',
+    commonInfections: ['Pharyngitis', 'Cellulitis', 'Bacteremia', 'Endocarditis'],
+    typicalResistance: 'Usually susceptible to penicillin. Similar susceptibility pattern to GAS.'
+  },
+  enterococcus: {
+    name: 'Enterococcus (E. faecalis / E. faecium)',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'Normal GI flora. Intrinsically resistant to many antibiotics. E. faecium more resistant than E. faecalis. Important nosocomial pathogen.',
+    keyTests: 'Gram+ cocci in chains/pairs, Catalase -, Gamma-haemolytic, Bile esculin +, 6.5% NaCl +, PYR +',
+    commonInfections: ['UTI', 'Bacteremia', 'Endocarditis', 'Intra-abdominal infections', 'Wound infections'],
+    typicalResistance: 'Intrinsically resistant to cephalosporins, clindamycin, TMP-SMX. VRE (vancomycin-resistant) strains increasingly common, especially E. faecium. Treat with linezolid or daptomycin.'
+  },
+  group_d_strep: {
+    name: 'Group D Streptococcus (S. bovis/gallolyticus)',
+    gram: 'positive', morphology: 'cocci',
+    clinicalInfo: 'S. gallolyticus (formerly S. bovis) bacteremia strongly associated with colorectal carcinoma — colonoscopy recommended.',
+    keyTests: 'Gram+ cocci, Catalase -, Gamma-haemolytic, Bile esculin +, 6.5% NaCl -',
+    commonInfections: ['Bacteremia', 'Endocarditis', 'Associated with colon cancer'],
+    typicalResistance: 'Usually susceptible to penicillin. More susceptible than Enterococcus to standard antibiotics.'
+  },
+  bacillus_cereus: {
+    name: 'Bacillus cereus',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Aerobic spore-forming rod. Produces emetic and diarrhoeal toxins. Common cause of food poisoning (fried rice). Large colonies with haemolysis on blood agar.',
+    keyTests: 'Gram+ large rods, Spore-forming, Aerobic, Large haemolytic colonies, Non-motile on blood agar',
+    commonInfections: ['Food poisoning (emetic and diarrhoeal)', 'Endophthalmitis (trauma)', 'Bacteremia (immunocompromised)'],
+    typicalResistance: 'Resistant to beta-lactams (produces beta-lactamase). Susceptible to vancomycin, clindamycin, fluoroquinolones.'
+  },
+  bacillus_subtilis: {
+    name: 'Bacillus subtilis',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Ubiquitous environmental spore-forming organism. Generally non-pathogenic. Often a contaminant in blood cultures.',
+    keyTests: 'Gram+ rods, Spore-forming, Aerobic, Motile',
+    commonInfections: ['Rarely pathogenic', 'Occasional wound infections', 'Contaminant'],
+    typicalResistance: 'Variable susceptibility. Usually susceptible to vancomycin and carbapenems.'
+  },
+  c_perfringens: {
+    name: 'Clostridium perfringens',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Anaerobic spore-forming rod. Produces alpha-toxin (lecithinase) causing gas gangrene. Characteristic double zone of haemolysis on blood agar.',
+    keyTests: 'Gram+ large rods, Spore-forming, Anaerobic, Double zone haemolysis, Lecithinase +, Non-motile',
+    commonInfections: ['Gas gangrene (myonecrosis)', 'Food poisoning', 'Anaerobic cellulitis', 'Septic abortion'],
+    typicalResistance: 'Susceptible to penicillin (drug of choice). Clindamycin also effective. Resistant to aminoglycosides.'
+  },
+  c_difficile: {
+    name: 'Clostridioides difficile',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Anaerobic spore-forming rod. Produces toxin A (enterotoxin) and toxin B (cytotoxin). Leading cause of healthcare-associated diarrhoea. Associated with antibiotic use.',
+    keyTests: 'Gram+ rods, Spore-forming, Anaerobic, Toxin A/B detection (EIA/PCR)',
+    commonInfections: ['Antibiotic-associated diarrhoea', 'Pseudomembranous colitis', 'Toxic megacolon'],
+    typicalResistance: 'Treat with oral vancomycin or fidaxomicin (not IV vancomycin). Metronidazole for mild cases. Fecal microbiota transplant for recurrent disease.'
+  },
+  listeria: {
+    name: 'Listeria monocytogenes',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Small Gram-positive rod with tumbling motility at room temperature. Intracellular pathogen. Risk groups: pregnant women, neonates, elderly, immunocompromised.',
+    keyTests: 'Gram+ short rods, Non-spore-forming, Catalase +, Tumbling motility (25 C), Beta-haemolytic',
+    commonInfections: ['Meningitis (neonates, elderly)', 'Bacteremia', 'Neonatal sepsis', 'Gastroenteritis'],
+    typicalResistance: 'Susceptible to ampicillin (drug of choice, often combined with gentamicin). Intrinsically resistant to cephalosporins. Susceptible to TMP-SMX.'
+  },
+  corynebacterium: {
+    name: 'Corynebacterium diphtheriae',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Club-shaped Gram-positive rod arranged in V/L formations (Chinese letter pattern). C. diphtheriae produces diphtheria toxin. Tellurite agar for isolation.',
+    keyTests: 'Gram+ club-shaped rods, Non-spore-forming, Catalase +, Metachromatic granules',
+    commonInfections: ['Diphtheria (pharyngeal/cutaneous)', 'Other species: UTI, device infections'],
+    typicalResistance: 'Susceptible to penicillin and erythromycin. Antitoxin required for diphtheria in addition to antibiotics.'
+  },
+  lactobacillus: {
+    name: 'Lactobacillus',
+    gram: 'positive', morphology: 'rods',
+    clinicalInfo: 'Normal flora of vagina, GI tract, and oral cavity. Generally non-pathogenic. Maintains acidic vaginal pH. Rare cause of endocarditis.',
+    keyTests: 'Gram+ rods, Non-spore-forming, Catalase -, Acid-tolerant',
+    commonInfections: ['Rarely pathogenic', 'Rare endocarditis', 'Bacteremia (immunocompromised)'],
+    typicalResistance: 'Intrinsically resistant to vancomycin (some species). Usually susceptible to penicillin and clindamycin.'
+  },
+  n_gonorrhoeae: {
+    name: 'Neisseria gonorrhoeae',
+    gram: 'negative', morphology: 'cocci',
+    clinicalInfo: 'Gram-negative diplococcus (kidney-bean shaped). Intracellular in PMNs. Grows on Thayer-Martin (chocolate agar with antibiotics). Ferments glucose only.',
+    keyTests: 'Gram- diplococci (intracellular), Oxidase +, Thayer-Martin growth, Glucose fermentation +, Maltose fermentation -',
+    commonInfections: ['Urethritis', 'Cervicitis', 'PID', 'Disseminated gonococcal infection', 'Septic arthritis', 'Ophthalmia neonatorum'],
+    typicalResistance: 'Increasing resistance globally. Dual therapy: ceftriaxone + azithromycin. Resistance to fluoroquinolones widespread. Emerging ceftriaxone resistance.'
+  },
+  n_meningitidis: {
+    name: 'Neisseria meningitidis',
+    gram: 'negative', morphology: 'cocci',
+    clinicalInfo: 'Gram-negative diplococcus with polysaccharide capsule. 5-10% of population are nasopharyngeal carriers. Can cause fulminant meningococcemia with purpura.',
+    keyTests: 'Gram- diplococci, Oxidase +, Thayer-Martin growth, Glucose +, Maltose + fermentation',
+    commonInfections: ['Bacterial meningitis', 'Meningococcemia', 'Waterhouse-Friderichsen syndrome'],
+    typicalResistance: 'Susceptible to penicillin and ceftriaxone. Ceftriaxone preferred empirically. Rifampin, ciprofloxacin, or ceftriaxone for prophylaxis of close contacts.'
+  },
+  e_coli: {
+    name: 'Escherichia coli',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Most common Gram-negative pathogen. Normal GI flora. Most common cause of UTI and Gram-negative bacteremia. Grows as pink colonies on MacConkey (lactose fermenter).',
+    keyTests: 'Gram- rods, Oxidase -, Lactose +, Indole +, Citrate -, MR +, VP -',
+    commonInfections: ['UTI', 'Bacteremia', 'Neonatal meningitis (K1 capsule)', 'Travellers diarrhoea (ETEC)', 'HUS (EHEC O157:H7)', 'Intra-abdominal infections'],
+    typicalResistance: 'Increasing ESBL production. Check for ESBL (ceftriaxone resistance). ESBL: treat with carbapenems. CRE (carbapenem-resistant) strains emerging.'
+  },
+  klebsiella: {
+    name: 'Klebsiella pneumoniae',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Mucoid (hypermucoviscous) colonies due to polysaccharide capsule. "Currant jelly" sputum. Common cause of nosocomial infections. Associated with alcoholism.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose +, Indole -, Citrate +, Urease +, Non-motile, Mucoid colonies',
+    commonInfections: ['Pneumonia (necrotizing)', 'UTI', 'Bacteremia', 'Liver abscess (hypervirulent strains)', 'Wound infections'],
+    typicalResistance: 'High rates of ESBL production. KPC (Klebsiella pneumoniae carbapenemase) — major resistance concern. Treat resistant strains with ceftazidime-avibactam or meropenem-vaborbactam.'
+  },
+  enterobacter: {
+    name: 'Enterobacter cloacae',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Nosocomial pathogen. Important: inducible AmpC beta-lactamase can emerge during treatment with 3rd-gen cephalosporins (derepression).',
+    keyTests: 'Gram- rods, Oxidase -, Lactose +, Indole -, Citrate +, Motile',
+    commonInfections: ['Nosocomial pneumonia', 'UTI', 'Bacteremia', 'Wound infections'],
+    typicalResistance: 'AVOID 3rd-gen cephalosporins (risk of AmpC derepression). Use cefepime or carbapenems. Check for ESBL co-production.'
+  },
+  salmonella: {
+    name: 'Salmonella enterica',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Non-lactose fermenter with H2S production. Typhoidal (S. Typhi) vs non-typhoidal species. Motile with peritrichous flagella.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose -, H2S + (TSI), Motile, Citrate +',
+    commonInfections: ['Gastroenteritis (non-typhoidal)', 'Typhoid/enteric fever (S. Typhi)', 'Bacteremia', 'Osteomyelitis (sickle cell)'],
+    typicalResistance: 'Most gastroenteritis self-limiting (antibiotics may prolong carriage). Invasive disease: ceftriaxone or fluoroquinolones. Watch for MDR strains.'
+  },
+  citrobacter: {
+    name: 'Citrobacter freundii',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Opportunistic pathogen with inducible AmpC beta-lactamase (similar to Enterobacter). H2S production can mimic Salmonella.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose -, H2S +, Non-motile/weakly motile, Citrate +',
+    commonInfections: ['UTI', 'Respiratory infections', 'Bacteremia', 'Neonatal meningitis'],
+    typicalResistance: 'Inducible AmpC — avoid 3rd-gen cephalosporins. Use cefepime or carbapenems for serious infections.'
+  },
+  proteus: {
+    name: 'Proteus mirabilis',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Characteristic swarming motility on agar. Urease-positive — splits urea to ammonia, raising urine pH and promoting struvite stone formation.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose -, H2S -, Urease +, Swarming motility, Indole - (P. mirabilis)',
+    commonInfections: ['UTI (complicated, catheter-associated)', 'Struvite kidney stones', 'Wound infections'],
+    typicalResistance: 'P. mirabilis usually susceptible to ampicillin and cephalosporins. Intrinsically resistant to nitrofurantoin and colistin.'
+  },
+  shigella: {
+    name: 'Shigella',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Non-motile, non-lactose-fermenting, H2S-negative. Causes bacillary dysentery. Very low infectious dose (10-100 organisms). Person-to-person spread.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose -, H2S -, Urease -, Non-motile',
+    commonInfections: ['Bacillary dysentery (bloody diarrhoea)', 'HUS (S. dysenteriae type 1)'],
+    typicalResistance: 'Increasing MDR. Azithromycin or fluoroquinolones for moderate-severe disease. Ceftriaxone for severe cases. TMP-SMX resistance common.'
+  },
+  serratia: {
+    name: 'Serratia marcescens',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'May produce red pigment (prodigiosin). Nosocomial pathogen. Has been associated with contaminated IV fluids and respiratory equipment.',
+    keyTests: 'Gram- rods, Oxidase -, Lactose -, H2S -, Urease -, Motile, DNase +',
+    commonInfections: ['Nosocomial pneumonia', 'UTI', 'Bacteremia', 'Wound infections', 'Endocarditis (IV drug users)'],
+    typicalResistance: 'Intrinsic AmpC beta-lactamase. Resistant to ampicillin and 1st/2nd-gen cephalosporins. Use cefepime, carbapenems, or fluoroquinolones.'
+  },
+  pseudomonas: {
+    name: 'Pseudomonas aeruginosa',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Obligate aerobe, non-fermenter. Produces pyocyanin (blue-green pigment) and pyoverdin. Grape-like odor. Biofilm formation. Major cause of nosocomial infections and CF lung infections.',
+    keyTests: 'Gram- rods, Oxidase +, Non-fermenter, Blue-green pigment, Growth at 42 C, Grape-like odor',
+    commonInfections: ['Nosocomial pneumonia (VAP)', 'UTI', 'Burn wound infections', 'CF lung infections', 'Otitis externa', 'Keratitis (contact lens)'],
+    typicalResistance: 'Intrinsically resistant to many antibiotics. Anti-pseudomonal agents: piperacillin-tazobactam, ceftazidime, cefepime, carbapenems (not ertapenem), aminoglycosides, ciprofloxacin. MDR/XDR strains increasing.'
+  },
+  acinetobacter: {
+    name: 'Acinetobacter baumannii',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Coccobacillary morphology. Non-fermenter. Survives on dry surfaces for weeks. Major nosocomial pathogen, especially in ICU and military settings.',
+    keyTests: 'Gram- coccobacilli, Oxidase -, Non-fermenter, Non-motile, No pigment',
+    commonInfections: ['Nosocomial pneumonia (VAP)', 'Bacteremia', 'Wound infections', 'UTI', 'Meningitis (post-neurosurgery)'],
+    typicalResistance: 'Often extensively drug-resistant (XDR). Carbapenems often last resort but resistance increasing. Colistin/polymyxins for XDR strains. Sulbactam has intrinsic activity.'
+  },
+  stenotrophomonas: {
+    name: 'Stenotrophomonas maltophilia',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Non-fermenter. Intrinsically resistant to carbapenems. Nosocomial pathogen in immunocompromised patients, especially those on broad-spectrum antibiotics.',
+    keyTests: 'Gram- rods, Oxidase -, Non-fermenter, No pigment, No growth at 42 C',
+    commonInfections: ['Nosocomial pneumonia', 'Bacteremia', 'Catheter-related infections'],
+    typicalResistance: 'Intrinsically resistant to carbapenems (L1 and L2 beta-lactamases). TMP-SMX is drug of choice. Alternatives: levofloxacin, minocycline, ceftazidime-avibactam.'
+  },
+  burkholderia: {
+    name: 'Burkholderia cepacia complex',
+    gram: 'negative', morphology: 'rods',
+    clinicalInfo: 'Non-fermenter. Important pathogen in cystic fibrosis patients. "Cepacia syndrome" — rapid pulmonary deterioration. Patient-to-patient transmission.',
+    keyTests: 'Gram- rods, Oxidase +, Non-fermenter, No pigment, Selective media (BCSA)',
+    commonInfections: ['CF lung infections', 'Nosocomial infections', 'Bacteremia'],
+    typicalResistance: 'Intrinsically resistant to aminoglycosides and polymyxins. TMP-SMX, meropenem, or ceftazidime may be active. Susceptibility testing essential.'
+  }
+};
+
+// ════════════════════════════════════════════════════════
+// Decision tree
+// Each node: { test, desc, pos (node|string), neg (node|string), options? }
+// Leaf string = key into ORGANISMS
+// ════════════════════════════════════════════════════════
+const TREE = {
+  test: 'Gram Stain',
+  desc: 'Crystal violet + iodine fixation followed by decolorization. Purple = positive, pink/red = negative.',
+  posLabel: 'Gram-positive',
+  negLabel: 'Gram-negative',
+  pos: {
+    test: 'Morphology',
+    desc: 'Examine cell shape under microscopy.',
+    posLabel: 'Cocci',
+    negLabel: 'Rods (bacilli)',
+    pos: { // GP cocci
+      test: 'Catalase',
+      desc: 'Add 3% H2O2 to colony. Bubbles = positive (enzyme breaks down peroxide).',
+      pos: { // catalase+
+        test: 'Coagulase',
+        desc: 'Slide or tube coagulase test with rabbit plasma. Clumping/clot = positive.',
+        pos: 's_aureus',
+        neg: {
+          test: 'Novobiocin Sensitivity',
+          desc: 'Place novobiocin disk on inoculated plate. Zone of inhibition >= 16 mm = sensitive.',
+          pos: 's_epidermidis',
+          neg: 's_saprophyticus'
+        }
+      },
+      neg: { // catalase-
+        test: 'Haemolysis (Blood Agar)',
+        desc: 'Observe haemolysis pattern on sheep blood agar. Alpha = green/partial, Beta = clear/complete, Gamma = none.',
+        posLabel: 'Alpha',
+        negLabel: 'Beta',
+        skipLabel: 'Gamma (none)',
+        pos: { // alpha
+          test: 'Optochin Sensitivity',
+          desc: 'Optochin (ethylhydrocupreine) disk test. Zone >= 14 mm = sensitive.',
+          pos: 's_pneumoniae',
+          neg: 'viridans_strep'
+        },
+        neg: { // beta
+          test: 'Bacitracin Sensitivity',
+          desc: 'Bacitracin disk (0.04 U). Any zone of inhibition = sensitive.',
+          pos: 's_pyogenes',
+          neg: {
+            test: 'CAMP Test',
+            desc: 'Streak test organism perpendicular to S. aureus beta-lysin streak. Arrowhead-shaped enhanced haemolysis = positive.',
+            pos: 's_agalactiae',
+            neg: 'group_cg_strep'
+          }
+        },
+        skip: { // gamma
+          test: 'Bile Esculin',
+          desc: 'Bile esculin agar. Blackening of medium = positive (organism hydrolyses esculin in presence of bile).',
+          pos: {
+            test: '6.5% NaCl Tolerance',
+            desc: 'Growth in 6.5% NaCl broth after 24-48 hours. Turbidity = positive.',
+            pos: 'enterococcus',
+            neg: 'group_d_strep'
+          },
+          neg: 'viridans_strep'
+        }
+      }
+    },
+    neg: { // GP rods
+      test: 'Spore-Forming',
+      desc: 'Malachite green stain or observe endospores microscopically.',
+      pos: { // spore+
+        test: 'Aerobic Growth',
+        desc: 'Can the organism grow in aerobic conditions?',
+        pos: { // aerobic spore-former
+          test: 'Haemolysis + Colony Size',
+          desc: 'Large colonies with haemolysis suggest B. cereus. Motile organisms suggest B. subtilis.',
+          posLabel: 'Large + haemolytic',
+          negLabel: 'Motile / other',
+          pos: 'bacillus_cereus',
+          neg: 'bacillus_subtilis'
+        },
+        neg: { // anaerobic spore-former
+          test: 'Double Zone Haemolysis',
+          desc: 'C. perfringens shows characteristic double zone of haemolysis (inner complete, outer partial) on blood agar.',
+          posLabel: 'Yes (double zone)',
+          negLabel: 'No / Toxin assay needed',
+          pos: 'c_perfringens',
+          neg: 'c_difficile'
+        }
+      },
+      neg: { // non-spore GP rods
+        test: 'Catalase',
+        desc: 'Add 3% H2O2 to colony. Bubbles = positive.',
+        pos: {
+          test: 'Tumbling Motility (25 C)',
+          desc: 'Wet mount at room temperature. Characteristic tumbling/somersaulting motility = Listeria.',
+          posLabel: 'Tumbling motility',
+          negLabel: 'No / club-shaped (V/L)',
+          pos: 'listeria',
+          neg: 'corynebacterium'
+        },
+        neg: 'lactobacillus'
+      }
+    }
+  },
+  neg: { // Gram-negative
+    test: 'Morphology',
+    desc: 'Examine cell shape under microscopy.',
+    posLabel: 'Cocci (diplococci)',
+    negLabel: 'Rods (bacilli)',
+    pos: { // GN cocci
+      test: 'Oxidase',
+      desc: 'Oxidase reagent (tetramethyl-p-phenylenediamine). Purple color within 10 seconds = positive.',
+      pos: {
+        test: 'Growth on Thayer-Martin',
+        desc: 'Thayer-Martin selective medium (chocolate agar with vancomycin, colistin, nystatin). Selective for pathogenic Neisseria.',
+        pos: {
+          test: 'Maltose Fermentation',
+          desc: 'CTA (cystine trypticase agar) sugars. N. meningitidis ferments both glucose and maltose; N. gonorrhoeae ferments glucose only.',
+          posLabel: 'Glucose + Maltose',
+          negLabel: 'Glucose only',
+          pos: 'n_meningitidis',
+          neg: 'n_gonorrhoeae'
+        },
+        neg: 'n_meningitidis' // non-TM still likely Neisseria sp
+      },
+      neg: { test: 'Oxidase', desc: 'GN cocci that are oxidase-negative are uncommon. Consider Moraxella or re-evaluate.', pos: 'acinetobacter', neg: 'acinetobacter' }
+    },
+    neg: { // GN rods
+      test: 'Oxidase',
+      desc: 'Oxidase reagent. Purple = positive. Differentiates Enterobacteriaceae (neg) from non-fermenters (pos).',
+      pos: { // oxidase+ non-fermenter
+        test: 'Green Pigment (Pyocyanin)',
+        desc: 'Blue-green pigment production on Mueller-Hinton or cetrimide agar. Characteristic of Pseudomonas aeruginosa.',
+        posLabel: 'Green/blue-green pigment',
+        negLabel: 'No pigment',
+        pos: 'pseudomonas',
+        neg: {
+          test: 'Growth at 42 C',
+          desc: 'Incubate at 42 C. P. aeruginosa and some others grow at this temperature.',
+          pos: 'pseudomonas',
+          neg: {
+            test: 'Morphology Detail',
+            desc: 'Coccobacilli suggest Acinetobacter. Oxidase-variable rods consider Stenotrophomonas or Burkholderia.',
+            posLabel: 'Coccobacilli',
+            negLabel: 'Rods',
+            pos: 'acinetobacter',
+            neg: {
+              test: 'Susceptible to Carbapenems',
+              desc: 'Stenotrophomonas is intrinsically resistant to carbapenems. Burkholderia may be susceptible.',
+              posLabel: 'Susceptible',
+              negLabel: 'Resistant',
+              pos: 'burkholderia',
+              neg: 'stenotrophomonas'
+            }
+          }
+        }
+      },
+      neg: { // oxidase- Enterobacteriaceae
+        test: 'Lactose Fermentation',
+        desc: 'MacConkey agar: pink/red colonies = lactose fermenter. Colorless = non-fermenter.',
+        posLabel: 'Lactose + (pink)',
+        negLabel: 'Lactose - (colorless)',
+        pos: { // lactose+
+          test: 'Indole',
+          desc: 'Inoculate tryptophan broth, add Kovacs reagent. Red ring = positive (tryptophanase produced).',
+          pos: 'e_coli',
+          neg: {
+            test: 'Citrate (Simmons)',
+            desc: 'Simmons citrate agar. Blue color change = positive (citrate used as sole carbon source).',
+            pos: {
+              test: 'Mucoid Colonies / Motility',
+              desc: 'Klebsiella: mucoid, non-motile, string test +. Enterobacter: non-mucoid, motile.',
+              posLabel: 'Mucoid + non-motile',
+              negLabel: 'Non-mucoid + motile',
+              pos: 'klebsiella',
+              neg: 'enterobacter'
+            },
+            neg: 'e_coli' // lac+, indole-, citrate- could be atypical E. coli or others
+          }
+        },
+        neg: { // lactose-
+          test: 'H2S Production (TSI)',
+          desc: 'Triple sugar iron agar. Blackening = H2S positive.',
+          pos: { // H2S+
+            test: 'Motility',
+            desc: 'Motility agar (SIM). Diffuse growth away from stab line = motile.',
+            pos: 'salmonella',
+            neg: 'citrobacter'
+          },
+          neg: { // H2S-
+            test: 'Urease',
+            desc: 'Christensen urea agar. Pink color change = positive (urea hydrolysed to ammonia).',
+            pos: 'proteus',
+            neg: {
+              test: 'Motility',
+              desc: 'Motility agar. Diffuse growth = motile. Non-motile is characteristic of Shigella.',
+              pos: {
+                test: 'Pigment / DNase',
+                desc: 'Red pigment (prodigiosin) or DNase positive suggests Serratia. Otherwise consider other motile non-lac fermenters.',
+                posLabel: 'Pigment + or DNase +',
+                negLabel: 'Neither',
+                pos: 'serratia',
+                neg: 'salmonella'
+              },
+              neg: 'shigella'
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+// ════════════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════════════
+let currentPath = []; // [{node, answer:'pos'|'neg'|'skip', testName}]
+let currentNode = TREE;
+
+function getAllOrganismKeys(node) {
+  if (!node) return [];
+  if (typeof node === 'string') return [node];
+  let keys = [];
+  if (node.pos) keys = keys.concat(getAllOrganismKeys(node.pos));
+  if (node.neg) keys = keys.concat(getAllOrganismKeys(node.neg));
+  if (node.skip) keys = keys.concat(getAllOrganismKeys(node.skip));
+  return [...new Set(keys)];
+}
+
+function render() {
+  renderPath();
+  renderQuestion();
+  renderCandidates();
+  renderVisualPath();
+  renderFinalResult();
+  document.getElementById('btnBack').disabled = currentPath.length === 0;
+}
+
+function renderPath() {
+  const el = document.getElementById('testPath');
+  if (currentPath.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">No tests performed yet. Start with the Gram stain below.</div>';
+    return;
+  }
+  el.innerHTML = currentPath.map(step => {
+    const cls = step.answer === 'neg' ? 'neg' : 'pos';
+    const lbl = step.answer === 'skip' ? step.node.skipLabel || 'Skipped' :
+                step.answer === 'pos' ? (step.node.posLabel || 'Positive') :
+                (step.node.negLabel || 'Negative');
+    const resultCls = step.answer === 'neg' ? 'result-neg' : 'result-pos';
+    return `<div class="path-step ${cls}">
+      <span class="step-test">${step.node.test}</span>
+      <span class="step-result ${resultCls}">${lbl}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderQuestion() {
+  const el = document.getElementById('questionArea');
+  if (typeof currentNode === 'string') {
+    el.innerHTML = '<div style="font-size:13px;color:var(--good);font-weight:700;padding:8px 0;">Identification complete.</div>';
+    return;
+  }
+  const posLabel = currentNode.posLabel || 'Positive';
+  const negLabel = currentNode.negLabel || 'Negative';
+  const hasSkip = !!currentNode.skip;
+  const skipLabel = currentNode.skipLabel || 'Gamma / Neither';
+
+  el.innerHTML = `
+    <div class="current-question">
+      <div class="q-label">Next Test</div>
+      <div class="q-test">${currentNode.test}</div>
+      <div class="q-desc">${currentNode.desc}</div>
+      <div class="answer-btns">
+        <button class="btn-pos" onclick="answer('pos')">${posLabel}</button>
+        <button class="btn-neg" onclick="answer('neg')">${negLabel}</button>
+        ${hasSkip ? `<button class="btn-skip" onclick="answer('skip')">${skipLabel}</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderCandidates() {
+  const keys = getAllOrganismKeys(currentNode);
+  document.getElementById('candidateCount').textContent = keys.length;
+  const el = document.getElementById('candidateList');
+  if (keys.length > 12) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);">Answer more tests to narrow down the candidates (${keys.length} remaining).</div>`;
+    return;
+  }
+  el.innerHTML = keys.map(k => {
+    const org = ORGANISMS[k];
+    if (!org) return '';
+    const dotCls = org.gram === 'positive' ? 'gram-pos-dot' : 'gram-neg-dot';
+    return `<div class="candidate-chip"><span class="gram-dot ${dotCls}"></span>${org.name}</div>`;
+  }).join('');
+}
+
+function renderVisualPath() {
+  const el = document.getElementById('visualPath');
+  if (currentPath.length === 0 && typeof currentNode !== 'string') {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);">Path will appear here as you answer tests.</div>';
+    return;
+  }
+
+  let html = '';
+  currentPath.forEach((step, i) => {
+    const cls = step.answer === 'neg' ? 'neg' : 'pos';
+    const lbl = step.answer === 'skip' ? (step.node.skipLabel || 'Skip') :
+                step.answer === 'pos' ? (step.node.posLabel || 'Positive') :
+                (step.node.negLabel || 'Negative');
+    const textCls = step.answer === 'neg' ? 'neg-text' : 'pos-text';
+    const isLast = i === currentPath.length - 1 && typeof currentNode === 'string';
+
+    html += `<div class="vp-step">
+      <div class="vp-dot-col">
+        <div class="vp-dot ${cls}"></div>
+        ${(!isLast || typeof currentNode !== 'string') ? '<div class="vp-line"></div>' : ''}
+      </div>
+      <div class="vp-content">
+        <div class="vp-test">${step.node.test}</div>
+        <div class="vp-result"><span class="${textCls}">${lbl}</span></div>
+      </div>
+    </div>`;
+  });
+
+  // Current node (if not final)
+  if (typeof currentNode !== 'string') {
+    html += `<div class="vp-step">
+      <div class="vp-dot-col">
+        <div class="vp-dot current"></div>
+      </div>
+      <div class="vp-content">
+        <div class="vp-test" style="color:#ea580c;">${currentNode.test}</div>
+        <div class="vp-result" style="color:var(--muted);font-style:italic;">Awaiting result...</div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function renderFinalResult() {
+  const el = document.getElementById('finalResult');
+  if (typeof currentNode !== 'string') {
+    el.innerHTML = '';
+    return;
+  }
+  const org = ORGANISMS[currentNode];
+  if (!org) {
+    el.innerHTML = '<div class="card">Unknown organism.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="id-result-card">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:4px;">Identified Organism</div>
+      <div class="org-name">${org.name}</div>
+      <div class="org-key-tests">${org.keyTests}</div>
+      <div class="id-detail">
+        <strong>Clinical significance</strong><br>
+        ${org.clinicalInfo}
+      </div>
+      <div class="id-detail" style="margin-top:8px;">
+        <strong>Common infections</strong>
+        <ul>${org.commonInfections.map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div class="id-detail" style="margin-top:8px;">
+        <strong>Typical susceptibility / resistance</strong><br>
+        ${org.typicalResistance}
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// Actions
+// ════════════════════════════════════════════════════════
+function answer(type) {
+  if (typeof currentNode === 'string') return;
+  const step = { node: currentNode, answer: type };
+  currentPath.push(step);
+
+  if (type === 'pos') currentNode = currentNode.pos;
+  else if (type === 'neg') currentNode = currentNode.neg;
+  else if (type === 'skip') currentNode = currentNode.skip || currentNode.neg;
+
+  render();
+}
+
+function goBack() {
+  if (currentPath.length === 0) return;
+  const last = currentPath.pop();
+  currentNode = last.node;
+  render();
+}
+
+function resetAll() {
+  currentPath = [];
+  currentNode = TREE;
+  render();
+}
+
+// ════════════════════════════════════════════════════════
+// Save / Load
+// ════════════════════════════════════════════════════════
+window.getSaveData = function() {
+  return {
+    answers: currentPath.map(s => s.answer)
+  };
+};
+
+window.loadSaveData = function(data) {
+  if (!data || !data.answers) return;
+  resetAll();
+  for (const ans of data.answers) {
+    if (typeof currentNode === 'string') break;
+    answer(ans);
+  }
+};
+
+// Init
+render();
+</script>
+</body>
+</html>

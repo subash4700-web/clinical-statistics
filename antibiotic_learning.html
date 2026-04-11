@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Antibiotic Susceptibility Agreement</title>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    .page-header {
+      background: linear-gradient(135deg, #134e4a 0%, #0f766e 60%, #0d9488 100%);
+      color: white; padding: 20px 28px 18px; flex-shrink: 0;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p { margin: 0; font-size: 13px; opacity: .78; }
+
+    .shell { display: flex; flex: 1; min-height: 0; }
+
+    /* LEFT */
+    .left-panel {
+      width: 300px; min-width: 300px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
+
+    .ctrl-group { margin-bottom: 18px; }
+    .ctrl-group label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #0d9488; }
+    .ctrl-val { font-size: 13px; font-weight: 700; color: #0d9488; min-width: 44px; text-align: right; }
+
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 16px 0 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+    .stat-card .sc-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .stat-card .sc-val { font-size: 18px; font-weight: 900; color: #111827; }
+    .stat-card .sc-pct { font-size: 11px; color: #6b7280; }
+
+    .verdict-badge {
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      border-radius: 14px;
+      padding: 14px; margin: 12px 0;
+    }
+    .verdict-badge.pass { background: #f0fdf4; border: 2px solid #86efac; }
+    .verdict-badge.fail { background: #fef2f2; border: 2px solid #fca5a5; }
+    .verdict-badge .verdict-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .verdict-badge.pass .verdict-label { color: #166534; }
+    .verdict-badge.fail .verdict-label { color: #991b1b; }
+    .verdict-badge .verdict-val { font-size: 36px; font-weight: 900; line-height: 1.1; }
+    .verdict-badge.pass .verdict-val { color: #16a34a; }
+    .verdict-badge.fail .verdict-val { color: #dc2626; }
+    .verdict-badge .verdict-desc { font-size: 12px; margin-top: 2px; text-align: center; }
+    .verdict-badge.pass .verdict-desc { color: #14532d; }
+    .verdict-badge.fail .verdict-desc { color: #7f1d1d; }
+
+    .insight-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; color: #134e4a; margin-top: 10px; }
+    .insight-box b { color: #0f766e; }
+
+    /* RIGHT */
+    .right-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; overflow: hidden; }
+
+    .chart-cell { padding: 14px 16px 10px; min-height: 0; display: flex; flex-direction: column; }
+    .chart-cell:nth-child(2) { border-left: 1px solid #e5e7eb; }
+    .chart-cell:nth-child(3) { border-top: 1px solid #e5e7eb; background: white; }
+    .chart-cell:nth-child(4) { border-top: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; background: white; }
+
+    .chart-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .chart-wrap { position: relative; flex: 1; min-height: 0; }
+
+    /* HEATMAP grid */
+    .heatmap-container { width: 100%; height: 100%; display: flex; flex-direction: column; }
+    .heatmap-header { display: grid; grid-template-columns: 60px 1fr 1fr 1fr; gap: 2px; margin-bottom: 2px; }
+    .heatmap-header-label { font-size: 10px; font-weight: 800; color: #6b7280; text-align: center; padding: 4px 2px; text-transform: uppercase; }
+    .heatmap-header-top { text-align: center; font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 4px; }
+    .heatmap-row { display: grid; grid-template-columns: 60px 1fr 1fr 1fr; gap: 2px; margin-bottom: 2px; flex: 1; }
+    .heatmap-row-label { font-size: 10px; font-weight: 800; color: #6b7280; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+    .heatmap-cell { border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: white; min-height: 50px; }
+    .heatmap-cell .cell-type { font-size: 9px; font-weight: 700; opacity: .85; margin-top: 2px; text-transform: uppercase; }
+    .hm-agree { background: #3b82f6; }
+    .hm-minor { background: #eab308; color: #422006; }
+    .hm-major { background: #f97316; }
+    .hm-vmajor { background: #dc2626; }
+    .heatmap-side-label { writing-mode: vertical-lr; text-orientation: mixed; transform: rotate(180deg); font-size: 11px; font-weight: 800; color: #374151; display: flex; align-items: center; justify-content: center; }
+
+    /* EXERCISES */
+    .exercises { background: white; border-bottom: 1px solid #e5e7eb; padding: 14px 20px; flex-shrink: 0; overflow-y: auto; max-height: 50vh; }
+    .ex-toggle { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 800; color: #344054; padding: 0 0 10px; width: 100%; }
+    .ex-toggle .ex-arrow { font-size: 11px; color: #9ca3af; transition: transform .2s; }
+    .ex-toggle.open .ex-arrow { transform: rotate(90deg); }
+    .ex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .ex-card { background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; position: relative; display: flex; flex-direction: column; }
+    .ex-card:hover { border-color: #5eead4; box-shadow: 0 2px 10px rgba(13,148,136,.1); }
+    .ex-card.active { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .ex-num { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 5px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #134e4a; margin-bottom: 6px; line-height: 1.3; }
+    .ex-obj { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 10px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .ex-param { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn { width: 100%; padding: 7px; background: #0d9488; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .ex-btn:hover { opacity: .88; }
+    .ex-instructions { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.7; color: #134e4a; display: none; }
+    .ex-instructions.visible { display: block; }
+    .ex-instructions b { color: #0f766e; }
+    .ex-instructions ol { margin: 8px 0 0 16px; padding: 0; }
+    .ex-instructions li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Understanding Antibiotic Susceptibility Agreement <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;">BETA</span></h1>
+  <p>Explore how error rates change as you adjust the 3&times;3 agreement matrix. Understand VME, ME, and minor errors in real time.</p>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+    <span>&#128203; Guided Exercises</span>
+    <span class="ex-arrow">&#9654;</span>
+  </button>
+  <div id="exPanel">
+    <div class="ex-grid">
+
+      <div class="ex-card" id="exCard0" onclick="loadExercise(0)">
+        <div class="ex-num">Exercise 1</div>
+        <div class="ex-title">Perfect agreement</div>
+        <div class="ex-obj">Understand what a high-performing agreement looks like — near-perfect CA, no VME or ME.</div>
+        <div class="ex-params">
+          <span class="ex-param">N = 100</span>
+          <span class="ex-param">R = 40%</span>
+          <span class="ex-param">CA = 98%</span>
+          <span class="ex-param">VME = 0%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+        <div class="ex-num">Exercise 2</div>
+        <div class="ex-title">VME exceeds limit</div>
+        <div class="ex-obj">See what happens when the very major error rate fails the 3% criterion.</div>
+        <div class="ex-params">
+          <span class="ex-param">N = 100</span>
+          <span class="ex-param">VME = 5%</span>
+          <span class="ex-param">ME = 1%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+        <div class="ex-num">Exercise 3</div>
+        <div class="ex-title">Few resistant isolates</div>
+        <div class="ex-obj">Explore how a small number of R isolates makes VME% unstable — denominator effect.</div>
+        <div class="ex-params">
+          <span class="ex-param">R = 10%</span>
+          <span class="ex-param">I = 5%</span>
+          <span class="ex-param">VME = 10%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+        <div class="ex-num">Exercise 4</div>
+        <div class="ex-title">High minor errors</div>
+        <div class="ex-obj">See how accumulating minor errors drags down overall category agreement below 90%.</div>
+        <div class="ex-params">
+          <span class="ex-param">I = 15%</span>
+          <span class="ex-param">CA = 85%</span>
+          <span class="ex-param">VME = 1%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+        <div class="ex-num">Exercise 5</div>
+        <div class="ex-title">ME dominates</div>
+        <div class="ex-obj">Explore major errors — susceptible organisms reported as resistant, denying effective therapy.</div>
+        <div class="ex-params">
+          <span class="ex-param">ME = 6%</span>
+          <span class="ex-param">VME = 0%</span>
+          <span class="ex-param">CA = 88%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+    </div>
+    <div class="ex-instructions" id="exInstructions"></div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="ctrl-group">
+      <label>Total Isolates (N)</label>
+      <div class="ctrl-row">
+        <input type="range" id="nSlider" min="50" max="300" step="1" value="100" oninput="update()">
+        <span class="ctrl-val" id="nVal">100</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Reference-R proportion (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="rPropSlider" min="10" max="60" step="1" value="40" oninput="update()">
+        <span class="ctrl-val" id="rPropVal">40%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Reference-I proportion (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="iPropSlider" min="5" max="30" step="1" value="10" oninput="update()">
+        <span class="ctrl-val" id="iPropVal">10%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Category Agreement (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="caSlider" min="70" max="100" step="1" value="92" oninput="update()">
+        <span class="ctrl-val" id="caVal">92%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>VME Rate (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="vmeSlider" min="0" max="15" step="0.5" value="2" oninput="update()">
+        <span class="ctrl-val" id="vmeVal">2.0%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>ME Rate (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="meSlider" min="0" max="15" step="0.5" value="3" oninput="update()">
+        <span class="ctrl-val" id="meVal">3.0%</span>
+      </div>
+    </div>
+
+    <div class="section-title">Verdict</div>
+    <div class="verdict-badge pass" id="verdictBadge">
+      <div class="verdict-label">EUCAST/CLSI Acceptance</div>
+      <div class="verdict-val" id="verdictVal">PASS</div>
+      <div class="verdict-desc" id="verdictDesc">All criteria met</div>
+    </div>
+
+    <div class="section-title">Error Rates</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-label">Category Agreement</div>
+        <div class="sc-val" id="caStatVal">--</div>
+        <div class="sc-pct">Limit: &ge; 90%</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">VME Rate</div>
+        <div class="sc-val" id="vmeStatVal">--</div>
+        <div class="sc-pct">Limit: &le; 3%</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">ME Rate</div>
+        <div class="sc-val" id="meStatVal">--</div>
+        <div class="sc-pct">Limit: &le; 3%</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Minor Error Rate</div>
+        <div class="sc-val" id="meMinorStatVal">--</div>
+        <div class="sc-pct">mE / Total N</div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insightBox">Adjust the sliders to explore antibiotic susceptibility agreement.</div>
+  </div>
+
+  <!-- RIGHT: 4 charts -->
+  <div class="right-panel">
+    <!-- 3x3 Heatmap -->
+    <div class="chart-cell">
+      <div class="chart-label">3&times;3 Agreement Heatmap</div>
+      <div class="chart-wrap" id="heatmapWrap"></div>
+    </div>
+    <!-- Error Rate Bar Chart -->
+    <div class="chart-cell">
+      <div class="chart-label">Error Rates vs Acceptance Limits</div>
+      <div class="chart-wrap"><canvas id="errorBarChart"></canvas></div>
+    </div>
+    <!-- VME vs R isolates -->
+    <div class="chart-cell">
+      <div class="chart-label">VME Rate vs Number of R Isolates</div>
+      <div class="chart-wrap"><canvas id="vmeRChart"></canvas></div>
+    </div>
+    <!-- Agreement Breakdown -->
+    <div class="chart-cell">
+      <div class="chart-label">Agreement Breakdown</div>
+      <div class="chart-wrap"><canvas id="breakdownChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const exercises = [
+  {
+    title: 'Perfect agreement',
+    N: 100, rProp: 40, iProp: 10, ca: 98, vme: 0, me: 0,
+    obj: 'Understand what a high-performing agreement looks like \u2014 near-perfect CA, no VME or ME.',
+    steps: [
+      'All sliders are set to near-perfect values. Note the heatmap: almost all counts are on the diagonal.',
+      'The CA is 98% \u2014 well above the 90% threshold. VME and ME are both 0%.',
+      'Look at the Error Rate chart \u2014 all bars are within limits.',
+      'Try reducing CA slightly. How many errors appear before you fail?'
+    ],
+    insight: 'Perfect or near-perfect agreement is rare but possible with well-validated systems using the same breakpoint table.'
+  },
+  {
+    title: 'VME exceeds limit',
+    N: 100, rProp: 40, iProp: 10, ca: 90, vme: 5, me: 1,
+    obj: 'See what happens when the very major error rate fails the 3% criterion.',
+    steps: [
+      'VME is set to 5% \u2014 above the 3% limit. The verdict shows FAIL.',
+      'Look at the heatmap: red cells (VME) appear where Reference-R is reported as S.',
+      'In the Error Rate chart, the VME bar exceeds its limit line.',
+      'Try reducing VME to 3%. The verdict flips to PASS.'
+    ],
+    insight: 'Even a single VME can be clinically catastrophic \u2014 a resistant organism reported as susceptible may lead to treatment failure.'
+  },
+  {
+    title: 'Few resistant isolates',
+    N: 100, rProp: 10, iProp: 5, ca: 94, vme: 10, me: 1,
+    obj: 'Explore how a small number of R isolates makes VME% unstable \u2014 denominator effect.',
+    steps: [
+      'With only 10% R (10 isolates), a VME rate of 10% means just 1 misclassified isolate.',
+      'Look at the VME vs R Isolates chart \u2014 the curve is steep with small denominators.',
+      'Increase R proportion to 40%. Now 10% VME would mean 4 isolates \u2014 but the rate is more stable.',
+      'This is why CLSI recommends \u2265 50 R isolates for reliable VME estimation.'
+    ],
+    insight: 'With only 10 R isolates, 1 VME = 10% rate. The denominator matters \u2014 CLSI recommends \u2265 50 R isolates for reliable VME estimation.'
+  },
+  {
+    title: 'High minor errors',
+    N: 100, rProp: 40, iProp: 15, ca: 85, vme: 1, me: 1,
+    obj: 'See how accumulating minor errors drags down overall category agreement below 90%.',
+    steps: [
+      'CA is 85% \u2014 below the 90% acceptance limit. The verdict shows FAIL.',
+      'VME and ME are both low (1%), so the problem is minor errors.',
+      'With 15% I isolates, there are more opportunities for I\u2192S or I\u2192R misclassifications.',
+      'Look at the Breakdown chart \u2014 minor errors take a large share.'
+    ],
+    insight: 'Minor errors accumulate when the I category is common. While individually less serious, they reduce overall category agreement.'
+  },
+  {
+    title: 'ME dominates',
+    N: 100, rProp: 40, iProp: 10, ca: 88, vme: 0, me: 6,
+    obj: 'Explore major errors \u2014 susceptible organisms reported as resistant, denying effective therapy.',
+    steps: [
+      'ME is set to 6% \u2014 double the 3% limit. The verdict shows FAIL.',
+      'In the heatmap, orange cells (ME) appear where Reference-S is reported as R.',
+      'CA is also dragged below 90% by the accumulating major errors.',
+      'Major errors mean patients are denied effective antibiotics \u2014 different clinical impact from VME but still significant.'
+    ],
+    insight: 'Major errors mean susceptible organisms reported as resistant \u2014 patients denied effective first-line therapy. Different clinical impact from VME but still significant.'
+  },
+];
+
+let errorBarChart, vmeRChart, breakdownChart;
+
+function computeMatrix() {
+  const N      = parseInt(document.getElementById('nSlider').value);
+  const rProp  = parseInt(document.getElementById('rPropSlider').value);
+  const iProp  = parseInt(document.getElementById('iPropSlider').value);
+  const caTarget = parseInt(document.getElementById('caSlider').value);
+  const vmePct = parseFloat(document.getElementById('vmeSlider').value);
+  const mePct  = parseFloat(document.getElementById('meSlider').value);
+
+  // Reference counts
+  const refR = Math.round(N * rProp / 100);
+  const refI = Math.round(N * iProp / 100);
+  const refS = N - refR - refI;
+
+  // Error counts
+  // VME: Reference R reported as S (denominator = refR)
+  const vmeCount = Math.round(refR * vmePct / 100);
+  // ME: Reference S reported as R (denominator = refS)
+  const meCount = Math.round(refS * mePct / 100);
+
+  // Total disagreements from CA
+  const totalDisagree = Math.round(N * (100 - caTarget) / 100);
+
+  // Minor errors = total disagree - VME - ME
+  let minorCount = Math.max(0, totalDisagree - vmeCount - meCount);
+
+  // Build the 3x3 matrix: rows = Reference (R, I, S), cols = Test (R, I, S)
+  // Agreements on diagonal
+  // VME: ref-R -> test-S (matrix[0][2])
+  // ME: ref-S -> test-R (matrix[2][0])
+  // Minor errors: ref-R -> test-I, ref-I -> test-R, ref-I -> test-S, ref-S -> test-I
+
+  // Distribute minor errors among the 4 minor error cells
+  // Minor from R row: R->I
+  // Minor from I row: I->R, I->S
+  // Minor from S row: S->I
+  const minorRI = Math.min(Math.round(minorCount * 0.25), refR - vmeCount);
+  const minorIR = Math.min(Math.round(minorCount * 0.25), refI);
+  const minorIS = Math.min(Math.round(minorCount * 0.25), Math.max(0, refI - minorIR));
+  const minorSI = Math.min(minorCount - minorRI - minorIR - minorIS, Math.max(0, refS - meCount));
+
+  const actualMinor = minorRI + minorIR + minorIS + minorSI;
+
+  // Matrix: [ref][test]  — R=0, I=1, S=2
+  const matrix = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0]
+  ];
+
+  // Errors
+  matrix[0][2] = Math.max(0, vmeCount);  // VME: R->S
+  matrix[2][0] = Math.max(0, meCount);   // ME: S->R
+  matrix[0][1] = Math.max(0, minorRI);   // minor: R->I
+  matrix[1][0] = Math.max(0, minorIR);   // minor: I->R
+  matrix[1][2] = Math.max(0, minorIS);   // minor: I->S
+  matrix[2][1] = Math.max(0, minorSI);   // minor: S->I
+
+  // Agreements on diagonal (remaining)
+  matrix[0][0] = Math.max(0, refR - matrix[0][1] - matrix[0][2]);
+  matrix[1][1] = Math.max(0, refI - matrix[1][0] - matrix[1][2]);
+  matrix[2][2] = Math.max(0, refS - matrix[2][0] - matrix[2][1]);
+
+  // Actual rates
+  const totalAgree = matrix[0][0] + matrix[1][1] + matrix[2][2];
+  const actualCA = N > 0 ? (totalAgree / N * 100) : 0;
+  const actualVME = refR > 0 ? (matrix[0][2] / refR * 100) : 0;
+  const actualME = refS > 0 ? (matrix[2][0] / refS * 100) : 0;
+  const actualMinorRate = N > 0 ? (actualMinor / N * 100) : 0;
+
+  return { matrix, N, refR, refI, refS, actualCA, actualVME, actualME, actualMinor: actualMinor, actualMinorRate, vmeCount: matrix[0][2], meCount: matrix[2][0] };
+}
+
+function update() {
+  const N      = parseInt(document.getElementById('nSlider').value);
+  const rProp  = parseInt(document.getElementById('rPropSlider').value);
+  const iProp  = parseInt(document.getElementById('iPropSlider').value);
+  const caTarget = parseInt(document.getElementById('caSlider').value);
+  const vmePct = parseFloat(document.getElementById('vmeSlider').value);
+  const mePct  = parseFloat(document.getElementById('meSlider').value);
+
+  document.getElementById('nVal').textContent     = N;
+  document.getElementById('rPropVal').textContent  = rProp + '%';
+  document.getElementById('iPropVal').textContent  = iProp + '%';
+  document.getElementById('caVal').textContent     = caTarget + '%';
+  document.getElementById('vmeVal').textContent    = vmePct.toFixed(1) + '%';
+  document.getElementById('meVal').textContent     = mePct.toFixed(1) + '%';
+
+  const data = computeMatrix();
+  const { matrix, refR, refI, refS, actualCA, actualVME, actualME, actualMinor, actualMinorRate } = data;
+
+  // Stats
+  document.getElementById('caStatVal').textContent = actualCA.toFixed(1) + '%';
+  document.getElementById('vmeStatVal').textContent = actualVME.toFixed(1) + '%';
+  document.getElementById('meStatVal').textContent = actualME.toFixed(1) + '%';
+  document.getElementById('meMinorStatVal').textContent = actualMinorRate.toFixed(1) + '%';
+
+  // Verdict
+  const caPass = actualCA >= 90;
+  const vmePass = actualVME <= 3;
+  const mePass = actualME <= 3;
+  const allPass = caPass && vmePass && mePass;
+
+  const badge = document.getElementById('verdictBadge');
+  const verdictVal = document.getElementById('verdictVal');
+  const verdictDesc = document.getElementById('verdictDesc');
+
+  if (allPass) {
+    badge.className = 'verdict-badge pass';
+    verdictVal.textContent = 'PASS';
+    verdictDesc.textContent = 'All criteria met';
+  } else {
+    badge.className = 'verdict-badge fail';
+    verdictVal.textContent = 'FAIL';
+    const fails = [];
+    if (!caPass) fails.push('CA < 90%');
+    if (!vmePass) fails.push('VME > 3%');
+    if (!mePass) fails.push('ME > 3%');
+    verdictDesc.textContent = fails.join(' | ');
+  }
+
+  // Insight
+  let msg = '';
+  if (allPass) {
+    msg = '<b>Acceptable performance.</b> All error rates are within EUCAST/CLSI acceptance limits. ';
+    if (actualCA >= 95) msg += 'Excellent category agreement (' + actualCA.toFixed(1) + '%). ';
+  } else {
+    if (!vmePass) msg += '<b>Very Major Errors exceed limit.</b> VME = ' + actualVME.toFixed(1) + '% (limit 3%). Resistant isolates reported as susceptible risk treatment failure. ';
+    if (!mePass) msg += '<b>Major Errors exceed limit.</b> ME = ' + actualME.toFixed(1) + '% (limit 3%). Susceptible isolates reported as resistant means unnecessary broad-spectrum therapy. ';
+    if (!caPass) msg += '<b>Category Agreement below threshold.</b> CA = ' + actualCA.toFixed(1) + '% (limit 90%). ';
+  }
+  if (refR < 30) msg += 'Warning: Only ' + refR + ' R isolates \u2014 VME rate may be unreliable (recommend \u2265 50). ';
+  document.getElementById('insightBox').innerHTML = msg || 'Adjust sliders to explore.';
+
+  // === CHARTS ===
+
+  // 1. Heatmap
+  renderHeatmap(matrix, refR, refI, refS);
+
+  // 2. Error Rate Bar Chart
+  renderErrorBars(actualCA, actualVME, actualME, actualMinorRate);
+
+  // 3. VME vs R isolates
+  renderVMEvsR(data);
+
+  // 4. Breakdown
+  renderBreakdown(data);
+}
+
+function renderHeatmap(matrix, refR, refI, refS) {
+  const wrap = document.getElementById('heatmapWrap');
+  const labels = ['R', 'I', 'S'];
+  const rowTotals = [refR, refI, refS];
+
+  // Cell type classification
+  function cellClass(r, c) {
+    if (r === c) return 'hm-agree';
+    // VME: ref-R -> test-S  (r=0, c=2)
+    if (r === 0 && c === 2) return 'hm-vmajor';
+    // ME: ref-S -> test-R  (r=2, c=0)
+    if (r === 2 && c === 0) return 'hm-major';
+    return 'hm-minor';
+  }
+  function cellLabel(r, c) {
+    if (r === c) return 'Agree';
+    if (r === 0 && c === 2) return 'VME';
+    if (r === 2 && c === 0) return 'ME';
+    return 'mE';
+  }
+
+  let html = '<div class="heatmap-container">';
+  html += '<div class="heatmap-header-top">Test Result</div>';
+  html += '<div class="heatmap-header">';
+  html += '<div class="heatmap-header-label"></div>';
+  for (let c = 0; c < 3; c++) {
+    html += '<div class="heatmap-header-label">' + labels[c] + '</div>';
+  }
+  html += '</div>';
+
+  for (let r = 0; r < 3; r++) {
+    html += '<div class="heatmap-row">';
+    html += '<div class="heatmap-row-label">Ref ' + labels[r] + ' (' + rowTotals[r] + ')</div>';
+    for (let c = 0; c < 3; c++) {
+      html += '<div class="heatmap-cell ' + cellClass(r, c) + '">';
+      html += matrix[r][c];
+      html += '<span class="cell-type">' + cellLabel(r, c) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function renderErrorBars(ca, vme, me, minor) {
+  if (errorBarChart) errorBarChart.destroy();
+
+  errorBarChart = new Chart(document.getElementById('errorBarChart'), {
+    type: 'bar',
+    data: {
+      labels: ['CA %', 'VME %', 'ME %', 'mE %'],
+      datasets: [{
+        label: 'Rate',
+        data: [ca, vme, me, minor],
+        backgroundColor: [
+          ca >= 90 ? '#3b82f6' : '#ef4444',
+          vme <= 3 ? '#3b82f6' : '#ef4444',
+          me <= 3 ? '#3b82f6' : '#ef4444',
+          minor <= 10 ? '#3b82f6' : '#eab308'
+        ],
+        borderRadius: 4,
+        barPercentage: 0.6,
+      }]
+    },
+    plugins: [{
+      id: 'limitLines',
+      afterDraw: function(chart) {
+        const ctx = chart.ctx;
+        const yAxis = chart.scales.y;
+        const xAxis = chart.scales.x;
+        const limits = [90, 3, 3, 10];
+        const meta = chart.getDatasetMeta(0);
+
+        meta.data.forEach(function(bar, i) {
+          const yPx = yAxis.getPixelForValue(limits[i]);
+          const barX = bar.x;
+          const halfWidth = bar.width / 2 + 8;
+          ctx.save();
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(barX - halfWidth, yPx);
+          ctx.lineTo(barX + halfWidth, yPx);
+          ctx.stroke();
+          ctx.restore();
+
+          // Label
+          ctx.save();
+          ctx.fillStyle = '#dc2626';
+          ctx.font = '9px system-ui';
+          ctx.textAlign = 'right';
+          ctx.fillText(i === 0 ? '\u226590%' : '\u2264' + limits[i] + '%', barX + halfWidth, yPx - 3);
+          ctx.restore();
+        });
+      }
+    }],
+    options: {
+      indexAxis: 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.label + ': ' + ctx.parsed.y.toFixed(1) + '%'; }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } },
+        y: { min: 0, max: 100, ticks: { font: { size: 10 }, callback: function(v) { return v + '%'; } }, grid: { color: '#f3f4f6' } }
+      }
+    }
+  });
+}
+
+function renderVMEvsR(data) {
+  if (vmeRChart) vmeRChart.destroy();
+
+  const { vmeCount, refR, N } = data;
+
+  // For a fixed number of VME isolates, show how VME% changes with different R counts
+  const fixedVME = Math.max(1, vmeCount);
+  const rValues = [];
+  const vmeRates = [];
+  for (let r = 5; r <= Math.min(N, 150); r += 1) {
+    rValues.push(r);
+    vmeRates.push(fixedVME / r * 100);
+  }
+
+  // Limit line at 3%
+  const limitData = rValues.map(function() { return 3; });
+
+  // Current point
+  const currentPtData = rValues.map(function(r) {
+    return r === refR ? (refR > 0 ? fixedVME / refR * 100 : 0) : null;
+  });
+
+  vmeRChart = new Chart(document.getElementById('vmeRChart'), {
+    type: 'line',
+    data: {
+      labels: rValues,
+      datasets: [
+        {
+          label: 'VME% (' + fixedVME + ' VME isolate' + (fixedVME > 1 ? 's' : '') + ')',
+          data: vmeRates,
+          borderColor: '#dc2626', borderWidth: 2.5,
+          backgroundColor: 'rgba(220,38,38,0.08)',
+          fill: true, pointRadius: 0, tension: 0.3,
+        },
+        {
+          label: '3% limit',
+          data: limitData,
+          borderColor: '#9ca3af', borderWidth: 1.5,
+          borderDash: [5, 4], pointRadius: 0,
+        },
+        {
+          label: 'Current (' + refR + ' R)',
+          data: currentPtData,
+          backgroundColor: '#f59e0b', borderColor: '#92400e',
+          pointRadius: 8, pointBorderWidth: 2,
+          showLine: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: fixedVME + ' VME isolate' + (fixedVME > 1 ? 's' : '') + ' \u2014 rate depends on R count',
+          font: { size: 11, weight: 'bold' }, color: '#374151',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.datasetIndex === 2 && ctx.parsed.y !== null) return 'Current: ' + ctx.parsed.y.toFixed(1) + '% at ' + refR + ' R isolates';
+              return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Number of R Isolates', font: { size: 10 } },
+          ticks: { maxTicksLimit: 10, font: { size: 10 } }, grid: { color: '#f3f4f6' },
+        },
+        y: {
+          min: 0, max: Math.max(20, fixedVME / 5 * 100 + 5),
+          title: { display: true, text: 'VME Rate (%)', font: { size: 10 } },
+          ticks: { font: { size: 10 }, callback: function(v) { return v + '%'; } },
+          grid: { color: '#f3f4f6' },
+        }
+      }
+    }
+  });
+}
+
+function renderBreakdown(data) {
+  if (breakdownChart) breakdownChart.destroy();
+
+  const { matrix, actualMinor, N } = data;
+  const agree = matrix[0][0] + matrix[1][1] + matrix[2][2];
+  const vme = matrix[0][2];
+  const me = matrix[2][0];
+
+  breakdownChart = new Chart(document.getElementById('breakdownChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Agreement', 'Minor Errors', 'Major Errors (ME)', 'Very Major Errors (VME)'],
+      datasets: [{
+        data: [agree, actualMinor, me, vme],
+        backgroundColor: ['#3b82f6', '#eab308', '#f97316', '#dc2626'],
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 }, padding: 8 } },
+        title: {
+          display: true,
+          text: agree + '/' + N + ' agree (' + (agree / N * 100).toFixed(1) + '%)',
+          font: { size: 11, weight: 'bold' }, color: '#374151',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const val = ctx.parsed;
+              const pct = N > 0 ? (val / N * 100).toFixed(1) : 0;
+              return ctx.label + ': ' + val + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function loadExercise(i) {
+  var ex = exercises[i];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
+  var card = document.getElementById('exCard' + i);
+  if (card) card.classList.add('active');
+
+  document.getElementById('nSlider').value      = ex.N;
+  document.getElementById('rPropSlider').value   = ex.rProp;
+  document.getElementById('iPropSlider').value   = ex.iProp;
+  document.getElementById('caSlider').value      = ex.ca;
+  document.getElementById('vmeSlider').value     = ex.vme;
+  document.getElementById('meSlider').value      = ex.me;
+
+  var stepsHtml = ex.steps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML =
+    '<b>Exercise ' + (i + 1) + ': ' + ex.title + '</b><br><br>' +
+    '<b>Learning objective:</b> ' + ex.obj + '<br><br>' +
+    '<ol>' + stepsHtml + '</ol>' +
+    '<b>Key insight:</b> ' + ex.insight;
+  instr.classList.add('visible');
+
+  update();
+}
+
+function toggleExercises() {
+  var toggle = document.getElementById('exToggle');
+  var panel  = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+update();
+</script>
+</body>
+</html>

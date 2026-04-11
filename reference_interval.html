@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reference Interval — EP28-A3c</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    :root{--panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;--accent:#0d9488;--shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#064e3b 0%,#0d9488 60%,#14b8a6 100%);color:#fff;padding:20px 28px 18px;border-radius:var(--radius) var(--radius) 0 0;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;}
+    .beta-badge{display:inline-block;background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:14px;}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:14px 0;}
+    .stat-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+    .stat-card .val{font-size:20px;font-weight:900;}
+    .stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+    .stat-card .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+    .pass{color:#059669;} .fail{color:#dc2626;} .warn{color:#d97706;}
+    .verdict{padding:14px;border-radius:10px;margin:12px 0;font-size:13px;font-weight:600;}
+    .verdict-pass{background:#f0fdf4;border:2px solid #86efac;color:#065f46;}
+    .verdict-warn{background:#fefce8;border:2px solid #fde68a;color:#854d0e;}
+    .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:#1e40af;margin:12px 0;}
+    .warn-box{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:#854d0e;margin:12px 0;}
+    textarea{width:100%;min-height:120px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical;box-sizing:border-box;}
+    .input-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:10px 0;}
+    .input-group{display:flex;flex-direction:column;gap:3px;}
+    .input-group label{font-size:11px;font-weight:700;color:#344054;}
+    .input-group input,.input-group select{padding:6px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;font-family:inherit;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    table.data{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+    table.data th{background:#f9fafb;padding:6px 8px;text-align:left;font-weight:700;border-bottom:2px solid var(--line);}
+    table.data td{padding:5px 8px;border-bottom:1px solid #f3f4f6;}
+    .outlier{background:#fef2f2;color:#dc2626;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Reference Interval <span class="beta-badge">BETA</span></h1>
+  <p>CLSI EP28-A3c — Establishing and verifying reference intervals</p>
+</div>
+<div class="wrap">
+
+  <div class="info-box">
+    <strong>How to use:</strong> Paste or enter reference values from healthy individuals (one value per line or comma-separated).
+    Minimum 120 samples recommended (EP28). The tool calculates the 2.5th and 97.5th percentiles with 90% confidence intervals.
+    Outliers are detected using Tukey's method (1.5 × IQR) or Dixon's Q test.
+  </div>
+
+  <!-- Settings -->
+  <div class="panel">
+    <div class="panel-hd">Settings</div>
+    <div class="panel-bd">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Method</label>
+          <select id="method" onchange="compute()">
+            <option value="nonparametric" selected>Non-parametric (rank-based)</option>
+            <option value="parametric">Parametric (mean ± 1.96 SD)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Outlier detection</label>
+          <select id="outlierMethod" onchange="compute()">
+            <option value="tukey" selected>Tukey (1.5 × IQR)</option>
+            <option value="dixon">Dixon's Q test</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Analyte name</label>
+          <input type="text" id="analyteName" value="Analyte" placeholder="fx Glucose" onchange="compute()">
+        </div>
+        <div class="input-group">
+          <label>Unit</label>
+          <input type="text" id="unit" value="mmol/L" placeholder="fx mmol/L" onchange="compute()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Entry -->
+  <div class="panel">
+    <div class="panel-hd">Data — Reference Values (one per line or comma-separated)</div>
+    <div class="panel-bd">
+      <textarea id="dataInput" placeholder="Indtast værdier, fx:
+4.2
+4.5
+5.1
+3.9
+..." onchange="compute()"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn" onclick="loadExample()">Indlæs eksempel (glucose, n=120)</button>
+        <button class="btn" onclick="document.getElementById('dataInput').value='';compute()">Ryd</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel">
+    <div class="panel-hd">Reference Interval</div>
+    <div class="panel-bd">
+      <div id="verdict" class="verdict verdict-pass"></div>
+      <div class="stats-row" id="statsRow"></div>
+      <div id="outlierInfo"></div>
+    </div>
+  </div>
+
+  <!-- Distribution Chart -->
+  <div class="panel">
+    <div class="panel-hd">Distribution</div>
+    <div class="panel-bd">
+      <canvas id="chart1" height="250"></canvas>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="panel" id="dataTablePanel" style="display:none;">
+    <div class="panel-hd">Sorted Values</div>
+    <div class="panel-bd" style="max-height:300px;overflow-y:auto;">
+      <table class="data" id="dataTable">
+        <thead><tr><th>#</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody id="dataBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>EP28-A3c Guidelines:</strong><br>
+    <strong>Sample size:</strong> Minimum 120 reference individuals recommended. With fewer samples, confidence intervals widen significantly.<br>
+    <strong>Non-parametric method:</strong> Recommended when distribution is unknown. Uses ranked values (2.5th and 97.5th percentiles).<br>
+    <strong>Parametric method:</strong> Use only when data is normally distributed. Calculates mean ± 1.96 × SD.<br>
+    <strong>Outlier removal:</strong> Outliers should be investigated clinically before removal. Maximum 1/3 of data should be removed.<br>
+    <strong>Partitioning:</strong> Consider sex, age, or other subgroups if clinically relevant (Harris & Boyd method).
+  </div>
+</div>
+
+<script>
+  let chart1 = null;
+
+  function parseData() {
+    const raw = document.getElementById('dataInput').value.trim();
+    if (!raw) return [];
+    return raw.split(/[\n,;\s]+/).map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+  }
+
+  function compute() {
+    let values = parseData();
+    if (values.length === 0) {
+      document.getElementById('verdict').className = 'verdict verdict-warn';
+      document.getElementById('verdict').innerHTML = '⚠️ Ingen data indtastet.';
+      document.getElementById('statsRow').innerHTML = '';
+      document.getElementById('outlierInfo').innerHTML = '';
+      document.getElementById('dataTablePanel').style.display = 'none';
+      return;
+    }
+
+    const method = document.getElementById('method').value;
+    const outlierMethod = document.getElementById('outlierMethod').value;
+    const name = document.getElementById('analyteName').value || 'Analyte';
+    const unit = document.getElementById('unit').value || '';
+
+    // Sort
+    values.sort((a, b) => a - b);
+
+    // Outlier detection
+    let outliers = new Set();
+    if (outlierMethod === 'tukey') {
+      const q1 = percentile(values, 25);
+      const q3 = percentile(values, 75);
+      const iqr = q3 - q1;
+      const lo = q1 - 1.5 * iqr;
+      const hi = q3 + 1.5 * iqr;
+      values.forEach((v, i) => { if (v < lo || v > hi) outliers.add(i); });
+    } else if (outlierMethod === 'dixon' && values.length >= 3) {
+      // Dixon Q for smallest and largest
+      const n = values.length;
+      const range = values[n - 1] - values[0];
+      if (range > 0) {
+        const qLo = (values[1] - values[0]) / range;
+        const qHi = (values[n - 1] - values[n - 2]) / range;
+        // Critical values (approximate, alpha=0.05)
+        const qCrit = n <= 7 ? 0.568 : n <= 10 ? 0.466 : n <= 15 ? 0.384 : n <= 20 ? 0.342 : 0.3;
+        if (qLo > qCrit) outliers.add(0);
+        if (qHi > qCrit) outliers.add(n - 1);
+      }
+    }
+
+    const cleanValues = values.filter((_, i) => !outliers.has(i));
+    const n = cleanValues.length;
+
+    // Calculate reference interval
+    let lower, upper, lowerCI, upperCI;
+    if (method === 'parametric') {
+      const mean = cleanValues.reduce((s, v) => s + v, 0) / n;
+      const sd = Math.sqrt(cleanValues.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1));
+      lower = mean - 1.96 * sd;
+      upper = mean + 1.96 * sd;
+      // CI for parametric limits (approximate)
+      const seLim = sd * Math.sqrt(1 / n + 1.96 ** 2 / (2 * (n - 1)));
+      lowerCI = [lower - 1.645 * seLim, lower + 1.645 * seLim];
+      upperCI = [upper - 1.645 * seLim, upper + 1.645 * seLim];
+    } else {
+      // Non-parametric: rank-based
+      const r = 0.025 * (n + 1);
+      const lIdx = Math.floor(r) - 1;
+      const uIdx = Math.ceil((1 - 0.025) * (n + 1)) - 1;
+      lower = lIdx >= 0 && lIdx < n ? cleanValues[lIdx] : cleanValues[0];
+      upper = uIdx >= 0 && uIdx < n ? cleanValues[uIdx] : cleanValues[n - 1];
+      // 90% CI for percentiles (non-parametric)
+      const ciR = Math.ceil(0.5 * (n - 1.645 * Math.sqrt(n * 0.025 * 0.975)));
+      const ciS = Math.floor(0.5 * (n + 1.645 * Math.sqrt(n * 0.025 * 0.975))) + 1;
+      lowerCI = [cleanValues[Math.max(0, ciR - 1)] || lower, cleanValues[Math.min(n - 1, ciS - 1)] || lower];
+      upperCI = [cleanValues[Math.max(0, n - ciS)] || upper, cleanValues[Math.min(n - 1, n - ciR)] || upper];
+    }
+
+    const mean = cleanValues.reduce((s, v) => s + v, 0) / n;
+    const sd = Math.sqrt(cleanValues.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1));
+    const median = percentile(cleanValues, 50);
+
+    // Verdict
+    const verdictEl = document.getElementById('verdict');
+    if (n >= 120) {
+      verdictEl.className = 'verdict verdict-pass';
+      verdictEl.innerHTML = `✅ <strong>${name} Reference Interval: ${lower.toFixed(2)} – ${upper.toFixed(2)} ${unit}</strong> (n=${n}, ${method === 'parametric' ? 'parametric' : 'non-parametric'})`;
+    } else {
+      verdictEl.className = 'verdict verdict-warn';
+      verdictEl.innerHTML = `⚠️ <strong>${name} Reference Interval: ${lower.toFixed(2)} – ${upper.toFixed(2)} ${unit}</strong> (n=${n} — EP28 recommends >= 120 samples)`;
+    }
+
+    // Stats
+    document.getElementById('statsRow').innerHTML = [
+      `<div class="stat-card"><div class="val" style="color:var(--accent);">${lower.toFixed(2)}</div><div class="lbl">Lower limit (2.5%)</div><div class="sub">90% CI: ${lowerCI[0].toFixed(2)}–${lowerCI[1].toFixed(2)}</div></div>`,
+      `<div class="stat-card"><div class="val" style="color:var(--accent);">${upper.toFixed(2)}</div><div class="lbl">Upper limit (97.5%)</div><div class="sub">90% CI: ${upperCI[0].toFixed(2)}–${upperCI[1].toFixed(2)}</div></div>`,
+      `<div class="stat-card"><div class="val">${n}</div><div class="lbl">Samples (clean)</div><div class="sub">${outliers.size} outliers removed</div></div>`,
+      `<div class="stat-card"><div class="val">${mean.toFixed(2)}</div><div class="lbl">Mean</div></div>`,
+      `<div class="stat-card"><div class="val">${sd.toFixed(2)}</div><div class="lbl">SD</div></div>`,
+      `<div class="stat-card"><div class="val">${median.toFixed(2)}</div><div class="lbl">Median</div></div>`,
+    ].join('');
+
+    // Outlier info
+    if (outliers.size > 0) {
+      const outlierVals = [...outliers].map(i => values[i].toFixed(2)).join(', ');
+      document.getElementById('outlierInfo').innerHTML = `<div class="warn-box">⚠️ <strong>${outliers.size} outlier(s) removed:</strong> ${outlierVals}</div>`;
+    } else {
+      document.getElementById('outlierInfo').innerHTML = '';
+    }
+
+    // Data table
+    document.getElementById('dataTablePanel').style.display = 'block';
+    document.getElementById('dataBody').innerHTML = values.map((v, i) => {
+      const isOut = outliers.has(i);
+      return `<tr class="${isOut ? 'outlier' : ''}"><td>${i + 1}</td><td>${v.toFixed(3)}</td><td>${isOut ? '⚠️ Outlier' : '✓'}</td></tr>`;
+    }).join('');
+
+    // Chart — histogram
+    if (chart1) chart1.destroy();
+    const ctx = document.getElementById('chart1').getContext('2d');
+    const bins = 20;
+    const min = cleanValues[0], max = cleanValues[n - 1];
+    const binWidth = (max - min) / bins || 1;
+    const histogram = Array(bins).fill(0);
+    cleanValues.forEach(v => {
+      const idx = Math.min(bins - 1, Math.floor((v - min) / binWidth));
+      histogram[idx]++;
+    });
+    const binLabels = histogram.map((_, i) => (min + (i + 0.5) * binWidth).toFixed(1));
+
+    chart1 = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: binLabels,
+        datasets: [{
+          data: histogram,
+          backgroundColor: histogram.map((_, i) => {
+            const center = min + (i + 0.5) * binWidth;
+            return center < lower || center > upper ? '#fca5a5' : '#86efac';
+          }),
+          borderRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: `${name} Distribution (n=${n}) — RI: ${lower.toFixed(2)}–${upper.toFixed(2)} ${unit}`, font: { size: 13, weight: 'bold' } }
+        },
+        scales: {
+          x: { title: { display: true, text: unit } },
+          y: { beginAtZero: true, title: { display: true, text: 'Frequency' } }
+        }
+      }
+    });
+  }
+
+  function percentile(sorted, p) {
+    const idx = (p / 100) * (sorted.length - 1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    if (lo === hi) return sorted[lo];
+    return sorted[lo] + (idx - lo) * (sorted[hi] - sorted[lo]);
+  }
+
+  function loadExample() {
+    // Simulated glucose reference values (n=120, mean ~5.0, SD ~0.7)
+    const vals = [];
+    for (let i = 0; i < 120; i++) {
+      // Box-Muller transform for normal distribution
+      const u1 = Math.random(), u2 = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      vals.push((5.0 + 0.7 * z).toFixed(2));
+    }
+    document.getElementById('dataInput').value = vals.join('\n');
+    document.getElementById('analyteName').value = 'Glucose';
+    document.getElementById('unit').value = 'mmol/L';
+    compute();
+  }
+
+  compute();
+</script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Antibiotic Susceptibility Agreement</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    :root{--panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;--accent:#dc2626;--shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#7f1d1d 0%,#dc2626 60%,#ef4444 100%);color:#fff;padding:20px 28px 18px;border-radius:var(--radius) var(--radius) 0 0;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;}
+    .beta-badge{display:inline-block;background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:14px;}
+    .grid-3x3{display:grid;grid-template-columns:auto repeat(3,1fr);gap:4px;margin:12px 0;}
+    .g-hdr{font-size:10px;font-weight:800;text-transform:uppercase;text-align:center;padding:6px 4px;color:var(--muted);}
+    .g-rhdr{font-size:10px;font-weight:800;text-transform:uppercase;text-align:right;padding:6px 8px;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;}
+    .g-cell{border-radius:8px;padding:10px 6px;text-align:center;}
+    .g-cell input{width:50px;padding:4px;border:1px solid var(--line);border-radius:5px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;}
+    .g-agree{background:#dbeafe;border:2px solid #93c5fd;}
+    .g-minor{background:#fef9c3;border:2px solid #fde68a;}
+    .g-major{background:#fee2e2;border:2px solid #fca5a5;}
+    .g-vmajor{background:#fecaca;border:2px solid #f87171;}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0;}
+    .stat-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+    .stat-card .val{font-size:22px;font-weight:900;}
+    .stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+    .stat-card .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+    .pass{color:#059669;} .fail{color:#dc2626;} .warn{color:#d97706;}
+    .verdict{padding:14px;border-radius:10px;margin:12px 0;font-size:13px;font-weight:600;}
+    .verdict-pass{background:#f0fdf4;border:2px solid #86efac;color:#065f46;}
+    .verdict-fail{background:#fef2f2;border:2px solid #fca5a5;color:#991b1b;}
+    .verdict-warn{background:#fefce8;border:2px solid #fde68a;color:#854d0e;}
+    table.data{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+    table.data th{background:#f9fafb;padding:6px 8px;text-align:left;font-weight:700;border-bottom:2px solid var(--line);}
+    table.data td{padding:5px 8px;border-bottom:1px solid #f3f4f6;}
+    .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:#1e40af;margin:12px 0;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;font-family:inherit;transition:opacity .1s;}
+    .btn:hover{opacity:.85;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn-row{display:flex;gap:8px;margin:12px 0;}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Antibiotic Susceptibility Agreement <span class="beta-badge">BETA</span></h1>
+  <p>EUCAST/CLSI error classification for antimicrobial susceptibility testing (AST)</p>
+</div>
+<div class="wrap">
+
+  <div class="info-box">
+    <strong>How to use:</strong> Enter the number of isolates for each combination of Reference (columns) and Test (rows) categories.
+    The tool calculates category agreement, essential agreement, and error rates according to EUCAST/CLSI guidelines.
+    <br><strong>S</strong> = Susceptible, <strong>I</strong> = Intermediate/Susceptible-Increased exposure, <strong>R</strong> = Resistant
+  </div>
+
+  <!-- 3x3 Input Matrix -->
+  <div class="panel">
+    <div class="panel-hd">3x3 Agreement Matrix — Reference Method (columns) vs Test Method (rows)</div>
+    <div class="panel-bd">
+      <div class="grid-3x3">
+        <div></div>
+        <div class="g-hdr" style="color:#059669;">Reference S</div>
+        <div class="g-hdr" style="color:#d97706;">Reference I</div>
+        <div class="g-hdr" style="color:#dc2626;">Reference R</div>
+
+        <div class="g-rhdr" style="color:#059669;">Test S</div>
+        <div class="g-cell g-agree"><input type="number" id="ss" value="45" min="0" onchange="compute()"><div style="font-size:9px;color:#059669;margin-top:3px;">Agreement</div></div>
+        <div class="g-cell g-minor"><input type="number" id="si" value="2" min="0" onchange="compute()"><div style="font-size:9px;color:#d97706;margin-top:3px;">Minor</div></div>
+        <div class="g-cell g-vmajor"><input type="number" id="sr" value="0" min="0" onchange="compute()"><div style="font-size:9px;color:#dc2626;margin-top:3px;">Very Major</div></div>
+
+        <div class="g-rhdr" style="color:#d97706;">Test I</div>
+        <div class="g-cell g-minor"><input type="number" id="is" value="3" min="0" onchange="compute()"><div style="font-size:9px;color:#d97706;margin-top:3px;">Minor</div></div>
+        <div class="g-cell g-agree"><input type="number" id="ii" value="8" min="0" onchange="compute()"><div style="font-size:9px;color:#059669;margin-top:3px;">Agreement</div></div>
+        <div class="g-cell g-minor"><input type="number" id="ir" value="1" min="0" onchange="compute()"><div style="font-size:9px;color:#d97706;margin-top:3px;">Minor</div></div>
+
+        <div class="g-rhdr" style="color:#dc2626;">Test R</div>
+        <div class="g-cell g-major"><input type="number" id="rs" value="1" min="0" onchange="compute()"><div style="font-size:9px;color:#dc2626;margin-top:3px;">Major</div></div>
+        <div class="g-cell g-minor"><input type="number" id="ri" value="0" min="0" onchange="compute()"><div style="font-size:9px;color:#d97706;margin-top:3px;">Minor</div></div>
+        <div class="g-cell g-agree"><input type="number" id="rr" value="40" min="0" onchange="compute()"><div style="font-size:9px;color:#059669;margin-top:3px;">Agreement</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="clearAll()">Ryd</button>
+        <button class="btn" onclick="loadExample('good')">Eksempel: God</button>
+        <button class="btn" onclick="loadExample('poor')">Eksempel: Dårlig</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel">
+    <div class="panel-hd">Results</div>
+    <div class="panel-bd">
+      <div id="verdict" class="verdict verdict-pass"></div>
+
+      <div class="stats-row" id="statsRow"></div>
+
+      <h3 style="font-size:14px;margin:16px 0 8px;">Error Classification (EUCAST/CLSI)</h3>
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Error Type</th>
+            <th>Definition</th>
+            <th>Count</th>
+            <th>Rate</th>
+            <th>Acceptable</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="errorTable"></tbody>
+      </table>
+
+      <h3 style="font-size:14px;margin:16px 0 8px;">Per-Category Agreement</h3>
+      <div id="perCatResults"></div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="panel">
+    <div class="panel-hd">Agreement Visualization</div>
+    <div class="panel-bd">
+      <div style="max-width:500px;margin:0 auto;">
+        <canvas id="chart1"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Definitions (EUCAST):</strong><br>
+    <strong>Category Agreement (CA):</strong> Same S/I/R category between test and reference. Target: >= 90%.<br>
+    <strong>Very Major Error (VME):</strong> Reference = R, Test = S. False susceptible — most dangerous. Target: < 3%.<br>
+    <strong>Major Error (ME):</strong> Reference = S, Test = R. False resistant — may deny effective treatment. Target: < 3%.<br>
+    <strong>Minor Error (mE):</strong> One method = I, other = S or R. Target: no formal limit, but < 10% preferred.<br>
+    <strong>Essential Agreement (EA):</strong> MIC within ±1 doubling dilution. Not applicable for disc diffusion — only for MIC methods.
+  </div>
+</div>
+
+<script>
+  let chart1 = null;
+
+  function v(id) { return parseInt(document.getElementById(id).value) || 0; }
+
+  function compute() {
+    const ss=v('ss'), si=v('si'), sr=v('sr');
+    const is_=v('is'), ii=v('ii'), ir=v('ir');
+    const rs=v('rs'), ri=v('ri'), rr=v('rr');
+
+    const total = ss+si+sr+is_+ii+ir+rs+ri+rr;
+    if (total === 0) return;
+
+    // Category agreement = diagonal / total
+    const agree = ss + ii + rr;
+    const CA = (agree / total * 100);
+
+    // Error counts
+    const vme = sr; // Reference R, Test S — very major
+    const me = rs;  // Reference S, Test R — major
+    const minor = si + is_ + ir + ri; // one is I
+
+    // Error rates
+    const refR = sr + ir + rr; // total reference R
+    const refS = ss + is_ + rs; // total reference S
+    const VME_rate = refR > 0 ? (vme / refR * 100) : 0;
+    const ME_rate = refS > 0 ? (me / refS * 100) : 0;
+    const mE_rate = total > 0 ? (minor / total * 100) : 0;
+
+    // Per-category agreement
+    const testS = ss + si + sr;
+    const testI = is_ + ii + ir;
+    const testR = rs + ri + rr;
+    const PA_S = (refS > 0 && testS > 0) ? (2*ss / (refS + testS) * 100) : 0;
+    const PA_I = ((si+is_+ii*2) > 0) ? (2*ii / ((si+is_+ii) + (is_+ii+ir)) * 100) : 0;
+    const PA_R = (refR > 0 && testR > 0) ? (2*rr / (refR + testR) * 100) : 0;
+
+    // Verdict
+    const vmeOK = VME_rate < 3;
+    const meOK = ME_rate < 3;
+    const caOK = CA >= 90;
+    const allOK = vmeOK && meOK && caOK;
+    const verdictEl = document.getElementById('verdict');
+    if (allOK) {
+      verdictEl.className = 'verdict verdict-pass';
+      verdictEl.innerHTML = '✅ <strong>Acceptable agreement.</strong> Category agreement >= 90%, VME < 3%, ME < 3%.';
+    } else {
+      const issues = [];
+      if (!caOK) issues.push(`CA ${CA.toFixed(1)}% < 90%`);
+      if (!vmeOK) issues.push(`VME ${VME_rate.toFixed(1)}% >= 3%`);
+      if (!meOK) issues.push(`ME ${ME_rate.toFixed(1)}% >= 3%`);
+      verdictEl.className = 'verdict verdict-fail';
+      verdictEl.innerHTML = `❌ <strong>Unacceptable agreement.</strong> ${issues.join(' · ')}`;
+    }
+
+    // Stats cards
+    document.getElementById('statsRow').innerHTML = [
+      card('Category Agreement', CA, '%', CA >= 90 ? 'pass' : 'fail', '>= 90%'),
+      card('Very Major Error', VME_rate, '%', VME_rate < 3 ? 'pass' : 'fail', '< 3%'),
+      card('Major Error', ME_rate, '%', ME_rate < 3 ? 'pass' : 'fail', '< 3%'),
+      card('Minor Error', mE_rate, '%', mE_rate < 10 ? 'pass' : 'warn', '< 10%'),
+      card('Total Isolates', total, '', '', ''),
+      card('Agreements', agree, '', '', `${(agree/total*100).toFixed(1)}%`),
+    ].join('');
+
+    // Error table
+    document.getElementById('errorTable').innerHTML = `
+      <tr><td>Very Major Error (VME)</td><td>Ref R → Test S (false susceptible)</td><td>${vme}</td><td class="${vmeOK?'pass':'fail'}">${VME_rate.toFixed(1)}%</td><td>< 3%</td><td>${vmeOK?'✅ Pass':'❌ Fail'}</td></tr>
+      <tr><td>Major Error (ME)</td><td>Ref S → Test R (false resistant)</td><td>${me}</td><td class="${meOK?'pass':'fail'}">${ME_rate.toFixed(1)}%</td><td>< 3%</td><td>${meOK?'✅ Pass':'❌ Fail'}</td></tr>
+      <tr><td>Minor Error (mE)</td><td>One = I, other = S or R</td><td>${minor}</td><td class="${mE_rate<10?'pass':'warn'}">${mE_rate.toFixed(1)}%</td><td>< 10%</td><td>${mE_rate<10?'✅ Pass':'⚠️ High'}</td></tr>
+    `;
+
+    // Per-category
+    document.getElementById('perCatResults').innerHTML = `
+      <div class="stats-row">
+        ${card('S Agreement', PA_S, '%', PA_S >= 90 ? 'pass' : 'warn', `${ss} of ${refS} ref S`)}
+        ${card('I Agreement', PA_I, '%', PA_I >= 80 ? 'pass' : 'warn', `${ii} of ${(si+is_+ii+ir)} involving I`)}
+        ${card('R Agreement', PA_R, '%', PA_R >= 90 ? 'pass' : 'warn', `${rr} of ${refR} ref R`)}
+      </div>`;
+
+    // Chart
+    if (chart1) chart1.destroy();
+    const ctx = document.getElementById('chart1').getContext('2d');
+    chart1 = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Agreement (S)', 'Agreement (I)', 'Agreement (R)', 'Minor', 'Major', 'Very Major'],
+        datasets: [{
+          data: [ss, ii, rr, minor, me, vme],
+          backgroundColor: ['#86efac', '#fde68a', '#fca5a5', '#fde68a', '#f87171', '#dc2626'],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, title: { display: true, text: `Category Agreement: ${CA.toFixed(1)}%`, font: { size: 14, weight: 'bold' } } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'Isolates' } } }
+      }
+    });
+  }
+
+  function card(label, val, unit, cls, sub) {
+    const v = typeof val === 'number' ? val.toFixed(1) : val;
+    return `<div class="stat-card"><div class="val ${cls}">${v}${unit}</div><div class="lbl">${label}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+  }
+
+  function clearAll() {
+    ['ss','si','sr','is','ii','ir','rs','ri','rr'].forEach(id => document.getElementById(id).value = '0');
+    compute();
+  }
+
+  function loadExample(type) {
+    if (type === 'good') {
+      Object.entries({ss:48,si:1,sr:0,is:2,ii:9,ir:0,rs:0,ri:1,rr:39}).forEach(([k,v]) => document.getElementById(k).value = v);
+    } else {
+      Object.entries({ss:30,si:5,sr:4,is:3,ii:6,ir:2,rs:8,ri:3,rr:39}).forEach(([k,v]) => document.getElementById(k).value = v);
+    }
+    compute();
+  }
+
+  compute();
+</script>
+</body>
+</html>

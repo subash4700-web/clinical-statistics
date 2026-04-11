@@ -320,6 +320,34 @@ ipcMain.handle("license:deactivate", async () => {
   return { success: true };
 });
 
+// ─── ANNOTATIONS / NOTES ─────────────────────────────────────────────────────
+const notesPath = path.join(app.getPath('userData'), 'annotations.json');
+
+function readNotes() {
+  try {
+    if (fs.existsSync(notesPath)) return JSON.parse(fs.readFileSync(notesPath, 'utf8'));
+  } catch(e) {}
+  return {};
+}
+
+function writeNotes(data) {
+  try {
+    fs.writeFileSync(notesPath, JSON.stringify(data, null, 2), 'utf8');
+  } catch(e) { console.error('Failed to save annotations:', e); }
+}
+
+ipcMain.handle('annotations:load', (event, page) => {
+  const all = readNotes();
+  return all[page] || [];
+});
+
+ipcMain.handle('annotations:save', (event, page, data) => {
+  const all = readNotes();
+  all[page] = data;
+  writeNotes(all);
+  return true;
+});
+
 // ─── COMPILE PDF ──────────────────────────────────────────────────────────────
 ipcMain.handle('app:previewReport', async (event, htmlContent, filename) => {
   const tmpPath = path.join(app.getPath('temp'), 'cs-report-tmp.html');

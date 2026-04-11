@@ -222,9 +222,9 @@
         <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
           <div class="ex-num">Scenario 4</div>
           <div class="ex-title">Combining analytes</div>
-          <div class="ex-obj">Three analytes with modest individual AUC. Combined via logistic regression — does the model outperform each alone?</div>
+          <div class="ex-obj">Three markers for heart failure. Combined via logistic regression — does the model outperform each alone?</div>
           <div class="ex-params">
-            <span class="ex-param">Troponin + CRP + Age</span>
+            <span class="ex-param">NT-proBNP + Creatinine + Age</span>
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Multi-analyte model</span>
           </div>
@@ -234,9 +234,9 @@
         <div class="ex-card" id="exCard5" onclick="loadExercise(5)">
           <div class="ex-num">Scenario 5</div>
           <div class="ex-title">Comparing two markers</div>
-          <div class="ex-obj">Troponin vs myoglobin: which has better diagnostic accuracy? Use AUC and 95% CI to decide.</div>
+          <div class="ex-obj">HbA1c vs fasting glucose for diabetes: which has better diagnostic accuracy? Use AUC and 95% CI to decide.</div>
           <div class="ex-params">
-            <span class="ex-param">Troponin vs Myoglobin</span>
+            <span class="ex-param">HbA1c vs Fasting Glucose</span>
             <span class="ex-param">n = 40</span>
             <span class="ex-param">Compare AUCs</span>
           </div>
@@ -260,8 +260,16 @@
 
           <!-- SIMPLE MODE -->
           <div class="panel-bd" id="modeSimple">
-            <label style="margin-top:0">Analyte name</label>
-            <input type="text" id="analyteName" placeholder="e.g. Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label style="margin-top:0">Analyte name</label>
+                <input type="text" id="analyteName" placeholder="e.g. Troponin (ng/L)" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+              </div>
+              <div>
+                <label style="margin-top:0">Diagnosis / Classification</label>
+                <input type="text" id="diagnosisName" placeholder="e.g. Sepsis, AMI, Bacterial infection" style="width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box;">
+              </div>
+            </div>
 
             <label>Disease <span style="font-weight:400;color:var(--muted);">(outcome = 1) — values from this group</span></label>
             <textarea id="posValues" placeholder="Enter values separated by commas or one per line:&#10;312&#10;245&#10;198&#10;287" style="min-height:80px;"></textarea>
@@ -353,13 +361,19 @@
   <!-- ── TAB: RESULTS ── -->
   <div id="tab-results" class="tab-content">
 
+    <!-- Study header -->
+    <div id="rocStudyHeader" style="display:none;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+      <div id="rocStudyTitle" style="font-size:16px;font-weight:900;"></div>
+      <div id="rocStudySub" style="font-size:12px;opacity:0.7;margin-top:3px;"></div>
+    </div>
+
     <div id="alertArea"></div>
 
     <!-- Cut-off explorer -->
     <div class="panel" id="cutoffPanel" style="display:none;margin-bottom:12px;">
       <div class="panel-hd" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="toggleCutoffKpis()">
         <span>Cut-off explorer</span>
-        <span id="cutoffKpisToggle" style="font-size:11px;color:var(--muted);user-select:none;">Hide details ▲</span>
+        <span id="cutoffKpisToggle" style="font-size:11px;color:var(--muted);user-select:none;">Show details ▼</span>
       </div>
       <div class="panel-bd">
         <div id="cutoffActiveLabel" style="font-size:11px;color:var(--muted);margin-bottom:6px;"></div>
@@ -368,7 +382,7 @@
           <input type="range" id="cutoffSlider" min="0" max="1000" value="500" oninput="onCutoffSlider()">
           <input type="number" id="cutoffValInput" step="any" oninput="onCutoffValInput()">
         </div>
-        <div id="cutoffKpisWrap">
+        <div id="cutoffKpisWrap" style="display:none;">
           <div class="ex-cutoff-grid" id="cutoffKpis"></div>
         </div>
       </div>
@@ -514,36 +528,36 @@ const EX_DATA = {
   },
   4: {
     csv: [
-      'outcome,Troponin (ng/L),CRP (mg/L),Age',
-      '1,290,145,67','1,230,89,71','1,180,210,58','1,310,130,74','1,260,178,62',
-      '1,200,98,69','1,340,220,76','1,175,85,55','1,270,160,70','1,220,110,64',
-      '1,300,195,73','1,165,75,59','1,315,240,77','1,245,120,66','1,190,92,61',
-      '1,280,170,72','1,210,105,63','1,330,215,75','1,185,88,57','1,255,148,68',
-      '0,35,18,45','0,28,28,52','0,42,55,61','0,22,12,38','0,38,34,57',
-      '0,51,62,48','0,29,22,43','0,44,38,55','0,19,8,36','0,56,45,64',
-      '0,33,31,50','0,27,25,42','0,48,52,59','0,31,19,46','0,40,36,54',
-      '0,24,15,40','0,53,48,62','0,36,32,49','0,26,21,41','0,46,42,57'
+      'outcome,NT-proBNP (pg/mL),Creatinine (µmol/L),Age',
+      '1,1850,145,72','1,980,118,68','1,3200,178,76','1,620,105,64','1,2400,162,74',
+      '1,1200,132,70','1,4100,195,79','1,540,98,61','1,1750,148,71','1,890,112,66',
+      '1,2800,172,75','1,480,95,59','1,3500,188,78','1,1100,128,69','1,720,108,63',
+      '1,2100,155,73','1,950,115,67','1,3800,192,77','1,650,102,62','1,1600,140,70',
+      '0,85,72,48','0,52,65,55','0,110,82,63','0,38,58,40','0,75,78,52',
+      '0,125,88,60','0,48,62,44','0,95,76,56','0,32,55,38','0,140,92,65',
+      '0,68,70,50','0,45,64,43','0,105,84,61','0,58,68,47','0,88,74,54',
+      '0,42,60,41','0,118,86,62','0,72,71,51','0,50,63,42','0,98,80,58'
     ].join('\n'),
     instructions: `<b>Exercise 4 — Combining analytes</b>
 <ol>
-  <li>Run the analysis. The tool auto-detects 3 analyte columns and fits a <b>logistic regression model</b> weighting each analyte by its contribution to discriminating disease from no-disease.</li>
+  <li>Run the analysis. The tool auto-detects 3 analyte columns and fits a <b>logistic regression model</b> weighting each analyte by its contribution to discriminating heart failure from no heart failure.</li>
   <li>In the <b>Per-analyte AUC table</b>, compare each single-analyte AUC with the <b>Combined model AUC</b>. Which analyte is weakest alone?</li>
-  <li>Why does combining improve AUC? Each analyte captures <i>partially independent</i> information. Logistic regression finds the optimal linear combination — producing a single probability score per patient.</li>
+  <li>Why does combining improve AUC? Each analyte captures <i>partially independent</i> information. NT-proBNP reflects cardiac wall stress, creatinine reflects renal function (often impaired in heart failure), and age captures baseline risk. Logistic regression finds the optimal linear combination — producing a single probability score per patient.</li>
   <li>The ROC curve for the combined model (red dashed) should sit <i>above</i> the individual curves, correctly ranking more patient pairs.</li>
   <li><b>Key question:</b> Age has low AUC alone in this dataset. Does adding it still improve the combined model? This is the value of multivariable analysis — even a weak predictor can contribute incremental discrimination when combined with others.</li>
 </ol>`
   },
   5: {
     csv: [
-      'outcome,Troponin (ng/L),Myoglobin (ng/L)',
-      '1,290,185','1,230,142','1,180,210','1,310,98','1,260,175',
-      '1,200,138','1,340,220','1,175,95','1,270,165','1,220,112',
-      '1,300,190','1,165,88','1,315,230','1,245,125','1,190,102',
-      '1,280,172','1,210,115','1,330,215','1,185,92','1,255,155',
-      '0,35,75','0,28,92','0,42,130','0,22,55','0,38,110',
-      '0,51,145','0,29,68','0,44,125','0,19,48','0,56,160',
-      '0,33,88','0,27,72','0,48,138','0,31,82','0,40,115',
-      '0,24,58','0,53,148','0,36,95','0,26,65','0,46,128'
+      'outcome,HbA1c (%),Fasting Glucose (mmol/L)',
+      '1,7.8,9.2','1,6.9,7.8','1,9.2,12.5','1,6.6,7.4','1,8.5,10.8',
+      '1,7.2,8.5','1,10.1,14.2','1,6.8,7.6','1,8.0,9.8','1,7.1,8.2',
+      '1,9.5,13.1','1,6.7,7.5','1,8.8,11.5','1,7.5,8.9','1,7.0,7.9',
+      '1,8.3,10.2','1,7.4,8.7','1,9.8,13.8','1,6.9,7.7','1,8.1,10.0',
+      '0,5.1,4.8','0,4.8,4.5','0,5.4,5.2','0,4.6,4.2','0,5.0,4.7',
+      '0,5.6,5.5','0,4.9,4.6','0,5.3,5.1','0,4.5,4.0','0,5.7,5.6',
+      '0,5.0,4.8','0,4.7,4.3','0,5.5,5.3','0,4.8,4.5','0,5.2,5.0',
+      '0,4.6,4.1','0,5.6,5.4','0,5.1,4.9','0,4.7,4.4','0,5.3,5.2'
     ].join('\n'),
     instructions: `<b>Exercise 5 — Comparing two markers</b>
 <ol>
@@ -551,7 +565,7 @@ const EX_DATA = {
   <li>Do the 95% confidence intervals overlap? <b>Non-overlapping CIs</b> are strong evidence that one marker truly outperforms the other. Overlapping CIs suggest the difference may be chance.</li>
   <li>On the <b>ROC chart</b>, one curve should track consistently above the other. A higher curve at all threshold points means unambiguously better discrimination.</li>
   <li>Try the <b>Cut-off explorer</b> for each analyte: at the same sensitivity, which marker achieves higher specificity?</li>
-  <li><b>Key insight:</b> Myoglobin rises <i>earlier</i> after AMI than troponin. In patients presenting within 2 hours of symptom onset, myoglobin AUC might actually be higher — illustrating that diagnostic performance depends heavily on <i>when</i> the sample is collected, not just which analyte is measured.</li>
+  <li><b>Key insight:</b> HbA1c reflects average blood glucose over 2–3 months, while fasting glucose is a single snapshot. A patient with well-controlled fasting glucose but poor post-meal control may have a high HbA1c — illustrating that each marker captures a <i>different dimension</i> of disease, and diagnostic performance depends on what aspect of diabetes you are trying to detect.</li>
 </ol>`
   }
 };
@@ -861,6 +875,18 @@ function runWithConfig() {
     const st  = cutoffStats((combined ?? analResults[0]).scores, labels, yPt.thresh);
     drawPVChart(st.sens, st.spec);
   }
+
+  // Populate study header
+  const _analName = document.getElementById('analyteName').value.trim() || analyteCols.join(', ');
+  const _diagName = document.getElementById('diagnosisName')?.value.trim() || '';
+  const _nPos = labels.filter(v => v === 1).length;
+  const _nNeg = labels.filter(v => v === 0).length;
+  const _primaryAUC = (combined ?? analResults[0])?.roc?.auc;
+  const _hdr = document.getElementById('rocStudyHeader');
+  const _title = _diagName ? _analName + ' as indicator of ' + _diagName : _analName;
+  document.getElementById('rocStudyTitle').textContent = _title;
+  document.getElementById('rocStudySub').textContent = _nPos + ' positive · ' + _nNeg + ' negative' + (_primaryAUC ? ' · AUC = ' + _primaryAUC.toFixed(3) : '');
+  _hdr.style.display = '';
 
   // Switch to results tab and show controls
   showTab('results');
@@ -1402,6 +1428,7 @@ function generateROCData() {
 function loadSampleData() {
   switchMode('simple');
   document.getElementById('analyteName').value = 'Troponin (ng/L)';
+  document.getElementById('diagnosisName').value = 'Acute Myocardial Infarction';
   const ex1 = EX_DATA[1].csv.split('\n').slice(1); // skip header
   const pos = ex1.filter(r => r.startsWith('1,')).map(r => r.split(',')[1]).join('\n');
   const neg = ex1.filter(r => r.startsWith('0,')).map(r => r.split(',')[1]).join('\n');
@@ -1410,7 +1437,11 @@ function loadSampleData() {
   runSimpleMode();
 }
 
-document.addEventListener('DOMContentLoaded', loadSampleData);
+document.addEventListener('DOMContentLoaded', function() {
+  loadSampleData();
+  // Stay on input tab — don't auto-switch to results
+  showTab('input');
+});
 
 function addToReport() {
   var analyte = document.getElementById('analyteName')?.value ||

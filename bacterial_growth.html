@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Bacterial Growth — Rate & Doubling Time</title>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    .tool-header{
+      background:linear-gradient(135deg,#431407 0%,#ea580c 100%);
+    }
+    .kpi .lab{ color:var(--muted); font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
+    .kpi .val{ font-weight:950; font-size:18px; margin-top:4px;}
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    .primary{ background:var(--accent); color:#fff; }
+    .ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); }
+
+    /* Data table */
+    .data-table{ width:100%; border-collapse:collapse; }
+    .data-table th{ background:var(--subtle); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#374151; padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; }
+    .data-table td{ padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    .data-table input[type="number"]{ width:100%; padding:6px 8px; font-size:13px; }
+    .data-table tr:last-child td{ border-bottom:none; }
+    .remove-row{ background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; padding:5px 10px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer; }
+    .remove-row:hover{ background:#fee2e2; }
+
+    /* Formula box */
+    .formula-box{ background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.8; margin-bottom:12px; }
+    .formula-box code{ font-family:ui-monospace,monospace; background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:12px; }
+
+    /* Insight box */
+    .insight-box{ background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.7; }
+    .insight-box strong{ color:#1e40af; }
+
+    /* Chart containers */
+    .chart-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:12px; }
+    @media(max-width:900px){ .chart-row{ grid-template-columns:1fr; } }
+
+    /* Log phase select row */
+    .phase-select-row{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; }
+    .phase-select-row .field{ flex:1 1 180px; }
+    .phase-select-row .field label{ display:block; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+
+    /* Settings row */
+    .settings-row{ display:flex; gap:14px; flex-wrap:wrap; }
+    .settings-row .field{ flex:1 1 180px; }
+
+    /* Exercises */
+    .exercises{margin-bottom:18px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    @media(max-width:900px){.ex-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-obj{flex:1;}
+    .ex-card:hover{border-color:#fdba74;box-shadow:0 2px 10px rgba(234,88,12,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(234,88,12,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#431407;margin-bottom:6px;line-height:1.3;}
+    .ex-obj-text{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#fff7ed;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#9a3412;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#431407;}
+    .ex-instructions b{color:#ea580c;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    .ex-answer{display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7;color:#14532d;}
+    .ex-answer b{color:#15803d;}
+    .ex-show-btn{margin-top:10px;background:none;border:1px solid #c7d7fd;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#1e40af;cursor:pointer;font-family:inherit;}
+    .ex-show-btn:hover{background:#e0eaff;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tool-header">
+      <h1>Bacterial Growth — Rate & Doubling Time <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;">BETA</span></h1>
+      <p>Calculate growth rate (r), generation time (g), and visualise the growth curve from OD or CFU measurements</p>
+    </div>
+
+    <!-- Guided Exercises -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="bgExToggle" onclick="toggleBgEx()">
+        <span>📋 Guided Exercises</span>
+        <span class="ex-arrow">▶</span>
+      </button>
+      <div id="bgExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="bgEx1" onclick="loadBgEx(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">E. coli in LB broth</div>
+            <div class="ex-obj-text">Classic fast-growing organism. Identify lag, log, and stationary phases and calculate generation time.</div>
+            <div class="ex-params">
+              <span class="ex-param">g ≈ 20 min</span>
+              <span class="ex-param">Fast grower</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="bgEx2" onclick="loadBgEx(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">Slow grower — overnight</div>
+            <div class="ex-obj-text">Extended monitoring over 18 hours. Notice the long lag phase before exponential growth begins.</div>
+            <div class="ex-params">
+              <span class="ex-param">g ≈ 2-3h</span>
+              <span class="ex-param">Long lag</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="bgEx3" onclick="loadBgEx(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Sub-MIC antibiotic effect</div>
+            <div class="ex-obj-text">Growth under sub-inhibitory antibiotic concentration. Compare the reduced rate to the untreated E. coli in Exercise 1.</div>
+            <div class="ex-params">
+              <span class="ex-param">Reduced rate</span>
+              <span class="ex-param">Compare to Ex 1</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="bgEx4" onclick="loadBgEx(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">CFU data</div>
+            <div class="ex-obj-text">Colony-forming unit counts instead of OD. The gold standard for viable cell enumeration — switch measurement type to CFU/mL.</div>
+            <div class="ex-params">
+              <span class="ex-param">CFU/mL</span>
+              <span class="ex-param">Gold standard</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="bgEx5" onclick="loadBgEx(5)">
+            <div class="ex-num">Exercise 5</div>
+            <div class="ex-title">Noisy data</div>
+            <div class="ex-obj-text">Real-world messy data with an outlier at 5 h. Practice manually selecting the log phase to exclude the dip.</div>
+            <div class="ex-params">
+              <span class="ex-param">Outlier at 5h</span>
+              <span class="ex-param">Manual selection needed</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="bgExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Settings</div>
+      <div class="settings-row">
+        <div class="field">
+          <label for="measureType">Measurement type</label>
+          <select id="measureType">
+            <option value="OD600" selected>OD600 (optical density)</option>
+            <option value="CFU">CFU/mL</option>
+            <option value="cells">Cell count</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="timeUnit">Time unit</label>
+          <select id="timeUnit">
+            <option value="min">Minutes</option>
+            <option value="h" selected>Hours</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Entry -->
+    <div class="card">
+      <div style="font-weight:900;font-size:15px;margin-bottom:4px;">Growth Measurements</div>
+      <p class="note" style="margin-top:0;margin-bottom:12px;">Enter time points and readings. Duplicate readings (Reading 2) are optional and will be averaged.</p>
+      <div class="table-wrap">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th style="width:60px;">#</th>
+              <th>Time</th>
+              <th>Reading 1</th>
+              <th>Reading 2 (opt.)</th>
+              <th style="width:70px;"></th>
+            </tr>
+          </thead>
+          <tbody id="dataBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row" style="justify-content:flex-start;">
+        <button class="primary" type="button" id="addRowBtn">+ Add time point</button>
+      </div>
+    </div>
+
+    <!-- Log Phase Selection -->
+    <div class="card">
+      <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Log Phase Selection</div>
+      <div class="phase-select-row">
+        <div class="field">
+          <label for="phaseStart">Log phase start</label>
+          <select id="phaseStart"><option value="auto" selected>Auto-detect</option></select>
+        </div>
+        <div class="field">
+          <label for="phaseEnd">Log phase end</label>
+          <select id="phaseEnd"><option value="auto" selected>Auto-detect</option></select>
+        </div>
+      </div>
+      <p class="note" style="margin-top:0;">Leave as "Auto-detect" to let the algorithm find the log phase, or manually select start/end time points.</p>
+    </div>
+
+    <!-- Results -->
+    <div class="card" id="resultsCard" style="display:none;">
+      <div style="font-weight:900;font-size:15px;margin-bottom:12px;">Results</div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="formula-box" id="formulaBox"></div>
+      <div class="insight-box" id="insightBox"></div>
+    </div>
+
+    <!-- Charts -->
+    <div id="chartsSection" style="display:none;">
+      <div class="chart-row">
+        <div class="card">
+          <div style="font-weight:800;font-size:14px;margin-bottom:8px;">Growth Curve (linear scale)</div>
+          <div class="viz-wrap"><canvas id="linearChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="font-weight:800;font-size:14px;margin-bottom:8px;">Semi-log Plot (ln scale)</div>
+          <div class="viz-wrap"><canvas id="logChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="assets/vendor/chart.umd.min.js"></script>
+<script>
+(function(){
+  /* ── State ── */
+  const DEFAULT_DATA = [
+    { time:0, r1:0.05, r2:'' },
+    { time:1, r1:0.08, r2:'' },
+    { time:2, r1:0.15, r2:'' },
+    { time:3, r1:0.30, r2:'' },
+    { time:4, r1:0.58, r2:'' },
+    { time:5, r1:1.10, r2:'' },
+    { time:6, r1:1.45, r2:'' },
+    { time:7, r1:1.52, r2:'' },
+  ];
+
+  let linearChartInstance = null;
+  let logChartInstance = null;
+
+  /* ── DOM refs ── */
+  const dataBody   = document.getElementById('dataBody');
+  const addRowBtn  = document.getElementById('addRowBtn');
+  const phaseStart = document.getElementById('phaseStart');
+  const phaseEnd   = document.getElementById('phaseEnd');
+  const measureType= document.getElementById('measureType');
+  const timeUnit   = document.getElementById('timeUnit');
+
+  /* ── Render table ── */
+  function renderTable(rows){
+    dataBody.innerHTML = '';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--muted);font-weight:700;font-size:12px;">${i+1}</td>
+        <td><input type="number" step="any" class="tp-time" value="${r.time}" data-idx="${i}"/></td>
+        <td><input type="number" step="any" class="tp-r1" value="${r.r1}" data-idx="${i}"/></td>
+        <td><input type="number" step="any" class="tp-r2" value="${r.r2}" data-idx="${i}" placeholder="—"/></td>
+        <td><button type="button" class="remove-row" data-idx="${i}">Remove</button></td>
+      `;
+      dataBody.appendChild(tr);
+    });
+  }
+
+  function getTableData(){
+    const rows = [];
+    const times = dataBody.querySelectorAll('.tp-time');
+    const r1s   = dataBody.querySelectorAll('.tp-r1');
+    const r2s   = dataBody.querySelectorAll('.tp-r2');
+    for(let i=0; i<times.length; i++){
+      const t = parseFloat(times[i].value);
+      const v1= parseFloat(r1s[i].value);
+      const v2= r2s[i].value.trim() !== '' ? parseFloat(r2s[i].value) : '';
+      rows.push({ time: isNaN(t)?0:t, r1: isNaN(v1)?0:v1, r2: v2 });
+    }
+    return rows;
+  }
+
+  function getCleanPoints(){
+    const rows = getTableData();
+    return rows
+      .filter(r => Number.isFinite(r.r1) && r.r1 > 0)
+      .map(r => {
+        const avg = (r.r2 !== '' && Number.isFinite(r.r2) && r.r2 > 0) ? (r.r1 + r.r2)/2 : r.r1;
+        return { time: r.time, value: avg };
+      })
+      .sort((a,b) => a.time - b.time);
+  }
+
+  /* ── Phase dropdowns ── */
+  function updatePhaseDropdowns(){
+    const pts = getCleanPoints();
+    const prevStart = phaseStart.value;
+    const prevEnd   = phaseEnd.value;
+
+    phaseStart.innerHTML = '<option value="auto">Auto-detect</option>';
+    phaseEnd.innerHTML   = '<option value="auto">Auto-detect</option>';
+    pts.forEach(p => {
+      const label = p.time + ' ' + timeUnit.value;
+      phaseStart.innerHTML += `<option value="${p.time}">${label}</option>`;
+      phaseEnd.innerHTML   += `<option value="${p.time}">${label}</option>`;
+    });
+
+    // Restore previous selection if still valid
+    if([...phaseStart.options].some(o => o.value === prevStart)) phaseStart.value = prevStart;
+    if([...phaseEnd.options].some(o => o.value === prevEnd)) phaseEnd.value = prevEnd;
+  }
+
+  /* ── Log phase detection ── */
+  function detectLogPhase(pts){
+    if(pts.length < 3) return null;
+    const manualStart = phaseStart.value;
+    const manualEnd   = phaseEnd.value;
+
+    if(manualStart !== 'auto' && manualEnd !== 'auto'){
+      const s = parseFloat(manualStart);
+      const e = parseFloat(manualEnd);
+      const sub = pts.filter(p => p.time >= s && p.time <= e);
+      if(sub.length >= 2) return { points: sub, startIdx: pts.indexOf(sub[0]), endIdx: pts.indexOf(sub[sub.length-1]) };
+    }
+
+    // Auto-detect: find consecutive points where ln-slope > 50% of max slope
+    const lnVals = pts.map(p => Math.log(p.value));
+    const slopes = [];
+    for(let i=1; i<pts.length; i++){
+      const dt = pts[i].time - pts[i-1].time;
+      if(dt <= 0){ slopes.push(0); continue; }
+      slopes.push((lnVals[i] - lnVals[i-1]) / dt);
+    }
+
+    const maxSlope = Math.max(...slopes);
+    if(maxSlope <= 0) return null;
+
+    const threshold = maxSlope * 0.5;
+    // Find longest consecutive run above threshold
+    let bestStart = -1, bestEnd = -1, bestLen = 0;
+    let curStart = -1;
+    for(let i=0; i<slopes.length; i++){
+      if(slopes[i] >= threshold){
+        if(curStart === -1) curStart = i;
+        const len = i - curStart + 1;
+        if(len > bestLen){ bestLen = len; bestStart = curStart; bestEnd = i; }
+      } else {
+        curStart = -1;
+      }
+    }
+
+    if(bestStart === -1) return null;
+
+    // slopes[i] is between pts[i] and pts[i+1], so log phase spans pts[bestStart] to pts[bestEnd+1]
+    const startPtIdx = bestStart;
+    const endPtIdx = Math.min(bestEnd + 1, pts.length - 1);
+    const sub = pts.slice(startPtIdx, endPtIdx + 1);
+    return { points: sub, startIdx: startPtIdx, endIdx: endPtIdx };
+  }
+
+  /* ── Linear regression on ln values ── */
+  function linRegression(pts){
+    const n = pts.length;
+    if(n < 2) return null;
+    let sx=0, sy=0, sxx=0, sxy=0;
+    for(const p of pts){
+      const y = Math.log(p.value);
+      sx += p.time; sy += y; sxx += p.time*p.time; sxy += p.time*y;
+    }
+    const denom = n*sxx - sx*sx;
+    if(denom === 0) return null;
+    const slope = (n*sxy - sx*sy) / denom;
+    const intercept = (sy - slope*sx) / n;
+
+    // R squared
+    const yMean = sy / n;
+    let ssTot=0, ssRes=0;
+    for(const p of pts){
+      const y = Math.log(p.value);
+      ssTot += (y - yMean)*(y - yMean);
+      const pred = slope*p.time + intercept;
+      ssRes += (y - pred)*(y - pred);
+    }
+    const r2 = ssTot === 0 ? 1 : 1 - ssRes/ssTot;
+    return { slope, intercept, r2 };
+  }
+
+  /* ── Main calculation ── */
+  function calculate(){
+    const pts = getCleanPoints();
+    updatePhaseDropdowns();
+
+    const resultsCard = document.getElementById('resultsCard');
+    const chartsSection = document.getElementById('chartsSection');
+
+    if(pts.length < 3){
+      resultsCard.style.display = 'none';
+      chartsSection.style.display = 'none';
+      return;
+    }
+
+    const logPhase = detectLogPhase(pts);
+    if(!logPhase || logPhase.points.length < 2){
+      resultsCard.style.display = 'none';
+      chartsSection.style.display = 'none';
+      return;
+    }
+
+    const reg = linRegression(logPhase.points);
+    if(!reg || reg.slope <= 0){
+      resultsCard.style.display = 'none';
+      chartsSection.style.display = 'none';
+      return;
+    }
+
+    const r = reg.slope; // growth rate per time unit
+    const g = Math.LN2 / r; // generation/doubling time
+    const tUnit = timeUnit.value === 'min' ? 'min' : 'h';
+    const mType = measureType.value;
+
+    const lp = logPhase.points;
+    const N1 = lp[0].value;
+    const N2 = lp[lp.length-1].value;
+    const doublings = (Math.log(N2) - Math.log(N1)) / Math.LN2;
+    const phaseRange = lp[0].time + tUnit + ' — ' + lp[lp.length-1].time + tUnit;
+
+    // KPI cards
+    document.getElementById('kpiGrid').innerHTML = `
+      <div class="kpi"><div class="lab">Growth rate (r)</div><div class="val"><span class="mono">${r.toFixed(4)}</span> <span style="font-size:12px;font-weight:600;color:var(--muted);">per ${tUnit}</span></div></div>
+      <div class="kpi"><div class="lab">Generation time (g)</div><div class="val"><span class="mono">${g.toFixed(4)}</span> <span style="font-size:12px;font-weight:600;color:var(--muted);">${tUnit}</span></div></div>
+      <div class="kpi"><div class="lab">Doublings in log phase</div><div class="val"><span class="mono">${doublings.toFixed(2)}</span></div></div>
+      <div class="kpi"><div class="lab">Log phase</div><div class="val" style="font-size:15px;">${phaseRange}</div></div>
+    `;
+
+    // Formula
+    const t1 = lp[0].time, t2 = lp[lp.length-1].time;
+    document.getElementById('formulaBox').innerHTML = `
+      <strong>Calculation</strong><br>
+      <code>r = (ln(N\u2082) \u2212 ln(N\u2081)) / (t\u2082 \u2212 t\u2081)</code><br>
+      r = (ln(${N2.toFixed(4)}) \u2212 ln(${N1.toFixed(4)})) / (${t2} \u2212 ${t1})<br>
+      r = (${Math.log(N2).toFixed(4)} \u2212 ${Math.log(N1).toFixed(4)}) / ${(t2-t1).toFixed(2)}<br>
+      <strong>r = ${r.toFixed(4)} per ${tUnit}</strong><br><br>
+      <code>g = ln(2) / r</code><br>
+      g = ${Math.LN2.toFixed(4)} / ${r.toFixed(4)} = <strong>${g.toFixed(4)} ${tUnit}</strong><br><br>
+      <em>Log phase detected from time points: ${lp.map(p=>p.time+tUnit).join(', ')}</em><br>
+      <em>Linear fit R\u00B2 = ${reg.r2.toFixed(4)}</em>
+    `;
+
+    // Insight box
+    let gMin = g;
+    if(tUnit === 'h') gMin = g * 60;
+    let insight = '';
+    if(gMin < 15){
+      insight = 'This is a very fast doubling time. Verify your data for accuracy.';
+    } else if(gMin <= 25){
+      insight = 'This doubling time is consistent with fast-growing organisms such as <strong>E. coli</strong> (~20 min).';
+    } else if(gMin <= 40){
+      insight = 'This doubling time is consistent with moderately fast organisms such as <strong>S. aureus</strong> (~30 min).';
+    } else if(gMin <= 120){
+      insight = 'This is a moderate doubling time, typical of many clinical bacteria.';
+    } else if(gMin <= 1200){
+      insight = 'This is a slow doubling time. Slow-growing organisms like <strong>M. tuberculosis</strong> can have doubling times of 15\u201320 hours.';
+    } else {
+      insight = 'This is an unusually slow growth rate. Check that readings and time units are correct.';
+    }
+
+    document.getElementById('insightBox').innerHTML = `
+      <strong>Interpretation</strong><br>
+      Generation time: <strong>${g.toFixed(2)} ${tUnit}</strong>${tUnit==='h' ? ' (' + gMin.toFixed(1) + ' min)' : ''}<br>
+      ${insight}<br><br>
+      <em style="font-size:12px;color:var(--muted);">Reference doubling times: E. coli ~20 min | S. aureus ~30 min | M. tuberculosis ~15\u201320 h</em>
+    `;
+
+    resultsCard.style.display = 'block';
+    chartsSection.style.display = 'block';
+
+    renderCharts(pts, logPhase, reg, tUnit, mType);
+  }
+
+  /* ── Charts ── */
+  function renderCharts(pts, logPhase, reg, tUnit, mType){
+    const times  = pts.map(p => p.time);
+    const values = pts.map(p => p.value);
+    const lnVals = pts.map(p => Math.log(p.value));
+
+    const lpStart = logPhase.points[0].time;
+    const lpEnd   = logPhase.points[logPhase.points.length-1].time;
+
+    const yLabel = mType === 'OD600' ? 'OD600' : mType === 'CFU' ? 'CFU/mL' : 'Cell count';
+
+    // Determine phase labels for annotation
+    // Lag = before log, Log = detected, Stationary = after log
+    const lagMid   = lpStart > times[0] ? (times[0] + lpStart) / 2 : null;
+    const logMid   = (lpStart + lpEnd) / 2;
+    const statMid  = lpEnd < times[times.length-1] ? (lpEnd + times[times.length-1]) / 2 : null;
+
+    // --- Linear Chart ---
+    if(linearChartInstance) linearChartInstance.destroy();
+
+    // Build background shading dataset for log phase
+    const logBgData = pts.map(p => (p.time >= lpStart && p.time <= lpEnd) ? p.value : null);
+
+    linearChartInstance = new Chart(document.getElementById('linearChart'), {
+      type: 'line',
+      data: {
+        labels: times,
+        datasets: [
+          {
+            label: yLabel,
+            data: values,
+            borderColor: '#1976d2',
+            backgroundColor: '#1976d2',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0,
+            fill: false,
+            order: 1
+          },
+          {
+            label: 'Log phase region',
+            data: logBgData,
+            borderColor: 'rgba(25,118,210,0.15)',
+            backgroundColor: 'rgba(25,118,210,0.10)',
+            pointRadius: 0,
+            fill: true,
+            tension: 0,
+            order: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { title: { display:true, text: 'Time (' + tUnit + ')' } },
+          y: { title: { display:true, text: yLabel }, beginAtZero: true }
+        }
+      },
+      plugins: [{
+        id: 'phaseLabels',
+        afterDraw(chart){
+          const ctx = chart.ctx;
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          ctx.save();
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+
+          // Shade log phase
+          const xL = xScale.getPixelForValue(times.indexOf(lpStart) >= 0 ? times.indexOf(lpStart) : 0);
+          const xR = xScale.getPixelForValue(times.indexOf(lpEnd) >= 0 ? times.indexOf(lpEnd) : times.length-1);
+          ctx.fillStyle = 'rgba(25,118,210,0.06)';
+          ctx.fillRect(xL, yScale.top, xR - xL, yScale.bottom - yScale.top);
+
+          // Phase labels at top
+          const labelY = yScale.top + 14;
+          ctx.fillStyle = '#6b7280';
+          if(lagMid !== null){
+            const idx = times.reduce((best,t,i) => Math.abs(t-lagMid) < Math.abs(times[best]-lagMid) ? i : best, 0);
+            ctx.fillText('Lag', xScale.getPixelForValue(idx), labelY);
+          }
+          const logIdx = times.reduce((best,t,i) => Math.abs(t-logMid) < Math.abs(times[best]-logMid) ? i : best, 0);
+          ctx.fillStyle = '#1976d2';
+          ctx.fillText('Log', xScale.getPixelForValue(logIdx), labelY);
+          if(statMid !== null){
+            const idx = times.reduce((best,t,i) => Math.abs(t-statMid) < Math.abs(times[best]-statMid) ? i : best, 0);
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText('Stationary', xScale.getPixelForValue(idx), labelY);
+          }
+          ctx.restore();
+        }
+      }]
+    });
+
+    // --- Semi-log Chart ---
+    if(logChartInstance) logChartInstance.destroy();
+
+    // Regression line through all time range for log phase points
+    const regLineData = times.map(t => {
+      if(t >= lpStart && t <= lpEnd){
+        return reg.slope * t + reg.intercept;
+      }
+      return null;
+    });
+
+    logChartInstance = new Chart(document.getElementById('logChart'), {
+      type: 'line',
+      data: {
+        labels: times,
+        datasets: [
+          {
+            label: 'ln(' + yLabel + ')',
+            data: lnVals,
+            borderColor: '#1976d2',
+            backgroundColor: '#1976d2',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0,
+            fill: false,
+            order: 1
+          },
+          {
+            label: 'Regression (log phase)',
+            data: regLineData,
+            borderColor: '#ef4444',
+            backgroundColor: '#ef4444',
+            borderDash: [6,3],
+            pointRadius: 0,
+            tension: 0,
+            fill: false,
+            order: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 } } },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { title: { display:true, text: 'Time (' + tUnit + ')' } },
+          y: { title: { display:true, text: 'ln(' + yLabel + ')' } }
+        }
+      },
+      plugins: [{
+        id: 'r2Label',
+        afterDraw(chart){
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = 'bold 12px ui-monospace, monospace';
+          ctx.fillStyle = '#ef4444';
+          ctx.textAlign = 'right';
+          ctx.fillText('R\u00B2 = ' + reg.r2.toFixed(4), chart.width - 20, 20);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  /* ── Event handling ── */
+  function onDataChange(){
+    calculate();
+  }
+
+  dataBody.addEventListener('input', onDataChange);
+  phaseStart.addEventListener('change', onDataChange);
+  phaseEnd.addEventListener('change', onDataChange);
+  measureType.addEventListener('change', onDataChange);
+  timeUnit.addEventListener('change', function(){
+    updatePhaseDropdowns();
+    onDataChange();
+  });
+
+  addRowBtn.addEventListener('click', function(){
+    const rows = getTableData();
+    const lastTime = rows.length > 0 ? rows[rows.length-1].time : 0;
+    rows.push({ time: lastTime + 1, r1: '', r2: '' });
+    renderTable(rows);
+    onDataChange();
+  });
+
+  dataBody.addEventListener('click', function(e){
+    if(e.target.classList.contains('remove-row')){
+      const rows = getTableData();
+      const idx = parseInt(e.target.dataset.idx);
+      if(rows.length <= 3){ return; } // keep minimum 3 rows
+      rows.splice(idx, 1);
+      renderTable(rows);
+      onDataChange();
+    }
+  });
+
+  /* ── Save / Load ── */
+  window.getSaveData = function(){
+    return {
+      measureType: measureType.value,
+      timeUnit: timeUnit.value,
+      data: getTableData(),
+      phaseStart: phaseStart.value,
+      phaseEnd: phaseEnd.value
+    };
+  };
+
+  window.loadSaveData = function(d){
+    if(!d) return;
+    if(d.measureType) measureType.value = d.measureType;
+    if(d.timeUnit) timeUnit.value = d.timeUnit;
+    if(d.data && Array.isArray(d.data)){
+      renderTable(d.data);
+    }
+    updatePhaseDropdowns();
+    if(d.phaseStart) phaseStart.value = d.phaseStart;
+    if(d.phaseEnd) phaseEnd.value = d.phaseEnd;
+    onDataChange();
+  };
+
+  /* ── Init ── */
+  renderTable(DEFAULT_DATA);
+  calculate();
+
+  /* ── Exercise toggle & loader (exposed globally) ── */
+  const BG_EXERCISES = {
+    1: {
+      measureType: 'OD600', timeUnit: 'h',
+      data: [
+        {time:0,r1:0.02,r2:''},{time:0.5,r1:0.03,r2:''},{time:1,r1:0.06,r2:''},{time:1.5,r1:0.12,r2:''},
+        {time:2,r1:0.24,r2:''},{time:2.5,r1:0.48,r2:''},{time:3,r1:0.85,r2:''},{time:3.5,r1:1.10,r2:''},
+        {time:4,r1:1.18,r2:''},{time:4.5,r1:1.20,r2:''}
+      ],
+      title: 'E. coli in LB broth',
+      steps: `
+        <b>Context:</b> E. coli is one of the fastest-growing organisms in the laboratory, with a generation time of approximately 20 minutes under optimal conditions in LB broth at 37 °C.<br><br>
+        <b>Steps:</b>
+        <ol>
+          <li>Inspect the loaded growth curve. Can you identify the lag phase, log (exponential) phase, and stationary phase?</li>
+          <li>Check the auto-detected log phase range. Does it cover the steepest part of the curve?</li>
+          <li>Note the calculated generation time. Is it close to the expected ~20 min for E. coli?</li>
+          <li>Look at the semi-log plot — the log phase should appear as a straight line. What does R² tell you about the fit?</li>
+        </ol>`,
+      answer: `<b>Expected result:</b> The generation time should be approximately <b>20 minutes</b> (≈ 0.33 h). The log phase is roughly from 0.5–3 h. R² should be high (> 0.99) in the exponential region, confirming good exponential growth. The stationary phase begins around 3.5–4 h where OD plateaus near 1.2.`
+    },
+    2: {
+      measureType: 'OD600', timeUnit: 'h',
+      data: [
+        {time:0,r1:0.05,r2:''},{time:2,r1:0.06,r2:''},{time:4,r1:0.08,r2:''},{time:6,r1:0.14,r2:''},
+        {time:8,r1:0.28,r2:''},{time:10,r1:0.52,r2:''},{time:12,r1:0.95,r2:''},{time:14,r1:1.30,r2:''},
+        {time:16,r1:1.42,r2:''},{time:18,r1:1.45,r2:''}
+      ],
+      title: 'Slow grower — overnight',
+      steps: `
+        <b>Context:</b> Not all organisms grow as fast as E. coli. This dataset shows a bacterium with a long lag phase (0–4 h) and a generation time of 2–3 hours, requiring overnight incubation to reach stationary phase.<br><br>
+        <b>Steps:</b>
+        <ol>
+          <li>Look at the growth curve — the OD barely changes in the first 4 hours. This is the lag phase where cells are adapting.</li>
+          <li>Identify where exponential growth begins (around 4–6 h) and where it ends (around 14 h).</li>
+          <li>Compare the generation time to Exercise 1. How many times slower is this organism?</li>
+          <li>Try manually selecting a narrower log phase (e.g. 6–12 h) and see how it affects the result.</li>
+        </ol>`,
+      answer: `<b>Expected result:</b> The generation time should be approximately <b>2–3 hours</b>. The long lag phase (0–4 h) is clearly visible. Compared to E. coli (~20 min), this organism is roughly 6–9× slower. Manual log phase selection between 6–12 h should give a clean fit with high R².`
+    },
+    3: {
+      measureType: 'OD600', timeUnit: 'h',
+      data: [
+        {time:0,r1:0.05,r2:''},{time:1,r1:0.06,r2:''},{time:2,r1:0.08,r2:''},{time:3,r1:0.11,r2:''},
+        {time:4,r1:0.15,r2:''},{time:5,r1:0.19,r2:''},{time:6,r1:0.22,r2:''},{time:7,r1:0.24,r2:''}
+      ],
+      title: 'Sub-MIC antibiotic effect',
+      steps: `
+        <b>Context:</b> This culture was grown in the presence of a sub-inhibitory antibiotic concentration. The bacteria still grow, but much slower than the untreated control (Exercise 1).<br><br>
+        <b>Steps:</b>
+        <ol>
+          <li>Calculate the generation time for this culture. Compare it to E. coli without antibiotic (Exercise 1, g ≈ 20 min).</li>
+          <li>The growth rate is reduced but not zero — this is the meaning of "sub-MIC" (below the minimum inhibitory concentration).</li>
+          <li>How would you determine the MIC from a series of experiments like this?</li>
+          <li>Note: a longer generation time means the antibiotic is partially effective, but resistance may develop if treatment continues at sub-MIC levels.</li>
+        </ol>`,
+      answer: `<b>Expected result:</b> The generation time will be substantially longer than the untreated E. coli. The growth rate is reduced but growth continues. In clinical microbiology, sub-MIC growth is concerning because it promotes resistance development. The MIC is determined by finding the lowest concentration where visible growth is completely inhibited.`
+    },
+    4: {
+      measureType: 'CFU', timeUnit: 'h',
+      data: [
+        {time:0,r1:10000,r2:''},{time:1,r1:25000,r2:''},{time:2,r1:60000,r2:''},{time:3,r1:150000,r2:''},
+        {time:4,r1:380000,r2:''},{time:5,r1:900000,r2:''},{time:6,r1:1100000,r2:''}
+      ],
+      title: 'CFU data',
+      steps: `
+        <b>Context:</b> Colony-forming units (CFU/mL) are the gold standard for measuring viable bacterial cell counts. Unlike OD, CFU counts only living cells capable of forming colonies on agar.<br><br>
+        <b>Steps:</b>
+        <ol>
+          <li>Note that the measurement type is set to CFU/mL (not OD600). The y-axis units change accordingly.</li>
+          <li>CFU data spans several orders of magnitude — the semi-log plot is especially useful here.</li>
+          <li>Calculate the generation time. Is it consistent with a fast-growing organism?</li>
+          <li>Compare this result to OD-based measurements. CFU gives absolute cell numbers, while OD is a relative turbidity measurement.</li>
+        </ol>`,
+      answer: `<b>Expected result:</b> The generation time from CFU data should be in the range of a fast-growing organism. The semi-log plot should show a clear linear region during exponential growth (approximately 0–5 h). At 6 h, growth begins to slow (early stationary). CFU data is noisier in practice because it involves serial dilutions and plate counting.`
+    },
+    5: {
+      measureType: 'OD600', timeUnit: 'h',
+      data: [
+        {time:0,r1:0.05,r2:''},{time:1,r1:0.07,r2:''},{time:2,r1:0.18,r2:''},{time:3,r1:0.30,r2:''},
+        {time:4,r1:0.55,r2:''},{time:5,r1:0.48,r2:''},{time:6,r1:1.05,r2:''},{time:7,r1:1.35,r2:''},
+        {time:8,r1:1.40,r2:''}
+      ],
+      title: 'Noisy data',
+      steps: `
+        <b>Context:</b> Real laboratory data is often messy. At time = 5 h, the reading drops unexpectedly (0.48 after 0.55 at 4 h). This could be a pipetting error, bubble in the cuvette, or measurement artefact.<br><br>
+        <b>Steps:</b>
+        <ol>
+          <li>Look at the growth curve — the dip at 5 h is clearly an outlier.</li>
+          <li>The auto-detect algorithm may or may not handle this well. Check what log phase it selects.</li>
+          <li>Manually select the log phase to exclude the outlier. Try selecting 1 h to 4 h as the log phase, then try 1 h to 6 h — how does R² change?</li>
+          <li>This demonstrates why manual phase selection is important when data quality is imperfect.</li>
+        </ol>`,
+      answer: `<b>Expected result:</b> With the outlier excluded (e.g. log phase 1–4 h), you should get a clean fit with high R². Including the outlier will lower R² and distort the growth rate. <b>Key lesson:</b> Always visually inspect your data. Automated algorithms can be misled by outliers — manual curation is an essential skill in laboratory data analysis.`
+    }
+  };
+
+  window.toggleBgEx = function(){
+    const panel  = document.getElementById('bgExPanel');
+    const toggle = document.getElementById('bgExToggle');
+    const open   = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : 'block';
+    toggle.classList.toggle('open', !open);
+  };
+
+  window.toggleBgAnswer = function(id, btn){
+    const ans = document.getElementById(id);
+    const showing = ans.style.display === 'block';
+    ans.style.display = showing ? 'none' : 'block';
+    btn.textContent = showing ? 'Show answer' : 'Hide answer';
+  };
+
+  window.loadBgEx = function(n){
+    const ex = BG_EXERCISES[n];
+    if(!ex) return;
+
+    // Highlight active card
+    document.querySelectorAll('[id^="bgEx"]').forEach(c => c.classList.remove('active'));
+    document.getElementById('bgEx' + n).classList.add('active');
+
+    // Set measurement type and time unit
+    measureType.value = ex.measureType;
+    timeUnit.value = ex.timeUnit;
+
+    // Reset log phase selectors to auto
+    phaseStart.value = 'auto';
+    phaseEnd.value = 'auto';
+
+    // Clear and populate the data table
+    renderTable(ex.data);
+
+    // Trigger calculation
+    calculate();
+
+    // Show instructions
+    const instr = document.getElementById('bgExInstructions');
+    instr.style.display = 'block';
+    instr.innerHTML = `
+      <strong style="color:#1e40af;">📌 ${ex.title}</strong><br><br>
+      ${ex.steps}
+      <br>
+      <button class="ex-show-btn" onclick="toggleBgAnswer('bgAns${n}', this)">Show answer</button>
+      <div class="ex-answer" id="bgAns${n}">${ex.answer}</div>`;
+    instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+})();
+</script>
+</body>
+</html>

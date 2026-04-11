@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Qualitative Limit of Detection</title>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    .page-header {
+      background: linear-gradient(135deg, #134e4a 0%, #0f766e 60%, #0d9488 100%);
+      color: white; padding: 20px 28px 18px; flex-shrink: 0;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p { margin: 0; font-size: 13px; opacity: .78; }
+
+    .shell { display: flex; flex: 1; min-height: 0; }
+
+    /* LEFT */
+    .left-panel {
+      width: 280px; min-width: 280px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
+
+    .ctrl-group { margin-bottom: 18px; }
+    .ctrl-group label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #0d9488; }
+    .ctrl-val { font-size: 13px; font-weight: 700; color: #0d9488; min-width: 44px; text-align: right; }
+
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 16px 0 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+    .stat-card .sc-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .stat-card .sc-val { font-size: 18px; font-weight: 900; color: #111827; }
+    .stat-card .sc-pct { font-size: 11px; color: #6b7280; }
+
+    .auc-badge {
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      background: #f0fdfa; border: 2px solid #99f6e4; border-radius: 14px;
+      padding: 14px; margin: 12px 0;
+    }
+    .auc-badge .auc-label { font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: .06em; }
+    .auc-badge .auc-val { font-size: 36px; font-weight: 900; color: #0d9488; line-height: 1.1; }
+    .auc-badge .auc-desc { font-size: 12px; color: #134e4a; margin-top: 2px; text-align: center; }
+
+    .insight-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; color: #134e4a; margin-top: 10px; }
+    .insight-box b { color: #0f766e; }
+
+    /* RIGHT */
+    .right-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; overflow: hidden; }
+
+    .chart-cell { padding: 14px 16px 10px; min-height: 0; display: flex; flex-direction: column; }
+    .chart-cell:nth-child(2) { border-left: 1px solid #e5e7eb; }
+    .chart-cell:nth-child(3) { border-top: 1px solid #e5e7eb; background: white; }
+    .chart-cell:nth-child(4) { border-top: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; background: white; }
+
+    .chart-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .chart-wrap { position: relative; flex: 1; min-height: 0; }
+
+    /* EXERCISES */
+    .exercises { background: white; border-bottom: 1px solid #e5e7eb; padding: 14px 20px; flex-shrink: 0; overflow-y: auto; max-height: 50vh; }
+    .ex-toggle { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 800; color: #344054; padding: 0 0 10px; width: 100%; }
+    .ex-toggle .ex-arrow { font-size: 11px; color: #9ca3af; transition: transform .2s; }
+    .ex-toggle.open .ex-arrow { transform: rotate(90deg); }
+    .ex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .ex-card { background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; position: relative; display: flex; flex-direction: column; }
+    .ex-card:hover { border-color: #5eead4; box-shadow: 0 2px 10px rgba(13,148,136,.1); }
+    .ex-card.active { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .ex-num { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 5px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #134e4a; margin-bottom: 6px; line-height: 1.3; }
+    .ex-obj { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 10px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .ex-param { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn { width: 100%; padding: 7px; background: #0d9488; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .ex-btn:hover { opacity: .88; }
+    .ex-instructions { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.7; color: #134e4a; display: none; }
+    .ex-instructions.visible { display: block; }
+    .ex-instructions b { color: #0f766e; }
+    .ex-instructions ol { margin: 8px 0 0 16px; padding: 0; }
+    .ex-instructions li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Understanding Qualitative Limit of Detection <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;">BETA</span></h1>
+  <p>Explore how concentration, replicates, and the target hit rate determine the LoD. See the probit curve respond to your parameters in real time.</p>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+    <span>📋 Guided Exercises</span>
+    <span class="ex-arrow">▶</span>
+  </button>
+  <div id="exPanel">
+    <div class="ex-grid">
+
+      <div class="ex-card" id="exCard0" onclick="loadExercise(0)">
+        <div class="ex-num">Exercise 1</div>
+        <div class="ex-title">Adequate design</div>
+        <div class="ex-obj">A well-designed study with enough replicates to identify the LoD with confidence.</div>
+        <div class="ex-params">
+          <span class="ex-param">LoD = 20</span>
+          <span class="ex-param">Steep = 2.0</span>
+          <span class="ex-param">n = 40</span>
+          <span class="ex-param">Levels = 6</span>
+          <span class="ex-param">Target = 95%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+        <div class="ex-num">Exercise 2</div>
+        <div class="ex-title">Too few replicates</div>
+        <div class="ex-obj">See how wide confidence intervals make it impossible to pin down the LoD.</div>
+        <div class="ex-params">
+          <span class="ex-param">LoD = 20</span>
+          <span class="ex-param">Steep = 2.0</span>
+          <span class="ex-param">n = 5</span>
+          <span class="ex-param">Levels = 6</span>
+          <span class="ex-param">Target = 95%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+        <div class="ex-num">Exercise 3</div>
+        <div class="ex-title">Sharp vs gradual transition</div>
+        <div class="ex-obj">Explore how a gradual detection probability curve widens the LoD zone.</div>
+        <div class="ex-params">
+          <span class="ex-param">LoD = 20</span>
+          <span class="ex-param">Steep = 0.8</span>
+          <span class="ex-param">n = 20</span>
+          <span class="ex-param">Levels = 8</span>
+          <span class="ex-param">Target = 95%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+        <div class="ex-num">Exercise 4</div>
+        <div class="ex-title">High target (99%)</div>
+        <div class="ex-obj">See how requiring 99% detection pushes the estimated LoD higher.</div>
+        <div class="ex-params">
+          <span class="ex-param">LoD = 20</span>
+          <span class="ex-param">Steep = 2.0</span>
+          <span class="ex-param">n = 20</span>
+          <span class="ex-param">Levels = 6</span>
+          <span class="ex-param">Target = 99%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+        <div class="ex-num">Exercise 5</div>
+        <div class="ex-title">Few concentration levels</div>
+        <div class="ex-obj">Understand why 3 levels may miss the true LoD entirely.</div>
+        <div class="ex-params">
+          <span class="ex-param">LoD = 20</span>
+          <span class="ex-param">Steep = 2.0</span>
+          <span class="ex-param">n = 20</span>
+          <span class="ex-param">Levels = 3</span>
+          <span class="ex-param">Target = 95%</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+    </div>
+    <div class="ex-instructions" id="exInstructions"></div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="ctrl-group">
+      <label>True LoD (P(detect) = target)</label>
+      <div class="ctrl-row">
+        <input type="range" id="lodSlider" min="5" max="50" step="1" value="20" oninput="update()">
+        <span class="ctrl-val" id="lodVal">20</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Curve steepness</label>
+      <div class="ctrl-row">
+        <input type="range" id="steepSlider" min="0.5" max="5.0" step="0.1" value="2.0" oninput="update()">
+        <span class="ctrl-val" id="steepVal">2.0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Replicates per level</label>
+      <div class="ctrl-row">
+        <input type="range" id="repSlider" min="5" max="80" step="1" value="20" oninput="update()">
+        <span class="ctrl-val" id="repVal">20</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Concentration levels</label>
+      <div class="ctrl-row">
+        <input type="range" id="levelsSlider" min="3" max="10" step="1" value="6" oninput="update()">
+        <span class="ctrl-val" id="levelsVal">6</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Target hit rate (%)</label>
+      <div class="ctrl-row">
+        <input type="range" id="targetSlider" min="80" max="99" step="1" value="95" oninput="update()">
+        <span class="ctrl-val" id="targetVal">95%</span>
+      </div>
+    </div>
+
+    <div class="section-title">Estimated LoD</div>
+    <div class="auc-badge">
+      <div class="auc-label">Estimated LoD</div>
+      <div class="auc-val" id="estLodVal">—</div>
+      <div class="auc-desc" id="estLodDesc">—</div>
+    </div>
+
+    <div class="section-title">Statistics</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-label">Estimated LoD</div>
+        <div class="sc-val" id="statEstLod">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">True LoD</div>
+        <div class="sc-val" id="statTrueLod">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Error (%)</div>
+        <div class="sc-val" id="statError">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Lowest at target</div>
+        <div class="sc-val" id="statLowest">—</div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insightBox">Adjust the sliders to explore how LoD estimation works.</div>
+  </div>
+
+  <!-- RIGHT: 4 charts -->
+  <div class="right-panel">
+    <div class="chart-cell">
+      <div class="chart-label">Hit Rate vs Concentration</div>
+      <div class="chart-wrap"><canvas id="hitRateChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">Probit Curve — True vs Estimated</div>
+      <div class="chart-wrap"><canvas id="probitChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">CI Width vs Replicates</div>
+      <div class="chart-wrap"><canvas id="ciChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">LoD Estimation Variability (50 runs)</div>
+      <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const exercises = [
+  {
+    title: 'Adequate design',
+    lod: 20, steep: 2.0, reps: 40, levels: 6, target: 95,
+    obj: 'A well-designed study with enough replicates to identify the LoD with confidence.',
+    steps: [
+      'Load the exercise and observe the hit rate chart. With 40 replicates per level, the confidence intervals are narrow.',
+      'Look at the CI Width chart (bottom-left) — at n=40, the CI half-width at 95% is only about 7 percentage points.',
+      'Check the histogram (bottom-right). The estimated LoD clusters tightly around the true value.',
+      'Now reduce replicates to 10 and watch the histogram spread out dramatically.'
+    ],
+    insight: 'With 40 replicates per level, the CI is narrow enough to distinguish 85% from 95% hit rate — you can identify the LoD with confidence.'
+  },
+  {
+    title: 'Too few replicates',
+    lod: 20, steep: 2.0, reps: 5, levels: 6, target: 95,
+    obj: 'See how wide confidence intervals make it impossible to pin down the LoD.',
+    steps: [
+      'With only 5 replicates, observe the huge error bars on the hit rate chart.',
+      'The possible observed hit rates are 0%, 20%, 40%, 60%, 80%, 100% — nothing in between.',
+      'Look at the CI Width chart: at n=5, the CI half-width at 95% exceeds 25 percentage points.',
+      'The histogram shows estimates scattered widely — some simulations miss the true LoD by 50% or more.'
+    ],
+    insight: 'With only 5 replicates, 4/5 = 80% and 5/5 = 100% — you cannot distinguish these from 95%. The CI spans nearly the entire range.'
+  },
+  {
+    title: 'Sharp vs gradual transition',
+    lod: 20, steep: 0.8, levels: 8, reps: 20, target: 95,
+    obj: 'Explore how a gradual detection probability curve widens the "LoD zone".',
+    steps: [
+      'With steepness = 0.8, the probit curve rises slowly. There is a wide range of concentrations between 50% and 95% hit rate.',
+      'Compare the probit chart: the true curve is much flatter than in Exercise 1.',
+      'Increase steepness to 4.0. Now the transition is almost a step function — the LoD is very precisely defined.',
+      'With a gradual curve, try increasing to 8-10 levels to better pinpoint where the transition happens.'
+    ],
+    insight: 'When the detection probability transitions gradually, the "LoD zone" is wide — you need more levels and more replicates to pinpoint where 95% is reached.'
+  },
+  {
+    title: 'High target (99%)',
+    lod: 20, steep: 2.0, reps: 20, levels: 6, target: 99,
+    obj: 'See how requiring 99% detection pushes the estimated LoD higher.',
+    steps: [
+      'At 99% target, the estimated LoD is above the true LoD (which was defined at 95%).',
+      'Look at the hit rate chart — the 99% line is higher, so you need a higher concentration to cross it.',
+      'To confirm 99% with 20 replicates, you need 20/20 = 100%. The CI for 20/20 includes 99%, but 19/20 = 95% does not.',
+      'Increase replicates to 60+ to see the estimates stabilize.'
+    ],
+    insight: 'Requiring 99% detection pushes the LoD higher. You need even more replicates to confirm 99% vs 95% because the binomial CI at 99% is very asymmetric.'
+  },
+  {
+    title: 'Few concentration levels',
+    lod: 20, steep: 2.0, reps: 20, levels: 3, target: 95,
+    obj: 'Understand why 3 levels may miss the true LoD entirely.',
+    steps: [
+      'With only 3 concentration levels, the spacing is very coarse.',
+      'Re-run the simulation a few times (move a slider back and forth). Sometimes the estimated LoD jumps dramatically.',
+      'Look at the histogram — estimates cluster at just 2-3 discrete values because there are only 3 levels to choose from.',
+      'Increase to 8 levels and observe how the histogram becomes smoother and more centered.'
+    ],
+    insight: 'With only 3 levels, you may miss the true LoD entirely if none of your levels falls near 95%. More levels (6-8) give much better resolution for pinpointing the transition.'
+  },
+];
+
+let hitRateChart, probitChart, ciChart, histChart;
+
+/* --- Utility functions --- */
+
+// Logistic sigmoid
+function sigmoid(x) {
+  if (x > 20) return 1;
+  if (x < -20) return 0;
+  return 1 / (1 + Math.exp(-x));
+}
+
+// True detection probability at concentration c
+// We use a logistic curve: P(c) = 1 / (1 + exp(-steepness * (c - c50) / lodTrue))
+// where c50 is chosen so that P(lodTrue) = target/100
+function trueProb(c, lodTrue, steepness, target) {
+  // We want P(lodTrue) = target/100
+  // sigmoid(steepness * (lodTrue - c50) / lodTrue) = target/100
+  // steepness * (lodTrue - c50) / lodTrue = logit(target/100)
+  // c50 = lodTrue - lodTrue * logit(target/100) / steepness
+  var tgt = target / 100;
+  var logitT = Math.log(tgt / (1 - tgt));
+  var c50 = lodTrue - lodTrue * logitT / steepness;
+  return sigmoid(steepness * (c - c50) / lodTrue);
+}
+
+// Binomial simulation: number of successes out of n trials with probability p
+function binomSample(n, p) {
+  var count = 0;
+  for (var i = 0; i < n; i++) {
+    if (Math.random() < p) count++;
+  }
+  return count;
+}
+
+// Clopper-Pearson 95% CI
+// Uses the beta distribution approximation via the incomplete beta function
+// For simplicity, we use the normal approximation for moderate n and a refined method for small n
+function clopperPearsonCI(k, n) {
+  if (n === 0) return [0, 1];
+  var alpha = 0.05;
+  var lo, hi;
+  if (k === 0) {
+    lo = 0;
+  } else {
+    lo = betaInvCDF(alpha / 2, k, n - k + 1);
+  }
+  if (k === n) {
+    hi = 1;
+  } else {
+    hi = betaInvCDF(1 - alpha / 2, k + 1, n - k);
+  }
+  return [lo, hi];
+}
+
+// Approximate beta inverse CDF using bisection
+function betaInvCDF(p, a, b) {
+  var lo = 0, hi = 1, mid;
+  for (var i = 0; i < 60; i++) {
+    mid = (lo + hi) / 2;
+    if (betaRegularized(mid, a, b) < p) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return (lo + hi) / 2;
+}
+
+// Regularized incomplete beta function I_x(a,b)
+// Using continued fraction expansion
+function betaRegularized(x, a, b) {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  // Use symmetry if needed for convergence
+  if (x > (a + 1) / (a + b + 2)) {
+    return 1 - betaRegularized(1 - x, b, a);
+  }
+  var lnBeta = lnGamma(a) + lnGamma(b) - lnGamma(a + b);
+  var front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lnBeta) / a;
+  // Lentz continued fraction
+  var f = 1, c = 1, d = 1 - (a + b) * x / (a + 1);
+  if (Math.abs(d) < 1e-30) d = 1e-30;
+  d = 1 / d;
+  f = d;
+  for (var i = 1; i <= 200; i++) {
+    var m = i;
+    // even step
+    var numerator = m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m));
+    d = 1 + numerator * d;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + numerator / c;
+    if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d;
+    f *= d * c;
+    // odd step
+    numerator = -((a + m) * (a + b + m) * x) / ((a + 2 * m) * (a + 2 * m + 1));
+    d = 1 + numerator * d;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + numerator / c;
+    if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d;
+    var delta = d * c;
+    f *= delta;
+    if (Math.abs(delta - 1) < 1e-10) break;
+  }
+  return front * f;
+}
+
+// Log-gamma function (Lanczos approximation)
+function lnGamma(z) {
+  var g = 7;
+  var coef = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (z < 0.5) {
+    return Math.log(Math.PI / Math.sin(Math.PI * z)) - lnGamma(1 - z);
+  }
+  z -= 1;
+  var x = coef[0];
+  for (var i = 1; i < g + 2; i++) {
+    x += coef[i] / (z + i);
+  }
+  var t = z + g + 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+// Fit a logistic curve to observed data points (concentration, hitRate)
+// Returns {c50, k} where P(c) = sigmoid(k * (c - c50))
+function fitLogistic(concs, hitRates, weights) {
+  // Simple grid search + refine for c50 and k
+  var bestErr = Infinity, bestC50 = concs[Math.floor(concs.length / 2)], bestK = 0.1;
+  var lodEst = concs[0];
+  // Coarse grid
+  var cMin = concs[0], cMax = concs[concs.length - 1];
+  for (var c50 = cMin; c50 <= cMax; c50 += (cMax - cMin) / 20) {
+    for (var k = 0.02; k <= 1.0; k += 0.02) {
+      var err = 0;
+      for (var i = 0; i < concs.length; i++) {
+        var pred = sigmoid(k * (concs[i] - c50));
+        var diff = pred - hitRates[i];
+        var w = weights ? weights[i] : 1;
+        err += w * diff * diff;
+      }
+      if (err < bestErr) { bestErr = err; bestC50 = c50; bestK = k; }
+    }
+  }
+  // Fine refine
+  for (var iter = 0; iter < 3; iter++) {
+    var dc = (cMax - cMin) / (20 * Math.pow(10, iter + 1));
+    var dk = 0.02 / Math.pow(5, iter + 1);
+    var c50Lo = bestC50 - 10 * dc, c50Hi = bestC50 + 10 * dc;
+    var kLo = Math.max(0.001, bestK - 10 * dk), kHi = bestK + 10 * dk;
+    for (var c50 = c50Lo; c50 <= c50Hi; c50 += dc) {
+      for (var k = kLo; k <= kHi; k += dk) {
+        var err = 0;
+        for (var i = 0; i < concs.length; i++) {
+          var pred = sigmoid(k * (concs[i] - c50));
+          var diff = pred - hitRates[i];
+          var w = weights ? weights[i] : 1;
+          err += w * diff * diff;
+        }
+        if (err < bestErr) { bestErr = err; bestC50 = c50; bestK = k; }
+      }
+    }
+  }
+  return { c50: bestC50, k: bestK };
+}
+
+/* --- Main update --- */
+function update() {
+  var lodTrue   = parseFloat(document.getElementById('lodSlider').value);
+  var steepness = parseFloat(document.getElementById('steepSlider').value);
+  var nReps     = parseInt(document.getElementById('repSlider').value);
+  var nLevels   = parseInt(document.getElementById('levelsSlider').value);
+  var target    = parseInt(document.getElementById('targetSlider').value);
+
+  document.getElementById('lodVal').textContent    = lodTrue;
+  document.getElementById('steepVal').textContent   = steepness.toFixed(1);
+  document.getElementById('repVal').textContent     = nReps;
+  document.getElementById('levelsVal').textContent  = nLevels;
+  document.getElementById('targetVal').textContent  = target + '%';
+
+  // Generate concentration levels
+  var cMin = 0.2 * lodTrue;
+  var cMax = 2.0 * lodTrue;
+  var concs = [];
+  for (var i = 0; i < nLevels; i++) {
+    concs.push(cMin + (cMax - cMin) * i / (nLevels - 1));
+  }
+
+  // Simulate binomial outcomes
+  var hitRates = [], ciLo = [], ciHi = [], successes = [];
+  for (var i = 0; i < nLevels; i++) {
+    var p = trueProb(concs[i], lodTrue, steepness, target);
+    var k = binomSample(nReps, p);
+    successes.push(k);
+    hitRates.push(k / nReps);
+    var ci = clopperPearsonCI(k, nReps);
+    ciLo.push(ci[0]);
+    ciHi.push(ci[1]);
+  }
+
+  // Estimate LoD: lowest level where observed hit rate >= target/100
+  var tgtFrac = target / 100;
+  var estLod = null;
+  var lowestAtTarget = null;
+  for (var i = 0; i < nLevels; i++) {
+    if (hitRates[i] >= tgtFrac) {
+      estLod = concs[i];
+      lowestAtTarget = concs[i];
+      break;
+    }
+  }
+  if (estLod === null) {
+    estLod = cMax; // beyond tested range
+    lowestAtTarget = '> ' + cMax.toFixed(1);
+  }
+
+  var error = ((estLod - lodTrue) / lodTrue * 100);
+
+  // Update stats
+  document.getElementById('estLodVal').textContent = estLod.toFixed(1);
+  document.getElementById('estLodDesc').textContent = 'Target: \u2265 ' + target + '% hit rate';
+  document.getElementById('statEstLod').textContent = estLod.toFixed(1);
+  document.getElementById('statTrueLod').textContent = lodTrue.toFixed(1);
+  document.getElementById('statError').textContent = (error >= 0 ? '+' : '') + error.toFixed(1) + '%';
+  document.getElementById('statLowest').textContent = typeof lowestAtTarget === 'string' ? lowestAtTarget : lowestAtTarget.toFixed(1);
+
+  // Insight
+  var msg = '';
+  var ciWidth = nReps > 0 ? (ciHi[Math.min(nLevels - 1, Math.floor(nLevels * 0.7))] - ciLo[Math.min(nLevels - 1, Math.floor(nLevels * 0.7))]) : 1;
+  if (nReps <= 10) {
+    msg = '<b>Very few replicates.</b> With n=' + nReps + ', the CI width is ~' + (ciWidth * 100).toFixed(0) + ' percentage points. You cannot reliably distinguish hit rates near the target. ';
+  } else if (nReps <= 20) {
+    msg = '<b>Moderate replicates.</b> With n=' + nReps + ', the CI width is ~' + (ciWidth * 100).toFixed(0) + ' pp. Reasonable but consider n=40+ for critical decisions. ';
+  } else {
+    msg = '<b>Good replicate count.</b> With n=' + nReps + ', the CI width is ~' + (ciWidth * 100).toFixed(0) + ' pp. ';
+  }
+  if (nLevels <= 4) msg += 'Only ' + nLevels + ' levels tested — coarse resolution may miss the true LoD. ';
+  if (steepness < 1.0) msg += 'The gradual transition (steepness=' + steepness.toFixed(1) + ') means the "LoD zone" is wide. ';
+  if (target >= 99) msg += 'A 99% target is very demanding — you need many replicates to confirm. ';
+  if (Math.abs(error) > 25) msg += '⚠ Estimation error is ' + Math.abs(error).toFixed(0) + '% — consider more replicates or levels. ';
+  document.getElementById('insightBox').innerHTML = msg;
+
+  // === CHARTS ===
+
+  // 1. Hit Rate vs Concentration
+  // Smooth true curve
+  var smoothConcs = [], smoothProbs = [];
+  for (var c = cMin; c <= cMax; c += (cMax - cMin) / 100) {
+    smoothConcs.push(c);
+    smoothProbs.push(trueProb(c, lodTrue, steepness, target));
+  }
+
+  if (hitRateChart) hitRateChart.destroy();
+  hitRateChart = new Chart(document.getElementById('hitRateChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'True curve',
+          data: smoothConcs.map(function(c, i) { return { x: c, y: smoothProbs[i] }; }),
+          showLine: true, borderColor: '#0d9488', borderWidth: 2,
+          pointRadius: 0, tension: 0.4, fill: false,
+        },
+        {
+          label: 'Observed hit rate',
+          data: concs.map(function(c, i) { return { x: c, y: hitRates[i] }; }),
+          backgroundColor: '#134e4a', borderColor: '#134e4a',
+          pointRadius: 6, pointBorderWidth: 2, showLine: false,
+        },
+        {
+          label: 'Target (' + target + '%)',
+          data: [{ x: cMin, y: tgtFrac }, { x: cMax, y: tgtFrac }],
+          showLine: true, borderColor: '#f59e0b', borderWidth: 2,
+          borderDash: [6, 4], pointRadius: 0,
+        },
+        {
+          label: '95% CI',
+          data: concs.map(function(c, i) { return { x: c, y: ciHi[i] }; }),
+          showLine: false, pointRadius: 0,
+          borderColor: 'transparent', backgroundColor: 'transparent',
+        }
+      ]
+    },
+    plugins: [{
+      id: 'errorBars',
+      afterDatasetsDraw: function(chart) {
+        var ctx = chart.ctx;
+        var meta = chart.getDatasetMeta(1);
+        ctx.save();
+        ctx.strokeStyle = '#134e4a';
+        ctx.lineWidth = 1.5;
+        for (var i = 0; i < meta.data.length; i++) {
+          var pt = meta.data[i];
+          var xPixel = pt.x;
+          var yScale = chart.scales.y;
+          var yLo = yScale.getPixelForValue(ciLo[i]);
+          var yHi = yScale.getPixelForValue(ciHi[i]);
+          ctx.beginPath();
+          ctx.moveTo(xPixel, yLo);
+          ctx.lineTo(xPixel, yHi);
+          ctx.stroke();
+          // caps
+          ctx.beginPath();
+          ctx.moveTo(xPixel - 4, yLo);
+          ctx.lineTo(xPixel + 4, yLo);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(xPixel - 4, yHi);
+          ctx.lineTo(xPixel + 4, yHi);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 }, filter: function(item) { return item.text !== '95% CI'; } } },
+        title: {
+          display: true,
+          text: 'Est. LoD = ' + estLod.toFixed(1) + '  |  True LoD = ' + lodTrue.toFixed(1),
+          font: { size: 11, weight: 'bold' }, color: '#374151',
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Concentration', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+        y: { min: 0, max: 1.05, title: { display: true, text: 'Hit Rate', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+      }
+    }
+  });
+
+  // 2. Probit Curve: True vs Estimated
+  var fit = fitLogistic(concs, hitRates, concs.map(function() { return 1; }));
+  var estSmooth = smoothConcs.map(function(c) { return sigmoid(fit.k * (c - fit.c50)); });
+
+  if (probitChart) probitChart.destroy();
+  probitChart = new Chart(document.getElementById('probitChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'True curve',
+          data: smoothConcs.map(function(c, i) { return { x: c, y: smoothProbs[i] }; }),
+          showLine: true, borderColor: '#0d9488', borderWidth: 2.5,
+          pointRadius: 0, tension: 0.4,
+        },
+        {
+          label: 'Estimated curve',
+          data: smoothConcs.map(function(c, i) { return { x: c, y: estSmooth[i] }; }),
+          showLine: true, borderColor: '#f59e0b', borderWidth: 2.5,
+          borderDash: [6, 3], pointRadius: 0, tension: 0.4,
+        },
+        {
+          label: 'Observed',
+          data: concs.map(function(c, i) { return { x: c, y: hitRates[i] }; }),
+          backgroundColor: '#134e4a', pointRadius: 5, showLine: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: 'Fitted c50 = ' + fit.c50.toFixed(1) + '  |  Fitted k = ' + fit.k.toFixed(3),
+          font: { size: 11 }, color: '#374151',
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Concentration', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+        y: { min: 0, max: 1.05, title: { display: true, text: 'P(detect)', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+      }
+    }
+  });
+
+  // 3. CI Width vs Replicates
+  // For a fixed hit rate of target%, show CI width as n increases from 5 to 80
+  var ciNs = [], ciWidths = [], currentCIwidth = null;
+  var kTarget = Math.round(0.95 * 40); // use 95% as reference hit rate
+  for (var n = 5; n <= 80; n++) {
+    var kRef = Math.round(tgtFrac * n);
+    var ci = clopperPearsonCI(kRef, n);
+    ciNs.push(n);
+    ciWidths.push(ci[1] - ci[0]);
+    if (n === nReps) currentCIwidth = ci[1] - ci[0];
+  }
+  var highlightData = ciNs.map(function(n, i) { return n === nReps ? ciWidths[i] : null; });
+
+  if (ciChart) ciChart.destroy();
+  ciChart = new Chart(document.getElementById('ciChart'), {
+    type: 'line',
+    data: {
+      labels: ciNs,
+      datasets: [
+        {
+          label: 'CI width at ' + target + '% hit rate',
+          data: ciWidths,
+          borderColor: '#0d9488', borderWidth: 2,
+          backgroundColor: 'rgba(13,148,136,0.08)', fill: true,
+          pointRadius: 0, tension: 0.3,
+        },
+        {
+          label: 'Current (n=' + nReps + ')',
+          data: highlightData,
+          backgroundColor: '#f59e0b', borderColor: '#92400e',
+          pointRadius: 8, pointBorderWidth: 2, showLine: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: currentCIwidth !== null ? 'At n=' + nReps + ': CI width = ' + (currentCIwidth * 100).toFixed(1) + ' pp' : '',
+          font: { size: 11 }, color: '#374151',
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Replicates per level', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } },
+        y: { min: 0, title: { display: true, text: 'CI Width', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+      }
+    }
+  });
+
+  // 4. LoD Estimation Variability — 50 simulations
+  var lodEstimates = [];
+  for (var sim = 0; sim < 50; sim++) {
+    var simEstLod = null;
+    for (var j = 0; j < nLevels; j++) {
+      var p = trueProb(concs[j], lodTrue, steepness, target);
+      var kSim = binomSample(nReps, p);
+      if (kSim / nReps >= tgtFrac) {
+        simEstLod = concs[j];
+        break;
+      }
+    }
+    if (simEstLod === null) simEstLod = cMax;
+    lodEstimates.push(simEstLod);
+  }
+
+  // Build histogram
+  var histMin = Math.min.apply(null, lodEstimates) - 1;
+  var histMax = Math.max.apply(null, lodEstimates) + 1;
+  if (histMax - histMin < 2) { histMin -= 2; histMax += 2; }
+  var nBins = Math.min(15, Math.max(5, Math.round(Math.sqrt(50))));
+  var binWidth = (histMax - histMin) / nBins;
+  var bins = [], binLabels = [];
+  for (var b = 0; b < nBins; b++) {
+    bins.push(0);
+    var bCenter = histMin + binWidth * (b + 0.5);
+    binLabels.push(bCenter.toFixed(1));
+  }
+  for (var s = 0; s < lodEstimates.length; s++) {
+    var bIdx = Math.min(nBins - 1, Math.floor((lodEstimates[s] - histMin) / binWidth));
+    bins[bIdx]++;
+  }
+  // Color bars: highlight bin containing true LoD
+  var barColors = bins.map(function(_, b) {
+    var bLo = histMin + binWidth * b;
+    var bHi = bLo + binWidth;
+    return (lodTrue >= bLo && lodTrue < bHi) ? '#0d9488' : '#99f6e4';
+  });
+
+  var lodMean = lodEstimates.reduce(function(a, b) { return a + b; }, 0) / lodEstimates.length;
+  var lodSD = Math.sqrt(lodEstimates.reduce(function(a, b) { return a + (b - lodMean) * (b - lodMean); }, 0) / lodEstimates.length);
+
+  if (histChart) histChart.destroy();
+  histChart = new Chart(document.getElementById('histChart'), {
+    type: 'bar',
+    data: {
+      labels: binLabels,
+      datasets: [{
+        label: 'Estimated LoD (50 runs)',
+        data: bins,
+        backgroundColor: barColors,
+        borderColor: '#0f766e',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Mean = ' + lodMean.toFixed(1) + '  |  SD = ' + lodSD.toFixed(1) + '  |  True = ' + lodTrue.toFixed(1),
+          font: { size: 11, weight: 'bold' }, color: '#374151',
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Estimated LoD', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+        y: { title: { display: true, text: 'Count', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 }, stepSize: 1 } },
+      }
+    }
+  });
+}
+
+function loadExercise(i) {
+  var ex = exercises[i];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
+  var card = document.getElementById('exCard' + i);
+  if (card) card.classList.add('active');
+
+  document.getElementById('lodSlider').value     = ex.lod;
+  document.getElementById('steepSlider').value   = ex.steep;
+  document.getElementById('repSlider').value     = ex.reps;
+  document.getElementById('levelsSlider').value  = ex.levels;
+  document.getElementById('targetSlider').value  = ex.target;
+
+  var stepsHtml = ex.steps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML =
+    '<b>Exercise ' + (i + 1) + ': ' + ex.title + '</b><br><br>' +
+    '<b>Learning objective:</b> ' + ex.obj + '<br><br>' +
+    '<ol>' + stepsHtml + '</ol>' +
+    '<b>Key insight:</b> ' + ex.insight;
+  instr.classList.add('visible');
+
+  update();
+}
+
+function toggleExercises() {
+  var toggle = document.getElementById('exToggle');
+  var panel  = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+update();
+</script>
+</body>
+</html>

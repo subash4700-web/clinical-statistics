@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Reference Intervals</title>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    .page-header {
+      background: linear-gradient(135deg, #134e4a 0%, #0f766e 60%, #0d9488 100%);
+      color: white; padding: 20px 28px 18px; flex-shrink: 0;
+    }
+    .page-header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 900; }
+    .page-header p { margin: 0; font-size: 13px; opacity: .78; }
+
+    .shell { display: flex; flex: 1; min-height: 0; }
+
+    /* LEFT */
+    .left-panel {
+      width: 280px; min-width: 280px;
+      background: white; border-right: 1px solid #e5e7eb;
+      overflow-y: auto; padding: 18px;
+    }
+
+    .ctrl-group { margin-bottom: 18px; }
+    .ctrl-group label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; }
+    .ctrl-row input[type=range] { flex: 1; accent-color: #0d9488; }
+    .ctrl-val { font-size: 13px; font-weight: 700; color: #0d9488; min-width: 44px; text-align: right; }
+
+    .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin: 16px 0 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+    .stat-card .sc-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .stat-card .sc-val { font-size: 18px; font-weight: 900; color: #111827; }
+    .stat-card .sc-pct { font-size: 11px; color: #6b7280; }
+
+    .n-badge {
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      background: #f0fdfa; border: 2px solid #99f6e4; border-radius: 14px;
+      padding: 14px; margin: 12px 0;
+    }
+    .n-badge .n-label { font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: .06em; }
+    .n-badge .n-val { font-size: 36px; font-weight: 900; color: #0d9488; line-height: 1.1; }
+    .n-badge .n-desc { font-size: 12px; color: #134e4a; margin-top: 2px; text-align: center; }
+
+    .insight-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.7; color: #134e4a; margin-top: 10px; }
+    .insight-box b { color: #0f766e; }
+
+    /* RIGHT */
+    .right-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0; overflow: hidden; }
+
+    .chart-cell { padding: 14px 16px 10px; min-height: 0; display: flex; flex-direction: column; }
+    .chart-cell:nth-child(2) { border-left: 1px solid #e5e7eb; }
+    .chart-cell:nth-child(3) { border-top: 1px solid #e5e7eb; background: white; }
+    .chart-cell:nth-child(4) { border-top: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; background: white; }
+
+    .chart-label { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .chart-wrap { position: relative; flex: 1; min-height: 0; }
+
+    /* EXERCISES */
+    .exercises { background: white; border-bottom: 1px solid #e5e7eb; padding: 14px 20px; flex-shrink: 0; overflow-y: auto; max-height: 50vh; }
+    .ex-toggle { display: flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 800; color: #344054; padding: 0 0 10px; width: 100%; }
+    .ex-toggle .ex-arrow { font-size: 11px; color: #9ca3af; transition: transform .2s; }
+    .ex-toggle.open .ex-arrow { transform: rotate(90deg); }
+    .ex-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .ex-card { background: #fff; border: 2px solid #e5e7eb; border-radius: 12px; padding: 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; position: relative; display: flex; flex-direction: column; }
+    .ex-card:hover { border-color: #5eead4; box-shadow: 0 2px 10px rgba(13,148,136,.1); }
+    .ex-card.active { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .ex-num { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #9ca3af; margin-bottom: 5px; }
+    .ex-title { font-size: 13px; font-weight: 800; color: #134e4a; margin-bottom: 6px; line-height: 1.3; }
+    .ex-obj { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 10px; flex: 1; }
+    .ex-params { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .ex-param { background: #f3f4f6; border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 700; color: #374151; }
+    .ex-btn { width: 100%; padding: 7px; background: #0d9488; color: #fff; border: none; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .ex-btn:hover { opacity: .88; }
+    .ex-instructions { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.7; color: #134e4a; display: none; }
+    .ex-instructions.visible { display: block; }
+    .ex-instructions b { color: #0f766e; }
+    .ex-instructions ol { margin: 8px 0 0 16px; padding: 0; }
+    .ex-instructions li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Understanding Reference Intervals <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;">BETA</span></h1>
+  <p>Explore how sample size, distribution shape, and outliers affect the reference interval. Adjust parameters and see the impact in real time.</p>
+</div>
+
+<!-- EXERCISES -->
+<div class="exercises">
+  <button class="ex-toggle open" id="exToggle" onclick="toggleExercises()">
+    <span>📋 Guided Exercises</span>
+    <span class="ex-arrow">▶</span>
+  </button>
+  <div id="exPanel">
+    <div class="ex-grid">
+
+      <div class="ex-card" id="exCard0" onclick="loadExercise(0)">
+        <div class="ex-num">Exercise 1</div>
+        <div class="ex-title">Adequate sample (n=120)</div>
+        <div class="ex-obj">Shows a clean dataset meeting EP28 requirements. With 120 samples, the 90% CI around the limits is acceptably narrow.</div>
+        <div class="ex-params">
+          <span class="ex-param">n = 120</span>
+          <span class="ex-param">Mean = 5.0</span>
+          <span class="ex-param">SD = 0.8</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard1" onclick="loadExercise(1)">
+        <div class="ex-num">Exercise 2</div>
+        <div class="ex-title">Too few samples (n=20)</div>
+        <div class="ex-obj">Shows how the percentile estimates become unstable with too few samples.</div>
+        <div class="ex-params">
+          <span class="ex-param">n = 20</span>
+          <span class="ex-param">Mean = 5.0</span>
+          <span class="ex-param">SD = 0.8</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard2" onclick="loadExercise(2)">
+        <div class="ex-num">Exercise 3</div>
+        <div class="ex-title">Effect of outliers</div>
+        <div class="ex-obj">Shows how outliers distort the interval even in a well-sized sample.</div>
+        <div class="ex-params">
+          <span class="ex-param">n = 120</span>
+          <span class="ex-param">3 outliers</span>
+          <span class="ex-param">4 SD</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard3" onclick="loadExercise(3)">
+        <div class="ex-num">Exercise 4</div>
+        <div class="ex-title">Wide biological variation</div>
+        <div class="ex-obj">Shows a wide reference interval from high biological variation.</div>
+        <div class="ex-params">
+          <span class="ex-param">n = 120</span>
+          <span class="ex-param">Mean = 5.0</span>
+          <span class="ex-param">SD = 1.8</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+      <div class="ex-card" id="exCard4" onclick="loadExercise(4)">
+        <div class="ex-num">Exercise 5</div>
+        <div class="ex-title">Parametric vs Non-parametric</div>
+        <div class="ex-obj">Shows how parametric limits diverge from non-parametric when data are skewed.</div>
+        <div class="ex-params">
+          <span class="ex-param">n = 60</span>
+          <span class="ex-param">Skewed</span>
+          <span class="ex-param">SD = 0.8</span>
+        </div>
+        <button class="ex-btn">Load exercise</button>
+      </div>
+
+    </div>
+    <div class="ex-instructions" id="exInstructions"></div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="ctrl-group">
+      <label>Sample Size (n)</label>
+      <div class="ctrl-row">
+        <input type="range" id="nSlider" min="20" max="300" step="1" value="120" oninput="update()">
+        <span class="ctrl-val" id="nVal">120</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Distribution Mean</label>
+      <div class="ctrl-row">
+        <input type="range" id="meanSlider" min="2" max="8" step="0.1" value="5.0" oninput="update()">
+        <span class="ctrl-val" id="meanVal">5.0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Distribution SD</label>
+      <div class="ctrl-row">
+        <input type="range" id="sdSlider" min="0.3" max="2.0" step="0.1" value="0.8" oninput="update()">
+        <span class="ctrl-val" id="sdVal">0.8</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Outlier Count</label>
+      <div class="ctrl-row">
+        <input type="range" id="outlierCountSlider" min="0" max="5" step="1" value="0" oninput="update()">
+        <span class="ctrl-val" id="outlierCountVal">0</span>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <label>Outlier Magnitude (SD units)</label>
+      <div class="ctrl-row">
+        <input type="range" id="outlierMagSlider" min="2" max="6" step="0.5" value="3" oninput="update()">
+        <span class="ctrl-val" id="outlierMagVal">3.0</span>
+      </div>
+    </div>
+
+    <div class="section-title">Sample Size</div>
+    <div class="n-badge">
+      <div class="n-label">Sample Size</div>
+      <div class="n-val" id="nBadgeVal">n = 120</div>
+      <div class="n-desc" id="nBadgeDesc">&#10003; Meets EP28 minimum</div>
+    </div>
+
+    <div class="section-title">Reference Interval</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-label">Lower Limit (2.5th)</div>
+        <div class="sc-val" id="lowerVal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Upper Limit (97.5th)</div>
+        <div class="sc-val" id="upperVal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Interval Width</div>
+        <div class="sc-val" id="widthVal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Outliers Detected</div>
+        <div class="sc-val" id="outliersVal">—</div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insightBox">Adjust the sliders to explore how sample size, distribution shape, and outliers affect the reference interval.</div>
+  </div>
+
+  <!-- RIGHT: 4 charts -->
+  <div class="right-panel">
+    <div class="chart-cell">
+      <div class="chart-label">Histogram + Reference Interval</div>
+      <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">Confidence Interval Width vs n</div>
+      <div class="chart-wrap"><canvas id="ciChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">QQ Plot (Normal Probability)</div>
+      <div class="chart-wrap"><canvas id="qqChart"></canvas></div>
+    </div>
+    <div class="chart-cell">
+      <div class="chart-label">Parametric vs Non-parametric Limits</div>
+      <div class="chart-wrap"><canvas id="pvChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Exercises ── */
+const exercises = [
+  {
+    title: 'Adequate sample (n=120)',
+    n: 120, mean: 5.0, sd: 0.8, outlierCount: 0, outlierMag: 3, skewed: false,
+    obj: 'Shows a clean dataset meeting EP28 requirements. With 120 samples, the 90% CI around the limits is acceptably narrow.',
+    steps: [
+      'This exercise loads n = 120 with no outliers — the standard EP28 recommendation.',
+      'Look at the histogram: data are normally distributed and the 2.5th/97.5th percentile lines are stable.',
+      'Check the CI Width chart: at n = 120, the confidence bands around the limits are quite narrow.',
+      'Compare the QQ plot — points fall close to the diagonal, confirming normality.',
+      'Now compare parametric vs non-parametric limits — they agree closely when data are truly normal.'
+    ],
+    insight: 'With 120 samples, the 90% CI around the limits is acceptably narrow. This is why EP28 recommends a minimum of 120 reference individuals for establishing a new reference interval.'
+  },
+  {
+    title: 'Too few samples (n=20)',
+    n: 20, mean: 5.0, sd: 0.8, outlierCount: 0, outlierMag: 3, skewed: false,
+    obj: 'Shows how the percentile estimates become unstable with too few samples.',
+    steps: [
+      'This exercise loads n = 20 — far below the EP28 establishment minimum.',
+      'Look at the histogram: only 20 bars — the shape barely resembles a bell curve.',
+      'Check the CI Width chart: at n = 20, the confidence interval around the limits is very wide.',
+      'Try clicking back to Exercise 1 (n = 120) and compare how much more stable the limits are.',
+      'EP28 allows n = 20 for verification (transference) of an existing interval, but NOT for establishing a new one.'
+    ],
+    insight: 'With only 20 samples, the limits jump around dramatically — this is why EP28 requires 120 for establishing a reference interval, but allows 20 for verification (transference).'
+  },
+  {
+    title: 'Effect of outliers',
+    n: 120, mean: 5.0, sd: 0.8, outlierCount: 3, outlierMag: 4, skewed: false,
+    obj: 'Shows how outliers distort the interval even in a well-sized sample.',
+    steps: [
+      'This exercise adds 3 outliers at 4 SD from the mean into an otherwise clean dataset.',
+      'Look at the histogram: red bars mark the outlier positions — they pull the tails outward.',
+      'Compare the parametric vs non-parametric limits — outliers affect both, but parametric (mean-based) limits shift more.',
+      'Check the QQ plot: outlier points deviate sharply from the diagonal.',
+      'In practice, always screen for outliers using Tukey fences or Dixon Q-test before computing limits.'
+    ],
+    insight: 'Even 2-3 outliers in 120 samples can shift the limits noticeably — always screen with Tukey or Dixon before calculating. Outlier removal must follow a predefined protocol, not subjective judgment.'
+  },
+  {
+    title: 'Wide biological variation',
+    n: 120, mean: 5.0, sd: 1.8, outlierCount: 0, outlierMag: 3, skewed: false,
+    obj: 'Shows a wide reference interval from high biological variation.',
+    steps: [
+      'This exercise sets SD = 1.8 — much higher than typical for many analytes.',
+      'Look at the histogram: it spans a very wide range. The reference interval is correspondingly wide.',
+      'Check the interval width in the stats panel — compare it mentally to Exercise 1 (SD = 0.8).',
+      'This is NOT a problem — some analytes (e.g. ferritin, triglycerides) naturally have high between-individual variation.',
+      'A wide interval reflects the true population. Do not artificially narrow it by excluding extreme-but-healthy values.'
+    ],
+    insight: 'Some analytes naturally have high biological variation. A wide interval is not a problem if it reflects the true population — do not artificially narrow it by excluding extreme values that are genuinely healthy.'
+  },
+  {
+    title: 'Parametric vs Non-parametric',
+    n: 60, mean: 5.0, sd: 0.8, outlierCount: 0, outlierMag: 3, skewed: true,
+    obj: 'Shows how parametric limits diverge from non-parametric when data are skewed (log-normal).',
+    steps: [
+      'This exercise generates data from a log-normal distribution — right-skewed.',
+      'Look at the histogram: it has a long right tail, unlike a symmetric bell curve.',
+      'Check the QQ plot: the points curve away from the diagonal, showing non-normality.',
+      'Compare parametric (dashed) vs non-parametric (solid) limits in the bottom-right chart — they diverge significantly.',
+      'The parametric lower limit may go below physically possible values. The non-parametric method is safer for skewed data.'
+    ],
+    insight: 'When data are not normally distributed, parametric limits (mean ± 1.96 SD) can be misleading. The non-parametric method is safer as it makes no distribution assumptions — this is why EP28 recommends it as the default.'
+  },
+];
+
+let histChart, ciChart, qqChart, pvChart;
+let currentSkewed = false;
+let currentSeed = 42;
+
+/* ── Seeded PRNG ── */
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+/* ── Box-Muller transform ── */
+function boxMuller(rand) {
+  const u1 = rand();
+  const u2 = rand();
+  return Math.sqrt(-2 * Math.log(Math.max(u1, 1e-10))) * Math.cos(2 * Math.PI * u2);
+}
+
+/* ── Generate data ── */
+function generateData(n, mean, sd, outlierCount, outlierMag, skewed, seed) {
+  const rand = seededRandom(seed);
+  const data = [];
+
+  for (let i = 0; i < n; i++) {
+    let val;
+    if (skewed) {
+      // Log-normal: exp(normal)
+      const z = boxMuller(rand);
+      val = Math.exp(Math.log(mean) + sd * 0.15 * z);
+    } else {
+      val = mean + sd * boxMuller(rand);
+    }
+    data.push({ value: val, outlier: false });
+  }
+
+  // Add outliers
+  for (let i = 0; i < outlierCount; i++) {
+    const sign = (i % 2 === 0) ? 1 : -1;
+    const val = mean + sign * outlierMag * sd + (rand() - 0.5) * sd * 0.2;
+    data.push({ value: val, outlier: true });
+  }
+
+  return data;
+}
+
+/* ── Percentile (rank-based, non-parametric) ── */
+function percentile(sorted, p) {
+  const n = sorted.length;
+  const rank = p / 100 * (n + 1);
+  const lo = Math.floor(rank) - 1;
+  const hi = lo + 1;
+  const frac = rank - Math.floor(rank);
+  if (lo < 0) return sorted[0];
+  if (hi >= n) return sorted[n - 1];
+  return sorted[lo] + frac * (sorted[hi] - sorted[lo]);
+}
+
+/* ── Normal quantile (inverse CDF, approximation) ── */
+function normalQuantile(p) {
+  // Rational approximation (Abramowitz and Stegun 26.2.23)
+  if (p <= 0) return -Infinity;
+  if (p >= 1) return Infinity;
+  if (p === 0.5) return 0;
+  const sign = p < 0.5 ? -1 : 1;
+  const pp = p < 0.5 ? p : 1 - p;
+  const t = Math.sqrt(-2 * Math.log(pp));
+  const c0 = 2.515517, c1 = 0.802853, c2 = 0.010328;
+  const d1 = 1.432788, d2 = 0.189269, d3 = 0.001308;
+  return sign * (t - (c0 + c1 * t + c2 * t * t) / (1 + d1 * t + d2 * t * t + d3 * t * t * t));
+}
+
+/* ── Detect outliers (Tukey 1.5*IQR) ── */
+function detectOutliers(sorted) {
+  const q1 = percentile(sorted, 25);
+  const q3 = percentile(sorted, 75);
+  const iqr = q3 - q1;
+  const lo = q1 - 1.5 * iqr;
+  const hi = q3 + 1.5 * iqr;
+  return sorted.filter(function(v) { return v < lo || v > hi; }).length;
+}
+
+/* ── CI width for reference limits at various n (bootstrap approximation formula) ── */
+function ciWidthAtN(n) {
+  // Approximate 90% CI half-width around the 2.5th percentile for normal data
+  // Using the large-sample formula: SE of percentile ≈ sqrt(p(1-p) / (n * f(x_p)^2))
+  // For standard normal at z=1.96: f = phi(1.96) ≈ 0.0584
+  // 90% CI half-width ≈ 1.645 * SE
+  const p = 0.025;
+  const fxp = 0.0584; // phi(normalQuantile(0.025)) for standard normal
+  const se = Math.sqrt(p * (1 - p) / (n * fxp * fxp));
+  return 2 * 1.645 * se; // full width of 90% CI
+}
+
+/* ── Main update ── */
+function update() {
+  const n = parseInt(document.getElementById('nSlider').value);
+  const mean = parseFloat(document.getElementById('meanSlider').value);
+  const sd = parseFloat(document.getElementById('sdSlider').value);
+  const outlierCount = parseInt(document.getElementById('outlierCountSlider').value);
+  const outlierMag = parseFloat(document.getElementById('outlierMagSlider').value);
+
+  document.getElementById('nVal').textContent = n;
+  document.getElementById('meanVal').textContent = mean.toFixed(1);
+  document.getElementById('sdVal').textContent = sd.toFixed(1);
+  document.getElementById('outlierCountVal').textContent = outlierCount;
+  document.getElementById('outlierMagVal').textContent = outlierMag.toFixed(1);
+
+  // n badge
+  document.getElementById('nBadgeVal').textContent = 'n = ' + (n + outlierCount);
+  if (n >= 120) {
+    document.getElementById('nBadgeDesc').innerHTML = '&#10003; Meets EP28 minimum';
+    document.getElementById('nBadgeDesc').style.color = '#166534';
+  } else {
+    document.getElementById('nBadgeDesc').innerHTML = 'EP28 requires &#8805; 120';
+    document.getElementById('nBadgeDesc').style.color = '#dc2626';
+  }
+
+  // Generate data
+  const rawData = generateData(n, mean, sd, outlierCount, outlierMag, currentSkewed, currentSeed);
+  const allValues = rawData.map(function(d) { return d.value; });
+  const sorted = allValues.slice().sort(function(a, b) { return a - b; });
+
+  // Non-parametric limits
+  const lower = percentile(sorted, 2.5);
+  const upper = percentile(sorted, 97.5);
+  const width = upper - lower;
+
+  // Parametric limits
+  const dataMean = allValues.reduce(function(a, b) { return a + b; }, 0) / allValues.length;
+  const dataSD = Math.sqrt(allValues.reduce(function(a, b) { return a + (b - dataMean) * (b - dataMean); }, 0) / (allValues.length - 1));
+  const paramLower = dataMean - 1.96 * dataSD;
+  const paramUpper = dataMean + 1.96 * dataSD;
+
+  // Outlier detection
+  const detectedOutliers = detectOutliers(sorted);
+
+  // Stats cards
+  document.getElementById('lowerVal').textContent = lower.toFixed(2);
+  document.getElementById('upperVal').textContent = upper.toFixed(2);
+  document.getElementById('widthVal').textContent = width.toFixed(2);
+  document.getElementById('outliersVal').textContent = detectedOutliers;
+
+  // Insight
+  var msg = '';
+  if (n >= 120 && outlierCount === 0 && !currentSkewed) {
+    msg = '<b>Clean dataset.</b> With n = ' + (n + outlierCount) + ' and no outliers, this is an ideal reference interval study. The non-parametric interval is [' + lower.toFixed(2) + ', ' + upper.toFixed(2) + '].';
+  } else if (n < 120 && n >= 40) {
+    msg = '<b>Moderate sample size.</b> n = ' + n + ' is below EP28\'s 120 minimum for establishing intervals. Consider this a preliminary estimate only.';
+  } else if (n < 40) {
+    msg = '<b>Very small sample.</b> n = ' + n + ' gives highly unstable percentile estimates. Only suitable for verification (transference), not establishment.';
+  }
+  if (outlierCount > 0) {
+    msg += ' <b>Outliers present:</b> ' + outlierCount + ' value(s) added at ' + outlierMag.toFixed(1) + ' SD from the mean. Tukey fences detect ' + detectedOutliers + ' outlier(s).';
+  }
+  if (currentSkewed) {
+    msg += ' <b>Skewed distribution:</b> Data generated from a log-normal model. Parametric limits may not be appropriate — prefer the non-parametric method.';
+  }
+  if (width > 4 * sd) {
+    msg += ' The interval is very wide relative to the SD — check for outliers or consider whether this reflects true biological variation.';
+  }
+  document.getElementById('insightBox').innerHTML = msg || 'Adjust the sliders to explore how sample size, distribution shape, and outliers affect the reference interval.';
+
+  // === CHARTS ===
+
+  // 1. Histogram + Reference Interval
+  var binCount = Math.max(12, Math.min(30, Math.round(Math.sqrt(allValues.length))));
+  var dataMin = Math.min.apply(null, allValues);
+  var dataMax = Math.max.apply(null, allValues);
+  var margin = (dataMax - dataMin) * 0.05;
+  var binMin = dataMin - margin;
+  var binMax = dataMax + margin;
+  var binWidth = (binMax - binMin) / binCount;
+
+  var bins = new Array(binCount).fill(0);
+  var binOutliers = new Array(binCount).fill(0);
+  var binLabels = [];
+  for (var b = 0; b < binCount; b++) {
+    binLabels.push(((binMin + (b + 0.5) * binWidth)).toFixed(2));
+  }
+  rawData.forEach(function(d) {
+    var idx = Math.min(Math.floor((d.value - binMin) / binWidth), binCount - 1);
+    if (idx < 0) idx = 0;
+    if (d.outlier) { binOutliers[idx]++; } else { bins[idx]++; }
+  });
+
+  // Vertical lines at limits — create arrays with spikes
+  var lowerLine = bins.map(function(_, i) {
+    var center = binMin + (i + 0.5) * binWidth;
+    return Math.abs(center - lower) < binWidth ? Math.max.apply(null, bins.concat(binOutliers)) * 1.15 : null;
+  });
+  var upperLine = bins.map(function(_, i) {
+    var center = binMin + (i + 0.5) * binWidth;
+    return Math.abs(center - upper) < binWidth ? Math.max.apply(null, bins.concat(binOutliers)) * 1.15 : null;
+  });
+
+  if (histChart) histChart.destroy();
+  histChart = new Chart(document.getElementById('histChart'), {
+    type: 'bar',
+    data: {
+      labels: binLabels,
+      datasets: [
+        {
+          label: 'Normal',
+          data: bins,
+          backgroundColor: 'rgba(13,148,136,0.5)',
+          borderColor: '#0d9488',
+          borderWidth: 1,
+        },
+        {
+          label: 'Outliers',
+          data: binOutliers,
+          backgroundColor: 'rgba(239,68,68,0.6)',
+          borderColor: '#ef4444',
+          borderWidth: 1,
+        },
+        {
+          label: '2.5th percentile',
+          data: lowerLine,
+          type: 'line',
+          borderColor: '#f59e0b',
+          borderWidth: 2.5,
+          borderDash: [6, 3],
+          pointRadius: 0,
+          fill: false,
+        },
+        {
+          label: '97.5th percentile',
+          data: upperLine,
+          type: 'line',
+          borderColor: '#f59e0b',
+          borderWidth: 2.5,
+          borderDash: [6, 3],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: 'RI: [' + lower.toFixed(2) + ', ' + upper.toFixed(2) + ']  |  Width = ' + width.toFixed(2),
+          font: { size: 11, weight: 'bold' }, color: '#374151'
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { maxTicksLimit: 8, font: { size: 10 } }, grid: { color: '#f3f4f6' } },
+        y: { stacked: true, title: { display: true, text: 'Count', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 2. CI Width vs n
+  var nRange = [];
+  var ciLowerWidths = [];
+  var ciUpperWidths = [];
+  for (var nn = 20; nn <= 300; nn += 5) {
+    nRange.push(nn);
+    var w = ciWidthAtN(nn) * sd; // scale by current SD
+    ciLowerWidths.push(w);
+    ciUpperWidths.push(w);
+  }
+  // Mark current n
+  var currentNIdx = nRange.indexOf(n) !== -1 ? nRange.indexOf(n) : -1;
+  var currentNMarker = nRange.map(function(v, i) {
+    return Math.abs(v - n) <= 3 ? ciLowerWidths[i] : null;
+  });
+
+  if (ciChart) ciChart.destroy();
+  ciChart = new Chart(document.getElementById('ciChart'), {
+    type: 'line',
+    data: {
+      labels: nRange.map(String),
+      datasets: [
+        {
+          label: '90% CI width (lower limit)',
+          data: ciLowerWidths,
+          borderColor: '#0d9488',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+        },
+        {
+          label: 'Current n',
+          data: currentNMarker,
+          borderColor: '#f59e0b',
+          backgroundColor: '#f59e0b',
+          pointRadius: 8,
+          pointBorderWidth: 2,
+          pointBorderColor: '#92400e',
+          showLine: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: 'How CI narrows as sample size increases',
+          font: { size: 11 }, color: '#374151'
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Sample size (n)', font: { size: 10 } }, ticks: { maxTicksLimit: 8, font: { size: 10 } }, grid: { color: '#f3f4f6' } },
+        y: { title: { display: true, text: 'CI width (units)', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 3. QQ Plot
+  var qqData = [];
+  for (var i = 0; i < sorted.length; i++) {
+    var p = (i + 0.5) / sorted.length;
+    var theoretical = normalQuantile(p);
+    qqData.push({ x: theoretical, y: sorted[i] });
+  }
+  // Reference line (through Q1 and Q3)
+  var q1idx = Math.floor(sorted.length * 0.25);
+  var q3idx = Math.floor(sorted.length * 0.75);
+  var q1t = normalQuantile((q1idx + 0.5) / sorted.length);
+  var q3t = normalQuantile((q3idx + 0.5) / sorted.length);
+  var q1v = sorted[q1idx];
+  var q3v = sorted[q3idx];
+  var qqSlope = (q3v - q1v) / (q3t - q1t);
+  var qqIntercept = q1v - qqSlope * q1t;
+  var qqMin = qqData[0].x;
+  var qqMax = qqData[qqData.length - 1].x;
+  var qqRefLine = [
+    { x: qqMin, y: qqIntercept + qqSlope * qqMin },
+    { x: qqMax, y: qqIntercept + qqSlope * qqMax }
+  ];
+
+  // Color outlier points
+  var qqColors = rawData.slice().sort(function(a, b) { return a.value - b.value; }).map(function(d) {
+    return d.outlier ? '#ef4444' : '#0d9488';
+  });
+
+  if (qqChart) qqChart.destroy();
+  qqChart = new Chart(document.getElementById('qqChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Data',
+          data: qqData,
+          backgroundColor: qqColors,
+          borderColor: qqColors,
+          pointRadius: 3.5,
+          pointBorderWidth: 0,
+        },
+        {
+          label: 'Reference line',
+          data: qqRefLine,
+          showLine: true,
+          borderColor: '#d1d5db',
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: currentSkewed ? 'Data deviate from normality (skewed)' : 'Assess normality of the sample',
+          font: { size: 11 }, color: '#374151'
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Theoretical quantiles', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+        y: { title: { display: true, text: 'Sample quantiles', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 4. Parametric vs Non-parametric
+  // Show both sets of limits as horizontal bars
+  var categories = ['Lower Limit', 'Upper Limit'];
+  var nonParamData = [lower, upper];
+  var paramData = [paramLower, paramUpper];
+
+  if (pvChart) pvChart.destroy();
+  pvChart = new Chart(document.getElementById('pvChart'), {
+    type: 'bar',
+    data: {
+      labels: categories,
+      datasets: [
+        {
+          label: 'Non-parametric (rank)',
+          data: nonParamData,
+          backgroundColor: 'rgba(13,148,136,0.7)',
+          borderColor: '#0d9488',
+          borderWidth: 2,
+        },
+        {
+          label: 'Parametric (mean ± 1.96 SD)',
+          data: paramData,
+          backgroundColor: 'rgba(59,130,246,0.5)',
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          borderDash: [5, 3],
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } },
+        title: {
+          display: true,
+          text: 'Diff: lower ' + Math.abs(lower - paramLower).toFixed(2) + '  |  upper ' + Math.abs(upper - paramUpper).toFixed(2),
+          font: { size: 11, weight: 'bold' }, color: '#374151'
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Value', font: { size: 10 } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } }
+      }
+    }
+  });
+}
+
+/* ── Exercise loader ── */
+function loadExercise(i) {
+  var ex = exercises[i];
+  if (!ex) return;
+
+  document.querySelectorAll('.ex-card').forEach(function(c) { c.classList.remove('active'); });
+  var card = document.getElementById('exCard' + i);
+  if (card) card.classList.add('active');
+
+  // Set seed based on exercise index for reproducibility
+  currentSeed = 42 + i * 1000;
+  currentSkewed = ex.skewed || false;
+
+  document.getElementById('nSlider').value = ex.n;
+  document.getElementById('meanSlider').value = ex.mean;
+  document.getElementById('sdSlider').value = ex.sd;
+  document.getElementById('outlierCountSlider').value = ex.outlierCount;
+  document.getElementById('outlierMagSlider').value = ex.outlierMag;
+
+  var stepsHtml = ex.steps.map(function(s) { return '<li>' + s + '</li>'; }).join('');
+  var instr = document.getElementById('exInstructions');
+  instr.innerHTML =
+    '<b>Exercise ' + (i + 1) + ': ' + ex.title + '</b><br><br>' +
+    '<b>Learning objective:</b> ' + ex.obj + '<br><br>' +
+    '<ol>' + stepsHtml + '</ol>' +
+    '<b>Key insight:</b> ' + ex.insight;
+  instr.classList.add('visible');
+
+  update();
+}
+
+function toggleExercises() {
+  var toggle = document.getElementById('exToggle');
+  var panel = document.getElementById('exPanel');
+  toggle.classList.toggle('open');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+update();
+</script>
+</body>
+</html>

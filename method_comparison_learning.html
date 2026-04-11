@@ -56,6 +56,9 @@
     .stat.warn .stat-v{color:#b45309;}
 
     .insight-box{padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;margin-top:0;}
+    .reg-tab{padding:4px 10px;border:none;background:transparent;border-radius:6px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit;transition:background .12s,color .12s;}
+    .reg-tab:hover{color:#374151;}
+    .reg-tab.active{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.08);}
     .insight-blue{background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;}
     .insight-green{background:#ecfdf5;border:1px solid #a7f3d0;color:#064e3b;}
     .insight-amber{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;}
@@ -305,6 +308,19 @@
           Scatter plot — Method A vs Method B
           <span id="scatterSub"></span>
         </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;">
+          <div style="display:flex;gap:2px;background:#f3f4f6;border-radius:8px;padding:2px;">
+            <button class="reg-tab active" onclick="switchRegMethod('ols',this)">OLS</button>
+            <button class="reg-tab" onclick="switchRegMethod('pb',this)">Passing-Bablok</button>
+            <button class="reg-tab" onclick="switchRegMethod('deming',this)">Deming</button>
+          </div>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:#6b7280;cursor:pointer;">
+            <input type="checkbox" id="showResidCb" checked onchange="simulate()" style="width:auto;accent-color:var(--accent);"> Residuals
+          </label>
+          <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:#6b7280;cursor:pointer;">
+            <input type="checkbox" id="showCICb" checked onchange="simulate()" style="width:auto;accent-color:var(--accent);"> 95% CI
+          </label>
+        </div>
         <div class="chart-bd">
           <canvas id="scatterChart" height="260"></canvas>
         </div>
@@ -360,6 +376,66 @@ function ols(x,y){
   const sb=Math.sqrt(s2*(1/n+mx*mx/Sxx));
   return {m, b, mLo:m-1.96*sm, mHi:m+1.96*sm, bLo:b-1.96*sb, bHi:b+1.96*sb, s2, Sxx, mx, n};
 }
+function passingBablok(x, y) {
+  const n = x.length;
+  const slopes = [];
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (x[j] !== x[i]) slopes.push((y[j] - y[i]) / (x[j] - x[i]));
+    }
+  }
+  slopes.sort((a, b) => a - b);
+  const K = slopes.filter(s => s < -1).length;
+  const N = slopes.length;
+  const medIdx = Math.floor((N + 1) / 2) + K;
+  const m = N % 2 === 1 ? slopes[medIdx] : (slopes[medIdx] + slopes[medIdx - 1]) / 2;
+  const intercepts = y.map((yi, i) => yi - m * x[i]);
+  intercepts.sort((a, b) => a - b);
+  const b = intercepts.length % 2 === 1 ? intercepts[Math.floor(intercepts.length / 2)] : (intercepts[Math.floor(intercepts.length / 2) - 1] + intercepts[Math.floor(intercepts.length / 2)]) / 2;
+  // CI for slope
+  const Cα = 1.96 * Math.sqrt(n * (n - 1) * (2 * n + 5) / 18);
+  const j1 = Math.max(0, Math.round((N - Cα) / 2) + K);
+  const j2 = Math.min(N - 1, Math.round((N + Cα) / 2) + K);
+  const mLo = slopes[j1] ?? m, mHi = slopes[j2] ?? m;
+  const bLo = intercepts[Math.max(0, Math.round((intercepts.length - Cα) / 2))] ?? b;
+  const bHi = intercepts[Math.min(intercepts.length - 1, Math.round((intercepts.length + Cα) / 2))] ?? b;
+  return { m, b, mLo, mHi, bLo, bHi, _noPredCI: true };
+}
+
+function deming(x, y, lambda) {
+  lambda = lambda || 1;
+  const n = x.length, mx = mean(x), my = mean(y);
+  const sxx = x.reduce((s, xi) => s + (xi - mx) ** 2, 0) / (n - 1);
+  const syy = y.reduce((s, yi) => s + (yi - my) ** 2, 0) / (n - 1);
+  const sxy = x.reduce((s, xi, i) => s + (xi - mx) * (y[i] - my), 0) / (n - 1);
+  const diff = syy - lambda * sxx;
+  const m = (diff + Math.sqrt(diff * diff + 4 * lambda * sxy * sxy)) / (2 * sxy);
+  const b = my - m * mx;
+  // Jackknife CI
+  const slopes = [], intercepts = [];
+  for (let i = 0; i < n; i++) {
+    const xj = x.filter((_, j) => j !== i), yj = y.filter((_, j) => j !== i);
+    const mxj = mean(xj), myj = mean(yj);
+    const sxxj = xj.reduce((s, xi) => s + (xi - mxj) ** 2, 0) / (xj.length - 1);
+    const syyj = yj.reduce((s, yi) => s + (yi - myj) ** 2, 0) / (yj.length - 1);
+    const sxyj = xj.reduce((s, xi, k) => s + (xi - mxj) * (yj[k] - myj), 0) / (xj.length - 1);
+    const dj = syyj - lambda * sxxj;
+    const mj = (dj + Math.sqrt(dj * dj + 4 * lambda * sxyj * sxyj)) / (2 * sxyj);
+    slopes.push(mj); intercepts.push(myj - mj * mxj);
+  }
+  const sm = std(slopes) * Math.sqrt((n - 1) / n);
+  const sb = std(intercepts) * Math.sqrt((n - 1) / n);
+  return { m, b, mLo: m - 1.96 * sm, mHi: m + 1.96 * sm, bLo: b - 1.96 * sb, bHi: b + 1.96 * sb, _noPredCI: true };
+}
+
+let currentRegMethod = 'ols';
+function switchRegMethod(method, btn) {
+  document.querySelectorAll('.reg-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  currentRegMethod = method;
+  simulate();
+}
+
 function f2(v){ return isNaN(v)?'—':v.toFixed(2); }
 function f1(v){ return isNaN(v)?'—':v.toFixed(1); }
 
@@ -379,7 +455,8 @@ function simulate(){
   const mB    = trueV.map(t=>slp*t+icp+t*cvB*randn());
 
   const r     = pearson(mA, mB);
-  const reg   = ols(mB, mA);
+  const reg   = currentRegMethod === 'pb' ? passingBablok(mB, mA) : currentRegMethod === 'deming' ? deming(mB, mA, 1) : ols(mB, mA);
+  const methodLabel = currentRegMethod === 'pb' ? 'P-B' : currentRegMethod === 'deming' ? 'Deming' : 'OLS';
   const diffs = mA.map((a,i)=>a-mB[i]);
   const baMeans= mA.map((a,i)=>(a+mB[i])/2);
   const mb    = mean(diffs);
@@ -437,7 +514,9 @@ function simulate(){
   biasEl.className='stat '+(rb<=2?'pass':rb<=5?'warn':'fail');
 
   document.getElementById('sv-loa').textContent=f1(loaDn)+' to '+f1(loaUp);
-  document.getElementById('scatterSub').textContent='r = '+f2(r)+' | y = '+f2(reg.m)+'x + '+f1(reg.b);
+  document.getElementById('s-slope').querySelector('.stat-k').textContent = methodLabel + ' Slope';
+  document.getElementById('s-intercept').querySelector('.stat-k').textContent = methodLabel + ' Intercept';
+  document.getElementById('scatterSub').textContent='r = '+f2(r)+' | '+methodLabel+': y = '+f2(reg.m)+'x + '+f1(reg.b);
 
   // insight
   const box=document.getElementById('insightBox');
@@ -472,28 +551,77 @@ function simulate(){
   box.className='insight-box '+cls;
   box.innerHTML=msg;
 
-  // scatter chart
+  // scatter chart — correlation learning style
   const nA=document.getElementById('nameA').value||'Method A';
   const nB=document.getElementById('nameB').value||'Method B';
   const pts=mB.map((x,i)=>({x,y:mA[i]}));
   const xMin=Math.min(...mB)*0.97, xMax=Math.max(...mB)*1.03;
-  // OLS CI band (hyperbolic)
-  const nBand=50, s=Math.sqrt(reg.s2);
-  const bandX=Array.from({length:nBand+1},(_,i)=>xMin+i*(xMax-xMin)/nBand);
-  const ciUp=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b+1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
-  const ciDn=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b-1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
+  const showResid=document.getElementById('showResidCb').checked;
+  const showCIBand=document.getElementById('showCICb').checked;
+
+  const scDs=[
+    {label:'Data',data:pts,backgroundColor:'rgba(13,148,136,0.55)',borderColor:'#0d9488',pointRadius:5,pointBorderWidth:1,pointHoverRadius:7,type:'scatter'},
+    {label:methodLabel+' regression',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'#1e293b',borderWidth:2.5,pointRadius:0,tension:0,fill:false},
+    {label:'Identity (y=x)',data:[{x:xMin,y:xMin},{x:xMax,y:xMax}],type:'line',borderColor:'#d1d5db',borderWidth:1.5,borderDash:[8,4],pointRadius:0,tension:0,fill:false}
+  ];
+
+  // CI band
+  if(showCIBand && !reg._noPredCI && reg.s2 != null){
+    const nBand=50, s=Math.sqrt(reg.s2);
+    const bandX=Array.from({length:nBand+1},(_,i)=>xMin+i*(xMax-xMin)/nBand);
+    const ciUp=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b+1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
+    const ciDn=bandX.map(xi=>({x:xi,y:reg.m*xi+reg.b-1.96*s*Math.sqrt(1/reg.n+Math.pow(xi-reg.mx,2)/reg.Sxx)}));
+    scDs.splice(2,0,
+      {label:'95% CI (upper)',data:ciUp,type:'line',borderColor:'rgba(13,148,136,0.5)',borderWidth:1.5,borderDash:[4,4],backgroundColor:'rgba(13,148,136,0.15)',pointRadius:0,tension:0,fill:'+1'},
+      {label:'95% CI (lower)',data:ciDn,type:'line',borderColor:'rgba(13,148,136,0.5)',borderWidth:1.5,borderDash:[4,4],pointRadius:0,tension:0,fill:false}
+    );
+  } else if(showCIBand && reg.mLo != null){
+    // PB/Deming: use slope/intercept CI envelope
+    const nBand=50;
+    const bandX=Array.from({length:nBand+1},(_,i)=>xMin+i*(xMax-xMin)/nBand);
+    const ciUp=bandX.map(xi=>({x:xi,y:Math.max(reg.mLo*xi+reg.bHi, reg.mHi*xi+reg.bLo)}));
+    const ciDn=bandX.map(xi=>({x:xi,y:Math.min(reg.mLo*xi+reg.bHi, reg.mHi*xi+reg.bLo)}));
+    scDs.splice(2,0,
+      {label:'95% CI (upper)',data:ciUp,type:'line',borderColor:'rgba(13,148,136,0.5)',borderWidth:1.5,borderDash:[4,4],backgroundColor:'rgba(13,148,136,0.15)',pointRadius:0,tension:0,fill:'+1'},
+      {label:'95% CI (lower)',data:ciDn,type:'line',borderColor:'rgba(13,148,136,0.5)',borderWidth:1.5,borderDash:[4,4],pointRadius:0,tension:0,fill:false}
+    );
+  }
+
+  // Residual lines
+  if(showResid){
+    for(let i=0;i<mB.length;i++){
+      const xi=mB[i], yi=mA[i];
+      let rx, ry;
+      if(currentRegMethod === 'deming'){
+        // Perpendicular (orthogonal) projection onto regression line
+        // Line: y = m*x + b  →  foot of perpendicular from (xi,yi):
+        // rx = (xi + m*(yi - b)) / (1 + m*m)
+        // ry = m*rx + b
+        rx = (xi + reg.m*(yi - reg.b)) / (1 + reg.m*reg.m);
+        ry = reg.m*rx + reg.b;
+      } else {
+        // OLS: vertical residual
+        rx = xi;
+        ry = reg.m*xi + reg.b;
+      }
+      scDs.push({label:i===0?'Residuals':'',data:[{x:xi,y:yi},{x:rx,y:ry}],type:'line',borderColor:'rgba(107,114,128,0.35)',borderWidth:1,pointRadius:0,tension:0});
+    }
+  }
+
+  // Force equal axis range
+  const allVals=[...mB,...mA];
+  const axMin=Math.min(...allVals), axMax=Math.max(...allVals);
+  const axPad=(axMax-axMin)*0.08||1;
+
   if(scatterChart) scatterChart.destroy();
   scatterChart=new Chart(document.getElementById('scatterChart'),{
     type:'scatter',
-    data:{datasets:[
-      {label:'Samples',data:pts,backgroundColor:'rgba(13,148,136,.35)',borderColor:'rgba(13,148,136,.7)',pointRadius:4,borderWidth:1},
-      {label:'Identity (y=x)',data:[{x:xMin,y:xMin},{x:xMax,y:xMax}],type:'line',borderColor:'#94a3b8',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false},
-      {label:'OLS regression',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],type:'line',borderColor:'#ef4444',borderWidth:2,pointRadius:0,fill:false},
-      {label:'95% CI (upper)',data:ciUp,type:'line',borderColor:'rgba(239,68,68,.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:'+1',backgroundColor:'rgba(239,68,68,.07)'},
-      {label:'95% CI (lower)',data:ciDn,type:'line',borderColor:'rgba(239,68,68,.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
-    ]},
-    options:{animation:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:p=>`(${p.parsed.x.toFixed(1)}, ${p.parsed.y.toFixed(1)})`}}},
-      scales:{x:{title:{display:true,text:nB,font:{size:12}},grid:{color:'#f3f4f6'}},y:{title:{display:true,text:nA,font:{size:12}},grid:{color:'#f3f4f6'}}}}
+    data:{datasets:scDs},
+    options:{animation:false, aspectRatio:1,
+      plugins:{legend:{display:false},
+        title:{display:true,text:`${methodLabel}: y = ${f2(reg.m)}x + ${f1(reg.b)}  |  r = ${f2(r)}`,font:{size:13,weight:'bold'},color:'#374151',padding:{bottom:6}},
+        tooltip:{filter:item=>item.datasetIndex===0,callbacks:{label:p=>`(${p.parsed.x.toFixed(1)}, ${p.parsed.y.toFixed(1)})`}}},
+      scales:{x:{min:axMin-axPad,max:axMax+axPad,title:{display:true,text:nB,font:{size:12}},grid:{color:'#f3f4f6'}},y:{min:axMin-axPad,max:axMax+axPad,title:{display:true,text:nA,font:{size:12}},grid:{color:'#f3f4f6'}}}}
   });
 
   // BA chart

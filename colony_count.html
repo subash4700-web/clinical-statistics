@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Colony Count — CFU Calculator</title>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    /* ── Orange Lab Tools header ── */
+    .tool-header{
+      background:linear-gradient(135deg,#431407 0%,#ea580c 100%);
+      color:#fff;padding:18px 22px 16px;border-radius:12px;margin:0 0 20px;
+    }
+    .tool-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .tool-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;line-height:1.5;}
+
+    /* ── Accent overrides (orange) ── */
+    :root{
+      --accent:#ea580c;
+      --accent-light:#fff7ed;
+    }
+
+    .primary{background:var(--accent);color:#fff;}
+    .ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
+    .ghost:hover{border-color:var(--accent);color:var(--accent);}
+
+    .kpi .lab{color:var(--muted);font-weight:900;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+    .kpi .val{font-weight:950;font-size:18px;margin-top:4px;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;}
+
+    /* ── Info box ── */
+    .info-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.65;color:#78350f;}
+    .info-box strong{color:#9a3412;}
+
+    /* ── Dilution table ── */
+    .dil-table{width:100%;border-collapse:collapse;font-size:13px;}
+    .dil-table th,.dil-table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+    .dil-table th{background:var(--subtle);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#374151;white-space:nowrap;}
+    .dil-table td input[type="number"]{width:80px;padding:6px 8px;font-size:13px;border:1px solid var(--line);border-radius:8px;text-align:center;}
+    .dil-table td select{padding:6px 8px;font-size:13px;border:1px solid var(--line);border-radius:8px;}
+    .dil-table .status-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+    .status-countable{background:#dcfce7;color:#15803d;}
+    .status-tntc{background:#fee2e2;color:#b91c1c;}
+    .status-tftc{background:#fef3c7;color:#92400e;}
+    .status-none{background:#f3f4f6;color:#6b7280;}
+    .btn-remove{background:#fee2e2;color:#b91c1c;padding:5px 10px;font-size:11px;font-weight:700;border-radius:8px;border:none;cursor:pointer;}
+    .btn-remove:hover{background:#fecaca;}
+
+    /* ── Big calc button ── */
+    .btn-calc{background:var(--accent);color:#fff;padding:14px 32px;font-size:15px;font-weight:800;border-radius:12px;border:none;cursor:pointer;display:block;width:100%;text-align:center;margin-top:16px;transition:opacity .15s;}
+    .btn-calc:hover{opacity:.88;}
+
+    /* ── Results ── */
+    #resultsPanel{display:none;}
+    .result-hero{background:linear-gradient(135deg,#431407 0%,#ea580c 100%);color:#fff;border-radius:14px;padding:20px 22px;margin-bottom:14px;text-align:center;}
+    .result-hero .big-val{font-size:28px;font-weight:950;font-family:ui-monospace,monospace;}
+    .result-hero .big-label{font-size:12px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+
+    .step-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.8;font-family:ui-monospace,monospace;margin-bottom:12px;}
+    .step-box .formula{font-weight:700;color:#ea580c;margin-bottom:6px;font-size:14px;}
+
+    /* verdict */
+    .verdict-box{border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6;margin-bottom:14px;font-weight:600;}
+    .verdict-good{background:#f0fdf4;border:1px solid #86efac;color:#14532d;}
+    .verdict-warn{background:#fffbeb;border:1px solid #fde68a;color:#78350f;}
+    .verdict-bad{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;}
+
+    /* Result data table row highlights */
+    .row-countable{background:#f0fdf4;}
+    .row-tntc{background:#fef2f2;}
+    .row-tftc{background:#fffbeb;}
+    .row-used td{font-weight:700;}
+
+    .row{display:flex;gap:12px;flex-wrap:wrap;}
+    .row .field{flex:1 1 160px;}
+    .field label{display:block;font-weight:700;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+    .btn-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;}
+
+    .iso-note{background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:10px 14px;font-size:12px;color:#6b21a8;line-height:1.6;margin-top:12px;}
+    .iso-note strong{color:#581c87;}
+
+    /* ── Exercises ── */
+    .exercises{margin-bottom:18px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+    @media(max-width:900px){.ex-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#fdba74;box-shadow:0 2px 10px rgba(234,88,12,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(234,88,12,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#78350f;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#fff7ed;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#9a3412;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#78350f;}
+    .ex-instructions b{color:#9a3412;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    .ex-answer{display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7;color:#14532d;}
+    .ex-answer b{color:#15803d;}
+    .ex-show-btn{margin-top:10px;background:none;border:1px solid #fed7aa;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#9a3412;cursor:pointer;font-family:inherit;}
+    .ex-show-btn:hover{background:#fff7ed;}
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ═══ Header ═══ -->
+    <div class="tool-header">
+      <h1>Colony Count — CFU Calculator <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;">BETA</span></h1>
+      <p>Calculate colony forming units (CFU) per mL or g from dilution series plate counts</p>
+    </div>
+
+    <!-- ═══ Info box ═══ -->
+    <div class="info-box">
+      <strong>How to use:</strong> Enter your plate counts for each dilution level in the data table below.
+      The calculator will identify countable plates (within the valid range), average duplicate counts,
+      and compute the final CFU/mL or CFU/g using the standard plate count method.
+      Plates outside the countable range are automatically flagged as TNTC (too numerous to count) or TFTC (too few to count).
+    </div>
+
+    <!-- ═══ Guided Exercises ═══ -->
+    <div class="exercises">
+      <button class="ex-toggle open" id="ccExToggle" onclick="toggleEx('ccExPanel','ccExToggle')">
+        <span>📋 Guided Exercises</span>
+        <span class="ex-arrow">▶</span>
+      </button>
+      <div id="ccExPanel">
+        <div class="ex-grid">
+
+          <div class="ex-card" id="ccEx1" onclick="loadExercise(1)">
+            <div class="ex-num">Exercise 1</div>
+            <div class="ex-title">Standard urine culture</div>
+            <div class="ex-obj">Calculate CFU/mL from a routine urine culture with 4 dilutions. Learn the clinical threshold for significant bacteriuria (&gt;10⁵ CFU/mL).</div>
+            <div class="ex-params">
+              <span class="ex-param">Liquid</span>
+              <span class="ex-param">Spread plate</span>
+              <span class="ex-param">4 dilutions</span>
+              <span class="ex-param">~1.9×10⁵ CFU/mL</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="ccEx2" onclick="loadExercise(2)">
+            <div class="ex-num">Exercise 2</div>
+            <div class="ex-title">Food safety — total aerobic count</div>
+            <div class="ex-obj">Determine total aerobic count in a solid food sample using pour plates and 5 dilutions. Practice the ISO 7218 weighted average method.</div>
+            <div class="ex-params">
+              <span class="ex-param">Solid (CFU/g)</span>
+              <span class="ex-param">Pour plate</span>
+              <span class="ex-param">5 dilutions</span>
+              <span class="ex-param">Weighted avg</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="ccEx3" onclick="loadExercise(3)">
+            <div class="ex-num">Exercise 3</div>
+            <div class="ex-title">Low bacterial load</div>
+            <div class="ex-obj">All plates fall below the countable range (TFTC). Learn when and how to report an estimated count with a qualifier.</div>
+            <div class="ex-params">
+              <span class="ex-param">Liquid</span>
+              <span class="ex-param">Spread plate</span>
+              <span class="ex-param">3 dilutions</span>
+              <span class="ex-param">All TFTC</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="ccEx4" onclick="loadExercise(4)">
+            <div class="ex-num">Exercise 4</div>
+            <div class="ex-title">Duplicate disagreement</div>
+            <div class="ex-obj">Duplicate plates show &gt;15% difference. Identify the technique issue and understand when results should be flagged.</div>
+            <div class="ex-params">
+              <span class="ex-param">Liquid</span>
+              <span class="ex-param">Spread plate</span>
+              <span class="ex-param">2 dilutions</span>
+              <span class="ex-param">&gt;15% diff</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+          <div class="ex-card" id="ccEx5" onclick="loadExercise(5)">
+            <div class="ex-num">Exercise 5</div>
+            <div class="ex-title">All TNTC</div>
+            <div class="ex-obj">Every plate exceeds the countable range. Learn why more dilutions are needed and how to report an estimate from TNTC data.</div>
+            <div class="ex-params">
+              <span class="ex-param">Liquid</span>
+              <span class="ex-param">Spread plate</span>
+              <span class="ex-param">3 dilutions</span>
+              <span class="ex-param">All TNTC</span>
+            </div>
+            <button class="ex-btn">Load exercise</button>
+          </div>
+
+        </div>
+        <div class="ex-instructions" id="ccExInstructions" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 1. Settings Panel ═══ -->
+    <div class="card">
+      <div style="font-weight:900;font-size:15px;margin-bottom:12px;">Settings</div>
+      <div class="row">
+        <div class="field">
+          <label for="sampleType">Sample type</label>
+          <select id="sampleType">
+            <option value="liquid" selected>Liquid (CFU/mL)</option>
+            <option value="solid">Solid (CFU/g)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="platingMethod">Plating method</label>
+          <select id="platingMethod">
+            <option value="spread" selected>Spread plate (0.1 mL)</option>
+            <option value="pour">Pour plate (1.0 mL)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="volumePlated">Volume plated (mL)</label>
+          <input id="volumePlated" type="number" min="0.001" step="any" value="0.1"/>
+        </div>
+        <div class="field">
+          <label for="sampleAmount">Sample weight/volume</label>
+          <input id="sampleAmount" type="number" min="0.001" step="any" value="1.0"/>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div class="field">
+          <label for="countMin">Min countable colonies</label>
+          <input id="countMin" type="number" min="0" step="1" value="30"/>
+        </div>
+        <div class="field">
+          <label for="countMax">Max countable colonies</label>
+          <input id="countMax" type="number" min="1" step="1" value="300"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 2. Dilution Series Data Entry ═══ -->
+    <div class="card">
+      <div style="font-weight:900;font-size:15px;margin-bottom:12px;">Dilution Series</div>
+      <div class="table-wrap">
+        <table class="dil-table" id="dilTable">
+          <thead>
+            <tr>
+              <th>Dilution</th>
+              <th>Plate 1</th>
+              <th>Plate 2</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="dilBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row" style="justify-content:flex-start;">
+        <button class="ghost" type="button" id="addRowBtn">+ Add dilution</button>
+      </div>
+    </div>
+
+    <!-- ═══ 3. Calculate Button ═══ -->
+    <button class="btn-calc" type="button" id="calcBtn">Calculate CFU</button>
+
+    <!-- ═══ 4. Results Panel ═══ -->
+    <div id="resultsPanel" style="margin-top:16px;">
+
+      <!-- Hero result -->
+      <div class="result-hero" id="heroResult"></div>
+
+      <!-- KPI cards -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- Verdict -->
+      <div id="verdictBox"></div>
+
+      <!-- Calculation steps -->
+      <div class="card" id="calcDetails" style="display:none;">
+        <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Calculation Details</div>
+        <div id="calcSteps"></div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card" id="chartCard" style="display:none;">
+        <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Colony Counts by Dilution</div>
+        <div class="viz-wrap">
+          <canvas id="cfuChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Result data table -->
+      <div class="card" id="resultTableCard" style="display:none;">
+        <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Data Summary</div>
+        <div class="table-wrap">
+          <table id="resultTable">
+            <thead>
+              <tr>
+                <th>Dilution</th>
+                <th class="num">Plate 1</th>
+                <th class="num">Plate 2</th>
+                <th class="num">Average</th>
+                <th>Status</th>
+                <th>Used</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ISO note -->
+      <div class="iso-note">
+        <strong>ISO Reference:</strong> This calculation follows the standard plate count methodology described in
+        <strong>ISO 7218</strong> (Microbiology of food and animal feeding stuffs — General requirements and guidance for microbiological examinations)
+        and <strong>ISO 4833</strong> (Microbiology of the food chain — Horizontal method for the enumeration of microorganisms — Colony-count technique).
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Colony Count — CFU Calculator  (BETA)
+   ═══════════════════════════════════════════════════ */
+
+// ── Plating method ↔ volume default sync ──
+const platingMethodEl = document.getElementById('platingMethod');
+const volumePlatedEl  = document.getElementById('volumePlated');
+platingMethodEl.addEventListener('change', () => {
+  volumePlatedEl.value = platingMethodEl.value === 'spread' ? '0.1' : '1.0';
+});
+
+// ── Dilution row management ──
+const dilBody = document.getElementById('dilBody');
+let rowIdCounter = 0;
+
+const DILUTIONS = [
+  {label:'10\u207B\u00B9', value:1},
+  {label:'10\u207B\u00B2', value:2},
+  {label:'10\u207B\u00B3', value:3},
+  {label:'10\u207B\u2074', value:4},
+  {label:'10\u207B\u2075', value:5},
+  {label:'10\u207B\u2076', value:6},
+  {label:'10\u207B\u2077', value:7},
+  {label:'10\u207B\u2078', value:8}
+];
+
+function makeDilutionSelect(selectedVal){
+  let html = '<select class="dil-select">';
+  DILUTIONS.forEach(d => {
+    html += `<option value="${d.value}"${d.value===selectedVal?' selected':''}>${d.label}</option>`;
+  });
+  html += '</select>';
+  return html;
+}
+
+function addRow(dilVal, p1, p2){
+  rowIdCounter++;
+  const tr = document.createElement('tr');
+  tr.dataset.rowId = rowIdCounter;
+  tr.innerHTML = `
+    <td>${makeDilutionSelect(dilVal||1)}</td>
+    <td><input type="number" class="plate1" min="0" step="1" value="${p1!==undefined?p1:''}"/></td>
+    <td><input type="number" class="plate2" min="0" step="1" value="${p2!==undefined?p2:''}"/></td>
+    <td class="status-cell"><span class="status-badge status-none">—</span></td>
+    <td><button class="btn-remove" type="button" onclick="removeRow(this)">Remove</button></td>
+  `;
+  dilBody.appendChild(tr);
+  // live status
+  tr.querySelector('.plate1').addEventListener('input', () => updateRowStatus(tr));
+  tr.querySelector('.plate2').addEventListener('input', () => updateRowStatus(tr));
+  updateRowStatus(tr);
+}
+
+function removeRow(btn){
+  const tr = btn.closest('tr');
+  if(dilBody.querySelectorAll('tr').length > 1) tr.remove();
+}
+
+function getCountableRange(){
+  return {
+    min: Number(document.getElementById('countMin').value) || 30,
+    max: Number(document.getElementById('countMax').value) || 300
+  };
+}
+
+function classifyCount(val, range){
+  if(val === '' || val === null || val === undefined || isNaN(Number(val))) return 'empty';
+  const n = Number(val);
+  if(n === 0) return 'zero';
+  if(n > range.max) return 'tntc';
+  if(n < range.min) return 'tftc';
+  return 'countable';
+}
+
+function updateRowStatus(tr){
+  const range = getCountableRange();
+  const v1 = tr.querySelector('.plate1').value.trim();
+  const v2 = tr.querySelector('.plate2').value.trim();
+  const c1 = classifyCount(v1, range);
+  const c2 = classifyCount(v2, range);
+
+  let status = 'none', label = '—', cls = 'status-none';
+  if(c1 === 'empty' && c2 === 'empty'){
+    // nothing entered
+  } else if(c1 === 'tntc' || c2 === 'tntc'){
+    status = 'tntc'; label = 'TNTC'; cls = 'status-tntc';
+  } else if(c1 === 'zero' && c2 === 'zero'){
+    status = 'zero'; label = 'No growth'; cls = 'status-none';
+  } else if(c1 === 'countable' || c2 === 'countable'){
+    status = 'countable'; label = 'Countable'; cls = 'status-countable';
+  } else if(c1 === 'tftc' || c2 === 'tftc'){
+    status = 'tftc'; label = 'TFTC'; cls = 'status-tftc';
+  } else if(c1 === 'zero' || c2 === 'zero'){
+    status = 'tftc'; label = 'TFTC'; cls = 'status-tftc';
+  }
+
+  tr.querySelector('.status-cell').innerHTML = `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+// Pre-fill example data
+function initRows(){
+  addRow(1, '', '');  // 10^-1 TNTC
+  addRow(2, 285, 310); // 10^-2 Countable
+  addRow(3, 32, 28);   // 10^-3 Countable
+  addRow(4, 3, 5);     // 10^-4 TFTC
+
+  // Set TNTC entries — use values above 300
+  const rows = dilBody.querySelectorAll('tr');
+  rows[0].querySelector('.plate1').value = 'TNTC';
+  rows[0].querySelector('.plate2').value = 'TNTC';
+  // Actually use high numbers for TNTC
+  rows[0].querySelector('.plate1').value = 500;
+  rows[0].querySelector('.plate2').value = 520;
+  updateRowStatus(rows[0]);
+}
+
+document.getElementById('addRowBtn').addEventListener('click', () => {
+  // find next dilution not in use
+  const used = new Set();
+  dilBody.querySelectorAll('.dil-select').forEach(s => used.add(Number(s.value)));
+  let next = 1;
+  for(let i = 1; i <= 8; i++){ if(!used.has(i)){ next = i; break; } }
+  addRow(next, '', '');
+});
+
+// ── Gather all row data ──
+function gatherRows(){
+  const range = getCountableRange();
+  const rows = [];
+  dilBody.querySelectorAll('tr').forEach(tr => {
+    const dilVal = Number(tr.querySelector('.dil-select').value);
+    const v1raw = tr.querySelector('.plate1').value.trim();
+    const v2raw = tr.querySelector('.plate2').value.trim();
+    const v1 = v1raw === '' ? null : Number(v1raw);
+    const v2 = v2raw === '' ? null : Number(v2raw);
+
+    const c1 = classifyCount(v1, range);
+    const c2 = classifyCount(v2, range);
+
+    // Determine overall row status
+    let status = 'empty';
+    if(c1 !== 'empty' || c2 !== 'empty'){
+      if(c1 === 'tntc' || c2 === 'tntc') status = 'tntc';
+      else if((c1 === 'zero' || c1 === 'empty') && (c2 === 'zero' || c2 === 'empty')) status = 'zero';
+      else if(c1 === 'countable' || c2 === 'countable') status = 'countable';
+      else status = 'tftc';
+    }
+
+    // compute average of countable/valid plates only
+    const validPlates = [];
+    if(v1 !== null && !isNaN(v1) && c1 === 'countable') validPlates.push(v1);
+    if(v2 !== null && !isNaN(v2) && c2 === 'countable') validPlates.push(v2);
+
+    // for the average, if both plates are entered and at least one is countable, average all entered values
+    const allPlates = [];
+    if(v1 !== null && !isNaN(v1)) allPlates.push(v1);
+    if(v2 !== null && !isNaN(v2)) allPlates.push(v2);
+
+    const avg = validPlates.length > 0
+      ? validPlates.reduce((a,b)=>a+b,0) / validPlates.length
+      : (allPlates.length > 0 ? allPlates.reduce((a,b)=>a+b,0) / allPlates.length : null);
+
+    rows.push({
+      dilution: dilVal,
+      dilutionFactor: Math.pow(10, -dilVal),
+      dilLabel: DILUTIONS.find(d=>d.value===dilVal)?.label || `10^-${dilVal}`,
+      plate1: v1, plate2: v2,
+      c1, c2, status,
+      validCount: validPlates.length,
+      average: avg,
+      allPlates
+    });
+  });
+  return rows;
+}
+
+// ── Calculation ──
+document.getElementById('calcBtn').addEventListener('click', calculate);
+
+function calculate(){
+  const range   = getCountableRange();
+  const volPlated = Number(volumePlatedEl.value);
+  const sampleAmt = Number(document.getElementById('sampleAmount').value) || 1;
+  const sampleType = document.getElementById('sampleType').value;
+  const unit = sampleType === 'liquid' ? 'CFU/mL' : 'CFU/g';
+
+  if(!(volPlated > 0)){ alert('Volume plated must be > 0'); return; }
+
+  const rows = gatherRows();
+  const countableRows = rows.filter(r => r.status === 'countable');
+
+  // ── No countable rows? ──
+  if(countableRows.length === 0){
+    // check if all zero
+    const allZero = rows.every(r => r.status === 'zero' || r.status === 'empty');
+    if(allZero && rows.some(r => r.status === 'zero')){
+      showNoGrowthResult(rows, unit);
+      return;
+    }
+    // check TNTC only
+    if(rows.some(r => r.status === 'tntc') && !rows.some(r => r.status === 'countable')){
+      showTNTCOnlyResult(rows, unit);
+      return;
+    }
+    // TFTC only
+    if(rows.some(r => r.status === 'tftc')){
+      showTFTCOnlyResult(rows, unit, volPlated, sampleAmt);
+      return;
+    }
+    alert('No data entered. Please enter plate counts.');
+    return;
+  }
+
+  // ── ISO 7218 approach: use countable dilutions ──
+  // Group countable rows by dilution
+  const byDil = {};
+  countableRows.forEach(r => {
+    if(!byDil[r.dilution]) byDil[r.dilution] = [];
+    byDil[r.dilution].push(r);
+  });
+
+  const dilKeys = Object.keys(byDil).map(Number).sort((a,b)=>a-b);
+  let chosenDils, reason;
+
+  if(dilKeys.length === 1){
+    chosenDils = dilKeys;
+    reason = `Only one dilution (${byDil[dilKeys[0]][0].dilLabel}) had countable plates.`;
+  } else {
+    // Check if CFU estimates from different dilutions are within 2x of each other
+    const estimates = dilKeys.map(d => {
+      const r = byDil[d][0];
+      return { dil: d, cfu: r.average / (r.dilutionFactor * volPlated) };
+    });
+    const minEst = Math.min(...estimates.map(e=>e.cfu));
+    const maxEst = Math.max(...estimates.map(e=>e.cfu));
+
+    if(maxEst / minEst <= 2){
+      // Use all countable dilutions (ISO 7218 weighted average)
+      chosenDils = dilKeys;
+      reason = `Multiple dilutions were countable and estimates were within 2-fold — using ISO 7218 weighted average across dilutions.`;
+    } else {
+      // Pick dilution closest to midpoint of countable range
+      const mid = (range.min + range.max) / 2;
+      let best = dilKeys[0], bestDist = Infinity;
+      dilKeys.forEach(d => {
+        const avg = byDil[d][0].average;
+        const dist = Math.abs(avg - mid);
+        if(dist < bestDist){ bestDist = dist; best = d; }
+      });
+      chosenDils = [best];
+      reason = `Multiple dilutions were countable but estimates differed by more than 2-fold. Using the dilution closest to the midpoint of the countable range (${byDil[best][0].dilLabel}).`;
+    }
+  }
+
+  // ── Compute CFU using chosen dilutions (ISO 7218 weighted) ──
+  // Weighted average: CFU = sum(all colonies from chosen dilutions) / (sum(n_i * d_i * v) for each dilution)
+  let totalColonies = 0;
+  let totalWeight = 0;
+  let totalPlates = 0;
+  const usedDilLabels = [];
+
+  chosenDils.forEach(d => {
+    const rowsAtDil = byDil[d];
+    rowsAtDil.forEach(r => {
+      const plates = [];
+      if(r.c1 === 'countable') plates.push(r.plate1);
+      if(r.c2 === 'countable') plates.push(r.plate2);
+      const colSum = plates.reduce((a,b)=>a+b,0);
+      totalColonies += colSum;
+      totalWeight += plates.length * r.dilutionFactor * volPlated;
+      totalPlates += plates.length;
+      usedDilLabels.push(r.dilLabel);
+    });
+  });
+
+  let cfu = totalColonies / totalWeight;
+
+  // adjust for sample amount if solid
+  if(sampleType === 'solid'){
+    cfu = cfu / sampleAmt;
+  }
+
+  const avgCount = totalColonies / totalPlates;
+  const log10cfu = cfu > 0 ? Math.log10(cfu) : 0;
+
+  // Mark which rows were used
+  rows.forEach(r => {
+    r.used = chosenDils.includes(r.dilution) && r.status === 'countable';
+  });
+
+  // ── Display results ──
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+
+  // Hero
+  const cfuDisplay = cfu > 10000
+    ? cfu.toExponential(2)
+    : cfu.toLocaleString('en', {maximumFractionDigits:0});
+  document.getElementById('heroResult').innerHTML = `
+    <div class="big-label">${unit}</div>
+    <div class="big-val">${cfuDisplay}</div>
+    <div style="font-size:13px;opacity:.8;margin-top:6px;">log\u2081\u2080 = ${log10cfu.toFixed(2)}</div>
+  `;
+
+  // KPI grid
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="lab">${unit}</div><div class="val"><span class="mono">${cfuDisplay}</span></div></div>
+    <div class="kpi"><div class="lab">Dilution(s) used</div><div class="val">${[...new Set(usedDilLabels)].join(', ')}</div></div>
+    <div class="kpi"><div class="lab">Average count</div><div class="val"><span class="mono">${avgCount.toFixed(1)}</span></div></div>
+    <div class="kpi"><div class="lab">Plates used</div><div class="val"><span class="mono">${totalPlates}</span></div></div>
+    <div class="kpi"><div class="lab">log\u2081\u2080(${unit})</div><div class="val"><span class="mono">${log10cfu.toFixed(2)}</span></div></div>
+  `;
+
+  // Verdict
+  const verdicts = [];
+  if(totalPlates === 1){
+    verdicts.push({type:'warn', msg:'Only one countable plate was found. Duplicate plating is recommended for reliable results.'});
+  }
+  const lowestDil = Math.min(...rows.filter(r=>r.status!=='empty').map(r=>r.dilution));
+  if(rows.some(r => r.dilution === lowestDil && r.status === 'tntc')){
+    verdicts.push({type:'warn', msg:'TNTC at the lowest dilution — consider using higher dilutions for better accuracy.'});
+  }
+  const highestDil = Math.max(...rows.filter(r=>r.status!=='empty').map(r=>r.dilution));
+  if(rows.some(r => r.dilution === highestDil && r.status === 'tftc')){
+    verdicts.push({type:'warn', msg:'TFTC at the highest dilution — the sample may have a low microbial count.'});
+  }
+  if(verdicts.length === 0){
+    verdicts.push({type:'good', msg:'Result calculated from countable plates within the valid range. No issues detected.'});
+  }
+  document.getElementById('verdictBox').innerHTML = verdicts.map(v =>
+    `<div class="verdict-box verdict-${v.type}">${v.msg}</div>`
+  ).join('');
+
+  // Calculation details
+  const detailsEl = document.getElementById('calcDetails');
+  detailsEl.style.display = '';
+  let stepsHtml = `
+    <div class="step-box">
+      <div class="formula">${unit} = Total colonies / (n\u2081 \u00D7 d\u2081 \u00D7 V + n\u2082 \u00D7 d\u2082 \u00D7 V + ...)</div>
+      <div>Total colonies from countable plates = <strong>${totalColonies}</strong></div>
+      <div>Weighted denominator = <strong>${totalWeight.toExponential(3)}</strong></div>
+  `;
+  chosenDils.forEach(d => {
+    const r = byDil[d][0];
+    const plates = [];
+    if(r.c1==='countable') plates.push(r.plate1);
+    if(r.c2==='countable') plates.push(r.plate2);
+    stepsHtml += `<div>&nbsp;&nbsp;${r.dilLabel}: ${plates.length} plate(s) \u00D7 ${r.dilutionFactor.toExponential(0)} \u00D7 ${volPlated} mL</div>`;
+  });
+  stepsHtml += `
+      <div style="margin-top:6px;font-weight:700;">${unit} = ${totalColonies} / ${totalWeight.toExponential(3)} = <span style="color:#ea580c;">${cfuDisplay}</span></div>
+    </div>
+    <p class="note">${reason}</p>
+  `;
+
+  // Excluded plates explanation
+  const excludedRows = rows.filter(r => !r.used && r.status !== 'empty');
+  if(excludedRows.length > 0){
+    stepsHtml += `<p class="note" style="margin-top:8px;"><strong>Excluded plates:</strong></p><ul style="font-size:12px;color:var(--muted);margin:4px 0 0 16px;">`;
+    excludedRows.forEach(r => {
+      const statusLabel = r.status === 'tntc' ? 'TNTC' : r.status === 'tftc' ? 'TFTC' : r.status === 'zero' ? 'No growth' : 'Not selected';
+      stepsHtml += `<li>${r.dilLabel}: ${statusLabel}</li>`;
+    });
+    stepsHtml += '</ul>';
+  }
+
+  document.getElementById('calcSteps').innerHTML = stepsHtml;
+
+  // Result data table
+  const resultTableCard = document.getElementById('resultTableCard');
+  resultTableCard.style.display = '';
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  rows.filter(r => r.status !== 'empty').forEach(r => {
+    const rowCls = r.used ? 'row-used row-countable'
+      : r.status === 'tntc' ? 'row-tntc'
+      : r.status === 'tftc' || r.status === 'zero' ? 'row-tftc'
+      : r.status === 'countable' ? 'row-countable' : '';
+    const statusLabel = r.status === 'tntc' ? '<span class="status-badge status-tntc">TNTC</span>'
+      : r.status === 'tftc' ? '<span class="status-badge status-tftc">TFTC</span>'
+      : r.status === 'zero' ? '<span class="status-badge status-none">No growth</span>'
+      : '<span class="status-badge status-countable">Countable</span>';
+    const tr = document.createElement('tr');
+    tr.className = rowCls;
+    tr.innerHTML = `
+      <td>${r.dilLabel}</td>
+      <td class="num">${r.plate1 !== null ? r.plate1 : '—'}</td>
+      <td class="num">${r.plate2 !== null ? r.plate2 : '—'}</td>
+      <td class="num">${r.average !== null ? r.average.toFixed(1) : '—'}</td>
+      <td>${statusLabel}</td>
+      <td>${r.used ? '\u2714' : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Chart
+  renderChart(rows);
+
+  // Scroll to results
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── Special result cases ──
+function showNoGrowthResult(rows, unit){
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+  document.getElementById('heroResult').innerHTML = `
+    <div class="big-label">${unit}</div>
+    <div class="big-val">0 (No growth)</div>
+  `;
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="lab">${unit}</div><div class="val"><span class="mono">0</span></div></div>
+    <div class="kpi"><div class="lab">Result</div><div class="val">No growth detected</div></div>
+  `;
+  document.getElementById('verdictBox').innerHTML = '<div class="verdict-box verdict-good">No growth detected at any dilution.</div>';
+  document.getElementById('calcDetails').style.display = 'none';
+  document.getElementById('resultTableCard').style.display = 'none';
+  document.getElementById('chartCard').style.display = 'none';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showTNTCOnlyResult(rows, unit){
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+  document.getElementById('heroResult').innerHTML = `
+    <div class="big-label">${unit}</div>
+    <div class="big-val">TNTC</div>
+  `;
+  document.getElementById('kpiGrid').innerHTML = '';
+  document.getElementById('verdictBox').innerHTML = '<div class="verdict-box verdict-bad">All plates are TNTC. Increase dilutions and re-plate to obtain countable colonies.</div>';
+  document.getElementById('calcDetails').style.display = 'none';
+  document.getElementById('resultTableCard').style.display = 'none';
+  document.getElementById('chartCard').style.display = 'none';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showTFTCOnlyResult(rows, unit, volPlated, sampleAmt){
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+  // Estimate using highest count TFTC plate
+  const allCounts = [];
+  rows.forEach(r => {
+    if(r.plate1 !== null && !isNaN(r.plate1)) allCounts.push({count:r.plate1, df:r.dilutionFactor});
+    if(r.plate2 !== null && !isNaN(r.plate2)) allCounts.push({count:r.plate2, df:r.dilutionFactor});
+  });
+  const best = allCounts.sort((a,b)=>b.count - a.count)[0];
+  const estCfu = best ? best.count / (best.df * volPlated) : 0;
+  const estDisplay = estCfu > 10000 ? estCfu.toExponential(2) : estCfu.toLocaleString('en',{maximumFractionDigits:0});
+
+  document.getElementById('heroResult').innerHTML = `
+    <div class="big-label">Estimated ${unit}</div>
+    <div class="big-val">&lt; ${estDisplay}</div>
+    <div style="font-size:12px;opacity:.7;margin-top:4px;">(below countable range — estimate only)</div>
+  `;
+  document.getElementById('kpiGrid').innerHTML = '';
+  document.getElementById('verdictBox').innerHTML = '<div class="verdict-box verdict-warn">All plates are below the countable range (TFTC). The result is an estimate only. The sample may have a very low microbial count.</div>';
+  document.getElementById('calcDetails').style.display = 'none';
+  document.getElementById('resultTableCard').style.display = 'none';
+  document.getElementById('chartCard').style.display = 'none';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── Chart ──
+let cfuChartInstance = null;
+
+function renderChart(rows){
+  const chartCard = document.getElementById('chartCard');
+  chartCard.style.display = '';
+  const ctx = document.getElementById('cfuChart').getContext('2d');
+  if(cfuChartInstance) cfuChartInstance.destroy();
+
+  const dataRows = rows.filter(r => r.status !== 'empty');
+  const labels = dataRows.map(r => r.dilLabel);
+  const p1 = dataRows.map(r => r.plate1 !== null ? r.plate1 : 0);
+  const p2 = dataRows.map(r => r.plate2 !== null ? r.plate2 : 0);
+  const range = getCountableRange();
+
+  cfuChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Plate 1',
+          data: p1,
+          backgroundColor: dataRows.map(r => r.status==='countable' ? '#86efac' : r.status==='tntc' ? '#fca5a5' : '#fde68a'),
+          borderColor: dataRows.map(r => r.status==='countable' ? '#15803d' : r.status==='tntc' ? '#b91c1c' : '#92400e'),
+          borderWidth: 1.5,
+          borderRadius: 4
+        },
+        {
+          label: 'Plate 2',
+          data: p2,
+          backgroundColor: dataRows.map(r => r.status==='countable' ? '#bbf7d0' : r.status==='tntc' ? '#fee2e2' : '#fef3c7'),
+          borderColor: dataRows.map(r => r.status==='countable' ? '#22c55e' : r.status==='tntc' ? '#ef4444' : '#d97706'),
+          borderWidth: 1.5,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 12, weight: '600' } } },
+        annotation: undefined
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Colony count', font: { size: 12, weight: '700' } },
+          grid: { color: '#f3f4f6' }
+        },
+        x: {
+          title: { display: true, text: 'Dilution', font: { size: 12, weight: '700' } },
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [{
+      id: 'countableRange',
+      afterDraw(chart){
+        const yAxis = chart.scales.y;
+        const ctx2 = chart.ctx;
+        const left = chart.chartArea.left;
+        const right = chart.chartArea.right;
+
+        // Draw min line
+        const yMin = yAxis.getPixelForValue(range.min);
+        const yMax = yAxis.getPixelForValue(range.max);
+        if(yMin >= chart.chartArea.top && yMin <= chart.chartArea.bottom){
+          ctx2.save();
+          ctx2.strokeStyle = '#22c55e';
+          ctx2.lineWidth = 1;
+          ctx2.setLineDash([6,4]);
+          ctx2.beginPath();
+          ctx2.moveTo(left, yMin);
+          ctx2.lineTo(right, yMin);
+          ctx2.stroke();
+          ctx2.fillStyle = '#15803d';
+          ctx2.font = '10px system-ui';
+          ctx2.fillText(`Min: ${range.min}`, right - 60, yMin - 4);
+          ctx2.restore();
+        }
+        if(yMax >= chart.chartArea.top && yMax <= chart.chartArea.bottom){
+          ctx2.save();
+          ctx2.strokeStyle = '#ef4444';
+          ctx2.lineWidth = 1;
+          ctx2.setLineDash([6,4]);
+          ctx2.beginPath();
+          ctx2.moveTo(left, yMax);
+          ctx2.lineTo(right, yMax);
+          ctx2.stroke();
+          ctx2.fillStyle = '#b91c1c';
+          ctx2.font = '10px system-ui';
+          ctx2.fillText(`Max: ${range.max}`, right - 60, yMax - 4);
+          ctx2.restore();
+        }
+      }
+    }]
+  });
+}
+
+// ── Save / Load ──
+window.getSaveData = function(){
+  const rows = [];
+  dilBody.querySelectorAll('tr').forEach(tr => {
+    rows.push({
+      dilution: Number(tr.querySelector('.dil-select').value),
+      plate1: tr.querySelector('.plate1').value,
+      plate2: tr.querySelector('.plate2').value
+    });
+  });
+  return {
+    sampleType: document.getElementById('sampleType').value,
+    platingMethod: platingMethodEl.value,
+    volumePlated: volumePlatedEl.value,
+    sampleAmount: document.getElementById('sampleAmount').value,
+    countMin: document.getElementById('countMin').value,
+    countMax: document.getElementById('countMax').value,
+    rows
+  };
+};
+
+window.loadSaveData = function(data){
+  if(!data) return;
+  if(data.sampleType) document.getElementById('sampleType').value = data.sampleType;
+  if(data.platingMethod) platingMethodEl.value = data.platingMethod;
+  if(data.volumePlated) volumePlatedEl.value = data.volumePlated;
+  if(data.sampleAmount) document.getElementById('sampleAmount').value = data.sampleAmount;
+  if(data.countMin) document.getElementById('countMin').value = data.countMin;
+  if(data.countMax) document.getElementById('countMax').value = data.countMax;
+  if(data.rows && Array.isArray(data.rows)){
+    dilBody.innerHTML = '';
+    data.rows.forEach(r => {
+      addRow(r.dilution, r.plate1, r.plate2);
+    });
+  }
+  // Auto-calculate after load
+  setTimeout(calculate, 100);
+};
+
+// ── Exercise system ──
+function toggleEx(panelId, toggleId){
+  const panel  = document.getElementById(panelId);
+  const toggle = document.getElementById(toggleId);
+  const open   = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+function toggleAnswer(id, btn){
+  const el = document.getElementById(id);
+  const showing = el.style.display === 'block';
+  el.style.display = showing ? 'none' : 'block';
+  btn.textContent = showing ? 'Show answer' : 'Hide answer';
+}
+
+const CC_EXERCISES = {
+  1: {
+    title: 'Standard urine culture',
+    sampleType: 'liquid',
+    platingMethod: 'spread',
+    volumePlated: 0.1,
+    sampleAmount: 1,
+    countMin: 30,
+    countMax: 300,
+    rows: [
+      { dil: 1, p1: 500, p2: 490 },
+      { dil: 2, p1: 180, p2: 195 },
+      { dil: 3, p1: 18,  p2: 21  },
+      { dil: 4, p1: 2,   p2: 1   }
+    ],
+    steps: `
+      <b>Context:</b> A routine urine culture is plated using spread plates (0.1 mL) across 4 dilutions. The clinical threshold for significant bacteriuria is &gt;10⁵ CFU/mL.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Note which dilutions are flagged as TNTC, Countable, and TFTC.</li>
+        <li>The calculator should use the 10⁻² dilution (180/195 colonies — both within 30–300 range).</li>
+        <li>Calculate: average = 187.5, CFU/mL = 187.5 / (10⁻² × 0.1) = 187 500 ≈ 1.9 × 10⁵.</li>
+        <li>Is this above or below the 10⁵ threshold for significant bacteriuria?</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> ~1.88 × 10⁵ CFU/mL (log₁₀ ≈ 5.27).<br><br>
+      <b>Clinical interpretation:</b> This exceeds 10⁵ CFU/mL — consistent with significant bacteriuria and likely urinary tract infection. The 10⁻³ dilution (18/21) gives a similar estimate (~1.95 × 10⁵), confirming consistency.`
+  },
+  2: {
+    title: 'Food safety — total aerobic count',
+    sampleType: 'solid',
+    platingMethod: 'pour',
+    volumePlated: 1.0,
+    sampleAmount: 1,
+    countMin: 30,
+    countMax: 300,
+    rows: [
+      { dil: 1, p1: 500, p2: 500 },
+      { dil: 2, p1: 480, p2: 460 },
+      { dil: 3, p1: 245, p2: 260 },
+      { dil: 4, p1: 28,  p2: 22  },
+      { dil: 5, p1: 3,   p2: 2   }
+    ],
+    steps: `
+      <b>Context:</b> A solid food sample is tested for total aerobic count using pour plates (1.0 mL) across 5 dilutions. This follows ISO 4833.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Identify countable plates: 10⁻³ (245/260) is within 30–300. 10⁻⁴ (28/22) is TFTC. 10⁻¹ and 10⁻² are TNTC.</li>
+        <li>The calculator uses the ISO 7218 weighted average when multiple dilutions qualify.</li>
+        <li>If only 10⁻³ is countable: CFU/g = 252.5 / (10⁻³ × 1.0) = 2.53 × 10⁵.</li>
+        <li>Compare this to typical food safety limits (e.g., &lt;10⁵ for many ready-to-eat foods).</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> ~2.53 × 10⁵ CFU/g (log₁₀ ≈ 5.40).<br><br>
+      <b>Key lesson:</b> The ISO 7218 weighted average method combines data from all countable dilutions for a more robust estimate. For solid samples, results are expressed as CFU/g.`
+  },
+  3: {
+    title: 'Low bacterial load',
+    sampleType: 'liquid',
+    platingMethod: 'spread',
+    volumePlated: 0.1,
+    sampleAmount: 1,
+    countMin: 30,
+    countMax: 300,
+    rows: [
+      { dil: 1, p1: 12, p2: 15 },
+      { dil: 2, p1: 1,  p2: 2  },
+      { dil: 3, p1: 0,  p2: 0  }
+    ],
+    steps: `
+      <b>Context:</b> A sample with very low contamination — all plates fall below the minimum countable range of 30 colonies.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Note that all dilutions are flagged TFTC (too few to count). No plate reaches 30 colonies.</li>
+        <li>The calculator will report an <em>estimated</em> count using the highest colony count available.</li>
+        <li>Using the 10⁻¹ plates (12/15): estimated CFU/mL = 15 / (10⁻¹ × 0.1) = 1 500.</li>
+        <li>This is an estimate only — report it with the qualifier "estimated" or "&lt;".</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> Estimated &lt;1 500 CFU/mL.<br><br>
+      <b>Key lesson:</b> When all plates are TFTC, results cannot be reported as a definitive count. Use the qualifier "estimated" and note that the sample has a low microbial load. Consider plating a larger volume or using a lower dilution.`
+  },
+  4: {
+    title: 'Duplicate disagreement',
+    sampleType: 'liquid',
+    platingMethod: 'spread',
+    volumePlated: 0.1,
+    sampleAmount: 1,
+    countMin: 30,
+    countMax: 300,
+    rows: [
+      { dil: 2, p1: 150, p2: 280 },
+      { dil: 3, p1: 18,  p2: 25  }
+    ],
+    steps: `
+      <b>Context:</b> Duplicate plates at 10⁻² show counts of 150 and 280 — a large discrepancy. Good technique should produce duplicates within ~15% of each other.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Calculate the percent difference: |280 − 150| / ((280 + 150)/2) × 100 = 130/215 × 100 ≈ 60%.</li>
+        <li>This far exceeds the 15% acceptable threshold — flagging a technique issue (uneven spreading, pipetting error, or contamination).</li>
+        <li>The calculator still averages (215) and computes CFU/mL, but the result is unreliable.</li>
+        <li>In practice, this sample should be re-plated.</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> ~2.15 × 10⁵ CFU/mL (using average of 215 at 10⁻²), but <b>unreliable</b>.<br><br>
+      <b>Key lesson:</b> Duplicate plates differing by &gt;15% indicate a technique problem. Always check duplicate agreement before reporting. The 10⁻³ plates (18/25) also show ~33% disagreement, reinforcing that something went wrong.`
+  },
+  5: {
+    title: 'All TNTC',
+    sampleType: 'liquid',
+    platingMethod: 'spread',
+    volumePlated: 0.1,
+    sampleAmount: 1,
+    countMin: 30,
+    countMax: 300,
+    rows: [
+      { dil: 1, p1: 500, p2: 480 },
+      { dil: 2, p1: 400, p2: 420 },
+      { dil: 3, p1: 350, p2: 380 }
+    ],
+    steps: `
+      <b>Context:</b> All plates across 3 dilutions exceed 300 colonies — every plate is TNTC.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Note the calculator reports "TNTC" with a warning to increase dilutions.</li>
+        <li>The lowest count is 350 at 10⁻³. A rough lower-bound estimate: 350 / (10⁻³ × 0.1) = 3.5 × 10⁶ CFU/mL.</li>
+        <li>To get countable plates, you would need at least 10⁻⁴ or 10⁻⁵ dilutions.</li>
+        <li>In practice, report as "> estimated value" and re-plate with higher dilutions.</li>
+      </ol>`,
+    answer: `<b>Expected result:</b> TNTC — cannot calculate a definitive count.<br><br>
+      <b>Key lesson:</b> When all plates are TNTC, the sample concentration exceeds what your dilution series can resolve. Always prepare enough dilutions to ensure at least one falls in the 30–300 countable range. A good practice is to include dilutions spanning at least 3–4 orders of magnitude.`
+  }
+};
+
+function loadExercise(n){
+  const ex = CC_EXERCISES[n];
+  if(!ex) return;
+
+  // Highlight active card
+  document.querySelectorAll('[id^="ccEx"]').forEach(c => c.classList.remove('active'));
+  document.getElementById('ccEx' + n).classList.add('active');
+
+  // Set settings
+  document.getElementById('sampleType').value = ex.sampleType;
+  platingMethodEl.value = ex.platingMethod;
+  volumePlatedEl.value = ex.volumePlated;
+  document.getElementById('sampleAmount').value = ex.sampleAmount;
+  document.getElementById('countMin').value = ex.countMin;
+  document.getElementById('countMax').value = ex.countMax;
+
+  // Clear and populate dilution rows
+  dilBody.innerHTML = '';
+  rowIdCounter = 0;
+  ex.rows.forEach(r => {
+    addRow(r.dil, r.p1, r.p2);
+  });
+
+  // Show instructions
+  const instr = document.getElementById('ccExInstructions');
+  instr.style.display = 'block';
+  instr.innerHTML = `
+    <strong style="color:#9a3412;">📌 ${ex.title}</strong><br><br>
+    ${ex.steps}
+    <br>
+    <button class="ex-show-btn" onclick="toggleAnswer('ccAns${n}', this)">Show answer</button>
+    <div class="ex-answer" id="ccAns${n}">${ex.answer}</div>`;
+
+  // Run calculation
+  calculate();
+
+  // Scroll to instructions
+  instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Init ──
+initRows();
+</script>
+</body>
+</html>

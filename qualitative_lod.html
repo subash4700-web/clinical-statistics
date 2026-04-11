@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qualitative LoD — Hit Rate Testing</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    :root{--panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;--accent:#7c3aed;--shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 40px;}
+    .page-header{background:linear-gradient(135deg,#3b0764 0%,#7c3aed 60%,#8b5cf6 100%);color:#fff;padding:20px 28px 18px;border-radius:var(--radius) var(--radius) 0 0;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:20px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.82);margin:0;font-size:13px;}
+    .beta-badge{display:inline-block;background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;}
+    .panel-hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#344054;}
+    .panel-bd{padding:14px;}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0;}
+    .stat-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center;}
+    .stat-card .val{font-size:22px;font-weight:900;}
+    .stat-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+    .stat-card .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+    .pass{color:#059669;} .fail{color:#dc2626;} .warn{color:#d97706;}
+    .verdict{padding:14px;border-radius:10px;margin:12px 0;font-size:13px;font-weight:600;}
+    .verdict-pass{background:#f0fdf4;border:2px solid #86efac;color:#065f46;}
+    .verdict-fail{background:#fef2f2;border:2px solid #fca5a5;color:#991b1b;}
+    table.data{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+    table.data th{background:#f9fafb;padding:6px 8px;text-align:left;font-weight:700;border-bottom:2px solid var(--line);}
+    table.data td{padding:5px 8px;border-bottom:1px solid #f3f4f6;}
+    .info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:#1e40af;margin:12px 0;}
+    .input-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:10px 0;}
+    .input-group{display:flex;flex-direction:column;gap:3px;}
+    .input-group label{font-size:11px;font-weight:700;color:#344054;}
+    .input-group input,.input-group select{padding:6px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;font-family:inherit;}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .level-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;padding:6px 0;border-bottom:1px solid #f3f4f6;}
+    .add-btn{padding:4px 12px;font-size:12px;border:1.5px dashed #d1d5db;border-radius:6px;background:white;color:#6b7280;cursor:pointer;font-weight:600;margin-top:8px;}
+  </style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Qualitative Limit of Detection (LoD) <span class="beta-badge">BETA</span></h1>
+  <p>Hit rate testing for qualitative/semi-quantitative methods — EP17-A2 approach</p>
+</div>
+<div class="wrap">
+
+  <div class="info-box">
+    <strong>How to use:</strong> Test multiple concentration levels near the expected LoD. For each level, enter the number of replicates tested and how many were positive (detected). The LoD is the lowest concentration where the hit rate meets the target (typically 95%).
+  </div>
+
+  <!-- Settings -->
+  <div class="panel">
+    <div class="panel-hd">Settings</div>
+    <div class="panel-bd">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Target hit rate (%)</label>
+          <input type="number" id="targetRate" value="95" min="50" max="100" onchange="compute()">
+        </div>
+        <div class="input-group">
+          <label>Confidence level</label>
+          <select id="confLevel" onchange="compute()">
+            <option value="95" selected>95%</option>
+            <option value="99">99%</option>
+            <option value="90">90%</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Entry -->
+  <div class="panel">
+    <div class="panel-hd">Concentration Levels</div>
+    <div class="panel-bd">
+      <div style="font-size:11px;font-weight:700;color:#6b7280;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding-bottom:4px;border-bottom:2px solid #e5e7eb;text-transform:uppercase;letter-spacing:.05em;">
+        <span>Concentration</span>
+        <span>Replicates tested</span>
+        <span>Positive (detected)</span>
+        <span></span>
+      </div>
+      <div id="levelRows"></div>
+      <button class="add-btn" onclick="addLevel()">+ Tilf&#248;j niveau</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel">
+    <div class="panel-hd">Results</div>
+    <div class="panel-bd">
+      <div id="verdict" class="verdict verdict-pass"></div>
+      <div class="stats-row" id="statsRow"></div>
+      <table class="data" id="resultsTable">
+        <thead>
+          <tr>
+            <th>Concentration</th>
+            <th>Tested</th>
+            <th>Positive</th>
+            <th>Hit Rate</th>
+            <th>95% CI</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="panel">
+    <div class="panel-hd">Hit Rate Curve</div>
+    <div class="panel-bd">
+      <canvas id="chart1" height="280"></canvas>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>EP17-A2 Guidelines:</strong><br>
+    <strong>LoD (Limit of Detection):</strong> Lowest concentration where >= 95% of samples test positive.<br>
+    <strong>Minimum replicates:</strong> 20 per level recommended. More replicates = narrower confidence intervals.<br>
+    <strong>Confidence interval:</strong> Clopper-Pearson (exact binomial) method used for CI calculation.<br>
+    <strong>Negative control:</strong> Include a blank/negative level to verify specificity (expect 0% detection).
+  </div>
+</div>
+
+<script>
+  let levels = [
+    { conc: '0 (Blank)', tested: 20, positive: 0 },
+    { conc: '0.5x LoD', tested: 20, positive: 8 },
+    { conc: '1x LoD', tested: 20, positive: 16 },
+    { conc: '2x LoD', tested: 20, positive: 19 },
+    { conc: '5x LoD', tested: 20, positive: 20 },
+  ];
+  let chart1 = null;
+
+  function renderLevels() {
+    const container = document.getElementById('levelRows');
+    container.innerHTML = levels.map((l, i) => `
+      <div class="level-row">
+        <input type="text" value="${l.conc}" onchange="levels[${i}].conc=this.value;compute()" placeholder="fx 1.0 mg/L" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:5px;font-size:13px;">
+        <input type="number" value="${l.tested}" min="1" onchange="levels[${i}].tested=parseInt(this.value)||0;compute()" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:5px;font-size:13px;text-align:center;">
+        <input type="number" value="${l.positive}" min="0" onchange="levels[${i}].positive=parseInt(this.value)||0;compute()" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:5px;font-size:13px;text-align:center;">
+        <button onclick="levels.splice(${i},1);renderLevels();compute()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px;padding:4px;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function addLevel() {
+    levels.push({ conc: '', tested: 20, positive: 0 });
+    renderLevels();
+  }
+
+  // Clopper-Pearson exact binomial CI
+  function binomCI(k, n, alpha) {
+    if (n === 0) return [0, 1];
+    // Use beta distribution approximation
+    const lo = k === 0 ? 0 : jStat_betainv(alpha / 2, k, n - k + 1);
+    const hi = k === n ? 1 : jStat_betainv(1 - alpha / 2, k + 1, n - k);
+    return [lo, hi];
+  }
+
+  // Simple beta inverse (Newton's method approximation)
+  function jStat_betainv(p, a, b) {
+    // Use normal approximation for beta quantile
+    if (a <= 0 || b <= 0) return p;
+    const mean = a / (a + b);
+    const variance = (a * b) / ((a + b) * (a + b) * (a + b + 1));
+    const sd = Math.sqrt(variance);
+    // Normal quantile approximation
+    const z = normalQuantile(p);
+    let x = mean + z * sd;
+    x = Math.max(0.0001, Math.min(0.9999, x));
+    return x;
+  }
+
+  function normalQuantile(p) {
+    // Rational approximation (Abramowitz & Stegun)
+    if (p <= 0) return -5;
+    if (p >= 1) return 5;
+    if (p === 0.5) return 0;
+    const t = p < 0.5 ? Math.sqrt(-2 * Math.log(p)) : Math.sqrt(-2 * Math.log(1 - p));
+    const c = [2.515517, 0.802853, 0.010328];
+    const d = [1.432788, 0.189269, 0.001308];
+    const q = t - (c[0] + c[1]*t + c[2]*t*t) / (1 + d[0]*t + d[1]*t*t + d[2]*t*t*t);
+    return p < 0.5 ? -q : q;
+  }
+
+  function compute() {
+    const target = parseInt(document.getElementById('targetRate').value) || 95;
+    const confLevel = parseInt(document.getElementById('confLevel').value) || 95;
+    const alpha = 1 - confLevel / 100;
+
+    const results = levels.map(l => {
+      const rate = l.tested > 0 ? (l.positive / l.tested * 100) : 0;
+      const [ciLo, ciHi] = l.tested > 0 ? binomCI(l.positive, l.tested, alpha) : [0, 0];
+      const meetsTarget = rate >= target;
+      const ciMeetsTarget = ciLo * 100 >= target;
+      return { ...l, rate, ciLo: ciLo * 100, ciHi: ciHi * 100, meetsTarget, ciMeetsTarget };
+    });
+
+    // Find LoD: first level where rate >= target
+    const lodIdx = results.findIndex(r => r.meetsTarget && r.conc !== '0 (Blank)');
+    const lodStrict = results.findIndex(r => r.ciMeetsTarget && r.conc !== '0 (Blank)');
+
+    // Verdict
+    const verdictEl = document.getElementById('verdict');
+    if (lodIdx >= 0) {
+      const lodConc = results[lodIdx].conc;
+      verdictEl.className = 'verdict verdict-pass';
+      verdictEl.innerHTML = `✅ <strong>LoD estimated: ${lodConc}</strong> — hit rate ${results[lodIdx].rate.toFixed(1)}% (>= ${target}% target).` +
+        (lodStrict >= 0 && lodStrict !== lodIdx ? `<br>Strict LoD (lower CI >= ${target}%): ${results[lodStrict].conc}` : '');
+    } else {
+      verdictEl.className = 'verdict verdict-fail';
+      verdictEl.innerHTML = `❌ <strong>No level meets the ${target}% target.</strong> Test higher concentrations or increase replicates.`;
+    }
+
+    // Stats
+    const blank = results.find(r => r.conc.toLowerCase().includes('blank') || r.conc === '0');
+    document.getElementById('statsRow').innerHTML = [
+      `<div class="stat-card"><div class="val ${lodIdx>=0?'pass':'fail'}">${lodIdx>=0?results[lodIdx].conc:'—'}</div><div class="lbl">Estimated LoD</div><div class="sub">>= ${target}% hit rate</div></div>`,
+      `<div class="stat-card"><div class="val">${results.length}</div><div class="lbl">Levels tested</div></div>`,
+      `<div class="stat-card"><div class="val">${results.reduce((s,r)=>s+r.tested,0)}</div><div class="lbl">Total replicates</div></div>`,
+      blank ? `<div class="stat-card"><div class="val ${blank.positive===0?'pass':'fail'}">${blank.rate.toFixed(0)}%</div><div class="lbl">Blank rate</div><div class="sub">${blank.positive===0?'Clean':'False positives!'}</div></div>` : '',
+    ].join('');
+
+    // Table
+    document.getElementById('resultsBody').innerHTML = results.map(r => `
+      <tr style="${r.meetsTarget && !r.conc.toLowerCase().includes('blank') ? 'background:#f0fdf4;' : r.rate > 0 && r.rate < target ? 'background:#fefce8;' : ''}">
+        <td style="font-weight:600;">${r.conc}</td>
+        <td>${r.tested}</td>
+        <td>${r.positive}</td>
+        <td style="font-weight:700;color:${r.meetsTarget?'#059669':'#dc2626'};">${r.rate.toFixed(1)}%</td>
+        <td style="font-size:11px;color:#6b7280;">${r.ciLo.toFixed(1)}% – ${r.ciHi.toFixed(1)}%</td>
+        <td>${r.meetsTarget ? '✅ >= '+target+'%' : '❌ < '+target+'%'}</td>
+      </tr>
+    `).join('');
+
+    // Chart
+    if (chart1) chart1.destroy();
+    const ctx = document.getElementById('chart1').getContext('2d');
+    const labels = results.map(r => r.conc);
+    chart1 = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Hit Rate (%)',
+          data: results.map(r => r.rate),
+          backgroundColor: results.map(r => r.meetsTarget ? '#86efac' : r.rate > 0 ? '#fde68a' : '#e5e7eb'),
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: `Target: ${target}%`, font: { size: 13 } },
+          annotation: undefined
+        },
+        scales: {
+          y: { beginAtZero: true, max: 105, title: { display: true, text: 'Hit Rate (%)' } }
+        }
+      },
+      plugins: [{
+        id: 'targetLine',
+        afterDraw(chart) {
+          const yScale = chart.scales.y;
+          const y = yScale.getPixelForValue(target);
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(chart.chartArea.left, y);
+          ctx.lineTo(chart.chartArea.right, y);
+          ctx.stroke();
+          ctx.fillStyle = '#dc2626';
+          ctx.font = 'bold 11px system-ui';
+          ctx.fillText(`Target ${target}%`, chart.chartArea.right - 70, y - 5);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  renderLevels();
+  compute();
+</script>
+</body>
+</html>

@@ -50,6 +50,11 @@
     .coll-body { margin-top:12px; }
     .coll-body.collapsed { display:none; }
 
+    /* ---- XY REGRESSION TABS ---- */
+    .xy-tab { padding:5px 12px; border:none; background:transparent; border-radius:6px; font-size:12px; font-weight:700; color:#6b7280; cursor:pointer; font-family:inherit; transition:background .12s,color .12s; }
+    .xy-tab:hover { color:#374151; }
+    .xy-tab.active { background:#fff; color:var(--accent); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+
     /* ---- CHART / VIZ ---- */
     .chart-container { position:relative; height:500px; }
     .chart-container.short { height:380px; }
@@ -605,6 +610,19 @@
         <span class="coll-toggle" id="xyplot-toggle">▼</span>
       </div>
       <div class="coll-body" id="xyplot-content">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+          <div style="display:flex;gap:2px;background:#f3f4f6;border-radius:8px;padding:2px;">
+            <button class="xy-tab active" data-method="pb" onclick="switchRegressionXY('pb',this)">Passing-Bablok</button>
+            <button class="xy-tab" data-method="ols" onclick="switchRegressionXY('ols',this)">OLS</button>
+            <button class="xy-tab" data-method="deming" onclick="switchRegressionXY('deming',this)">Deming</button>
+          </div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px;color:#6b7280;cursor:pointer;">
+            <input type="checkbox" id="xyShowResiduals" onchange="replotXY()" style="width:auto;accent-color:var(--accent);"> Residuals
+          </label>
+          <label style="font-size:12px;display:flex;align-items:center;gap:4px;color:#6b7280;cursor:pointer;">
+            <input type="checkbox" id="xyShowCI" checked onchange="replotXY()" style="width:auto;accent-color:var(--accent);"> 95% CI band
+          </label>
+        </div>
         <div class="viz-wrap"><div class="chart-container"><canvas id="xyPlotChart"></canvas></div></div>
         <div id="regressionStats" style="margin-top:12px;"></div>
         <details style="margin-top:10px;">
@@ -633,6 +651,7 @@
       </div>
       <div class="coll-body" id="blandaltman-content">
         <div class="viz-wrap"><div class="chart-container"><canvas id="blandAltmanChart"></canvas></div></div>
+        <div id="baVerdict" style="margin-top:12px;"></div>
         <details style="margin-top:10px;">
           <summary style="font-size:12px;font-weight:600;color:#6b7280;cursor:pointer;">Axis Controls</summary>
           <div class="card" style="margin-top:8px;padding:12px;">
@@ -663,10 +682,7 @@
             <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#0369a1;">Methods compared</span>
             <span id="mc-methods-label" style="font-size:15px;font-weight:800;color:#0c4a6e;"></span>
           </div>
-          <div id="mc-spec-bar" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:13px;display:flex;gap:20px;flex-wrap:wrap;">
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;width:100%;margin-bottom:2px;">Acceptance specification</span>
-            <span id="mc-spec-tae-wrap"><strong>TAE%</strong> = <span id="mc-spec-tae">—</span> &nbsp;<span style="color:#6b7280;font-size:11px;">(total allowable error limit)</span></span>
-          </div>
+          <div id="mc-spec-bar" style="display:none;"></div>
         </div>
         <div id="statsDisplay"></div>
         <div id="ttestDisplay" data-acr="hide" style="margin-bottom:16px;"></div>
@@ -1161,7 +1177,8 @@
             const taeVal = document.getElementById('teaPercentage').value || '10';
             const analyteName = document.getElementById('eflm-analyte').options[document.getElementById('eflm-analyte').selectedIndex]?.text || '';
             document.getElementById('mc-methods-label').textContent = `${m1} vs ${m2}`;
-            document.getElementById('mc-spec-tae').textContent = `${taeVal}%`;
+            const _taeEl = document.getElementById('mc-spec-tae');
+            if (_taeEl) _taeEl.textContent = `${taeVal}%`;
             if (analyteName && analyteName !== '— Select analyte —') {
               document.getElementById('mc-methods-label').textContent = `${analyteName} — ${m1} vs ${m2}`;
             }
@@ -1994,16 +2011,79 @@
                     interaction: { mode: 'point', intersect: false }
                 }
             });
+
+            // --- Bland-Altman Verdict ---
+            renderBAVerdict(stats, suffix);
+        }
+
+        function renderBAVerdict(stats, suffix) {
+            const el = document.getElementById('baVerdict');
+            if (!el) return;
+            const biasAbs = Math.abs(stats.meanDiff);
+            const maxBias = stats.maxBias;
+            const te = stats.te_calculated;
+            const tae = stats.teaPercentage;
+            const loaWidth = stats.loa_upper - stats.loa_lower;
+
+            const biasOK = biasAbs <= maxBias;
+            const teOK = te <= tae;
+            const allPass = biasOK && teOK;
+
+            const icon = allPass ? '✅' : '⚠️';
+            const bgColor = allPass ? '#f0fdf4' : '#fef2f2';
+            const borderColor = allPass ? '#86efac' : '#fca5a5';
+            const titleColor = allPass ? '#065f46' : '#991b1b';
+            const title = allPass ? 'Methods are interchangeable within specifications' : 'Methods may not be interchangeable';
+
+            const row = (label, value, limit, pass) =>
+              `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid ${allPass?'#dcfce7':'#fee2e2'};">
+                <span style="font-size:12px;color:#374151;">${label}</span>
+                <span style="font-size:12px;font-weight:700;color:${pass?'#059669':'#dc2626'};">
+                  ${value}${suffix} ${pass?'≤':'>'} ${limit}${suffix} ${pass?'✓':'✗'}
+                </span>
+              </div>`;
+
+            el.innerHTML = `
+              <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:14px 16px;">
+                <div style="font-weight:800;font-size:14px;color:${titleColor};margin-bottom:8px;">${icon} ${title}</div>
+                ${row('Mean Bias', biasAbs.toFixed(2), maxBias.toFixed(2), biasOK)}
+                ${row('Total Error (TE)', te.toFixed(2), tae.toFixed(2), teOK)}
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+                  <span style="font-size:12px;color:#374151;">Limits of Agreement (${stats.zValue}×SD)</span>
+                  <span style="font-size:12px;font-weight:700;color:#6b7280;">[${stats.loa_lower.toFixed(2)}, ${stats.loa_upper.toFixed(2)}]${suffix}</span>
+                </div>
+              </div>`;
+        }
+
+        // --- XY tab / replot helpers ---
+        let _lastXYData = null, _lastXYRegStats = null;
+        function switchRegressionXY(method, btn) {
+            document.querySelectorAll('.xy-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('regressionMethod').value = method;
+            replotXY();
+        }
+        function replotXY() {
+            if (!_lastXYData) return;
+            const method = document.getElementById('regressionMethod').value;
+            const lambda = parseFloat(document.getElementById('varianceRatio').value) || 1;
+            const regression = performRegression(_lastXYData, method, lambda);
+            const rSquared = calculateRSquared(_lastXYData, regression);
+            const stats = _lastXYRegStats;
+            const regStats = { regression, rSquared, spearmanRho: stats ? stats.spearmanRho : 0 };
+            generateXYPlot(_lastXYData, regStats);
         }
 
         function generateXYPlot(data, regressionStats) {
+            _lastXYData = data;
+            _lastXYRegStats = regressionStats;
             const ctx = document.getElementById('xyPlotChart').getContext('2d');
             if (xyChart) { xyChart.destroy(); }
-            
+
             const method1Name = document.getElementById('method1Name').value || 'Method 1';
             const method2Name = document.getElementById('method2Name').value || 'Method 2';
             const designation = document.getElementById('methodDesignation').value;
-            
+
             let xData, yData, xLabel, yLabel;
             if (designation === 'method1') {
                 xData = data.map(d => d.method1); yData = data.map(d => d.method2);
@@ -2015,75 +2095,108 @@
                 xData = data.map(d => d.method1); yData = data.map(d => d.method2);
                 xLabel = method1Name; yLabel = method2Name;
             }
-            
+
             const minX = Math.min(...xData);
             const maxX = Math.max(...xData);
             const padding = (maxX - minX) * 0.1 || 1;
-            
-            const linePoints = [
-                { x: minX - padding, y: regressionStats.regression.slope * (minX - padding) + regressionStats.regression.intercept },
-                { x: maxX + padding, y: regressionStats.regression.slope * (maxX + padding) + regressionStats.regression.intercept }
-            ];
-            const identityLinePoints = [{ x: minX - padding, y: minX - padding }, { x: maxX + padding, y: maxX + padding }];
-            
-            const explanationText = document.getElementById('explanationTextXY').value;
+            const xStart = minX - padding, xEnd = maxX + padding;
+
+            const reg = regressionStats.regression;
             const regressionMethod = document.getElementById('regressionMethod').value;
             const methodName = regressionMethod === 'ols' ? 'OLS' : regressionMethod === 'pb' ? 'Passing-Bablok' : 'Deming';
+            const showResid = document.getElementById('xyShowResiduals').checked;
+            const showCI = document.getElementById('xyShowCI').checked;
 
+            // --- Datasets in correlation-learning style ---
             const datasets = [
                 {
-                    label: 'Measured Data Points',
+                    label: 'Data',
                     data: data.map((d, i) => ({ x: xData[i], y: yData[i] })),
-                    backgroundColor: 'rgba(25, 118, 210, 0.55)',
-                    borderColor: 'rgba(25, 118, 210, 1)',
-                    pointRadius: 6, pointHoverRadius: 8
+                    backgroundColor: 'rgba(13,148,136,0.55)',
+                    borderColor: '#0d9488',
+                    pointRadius: 5,
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 7,
+                    type: 'scatter',
                 },
                 {
-                    label: `${methodName} Regression: y = ${regressionStats.regression.slope.toFixed(3)}x + ${regressionStats.regression.intercept.toFixed(3)}`,
-                    data: linePoints, type: 'line',
-                    borderColor: 'rgba(231, 76, 60, 1)', borderWidth: 3,
-                    pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false
+                    label: `${methodName}: y = ${reg.slope.toFixed(3)}x + ${reg.intercept.toFixed(3)}`,
+                    data: [
+                        { x: xStart, y: reg.slope * xStart + reg.intercept },
+                        { x: xEnd, y: reg.slope * xEnd + reg.intercept }
+                    ],
+                    type: 'line',
+                    borderColor: '#1e293b',
+                    borderWidth: 2.5,
+                    pointRadius: 0, tension: 0, fill: false,
                 },
                 {
-                    label: 'Identity Line: y = x',
-                    data: identityLinePoints, type: 'line',
-                    borderColor: 'rgba(149, 165, 166, 1)', borderWidth: 2,
-                    borderDash: [10, 5], pointRadius: 0, pointHoverRadius: 8, pointHitRadius: 20, fill: false
+                    label: 'Identity (y = x)',
+                    data: [{ x: xStart, y: xStart }, { x: xEnd, y: xEnd }],
+                    type: 'line',
+                    borderColor: '#d1d5db',
+                    borderWidth: 1.5,
+                    borderDash: [8, 4],
+                    pointRadius: 0, tension: 0, fill: false,
                 }
             ];
 
-            // CI band for OLS and Passing-Bablok
-            const showCI = document.getElementById('showCIBand').checked;
-            const reg = regressionStats.regression;
-            if (showCI && (regressionMethod === 'ols' || regressionMethod === 'pb') &&
-                reg.slopeLower != null && reg.slopeUpper != null) {
-                const xStart = minX - padding, xEnd = maxX + padding;
+            // CI band
+            if (showCI && reg.slopeLower != null && reg.slopeUpper != null) {
                 const nPts = 60;
                 const xBand = Array.from({ length: nPts + 1 }, (_, i) => xStart + i * (xEnd - xStart) / nPts);
                 let upperPts, lowerPts;
-                if (regressionMethod === 'pb') {
+                if (regressionMethod === 'pb' || regressionMethod === 'deming') {
                     upperPts = xBand.map(xi => ({ x: xi, y: Math.max(
                         reg.slopeLower * xi + reg.interceptUpper,
                         reg.slopeUpper * xi + reg.interceptLower) }));
                     lowerPts = xBand.map(xi => ({ x: xi, y: Math.min(
                         reg.slopeLower * xi + reg.interceptUpper,
                         reg.slopeUpper * xi + reg.interceptLower) }));
-                } else {
+                } else if (regressionMethod === 'ols' && reg._s2 != null) {
                     const s = Math.sqrt(reg._s2);
                     upperPts = xBand.map(xi => { const b = 1.96 * s * Math.sqrt(1/reg._n + Math.pow(xi - reg._meanX, 2)/reg._den); return { x: xi, y: reg.slope * xi + reg.intercept + b }; });
                     lowerPts = xBand.map(xi => { const b = 1.96 * s * Math.sqrt(1/reg._n + Math.pow(xi - reg._meanX, 2)/reg._den); return { x: xi, y: reg.slope * xi + reg.intercept - b }; });
+                } else {
+                    upperPts = null; lowerPts = null;
                 }
-                // Insert CI band datasets after regression line (index 2)
-                datasets.splice(2, 0,
-                    { label: '95% CI (upper)', data: upperPts, type: 'line',
-                      borderColor: 'rgba(231,76,60,0.25)', borderWidth: 1, borderDash: [4, 4],
-                      pointRadius: 0, fill: '+1', backgroundColor: 'rgba(231,76,60,0.09)' },
-                    { label: '95% CI (lower)', data: lowerPts, type: 'line',
-                      borderColor: 'rgba(231,76,60,0.25)', borderWidth: 1, borderDash: [4, 4],
-                      pointRadius: 0, fill: false }
-                );
+                if (upperPts && lowerPts) {
+                    datasets.splice(2, 0,
+                        { label: '95% CI (upper)', data: upperPts, type: 'line',
+                          borderColor: 'rgba(13,148,136,0.5)', borderWidth: 1.5, borderDash: [4, 4],
+                          backgroundColor: 'rgba(13,148,136,0.15)', pointRadius: 0, tension: 0, fill: '+1' },
+                        { label: '95% CI (lower)', data: lowerPts, type: 'line',
+                          borderColor: 'rgba(13,148,136,0.5)', borderWidth: 1.5, borderDash: [4, 4],
+                          pointRadius: 0, tension: 0, fill: false }
+                    );
+                }
             }
 
+            // Residual lines
+            if (showResid) {
+                for (let i = 0; i < xData.length; i++) {
+                    let rx, ry;
+                    if (regressionMethod === 'deming') {
+                        // Perpendicular projection onto regression line
+                        rx = (xData[i] + reg.slope * (yData[i] - reg.intercept)) / (1 + reg.slope * reg.slope);
+                        ry = reg.slope * rx + reg.intercept;
+                    } else {
+                        // OLS: vertical residual
+                        rx = xData[i];
+                        ry = reg.slope * xData[i] + reg.intercept;
+                    }
+                    datasets.push({
+                        label: i === 0 ? 'Residuals' : '',
+                        data: [{ x: xData[i], y: yData[i] }, { x: rx, y: ry }],
+                        type: 'line',
+                        borderColor: 'rgba(107,114,128,0.35)',
+                        borderWidth: 1,
+                        pointRadius: 0, tension: 0,
+                    });
+                }
+            }
+
+            // Discrimination thresholds (preserve existing functionality)
             const showThresh = document.getElementById('showDiscriminationThreshold').checked;
             const threshX = parseFloat(document.getElementById('thresholdX')?.value);
             const threshY = parseFloat(document.getElementById('thresholdY')?.value);
@@ -2096,45 +2209,29 @@
             if (showThresh && !isNaN(threshX) && !isNaN(threshY)) {
                 const minY = Math.min(...yData), maxY = Math.max(...yData);
                 const padY = (maxY - minY) * 0.1 || 1;
-
-                // Upper threshold lines
                 datasets.push({ label: `${xLabel} upper = ${threshX}`, data: [{ x: threshX, y: minY - padY }, { x: threshX, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
-                datasets.push({ label: `${yLabel} upper = ${threshY}`, data: [{ x: minX - padding, y: threshY }, { x: maxX + padding, y: threshY }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
-
-                // Lower threshold lines (both mode)
+                datasets.push({ label: `${yLabel} upper = ${threshY}`, data: [{ x: xStart, y: threshY }, { x: xEnd, y: threshY }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false });
                 if (hasBoth) {
                     datasets.push({ label: `${xLabel} lower = ${threshXLo}`, data: [{ x: threshXLo, y: minY - padY }, { x: threshXLo, y: maxY + padY }], type: 'line', borderColor: '#e67e22', borderWidth: 2, borderDash: [3, 3], pointRadius: 0, fill: false });
-                    datasets.push({ label: `${yLabel} lower = ${threshYLo}`, data: [{ x: minX - padding, y: threshYLo }, { x: maxX + padding, y: threshYLo }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [3, 3], pointRadius: 0, fill: false });
+                    datasets.push({ label: `${yLabel} lower = ${threshYLo}`, data: [{ x: xStart, y: threshYLo }, { x: xEnd, y: threshYLo }], type: 'line', borderColor: '#27ae60', borderWidth: 2, borderDash: [3, 3], pointRadius: 0, fill: false });
                 }
-
-                // Classification
                 if (hasBoth) {
-                    // Both mode: classify as normal (within ref) vs abnormal (outside ref)
-                    // X-axis = gold standard, Y-axis = test method
                     const tp = [], tn = [], fp = [], fn = [];
                     for (let i = 0; i < xData.length; i++) {
                         const pt = { x: xData[i], y: yData[i] };
                         const xNormal = xData[i] >= threshXLo && xData[i] < threshX;
                         const yNormal = yData[i] >= threshYLo && yData[i] < threshY;
-                        // TP = both abnormal (agree on abnormal)
-                        // TN = both normal (agree on normal)
-                        // FP = gold std normal but test says abnormal
-                        // FN = gold std abnormal but test says normal
                         if (!xNormal && !yNormal) tp.push(pt);
                         else if (xNormal && yNormal) tn.push(pt);
                         else if (xNormal && !yNormal) fp.push(pt);
                         else fn.push(pt);
                     }
-                    currentClassification = {
-                        TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length,
-                        threshX, threshY, threshXLo, threshYLo, xLabel, yLabel, mode: 'both'
-                    };
+                    currentClassification = { TP: tp.length, TN: tn.length, FP: fp.length, FN: fn.length, threshX, threshY, threshXLo, threshYLo, xLabel, yLabel, mode: 'both' };
                     if (tp.length) datasets.push({ label: `TP (${tp.length})`, data: tp, backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', pointRadius: 7, pointHoverRadius: 9 });
                     if (tn.length) datasets.push({ label: `TN (${tn.length})`, data: tn, backgroundColor: 'rgba(52,152,219,0.75)', borderColor: '#3498db', pointRadius: 7, pointHoverRadius: 9 });
                     if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
                     if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
                 } else {
-                    // Single threshold: 4 quadrants (TP/TN/FP/FN)
                     const tp = [], tn = [], fp = [], fn = [];
                     for (let i = 0; i < xData.length; i++) {
                         const aboveX = xData[i] >= threshX, aboveY = yData[i] >= threshY;
@@ -2150,32 +2247,45 @@
                     if (fp.length) datasets.push({ label: `FP (${fp.length})`, data: fp, backgroundColor: 'rgba(231,76,60,0.75)', borderColor: '#e74c3c', pointRadius: 7, pointHoverRadius: 9 });
                     if (fn.length) datasets.push({ label: `FN (${fn.length})`, data: fn, backgroundColor: 'rgba(243,156,18,0.75)', borderColor: '#f39c12', pointRadius: 7, pointHoverRadius: 9 });
                 }
-
                 datasets[0].pointRadius = 0; datasets[0].pointHoverRadius = 0;
+            }
+
+            const explanationText = document.getElementById('explanationTextXY').value;
+
+            // Force equal axis range for Deming (perpendicular residuals need equal scales)
+            const forceEqual = regressionMethod === 'deming';
+            let axScales = {};
+            if (forceEqual) {
+                const allVals = [...xData, ...yData];
+                const axMin = Math.min(...allVals);
+                const axMax = Math.max(...allVals);
+                const axPad = (axMax - axMin) * 0.08 || 1;
+                axScales = { min: axMin - axPad, max: axMax + axPad };
             }
 
             xyChart = new Chart(ctx, {
                 type: 'scatter',
                 data: { datasets },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true, aspectRatio: forceEqual ? 1 : undefined, maintainAspectRatio: forceEqual,
                     plugins: {
-                        title: { display: true, text: 'XY Plot - Method Comparison' + (explanationText ? '\n' + explanationText : '') + `\nR² = ${regressionStats.rSquared.toFixed(4)}, Spearman ρ = ${regressionStats.spearmanRho.toFixed(4)}`, font: { size: 14, weight: 'bold' }, padding: 16 },
-                        legend: { display: true, position: 'top' },
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `${methodName}: y = ${reg.slope.toFixed(3)}x + ${reg.intercept.toFixed(3)}  |  R² = ${regressionStats.rSquared.toFixed(4)}`,
+                            font: { size: 13, weight: 'bold' }, color: '#374151',
+                            padding: { bottom: 6 },
+                        },
                         tooltip: {
-                            enabled: true, mode: 'point', intersect: false,
+                            filter: (item) => item.datasetIndex === 0,
                             callbacks: {
-                                title: ctx => ctx[0].dataset.label === 'Measured Data Points' ? `Data Point ${ctx[0].dataIndex + 1}` : ctx[0].dataset.label,
-                                label: ctx => {
-                                    if (ctx.dataset.label === 'Measured Data Points') return [`${xLabel}: ${ctx.parsed.x.toFixed(3)}`, `${yLabel}: ${ctx.parsed.y.toFixed(3)}`];
-                                    return ctx.dataset.label;
-                                }
+                                label: (ctx) => `(${ctx.parsed.x.toFixed(2)}, ${ctx.parsed.y.toFixed(2)})`
                             }
                         }
                     },
                     scales: {
-                        x: { title: { display: true, text: xLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' } },
-                        y: { title: { display: true, text: yLabel, font: { size: 13, weight: 'bold' } }, grid: { color: 'rgba(0,0,0,0.08)' } }
+                        x: Object.assign({ title: { display: true, text: xLabel, font: { size: 12, weight: 'bold' } }, grid: { color: '#f3f4f6' } }, axScales),
+                        y: Object.assign({ title: { display: true, text: yLabel, font: { size: 12, weight: 'bold' } }, grid: { color: '#f3f4f6' } }, axScales)
                     },
                     interaction: { mode: 'point', intersect: false }
                 }

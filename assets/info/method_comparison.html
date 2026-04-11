@@ -114,6 +114,14 @@
   recommended regression method in CLSI EP09 for routine method comparison and is widely used
   in published validation studies. Slope and intercept are reported with 95% confidence intervals.</p>
 
+  <h3>Residuals &amp; CI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span></h3>
+  <ul>
+    <li><strong>OLS residuals</strong> — vertical (minimises vertical distance). CI band is hyperbolic, widens at extremes.</li>
+    <li><strong>Deming residuals</strong> — perpendicular to the line (minimises orthogonal distance). CI from jackknife resampling.</li>
+    <li><strong>Passing-Bablok residuals</strong> — vertical (no distance is minimised; slope is median of pairwise slopes). CI from rank-based bounds.</li>
+    <li><strong>OLS CI is always narrowest</strong> — because it ignores X-error. This is overconfidence, not higher precision.</li>
+  </ul>
+
   <h3 id="mc-ccc">Lin's Concordance Correlation Coefficient (ρc)</h3>
   <p>
     Lin's CCC measures <strong>agreement</strong> with the identity line (y = x) — not just correlation.

@@ -102,7 +102,7 @@
 </div>
 
   <h1>Correlation &amp; Regression — Concepts &amp; Theory</h1>
-  <p class="lead">A practical guide to correlation, linear regression, and ROC analysis — written for clinical laboratory scientists. Explains when to use each method, what the numbers mean, and the most common mistakes.</p>
+  <p class="lead">A practical guide to correlation and linear regression — written for clinical laboratory scientists. Explains when to use each method, what the numbers mean, and the most common mistakes. ROC &amp; diagnostic accuracy has moved to the <strong>Analytical Performance</strong> theory page.</p>
 
   <div class="index">
     <h3>Contents</h3>
@@ -116,9 +116,6 @@
       <li><a href="#residuals">Residuals and model fit</a></li>
       <li><a href="#assumptions">Assumptions you must check</a></li>
       <li><a href="#clinical">Clinical context — method comparison regression</a></li>
-      <li><a href="#roc">ROC analysis — why we need it</a></li>
-      <li><a href="#auc">AUC — interpreting the area under the curve</a></li>
-      <li><a href="#cutoff">Choosing a cut-off</a></li>
       <li><a href="#summary">Summary table</a></li>
     </ol>
   </div>
@@ -663,75 +660,8 @@
   <hr class="divider"/>
 
   <!-- 10 -->
-  <div class="section" id="roc">
-    <h2>10. ROC analysis — why we need it</h2>
-    <p>When a laboratory test is used to <strong>classify patients into two groups</strong> (disease vs no disease, high risk vs low risk), the question is not just "does the marker correlate with the outcome?" but "at what threshold does it best separate the groups?"</p>
-    <p>Most biomarkers produce a continuous result, but clinical decisions are binary. The <strong>Receiver Operating Characteristic (ROC) curve</strong> shows how the trade-off between sensitivity and specificity changes as you vary the threshold.</p>
-    <p><strong>Key concepts:</strong></p>
-    <ul>
-      <li><strong>Sensitivity (True Positive Rate):</strong> The proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
-      <li><strong>Specificity (True Negative Rate):</strong> The proportion of true negatives correctly identified. High specificity → few false alarms.</li>
-      <li><strong>False Positive Rate (FPR) = 1 − Specificity:</strong> Plotted on the X-axis of the ROC curve.</li>
-    </ul>
-    <div class="good">
-      <b>The trade-off:</b> You cannot simultaneously maximise sensitivity and specificity by moving the threshold. Lowering the threshold catches more true positives (higher sensitivity) but also flags more false positives (lower specificity). The ROC curve makes this trade-off visible across all possible thresholds.
-    </div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-  <hr class="divider"/>
-
-  <!-- 11 -->
-  <div class="section" id="auc">
-    <h2>11. AUC — interpreting the area under the curve</h2>
-    <p>The <strong>Area Under the ROC Curve (AUC)</strong> summarises the overall discriminatory ability of a test with a single number. It represents the probability that a randomly selected patient with the disease has a higher test result than a randomly selected patient without the disease.</p>
-    <table>
-      <tr><th>AUC</th><th>Interpretation</th><th>Clinical implication</th></tr>
-      <tr><td>1.00</td><td>Perfect discrimination</td><td>Rare in practice — always check for data leakage</td></tr>
-      <tr><td>0.90 – 0.99</td><td>Excellent</td><td>Suitable for rule-in or rule-out at appropriate thresholds</td></tr>
-      <tr><td>0.80 – 0.89</td><td>Good</td><td>Useful; needs careful threshold selection</td></tr>
-      <tr><td>0.70 – 0.79</td><td>Acceptable / Fair</td><td>Useful as part of a panel; not ideal alone</td></tr>
-      <tr><td>0.60 – 0.69</td><td>Poor</td><td>Limited clinical use</td></tr>
-      <tr><td>0.50</td><td>No discrimination</td><td>No better than chance — random guessing</td></tr>
-      <tr><td>&lt; 0.50</td><td>Worse than chance</td><td>Consider inverting the test result</td></tr>
-    </table>
-    <div class="info">
-      <b>Combining analytes:</b> Logistic regression can combine multiple biomarkers into a single score. The predicted probability from the logistic model becomes the test result, and its ROC curve shows the combined discriminatory performance.
-    </div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-  <hr class="divider"/>
-
-  <!-- 12 -->
-  <div class="section" id="cutoff">
-    <h2>12. Choosing a cut-off</h2>
-    <p>There is no universally "correct" cut-off — the optimal threshold depends on the clinical context: what is the consequence of a missed case vs a false alarm?</p>
-    <h3>Common approaches</h3>
-    <table>
-      <tr><th>Method</th><th>How it works</th><th>Best when</th></tr>
-      <tr><td><strong>Youden Index</strong></td><td>Maximise (Sensitivity + Specificity − 1). Finds the point furthest from the diagonal.</td><td>Missing a case and a false alarm are equally costly</td></tr>
-      <tr><td><strong>Clinical constraint</strong></td><td>Fix minimum sensitivity (e.g. ≥ 95%) then pick highest specificity at that sensitivity</td><td>Ruling out a serious disease (e.g. sepsis, AMI) where missed cases are unacceptable</td></tr>
-      <tr><td><strong>Minimum cost</strong></td><td>Weight FP and FN by their clinical/economic costs</td><td>When costs are explicitly known (decision analysis)</td></tr>
-      <tr><td><strong>Prevalence-adjusted</strong></td><td>Consider PPV and NPV at the expected prevalence in your population</td><td>When the pre-test probability is very low or very high</td></tr>
-    </table>
-    <h3>PPV and NPV depend on prevalence</h3>
-    <p>Positive Predictive Value (PPV) and Negative Predictive Value (NPV) are not fixed properties of a test — they change with the prevalence of the disease in the tested population:</p>
-    <div class="formula-box">
-      <span class="f-label">PPV (Bayes theorem)</span>
-      <span class="f-correct">PPV = (Sensitivity × Prevalence) / [(Sensitivity × Prevalence) + ((1 − Specificity) × (1 − Prevalence))]</span>
-      <br/>
-      <span class="f-label">NPV</span>
-      <span class="f-correct">NPV = (Specificity × (1 − Prevalence)) / [((1 − Sensitivity) × Prevalence) + (Specificity × (1 − Prevalence))]</span>
-    </div>
-    <div class="warn">
-      <b>The prevalence trap:</b> A test with 90% sensitivity and 90% specificity sounds excellent. But at 1% disease prevalence, the PPV is only 8.3% — 11 out of 12 positive results are false positives. Use the interactive ROC tool to explore this effect.
-    </div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-  <hr class="divider"/>
-
-  <!-- 13 -->
   <div class="section" id="summary">
-    <h2>13. Summary table</h2>
+    <h2>10. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>Symbol / Name</th><th>Range</th><th>What it measures</th></tr>
       <tr><td>Pearson correlation</td><td>r</td><td>−1 to +1</td><td>Strength and direction of linear relationship</td></tr>
@@ -740,12 +670,6 @@
       <tr><td>Regression slope</td><td>b</td><td>Any real number</td><td>Change in Y per unit change in X (proportional bias)</td></tr>
       <tr><td>Regression intercept</td><td>a</td><td>Any real number</td><td>Predicted Y when X = 0 (constant bias)</td></tr>
       <tr><td>Residual</td><td>e</td><td>Any real number</td><td>Observed minus predicted; model error</td></tr>
-      <tr><td>AUC</td><td>c-statistic</td><td>0.5 to 1.0</td><td>Discriminatory ability of a diagnostic test</td></tr>
-      <tr><td>Sensitivity</td><td>TPR</td><td>0 to 1</td><td>True positive rate at a given threshold</td></tr>
-      <tr><td>Specificity</td><td>TNR</td><td>0 to 1</td><td>True negative rate at a given threshold</td></tr>
-      <tr><td>PPV</td><td>Precision</td><td>0 to 1</td><td>Probability that a positive result is a true positive</td></tr>
-      <tr><td>NPV</td><td>—</td><td>0 to 1</td><td>Probability that a negative result is a true negative</td></tr>
-      <tr><td>Youden Index</td><td>J</td><td>0 to 1</td><td>Sensitivity + Specificity − 1; optimal cut-off criterion</td></tr>
     </table>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>

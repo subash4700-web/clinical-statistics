@@ -1,0 +1,71 @@
+<h2>Enzyme Activity <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></h2>
+
+<h3>What is a Unit?</h3>
+<ul>
+  <li><strong>1 U = 1 &micro;mol substrate converted per minute</strong> under defined conditions (temperature, pH, substrate concentration).</li>
+  <li>SI alternative: 1 katal = 1 mol/s. Rarely used in clinical labs. 1 U = 16.67 nkat.</li>
+</ul>
+
+<h3>The Assay</h3>
+<ul>
+  <li>Spectrophotometric: measure <strong>&Delta;Abs/min</strong> = reaction rate.</li>
+  <li>Common chromophores: <strong>NADH</strong> (340 nm, &epsilon; = 6220), <strong>pNP</strong> (405 nm, &epsilon; = 18 300).</li>
+  <li>Continuous assays preferred &mdash; you see the rate in real time and can confirm linearity.</li>
+</ul>
+
+<h3>The Formula</h3>
+<p style="font-weight:700; font-size:16px;">
+  Activity (U/mL) = (&Delta;Abs/min &times; V<sub>total</sub>) / (&epsilon; &times; l &times; V<sub>sample</sub>)
+</p>
+<ul>
+  <li><strong>&Delta;Abs/min</strong> = change in absorbance per minute (from the linear portion).</li>
+  <li><strong>V<sub>total</sub></strong> = total assay volume (mL). <strong>V<sub>sample</sub></strong> = sample volume added (mL).</li>
+  <li><strong>&epsilon;</strong> = molar extinction coefficient (L&middot;mol<sup>&minus;1</sup>&middot;cm<sup>&minus;1</sup>). <strong>l</strong> = path length (cm, usually 1).</li>
+</ul>
+
+<h3>Specific Activity</h3>
+<ul>
+  <li><strong>U/mg protein.</strong> Tracks purification progress &mdash; should increase with each step.</li>
+  <li>Purification fold = specific activity at step N / specific activity of crude extract.</li>
+</ul>
+
+<hr>
+
+<h3>K<sub>m</sub> (Michaelis Constant)</h3>
+<ul>
+  <li>Substrate concentration at <strong>&frac12; V<sub>max</sub></strong>. Low K<sub>m</sub> = high affinity.</li>
+  <li><strong>Clinical example:</strong> glucokinase (K<sub>m</sub> &asymp; 10 mM, liver glucose sensor) vs hexokinase (K<sub>m</sub> &asymp; 0.1 mM, always active).</li>
+</ul>
+
+<h3>V<sub>max</sub></h3>
+<ul>
+  <li>Maximum rate when all enzyme is saturated with substrate. Proportional to <strong>[enzyme]</strong>.</li>
+  <li>Doubling enzyme concentration doubles V<sub>max</sub> but does not change K<sub>m</sub>.</li>
+</ul>
+
+<h3>Lineweaver-Burk Plot</h3>
+<ul>
+  <li><strong>1/V vs 1/[S].</strong> Slope = K<sub>m</sub>/V<sub>max</sub>. Y-intercept = 1/V<sub>max</sub>. X-intercept = &minus;1/K<sub>m</sub>.</li>
+  <li>Good for visualizing <strong>inhibition patterns</strong>. Lines converge on y-axis (competitive), x-axis (non-competitive).</li>
+  <li>Limitation: amplifies errors at low [S]. Prefer non-linear regression for accurate fitting.</li>
+</ul>
+
+<h3>Inhibition Types</h3>
+<ul>
+  <li><strong>Competitive</strong> &mdash; inhibitor binds active site. &uarr; apparent K<sub>m</sub>, V<sub>max</sub> unchanged. Overcome by excess substrate.</li>
+  <li><strong>Non-competitive</strong> &mdash; binds allosteric site. K<sub>m</sub> unchanged, &darr; V<sub>max</sub>. Cannot be overcome.</li>
+  <li><strong>Uncompetitive</strong> &mdash; binds ES complex only. Both K<sub>m</sub> and V<sub>max</sub> decrease.</li>
+</ul>
+
+<h3>Clinical Enzymes</h3>
+<ul>
+  <li><strong>CK-MB</strong> &mdash; myocardial infarction (now largely replaced by troponin).</li>
+  <li><strong>ALT / AST</strong> &mdash; liver damage. ALT more liver-specific; AST also in heart and muscle.</li>
+  <li><strong>Amylase / Lipase</strong> &mdash; acute pancreatitis. Lipase more specific and stays elevated longer.</li>
+  <li><strong>ALP</strong> &mdash; bone and liver. Isoenzymes or GGT help distinguish source.</li>
+  <li><strong>LDH</strong> &mdash; non-specific tissue damage. Isoenzymes (LD1&ndash;LD5) for source identification.</li>
+</ul>
+
+<p style="font-size:13px; color:#6B7280;">
+Educational use only; always verify with SOPs and validated methods.
+</p>

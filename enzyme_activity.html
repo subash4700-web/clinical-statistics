@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Enzyme Activity &mdash; Michaelis-Menten Kinetics</title>
+  <link rel="stylesheet" href="assets/css/components.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --accent:#ea580c;
+      --accent-light:#fff7ed;
+    }
+    .tool-header{
+      background:linear-gradient(135deg,#431407 0%,#ea580c 100%);
+    }
+    .pane{ display:none; }
+    .pane.active{ display:block; }
+    .primary{ background:var(--accent); color:#fff; }
+    .ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); }
+    .kpi .lab{ color:var(--muted); font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
+    .kpi .val{ font-weight:950; font-size:18px; margin-top:4px;}
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+
+    .beta-badge{
+      display:inline-block; font-size:10px; font-weight:800; padding:2px 8px;
+      border-radius:999px; background:#fef3c7; color:#92400e; border:1px solid #fde68a;
+      vertical-align:middle; margin-left:8px; letter-spacing:.04em;
+    }
+
+    /* Data table for kinetics */
+    .data-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:10px; }
+    .data-table th, .data-table td{ padding:6px 8px; border:1px solid var(--line); text-align:center; }
+    .data-table th{ background:var(--subtle); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#374151; }
+    .data-table input{ width:80px; text-align:center; padding:5px 6px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:inherit; }
+    .data-table input:focus{ border-color:var(--accent); outline:none; }
+    .remove-row{ background:none; border:none; color:#b91c1c; cursor:pointer; font-size:16px; padding:2px 6px; font-weight:700; }
+    .remove-row:hover{ opacity:.7; }
+
+    /* Step box */
+    .step-box{ font-family:ui-monospace,monospace; font-size:12px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:10px; line-height:1.9; }
+
+    /* Info box */
+    .info-box{ background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.7; color:#1e3a5f; }
+    .info-box h3{ margin:0 0 6px; font-size:14px; color:#1e40af; }
+    .info-box ul{ margin:6px 0; padding-left:18px; }
+
+    /* Chart grid */
+    .chart-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:900px){ .chart-grid{ grid-template-columns:1fr; } }
+
+    .row{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+    .field{ flex:1 1 140px; }
+    .field label{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+
+    /* Exercises */
+    .exercises{margin-bottom:18px;}
+    .ex-toggle{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:800;color:#344054;padding:0 0 10px;width:100%;}
+    .ex-toggle .ex-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+    .ex-toggle.open .ex-arrow{transform:rotate(90deg);}
+    .ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+    @media(max-width:500px){.ex-grid{grid-template-columns:1fr;}}
+    .ex-card{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+    .ex-card:hover{border-color:#fdba74;box-shadow:0 2px 10px rgba(234,88,12,.1);}
+    .ex-card.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(234,88,12,.12);}
+    .ex-num{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+    .ex-title{font-size:13px;font-weight:800;color:#431407;margin-bottom:6px;line-height:1.3;}
+    .ex-obj{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;flex:1;}
+    .ex-params{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+    .ex-param{background:#fff7ed;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#9a3412;}
+    .ex-btn{width:100%;padding:7px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ex-btn:hover{opacity:.88;}
+    .ex-instructions{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;margin-top:12px;font-size:13px;line-height:1.7;color:#431407;}
+    .ex-instructions b{color:#ea580c;}
+    .ex-instructions ol{margin:8px 0 0 16px;padding:0;}
+    .ex-instructions li{margin-bottom:5px;}
+    .ex-answer{display:none;margin-top:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.7;color:#14532d;}
+    .ex-answer b{color:#15803d;}
+    .ex-show-btn{margin-top:10px;background:none;border:1px solid #fed7aa;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:#ea580c;cursor:pointer;font-family:inherit;}
+    .ex-show-btn:hover{background:#e0eaff;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tool-header">
+      <h1>Enzyme Activity &mdash; Michaelis-Menten Kinetics <span class="beta-badge">BETA</span></h1>
+      <p>Calculate enzyme activity (U/mL), fit Km and Vmax from substrate concentration data, and visualise kinetics</p>
+    </div>
+
+    <!-- ── Tab bar ── -->
+    <div class="tabs">
+      <button type="button" class="tab active" onclick="switchTab('activity')">Activity Calculation</button>
+      <button type="button" class="tab" onclick="switchTab('kinetics')">Michaelis-Menten Kinetics</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB A: Activity Calculation
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="tab-activity" class="pane active">
+
+      <!-- Activity Exercises -->
+      <div class="exercises">
+        <button class="ex-toggle open" id="actExToggle" onclick="toggleEx('actExPanel','actExToggle')">
+          <span>📋 Guided Exercises</span>
+          <span class="ex-arrow">▶</span>
+        </button>
+        <div id="actExPanel">
+          <div class="ex-grid">
+
+            <div class="ex-card" id="exA1" onclick="loadExercise(1)">
+              <div class="ex-num">Exercise 1</div>
+              <div class="ex-title">LDH activity &mdash; NADH method</div>
+              <div class="ex-obj">Calculate LDH activity from a standard clinical assay using NADH absorbance decrease at 340 nm. Includes protein for specific activity.</div>
+              <div class="ex-params">
+                <span class="ex-param">NADH 340 nm</span>
+                <span class="ex-param">Tab A</span>
+              </div>
+              <button class="ex-btn">Load exercise</button>
+            </div>
+
+            <div class="ex-card" id="exA2" onclick="loadExercise(2)">
+              <div class="ex-num">Exercise 2</div>
+              <div class="ex-title">ALP with p-nitrophenol</div>
+              <div class="ex-obj">Alkaline phosphatase measured via p-nitrophenol release at 405 nm. No protein &mdash; only volumetric activity.</div>
+              <div class="ex-params">
+                <span class="ex-param">pNP 405 nm</span>
+                <span class="ex-param">Tab A</span>
+              </div>
+              <button class="ex-btn">Load exercise</button>
+            </div>
+
+          </div>
+          <div class="ex-instructions" id="actExInstructions" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Single Assay &mdash; Enzyme Activity</div>
+
+        <!-- Absorbance input mode -->
+        <div class="row">
+          <div class="field">
+            <label for="absMode">Absorbance input</label>
+            <select id="absMode" onchange="toggleAbsMode()">
+              <option value="rate">Direct &Delta;Abs/min</option>
+              <option value="two">Two readings + times</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Direct rate -->
+        <div id="rateRow" class="row">
+          <div class="field">
+            <label for="deltaAbs">&Delta;Absorbance / min</label>
+            <input id="deltaAbs" type="number" min="0" step="any" placeholder="e.g. 0.045"/>
+          </div>
+        </div>
+
+        <!-- Two-point mode (hidden by default) -->
+        <div id="twoPointRow" class="row" style="display:none;">
+          <div class="field">
+            <label for="abs1">Absorbance 1</label>
+            <input id="abs1" type="number" step="any" placeholder="e.g. 0.120"/>
+          </div>
+          <div class="field">
+            <label for="t1">Time 1 (min)</label>
+            <input id="t1" type="number" min="0" step="any" placeholder="0"/>
+          </div>
+          <div class="field">
+            <label for="abs2">Absorbance 2</label>
+            <input id="abs2" type="number" step="any" placeholder="e.g. 0.345"/>
+          </div>
+          <div class="field">
+            <label for="t2">Time 2 (min)</label>
+            <input id="t2" type="number" min="0" step="any" placeholder="5"/>
+          </div>
+        </div>
+
+        <!-- Extinction coefficient -->
+        <div class="row">
+          <div class="field">
+            <label for="epsilonPreset">Extinction coefficient (&epsilon;)</label>
+            <select id="epsilonPreset" onchange="applyEpsilon()">
+              <option value="6220">NADH at 340 nm (&epsilon; = 6220)</option>
+              <option value="18300">p-Nitrophenol at 405 nm (&epsilon; = 18300)</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="epsilon">&epsilon; in L/(mol&middot;cm)</label>
+            <input id="epsilon" type="number" min="0" step="any" value="6220"/>
+          </div>
+          <div class="field">
+            <label for="pathLen">Path length (cm)</label>
+            <input id="pathLen" type="number" min="0" step="any" value="1"/>
+          </div>
+        </div>
+
+        <!-- Volumes -->
+        <div class="row">
+          <div class="field">
+            <label for="vTotal">Reaction volume (mL)</label>
+            <input id="vTotal" type="number" min="0" step="any" placeholder="e.g. 1.0"/>
+          </div>
+          <div class="field">
+            <label for="vSample">Sample volume (mL)</label>
+            <input id="vSample" type="number" min="0" step="any" placeholder="e.g. 0.05"/>
+          </div>
+          <div class="field">
+            <label for="protConc">Total protein (mg/mL) <span style="font-weight:400;color:var(--muted);">&mdash; optional</span></label>
+            <input id="protConc" type="number" min="0" step="any" placeholder="optional"/>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" type="button" onclick="calcActivity()">Calculate activity</button>
+          <button class="ghost" type="button" onclick="clearActivity()">Clear</button>
+        </div>
+
+        <div id="activityOut"></div>
+
+        <div id="activityErr" class="alert" style="display:none;"></div>
+
+        <p class="note">
+          <strong>Formula:</strong> Activity (U/mL) = (&Delta;Abs/min &times; V<sub>total</sub> &times; 10<sup>6</sup>) / (&epsilon; &times; l &times; V<sub>sample</sub> &times; 10<sup>3</sup>)<br>
+          where 1 U = 1 &micro;mol substrate converted per minute. Volumes in mL are converted internally.
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB B: Michaelis-Menten Kinetics
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="tab-kinetics" class="pane">
+
+      <!-- Kinetics Exercises -->
+      <div class="exercises">
+        <button class="ex-toggle open" id="kinExToggle" onclick="toggleEx('kinExPanel','kinExToggle')">
+          <span>📋 Guided Exercises</span>
+          <span class="ex-arrow">▶</span>
+        </button>
+        <div id="kinExPanel">
+          <div class="ex-grid">
+
+            <div class="ex-card" id="exB3" onclick="loadExercise(3)">
+              <div class="ex-num">Exercise 3</div>
+              <div class="ex-title">Classic Michaelis-Menten</div>
+              <div class="ex-obj">Fit a typical hyperbolic substrate-velocity curve. Identify Km and Vmax from the non-linear fit.</div>
+              <div class="ex-params">
+                <span class="ex-param">Km &asymp; 3 mM</span>
+                <span class="ex-param">Tab B</span>
+              </div>
+              <button class="ex-btn">Load exercise</button>
+            </div>
+
+            <div class="ex-card" id="exB4" onclick="loadExercise(4)">
+              <div class="ex-num">Exercise 4</div>
+              <div class="ex-title">High-affinity enzyme</div>
+              <div class="ex-obj">An enzyme with very low Km &mdash; it reaches Vmax quickly. Compare to Exercise 3 and interpret affinity.</div>
+              <div class="ex-params">
+                <span class="ex-param">Low Km</span>
+                <span class="ex-param">Tab B</span>
+              </div>
+              <button class="ex-btn">Load exercise</button>
+            </div>
+
+            <div class="ex-card" id="exB5" onclick="loadExercise(5)">
+              <div class="ex-num">Exercise 5</div>
+              <div class="ex-title">Substrate inhibition</div>
+              <div class="ex-obj">Velocity drops at very high [S]. The standard Michaelis-Menten model cannot fit this &mdash; observe and interpret.</div>
+              <div class="ex-params">
+                <span class="ex-param">V drops at high [S]</span>
+                <span class="ex-param">Tab B</span>
+              </div>
+              <button class="ex-btn">Load exercise</button>
+            </div>
+
+          </div>
+          <div class="ex-instructions" id="kinExInstructions" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Substrate-Velocity Data</div>
+
+        <div class="row">
+          <div class="field" style="flex:0 0 160px;">
+            <label for="concUnit">[S] unit</label>
+            <select id="concUnit">
+              <option value="mM" selected>mM</option>
+              <option value="uM">&micro;M</option>
+            </select>
+          </div>
+          <div class="field" style="flex:0 0 160px;">
+            <label for="velUnit">V unit</label>
+            <select id="velUnit">
+              <option value="U/mL" selected>U/mL</option>
+              <option value="dAbs/min">&Delta;Abs/min</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="dataTable">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>[S]</th>
+                <th>V</th>
+                <th>V rep. 2 (opt.)</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="dataBody"></tbody>
+          </table>
+        </div>
+
+        <div class="btn-row" style="justify-content:flex-start;">
+          <button class="ghost btn-sm" type="button" onclick="addRow()">+ Add row</button>
+          <button class="ghost btn-sm" type="button" onclick="resetData()">Reset to example</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" type="button" onclick="fitMM()">Fit Michaelis-Menten</button>
+          <button class="ghost" type="button" onclick="clearKinetics()">Clear results</button>
+        </div>
+
+        <div id="kineticsErr" class="alert" style="display:none;"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="kineticsResults" style="display:none;">
+        <div class="card">
+          <div style="font-weight:900;font-size:15px;margin-bottom:10px;">Fitted Parameters</div>
+          <div id="kineticsKPI" class="kpi-grid"></div>
+          <div id="kineticsSteps" class="step-box" style="display:none;"></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+          <div class="card">
+            <div style="font-weight:800;font-size:13px;margin-bottom:8px;">Michaelis-Menten Plot</div>
+            <div class="viz-wrap"><canvas id="mmChart" height="280"></canvas></div>
+          </div>
+          <div class="card">
+            <div style="font-weight:800;font-size:13px;margin-bottom:8px;">Lineweaver-Burk Plot (Double Reciprocal)</div>
+            <div class="viz-wrap"><canvas id="lbChart" height="280"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Info box
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="card" style="margin-top:4px;">
+      <details class="tg-details" open>
+        <summary>Background &mdash; Enzyme Kinetics</summary>
+        <div class="info-box" style="margin-top:10px;">
+          <h3>Km (Michaelis constant)</h3>
+          <ul>
+            <li>Km is the substrate concentration at which the reaction velocity is half of Vmax.</li>
+            <li><strong>Clinical interpretation:</strong> A lower Km indicates higher enzyme-substrate affinity. Clinically, Km values help predict how enzymes behave at physiological substrate concentrations.</li>
+            <li>Units match the substrate concentration (e.g. mM or &micro;M).</li>
+          </ul>
+
+          <h3>Vmax (maximum velocity)</h3>
+          <ul>
+            <li>Vmax is the maximum rate of the reaction when the enzyme is fully saturated with substrate.</li>
+            <li>It depends on enzyme concentration: Vmax = kcat &times; [E]<sub>total</sub>.</li>
+            <li>Units: U/mL (or &Delta;Abs/min, depending on input).</li>
+          </ul>
+
+          <h3>Vmax/Km (catalytic efficiency)</h3>
+          <ul>
+            <li>The ratio Vmax/Km is a measure of catalytic efficiency. Higher values indicate the enzyme is more efficient at low substrate concentrations.</li>
+          </ul>
+
+          <h3>When to use which plot?</h3>
+          <ul>
+            <li><strong>Michaelis-Menten plot</strong> (V vs [S]): The standard representation. Non-linear regression gives the most reliable Km and Vmax estimates.</li>
+            <li><strong>Lineweaver-Burk plot</strong> (1/V vs 1/[S]): A linearised form historically used because linear regression is simpler. However, it distorts experimental error (low [S] points are amplified). Use it for visual inspection and to identify inhibition patterns, but prefer non-linear fitting for parameter estimation.</li>
+          </ul>
+
+          <h3>Units in this calculator</h3>
+          <ul>
+            <li><strong>1 Unit (U)</strong> = 1 &micro;mol of substrate converted per minute under specified conditions.</li>
+            <li><strong>Specific activity</strong> (U/mg) = enzyme activity per milligram of total protein &mdash; measures enzyme purity.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Tab switching
+   ═══════════════════════════════════════════════════════════════ */
+function switchTab(id){
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const idx = id === 'activity' ? 0 : 1;
+  document.querySelectorAll('.tabs .tab')[idx].classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB A: Activity Calculation
+   ═══════════════════════════════════════════════════════════════ */
+function toggleAbsMode(){
+  const mode = document.getElementById('absMode').value;
+  document.getElementById('rateRow').style.display = mode === 'rate' ? '' : 'none';
+  document.getElementById('twoPointRow').style.display = mode === 'two' ? '' : 'none';
+}
+
+function applyEpsilon(){
+  const sel = document.getElementById('epsilonPreset');
+  if(sel.value !== 'custom'){
+    document.getElementById('epsilon').value = sel.value;
+  } else {
+    document.getElementById('epsilon').value = '';
+    document.getElementById('epsilon').focus();
+  }
+}
+
+function showActErr(msg){
+  const el = document.getElementById('activityErr');
+  el.style.display = 'block'; el.className = 'alert bad'; el.textContent = msg;
+}
+function clearActErr(){ const el = document.getElementById('activityErr'); el.style.display = 'none'; el.textContent = ''; }
+
+function calcActivity(){
+  clearActErr();
+  const mode = document.getElementById('absMode').value;
+  let dAbsMin;
+
+  if(mode === 'rate'){
+    dAbsMin = parseFloat(document.getElementById('deltaAbs').value);
+    if(!Number.isFinite(dAbsMin) || dAbsMin < 0){ showActErr('Enter a valid \u0394Abs/min value.'); return; }
+  } else {
+    const a1 = parseFloat(document.getElementById('abs1').value);
+    const a2 = parseFloat(document.getElementById('abs2').value);
+    const t1 = parseFloat(document.getElementById('t1').value);
+    const t2 = parseFloat(document.getElementById('t2').value);
+    if(!Number.isFinite(a1) || !Number.isFinite(a2) || !Number.isFinite(t1) || !Number.isFinite(t2)){
+      showActErr('Enter all four absorbance/time values.'); return;
+    }
+    if(t2 === t1){ showActErr('Time points must be different.'); return; }
+    dAbsMin = Math.abs(a2 - a1) / Math.abs(t2 - t1);
+  }
+
+  const eps = parseFloat(document.getElementById('epsilon').value);
+  const l = parseFloat(document.getElementById('pathLen').value);
+  const vTotmL = parseFloat(document.getElementById('vTotal').value);
+  const vSammL = parseFloat(document.getElementById('vSample').value);
+  const prot = parseFloat(document.getElementById('protConc').value);
+
+  if(!(eps > 0)){ showActErr('Extinction coefficient must be > 0.'); return; }
+  if(!(l > 0)){ showActErr('Path length must be > 0.'); return; }
+  if(!(vTotmL > 0)){ showActErr('Reaction volume must be > 0.'); return; }
+  if(!(vSammL > 0)){ showActErr('Sample volume must be > 0.'); return; }
+
+  // Convert mL to L for Beer-Lambert
+  const vTotL = vTotmL / 1000;
+  const vSamL = vSammL / 1000;
+
+  // Activity (U/mL):
+  // c (mol/L) = dAbs / (eps * l)
+  // rate (mol/min/L_reaction) = c_rate = dAbsMin / (eps * l)
+  // total moles/min = c_rate * V_total(L)
+  // umol/min = total moles/min * 1e6
+  // U/mL = umol/min / V_sample(mL)
+  const activity = (dAbsMin * vTotL * 1e6) / (eps * l * vSammL);
+
+  let specAct = null;
+  if(Number.isFinite(prot) && prot > 0){
+    specAct = activity / prot;
+  }
+
+  let html = '<div class="kpi-grid" style="margin-top:14px;">';
+  html += '<div class="kpi"><div class="lab">Enzyme activity</div><div class="val"><span class="mono">' + fmtN(activity, 4) + '</span> U/mL</div></div>';
+  if(specAct !== null){
+    html += '<div class="kpi"><div class="lab">Specific activity</div><div class="val"><span class="mono">' + fmtN(specAct, 4) + '</span> U/mg</div></div>';
+  }
+  html += '<div class="kpi"><div class="lab">&Delta;Abs/min</div><div class="val"><span class="mono">' + fmtN(dAbsMin, 6) + '</span></div></div>';
+  html += '</div>';
+
+  // Step-by-step
+  html += '<div class="step-box">';
+  html += '<strong>Step-by-step calculation</strong><br>';
+  html += '1. &Delta;Abs/min = ' + fmtN(dAbsMin, 6) + '<br>';
+  html += '2. V<sub>total</sub> = ' + vTotmL + ' mL = ' + fmtN(vTotL, 6) + ' L<br>';
+  html += '3. V<sub>sample</sub> = ' + vSammL + ' mL<br>';
+  html += '4. &epsilon; = ' + eps + ' L/(mol&middot;cm), l = ' + l + ' cm<br>';
+  html += '5. Activity = (&Delta;Abs/min &times; V<sub>total</sub>(L) &times; 10<sup>6</sup>) / (&epsilon; &times; l &times; V<sub>sample</sub>(mL))<br>';
+  html += '&nbsp;&nbsp;&nbsp;= (' + fmtN(dAbsMin,6) + ' &times; ' + fmtN(vTotL,6) + ' &times; 10<sup>6</sup>) / (' + eps + ' &times; ' + l + ' &times; ' + vSammL + ')<br>';
+  html += '&nbsp;&nbsp;&nbsp;= <strong>' + fmtN(activity, 4) + ' U/mL</strong><br>';
+  if(specAct !== null){
+    html += '6. Specific activity = ' + fmtN(activity,4) + ' / ' + prot + ' = <strong>' + fmtN(specAct,4) + ' U/mg</strong>';
+  }
+  html += '</div>';
+
+  document.getElementById('activityOut').innerHTML = html;
+}
+
+function clearActivity(){
+  ['deltaAbs','abs1','abs2','t1','t2','vTotal','vSample','protConc'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('activityOut').innerHTML = '';
+  clearActErr();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB B: Michaelis-Menten Kinetics
+   ═══════════════════════════════════════════════════════════════ */
+const DEFAULT_DATA = [
+  { s: 0.5,  v1: 0.12, v2: '' },
+  { s: 1.0,  v1: 0.21, v2: '' },
+  { s: 2.0,  v1: 0.35, v2: '' },
+  { s: 5.0,  v1: 0.58, v2: '' },
+  { s: 10.0, v1: 0.72, v2: '' },
+  { s: 20.0, v1: 0.82, v2: '' },
+];
+
+let mmChart = null, lbChart = null;
+
+function buildTable(data){
+  const body = document.getElementById('dataBody');
+  body.innerHTML = '';
+  data.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + (i+1) + '</td>' +
+      '<td><input type="number" step="any" min="0" class="ds" value="' + r.s + '"/></td>' +
+      '<td><input type="number" step="any" min="0" class="dv1" value="' + r.v1 + '"/></td>' +
+      '<td><input type="number" step="any" min="0" class="dv2" value="' + r.v2 + '"/></td>' +
+      '<td><button type="button" class="remove-row" onclick="removeRow(this)">&times;</button></td>';
+    body.appendChild(tr);
+  });
+}
+
+function addRow(){
+  const body = document.getElementById('dataBody');
+  const n = body.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td>' + n + '</td>' +
+    '<td><input type="number" step="any" min="0" class="ds" value=""/></td>' +
+    '<td><input type="number" step="any" min="0" class="dv1" value=""/></td>' +
+    '<td><input type="number" step="any" min="0" class="dv2" value=""/></td>' +
+    '<td><button type="button" class="remove-row" onclick="removeRow(this)">&times;</button></td>';
+  body.appendChild(tr);
+}
+
+function removeRow(btn){
+  const body = document.getElementById('dataBody');
+  if(body.rows.length <= 2){ return; } // keep at least 2 rows
+  btn.closest('tr').remove();
+  renumber();
+}
+
+function renumber(){
+  const rows = document.getElementById('dataBody').rows;
+  for(let i = 0; i < rows.length; i++) rows[i].cells[0].textContent = i + 1;
+}
+
+function resetData(){ buildTable(DEFAULT_DATA); clearKinetics(); }
+
+function readData(){
+  const rows = document.getElementById('dataBody').rows;
+  const pts = [];
+  for(let i = 0; i < rows.length; i++){
+    const s = parseFloat(rows[i].querySelector('.ds').value);
+    const v1 = parseFloat(rows[i].querySelector('.dv1').value);
+    const v2 = parseFloat(rows[i].querySelector('.dv2').value);
+    if(!Number.isFinite(s) || s <= 0 || !Number.isFinite(v1) || v1 <= 0) continue;
+    let v = v1;
+    if(Number.isFinite(v2) && v2 > 0) v = (v1 + v2) / 2;
+    pts.push({ s, v });
+  }
+  return pts;
+}
+
+function showKinErr(msg){
+  const el = document.getElementById('kineticsErr');
+  el.style.display = 'block'; el.className = 'alert bad'; el.textContent = msg;
+}
+function clearKinErr(){ document.getElementById('kineticsErr').style.display = 'none'; }
+
+function clearKinetics(){
+  document.getElementById('kineticsResults').style.display = 'none';
+  if(mmChart){ mmChart.destroy(); mmChart = null; }
+  if(lbChart){ lbChart.destroy(); lbChart = null; }
+  clearKinErr();
+}
+
+/* ── Non-linear least squares fitting ──
+   Grid search then Nelder-Mead style refinement */
+function fitMichaelisMenten(pts){
+  // Initial estimates from Lineweaver-Burk
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  const n = pts.length;
+  for(const p of pts){
+    const x = 1 / p.s, y = 1 / p.v;
+    sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x;
+  }
+  const lbSlope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const lbIntercept = (sumY - lbSlope * sumX) / n;
+  const lbVmax = lbIntercept > 0 ? 1 / lbIntercept : Math.max(...pts.map(p => p.v)) * 1.2;
+  const lbKm = lbSlope > 0 && lbIntercept > 0 ? lbSlope / lbIntercept : pts[Math.floor(n/2)].s;
+
+  // SSE function
+  function sse(vmax, km){
+    let s = 0;
+    for(const p of pts){
+      const pred = vmax * p.s / (km + p.s);
+      s += (p.v - pred) ** 2;
+    }
+    return s;
+  }
+
+  // Grid search around LB estimates
+  let bestVmax = Math.abs(lbVmax), bestKm = Math.abs(lbKm), bestSSE = sse(bestVmax, bestKm);
+  for(let fv = 0.2; fv <= 3.0; fv += 0.1){
+    for(let fk = 0.2; fk <= 3.0; fk += 0.1){
+      const tv = Math.abs(lbVmax) * fv;
+      const tk = Math.abs(lbKm) * fk;
+      const e = sse(tv, tk);
+      if(e < bestSSE){ bestSSE = e; bestVmax = tv; bestKm = tk; }
+    }
+  }
+
+  // Refinement: iterative coordinate descent
+  for(let iter = 0; iter < 200; iter++){
+    const step = Math.max(0.0001, bestVmax * 0.002);
+    const stepK = Math.max(0.0001, bestKm * 0.002);
+    for(const dv of [-step, 0, step]){
+      for(const dk of [-stepK, 0, stepK]){
+        if(dv === 0 && dk === 0) continue;
+        const tv = bestVmax + dv, tk = bestKm + dk;
+        if(tv <= 0 || tk <= 0) continue;
+        const e = sse(tv, tk);
+        if(e < bestSSE){ bestSSE = e; bestVmax = tv; bestKm = tk; }
+      }
+    }
+  }
+
+  // R-squared
+  const meanV = pts.reduce((a, p) => a + p.v, 0) / n;
+  const ssTot = pts.reduce((a, p) => a + (p.v - meanV) ** 2, 0);
+  const r2 = ssTot > 0 ? 1 - bestSSE / ssTot : 0;
+
+  // LB linear regression values for plotting
+  const lbR2 = (() => {
+    const meanY = sumY / n;
+    let ssTotLB = 0, ssResLB = 0;
+    for(const p of pts){
+      const x = 1/p.s, y = 1/p.v;
+      const pred = lbSlope * x + lbIntercept;
+      ssTotLB += (y - meanY) ** 2;
+      ssResLB += (y - pred) ** 2;
+    }
+    return ssTotLB > 0 ? 1 - ssResLB / ssTotLB : 0;
+  })();
+
+  return {
+    vmax: bestVmax,
+    km: bestKm,
+    r2,
+    sse: bestSSE,
+    lb: { slope: lbSlope, intercept: lbIntercept, vmax: lbVmax, km: lbKm, r2: lbR2 }
+  };
+}
+
+function fitMM(){
+  clearKinErr();
+  const pts = readData();
+  if(pts.length < 3){ showKinErr('Need at least 3 valid data points (positive [S] and V).'); return; }
+
+  const result = fitMichaelisMenten(pts);
+  const concUnit = document.getElementById('concUnit').value;
+  const velUnit = document.getElementById('velUnit').value;
+
+  // KPI cards
+  const kpiDiv = document.getElementById('kineticsKPI');
+  kpiDiv.innerHTML =
+    '<div class="kpi"><div class="lab">Vmax</div><div class="val"><span class="mono">' + fmtN(result.vmax, 4) + '</span> ' + velUnit + '</div></div>' +
+    '<div class="kpi"><div class="lab">Km</div><div class="val"><span class="mono">' + fmtN(result.km, 4) + '</span> ' + concUnit + '</div></div>' +
+    '<div class="kpi"><div class="lab">Vmax / Km</div><div class="val"><span class="mono">' + fmtN(result.vmax / result.km, 4) + '</span></div></div>' +
+    '<div class="kpi"><div class="lab">R&sup2; (non-linear)</div><div class="val"><span class="mono">' + fmtN(result.r2, 6) + '</span></div></div>';
+
+  // Steps
+  const stepsDiv = document.getElementById('kineticsSteps');
+  stepsDiv.style.display = 'block';
+  stepsDiv.innerHTML =
+    '<strong>Lineweaver-Burk linear fit</strong><br>' +
+    '1/V = (Km/Vmax) &times; 1/[S] + 1/Vmax<br>' +
+    'Slope = Km/Vmax = ' + fmtN(result.lb.slope, 4) + '<br>' +
+    'Y-intercept = 1/Vmax = ' + fmtN(result.lb.intercept, 4) +
+    ' &rarr; Vmax(LB) = ' + fmtN(result.lb.vmax, 4) + ' ' + velUnit + '<br>' +
+    'X-intercept = -1/Km = ' + fmtN(-1 / result.lb.km, 4) +
+    ' &rarr; Km(LB) = ' + fmtN(result.lb.km, 4) + ' ' + concUnit + '<br>' +
+    'R&sup2;(LB) = ' + fmtN(result.lb.r2, 6) + '<br><br>' +
+    '<strong>Non-linear fit (preferred)</strong><br>' +
+    'Vmax = ' + fmtN(result.vmax, 4) + ' ' + velUnit + '<br>' +
+    'Km = ' + fmtN(result.km, 4) + ' ' + concUnit + '<br>' +
+    'R&sup2; = ' + fmtN(result.r2, 6);
+
+  document.getElementById('kineticsResults').style.display = '';
+
+  // Draw charts
+  drawMMChart(pts, result, concUnit, velUnit);
+  drawLBChart(pts, result, concUnit, velUnit);
+}
+
+/* ── Michaelis-Menten Chart ── */
+function drawMMChart(pts, result, concUnit, velUnit){
+  if(mmChart){ mmChart.destroy(); mmChart = null; }
+  const ctx = document.getElementById('mmChart').getContext('2d');
+
+  const maxS = Math.max(...pts.map(p => p.s)) * 1.15;
+  const curvePoints = [];
+  for(let s = 0; s <= maxS; s += maxS / 200){
+    curvePoints.push({ x: s, y: result.vmax * s / (result.km + s) });
+  }
+
+  mmChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Data',
+          data: pts.map(p => ({ x: p.s, y: p.v })),
+          backgroundColor: '#1976d2',
+          borderColor: '#1976d2',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          showLine: false,
+        },
+        {
+          label: 'Fitted curve',
+          data: curvePoints,
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          showLine: true,
+          borderWidth: 2,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } },
+        annotation: undefined,
+      },
+      scales: {
+        x: { title: { display: true, text: '[S] (' + concUnit + ')', font: { weight: 'bold' } }, min: 0 },
+        y: { title: { display: true, text: 'V (' + velUnit + ')', font: { weight: 'bold' } }, min: 0 }
+      }
+    },
+    plugins: [{
+      id: 'mmAnnotations',
+      afterDraw(chart){
+        const ctx2 = chart.ctx;
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+
+        // Vmax horizontal dashed line
+        const yVmax = yScale.getPixelForValue(result.vmax);
+        if(yVmax >= yScale.top && yVmax <= yScale.bottom){
+          ctx2.save();
+          ctx2.setLineDash([6, 4]);
+          ctx2.strokeStyle = '#6b7280';
+          ctx2.lineWidth = 1;
+          ctx2.beginPath();
+          ctx2.moveTo(xScale.left, yVmax);
+          ctx2.lineTo(xScale.right, yVmax);
+          ctx2.stroke();
+          ctx2.setLineDash([]);
+          ctx2.fillStyle = '#374151';
+          ctx2.font = 'bold 11px system-ui';
+          ctx2.fillText('Vmax = ' + fmtN(result.vmax, 3), xScale.left + 6, yVmax - 5);
+          ctx2.restore();
+        }
+
+        // Km vertical dashed line
+        const xKm = xScale.getPixelForValue(result.km);
+        if(xKm >= xScale.left && xKm <= xScale.right){
+          ctx2.save();
+          ctx2.setLineDash([6, 4]);
+          ctx2.strokeStyle = '#6b7280';
+          ctx2.lineWidth = 1;
+          ctx2.beginPath();
+          ctx2.moveTo(xKm, yScale.top);
+          ctx2.lineTo(xKm, yScale.bottom);
+          ctx2.stroke();
+          ctx2.setLineDash([]);
+          ctx2.fillStyle = '#374151';
+          ctx2.font = 'bold 11px system-ui';
+          ctx2.fillText('Km = ' + fmtN(result.km, 3), xKm + 4, yScale.bottom - 8);
+          ctx2.restore();
+        }
+      }
+    }]
+  });
+}
+
+/* ── Lineweaver-Burk Chart ── */
+function drawLBChart(pts, result, concUnit, velUnit){
+  if(lbChart){ lbChart.destroy(); lbChart = null; }
+  const ctx = document.getElementById('lbChart').getContext('2d');
+
+  const lbPts = pts.map(p => ({ x: 1 / p.s, y: 1 / p.v }));
+  const slope = result.lb.slope;
+  const intercept = result.lb.intercept;
+
+  // X range: extend to include x-intercept (-1/Km) if Km > 0
+  const xIntercept = result.lb.km > 0 ? -1 / result.lb.km : 0;
+  const maxX = Math.max(...lbPts.map(p => p.x)) * 1.15;
+  const minX = Math.min(xIntercept * 1.2, 0);
+
+  // Line points
+  const lineData = [];
+  for(let x = minX; x <= maxX; x += (maxX - minX) / 200){
+    lineData.push({ x, y: slope * x + intercept });
+  }
+
+  lbChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Data (1/V vs 1/[S])',
+          data: lbPts,
+          backgroundColor: '#1976d2',
+          borderColor: '#1976d2',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          showLine: false,
+        },
+        {
+          label: 'Linear regression',
+          data: lineData,
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+          showLine: true,
+          borderWidth: 2,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } },
+      },
+      scales: {
+        x: { title: { display: true, text: '1/[S] (1/' + concUnit + ')', font: { weight: 'bold' } } },
+        y: { title: { display: true, text: '1/V (1/' + velUnit + ')', font: { weight: 'bold' } }, min: 0 }
+      }
+    },
+    plugins: [{
+      id: 'lbAnnotations',
+      afterDraw(chart){
+        const ctx2 = chart.ctx;
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+
+        // Y-intercept label (1/Vmax)
+        const yInt = yScale.getPixelForValue(intercept);
+        const xZero = xScale.getPixelForValue(0);
+        if(yInt >= yScale.top && yInt <= yScale.bottom && xZero >= xScale.left && xZero <= xScale.right){
+          ctx2.save();
+          ctx2.fillStyle = '#15803d';
+          ctx2.font = 'bold 10px system-ui';
+          ctx2.fillText('1/Vmax = ' + fmtN(intercept, 3), xZero + 4, yInt - 6);
+          ctx2.beginPath();
+          ctx2.arc(xZero, yInt, 4, 0, Math.PI * 2);
+          ctx2.fillStyle = '#15803d';
+          ctx2.fill();
+          ctx2.restore();
+        }
+
+        // X-intercept label (-1/Km)
+        if(result.lb.km > 0){
+          const xIntVal = -1 / result.lb.km;
+          const xIntPx = xScale.getPixelForValue(xIntVal);
+          const yZeroPx = yScale.getPixelForValue(0);
+          if(xIntPx >= xScale.left && xIntPx <= xScale.right && yZeroPx >= yScale.top && yZeroPx <= yScale.bottom){
+            ctx2.save();
+            ctx2.fillStyle = '#b45309';
+            ctx2.font = 'bold 10px system-ui';
+            ctx2.fillText('-1/Km = ' + fmtN(xIntVal, 3), xIntPx + 4, yZeroPx - 6);
+            ctx2.beginPath();
+            ctx2.arc(xIntPx, yZeroPx, 4, 0, Math.PI * 2);
+            ctx2.fillStyle = '#b45309';
+            ctx2.fill();
+            ctx2.restore();
+          }
+        }
+      }
+    }]
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Utility
+   ═══════════════════════════════════════════════════════════════ */
+function fmtN(x, d){
+  if(!Number.isFinite(x)) return '\u2014';
+  return x.toFixed(d);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Save / Load
+   ═══════════════════════════════════════════════════════════════ */
+window.getSaveData = function(){
+  // Collect activity tab
+  const activity = {
+    absMode: document.getElementById('absMode').value,
+    deltaAbs: document.getElementById('deltaAbs').value,
+    abs1: document.getElementById('abs1').value,
+    abs2: document.getElementById('abs2').value,
+    t1: document.getElementById('t1').value,
+    t2: document.getElementById('t2').value,
+    epsilonPreset: document.getElementById('epsilonPreset').value,
+    epsilon: document.getElementById('epsilon').value,
+    pathLen: document.getElementById('pathLen').value,
+    vTotal: document.getElementById('vTotal').value,
+    vSample: document.getElementById('vSample').value,
+    protConc: document.getElementById('protConc').value,
+  };
+
+  // Collect kinetics table
+  const rows = document.getElementById('dataBody').rows;
+  const data = [];
+  for(let i = 0; i < rows.length; i++){
+    data.push({
+      s: rows[i].querySelector('.ds').value,
+      v1: rows[i].querySelector('.dv1').value,
+      v2: rows[i].querySelector('.dv2').value,
+    });
+  }
+  const kinetics = {
+    concUnit: document.getElementById('concUnit').value,
+    velUnit: document.getElementById('velUnit').value,
+    data,
+  };
+
+  return { tool: 'enzyme_activity', activity, kinetics };
+};
+
+window.loadSaveData = function(saved){
+  if(!saved) return;
+
+  // Activity tab
+  if(saved.activity){
+    const a = saved.activity;
+    if(a.absMode) { document.getElementById('absMode').value = a.absMode; toggleAbsMode(); }
+    if(a.deltaAbs !== undefined) document.getElementById('deltaAbs').value = a.deltaAbs;
+    if(a.abs1 !== undefined) document.getElementById('abs1').value = a.abs1;
+    if(a.abs2 !== undefined) document.getElementById('abs2').value = a.abs2;
+    if(a.t1 !== undefined) document.getElementById('t1').value = a.t1;
+    if(a.t2 !== undefined) document.getElementById('t2').value = a.t2;
+    if(a.epsilonPreset) document.getElementById('epsilonPreset').value = a.epsilonPreset;
+    if(a.epsilon !== undefined) document.getElementById('epsilon').value = a.epsilon;
+    if(a.pathLen !== undefined) document.getElementById('pathLen').value = a.pathLen;
+    if(a.vTotal !== undefined) document.getElementById('vTotal').value = a.vTotal;
+    if(a.vSample !== undefined) document.getElementById('vSample').value = a.vSample;
+    if(a.protConc !== undefined) document.getElementById('protConc').value = a.protConc;
+  }
+
+  // Kinetics tab
+  if(saved.kinetics){
+    const k = saved.kinetics;
+    if(k.concUnit) document.getElementById('concUnit').value = k.concUnit;
+    if(k.velUnit) document.getElementById('velUnit').value = k.velUnit;
+    if(k.data && k.data.length){
+      buildTable(k.data.map(r => ({ s: r.s || '', v1: r.v1 || '', v2: r.v2 || '' })));
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   Exercises
+   ═══════════════════════════════════════════════════════════════ */
+function toggleEx(panelId, toggleId){
+  const panel  = document.getElementById(panelId);
+  const toggle = document.getElementById(toggleId);
+  const open   = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+function toggleAnswer(answerId, btn){
+  const ans = document.getElementById(answerId);
+  const visible = ans.style.display === 'block';
+  ans.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? 'Show answer' : 'Hide answer';
+}
+
+const EXERCISES = {
+  1: {
+    tab: 'activity',
+    deltaAbs: 0.085, epsilon: 6220, epsilonPreset: '6220', pathLen: 1,
+    vTotal: 3.0, vSample: 0.1, protConc: 5.2,
+    title: 'LDH activity \u2014 NADH method',
+    steps: `
+      <b>Context:</b> Lactate dehydrogenase (LDH) catalyses the conversion of pyruvate to lactate, oxidising NADH to NAD\u207A. The decrease in absorbance at 340 nm (\u03B5 = 6220 L\u00B7mol\u207B\u00B9\u00B7cm\u207B\u00B9) is measured.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Note the \u0394Abs/min = 0.085 and the NADH preset (\u03B5 = 6220). The reaction volume is 3.0 mL with 0.1 mL sample.</li>
+        <li>Calculate the enzyme activity (U/mL). 1 U = 1 \u00B5mol substrate/min.</li>
+        <li>Total protein is 5.2 mg/mL \u2014 the specific activity (U/mg) tells you how pure the enzyme preparation is.</li>
+        <li>Try removing the protein concentration and recalculating \u2014 the volumetric activity stays the same but specific activity disappears.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      Activity = (0.085 \u00D7 0.003 \u00D7 10\u2076) / (6220 \u00D7 1 \u00D7 0.1) = <b>0.4099 U/mL</b><br>
+      Specific activity = 0.4099 / 5.2 = <b>0.0788 U/mg</b><br>
+      <b>Key lesson:</b> This is a standard clinical LDH assay. The dilution factor (V<sub>total</sub>/V<sub>sample</sub> = 30\u00D7) amplifies the measured rate into a meaningful activity value.`
+  },
+  2: {
+    tab: 'activity',
+    deltaAbs: 0.142, epsilon: 18300, epsilonPreset: '18300', pathLen: 1,
+    vTotal: 2.5, vSample: 0.05, protConc: '',
+    title: 'ALP with p-nitrophenol',
+    steps: `
+      <b>Context:</b> Alkaline phosphatase (ALP) hydrolyses p-nitrophenyl phosphate (pNPP) to p-nitrophenol (pNP), which absorbs strongly at 405 nm (\u03B5 = 18\u2009300 L\u00B7mol\u207B\u00B9\u00B7cm\u207B\u00B9). This is a common clinical chemistry assay.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>The preset switches to pNP at 405 nm automatically. Note how \u03B5 is nearly 3\u00D7 higher than NADH \u2014 pNP is a very strong chromophore.</li>
+        <li>No protein concentration is entered \u2014 only volumetric activity (U/mL) is calculated.</li>
+        <li>Compare the result to Exercise 1. Despite a higher \u0394Abs/min, does the activity come out higher or lower? Why?</li>
+        <li>Try changing the sample volume from 0.05 to 0.1 mL \u2014 what happens to the calculated activity?</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      Activity = (0.142 \u00D7 0.0025 \u00D7 10\u2076) / (18300 \u00D7 1 \u00D7 0.05) = <b>0.3880 U/mL</b><br>
+      No specific activity (no protein entered).<br>
+      <b>Key lesson:</b> A higher \u03B5 means each \u00B5mol of product gives more absorbance change. So even though \u0394Abs/min is higher, the actual activity is similar to Exercise 1 because \u03B5 compensates. Different substrates \u2192 different \u03B5 values \u2192 always use the correct one.`
+  },
+  3: {
+    tab: 'kinetics',
+    data: [
+      { s: 0.5,  v1: 0.12, v2: '' },
+      { s: 1.0,  v1: 0.21, v2: '' },
+      { s: 2.0,  v1: 0.35, v2: '' },
+      { s: 5.0,  v1: 0.58, v2: '' },
+      { s: 10.0, v1: 0.72, v2: '' },
+      { s: 20.0, v1: 0.82, v2: '' },
+    ],
+    title: 'Classic Michaelis-Menten',
+    steps: `
+      <b>Context:</b> This is a textbook Michaelis-Menten dataset. Velocity increases with substrate concentration but approaches a plateau (Vmax). The Km is the [S] at which V = Vmax/2.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Look at the Michaelis-Menten plot \u2014 you should see a clear hyperbolic curve approaching Vmax.</li>
+        <li>Read off the fitted Km and Vmax values. Km should be around 3 mM.</li>
+        <li>Check the Lineweaver-Burk plot. The x-intercept is \u22121/Km and the y-intercept is 1/Vmax.</li>
+        <li>Compare the LB-estimated parameters to the non-linear fit. Which method gives a better R\u00B2?</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      Vmax \u2248 <b>0.95\u20131.0 U/mL</b>, Km \u2248 <b>2.8\u20133.2 mM</b><br>
+      R\u00B2 (non-linear) should be &gt; 0.99.<br>
+      <b>Key lesson:</b> The hyperbolic shape is the hallmark of Michaelis-Menten kinetics. Km tells you enzyme affinity: at [S] = Km, the enzyme works at half its maximum rate. Non-linear fitting is more reliable than Lineweaver-Burk for parameter estimation.`
+  },
+  4: {
+    tab: 'kinetics',
+    data: [
+      { s: 0.1,  v1: 0.42, v2: '' },
+      { s: 0.2,  v1: 0.60, v2: '' },
+      { s: 0.5,  v1: 0.78, v2: '' },
+      { s: 1.0,  v1: 0.88, v2: '' },
+      { s: 2.0,  v1: 0.94, v2: '' },
+      { s: 5.0,  v1: 0.98, v2: '' },
+    ],
+    title: 'High-affinity enzyme',
+    steps: `
+      <b>Context:</b> This enzyme has a very low Km, meaning it binds substrate tightly and reaches near-Vmax at low [S]. Compare to Exercise 3 where Km \u2248 3 mM.<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Fit the data and note the Km value \u2014 it should be much lower than in Exercise 3.</li>
+        <li>Look at the Michaelis-Menten plot. The curve reaches the plateau much faster. At [S] = 1 mM, the enzyme is already close to Vmax.</li>
+        <li>What does this mean clinically? A high-affinity enzyme will maintain its reaction rate even when substrate levels drop. This is important for enzymes that must function at low physiological concentrations.</li>
+        <li>Compare the Vmax/Km ratio (catalytic efficiency) between this exercise and Exercise 3.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      Vmax \u2248 <b>1.0 U/mL</b>, Km \u2248 <b>0.10\u20130.15 mM</b><br>
+      <b>Key lesson:</b> Low Km = high affinity. This enzyme is nearly saturated even at very low substrate concentrations. The Vmax/Km ratio is much higher than Exercise 3, indicating superior catalytic efficiency. Clinically relevant for enzymes like hexokinase (low Km for glucose) vs glucokinase (high Km for glucose).`
+  },
+  5: {
+    tab: 'kinetics',
+    data: [
+      { s: 0.5,  v1: 0.15, v2: '' },
+      { s: 1.0,  v1: 0.28, v2: '' },
+      { s: 2.0,  v1: 0.45, v2: '' },
+      { s: 5.0,  v1: 0.68, v2: '' },
+      { s: 10.0, v1: 0.72, v2: '' },
+      { s: 20.0, v1: 0.65, v2: '' },
+      { s: 50.0, v1: 0.48, v2: '' },
+    ],
+    title: 'Substrate inhibition',
+    steps: `
+      <b>Context:</b> At very high substrate concentrations, the velocity actually <em>decreases</em>. This is called substrate inhibition \u2014 a real phenomenon in some enzymes (e.g. acetylcholinesterase, some dehydrogenases).<br><br>
+      <b>Steps:</b>
+      <ol>
+        <li>Fit the data and look at the Michaelis-Menten plot. The fitted curve will try to produce a standard hyperbola, but the last 2\u20133 data points fall below it.</li>
+        <li>Note the R\u00B2 value \u2014 it should be noticeably lower than in Exercises 3 and 4 because the standard model cannot account for the velocity decrease.</li>
+        <li>Look at the raw data: velocity peaks around [S] = 10 mM, then drops at 20 and 50 mM. The standard Michaelis-Menten equation (V = Vmax\u00B7[S]/(Km+[S])) only produces monotonically increasing curves.</li>
+        <li>In a research setting, you would use a substrate inhibition model: V = Vmax\u00B7[S] / (Km + [S] + [S]\u00B2/Ki). This calculator does not fit that model, but recognising the pattern is the key learning point.</li>
+      </ol>`,
+    answer: `<b>Expected results:</b><br>
+      The standard fit will report Vmax and Km, but R\u00B2 will be poor (&lt; 0.95) because the model is wrong for this data.<br>
+      <b>Key lesson:</b> Not all enzyme kinetics follow simple Michaelis-Menten. When velocity <em>decreases</em> at high [S], suspect substrate inhibition. Always plot your data before trusting a fitted equation \u2014 visual inspection catches problems that R\u00B2 alone may not reveal.`
+  }
+};
+
+function loadExercise(n){
+  const ex = EXERCISES[n];
+  if(!ex) return;
+
+  // Highlight active card, clear others
+  document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('active'));
+  const cardId = ex.tab === 'activity' ? 'exA' + n : 'exB' + n;
+  const card = document.getElementById(cardId);
+  if(card) card.classList.add('active');
+
+  if(ex.tab === 'activity'){
+    // Switch to Activity tab
+    switchTab('activity');
+
+    // Set absorbance mode to direct rate
+    document.getElementById('absMode').value = 'rate';
+    toggleAbsMode();
+
+    // Fill fields
+    document.getElementById('deltaAbs').value = ex.deltaAbs;
+    document.getElementById('epsilonPreset').value = ex.epsilonPreset;
+    document.getElementById('epsilon').value = ex.epsilon;
+    document.getElementById('pathLen').value = ex.pathLen;
+    document.getElementById('vTotal').value = ex.vTotal;
+    document.getElementById('vSample').value = ex.vSample;
+    document.getElementById('protConc').value = ex.protConc;
+
+    // Calculate
+    calcActivity();
+
+    // Show instructions in Activity panel
+    const instr = document.getElementById('actExInstructions');
+    instr.style.display = 'block';
+    instr.innerHTML = `
+      <strong style="color:#1e40af;">\uD83D\uDCCC ${ex.title}</strong><br><br>
+      ${ex.steps}
+      <br>
+      <button class="ex-show-btn" onclick="toggleAnswer('exAns${n}', this)">Show answer</button>
+      <div class="ex-answer" id="exAns${n}">${ex.answer}</div>`;
+    instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Clear kinetics instructions
+    document.getElementById('kinExInstructions').style.display = 'none';
+
+  } else {
+    // Switch to Kinetics tab
+    switchTab('kinetics');
+
+    // Populate the data table
+    buildTable(ex.data);
+
+    // Fit
+    fitMM();
+
+    // Show instructions in Kinetics panel
+    const instr = document.getElementById('kinExInstructions');
+    instr.style.display = 'block';
+    instr.innerHTML = `
+      <strong style="color:#1e40af;">\uD83D\uDCCC ${ex.title}</strong><br><br>
+      ${ex.steps}
+      <br>
+      <button class="ex-show-btn" onclick="toggleAnswer('exAns${n}', this)">Show answer</button>
+      <div class="ex-answer" id="exAns${n}">${ex.answer}</div>`;
+    instr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Clear activity instructions
+    document.getElementById('actExInstructions').style.display = 'none';
+  }
+}
+
+/* ── Init ── */
+buildTable(DEFAULT_DATA);
+</script>
+</body>
+</html>
