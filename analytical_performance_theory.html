@@ -121,7 +121,7 @@
       <li><a href="#roc">ROC &amp; Diagnostic Accuracy REVIEW</a></li>
       <li><a href="#antibiotic">Antibiotic Susceptibility Agreement — EUCAST/CLSI BETA REVIEW</a></li>
     </ol>
-    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#4338ca;margin:16px 0 6px;">Compliance</div>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Compliance</div>
     <ol start="23">
       <li><a href="#why-compliance">What is compliance — and why does it matter?</a></li>
       <li><a href="#workflow">Typical validation workflow</a></li>
@@ -132,7 +132,7 @@
       <li><a href="#ref-interval">Reference Intervals — EP28 BETA REVIEW</a></li>
       <li><a href="#qual-lod">Qualitative Limit of Detection — EP17 BETA REVIEW</a></li>
     </ol>
-    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;margin:16px 0 6px;">Appendix</div>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Appendix</div>
     <ol start="31">
       <li><a href="#summary">Summary table</a></li>
       <li><a href="#references">References</a></li>
@@ -1114,8 +1114,69 @@
   <hr class="divider">
 
   <!-- Workflow -->
+  <div class="section" id="iso15189">
+    <h2>24. ISO 15189 — Validation and Verification Requirements</h2>
+    <p>
+      ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
+      accreditation standard for clinical laboratories. It requires that all measurement procedures
+      be evaluated for fitness for purpose before clinical use — but distinguishes clearly between
+      <strong>validation</strong> and <strong>verification</strong> depending on the type of method.
+    </p>
+
+    <h3>The core rule</h3>
+    <table>
+      <tr><th>Situation</th><th>Requirement</th><th>Typical protocol</th></tr>
+      <tr><td>Commercially available, used as intended by manufacturer</td><td><strong>Verification</strong></td><td>EP15 (precision) + bias check</td></tr>
+      <tr><td>Modified commercial method (different sample type, dilution, range)</td><td><strong>Validation</strong></td><td>EP05 + EP09 + full performance panel</td></tr>
+      <tr><td>In-house developed method</td><td><strong>Full validation</strong></td><td>EP05 + EP09 + linearity + interferences + reference interval</td></tr>
+      <tr><td>Method transferred from another laboratory</td><td><strong>Verification</strong></td><td>Confirm performance matches originating lab</td></tr>
+    </table>
+
+    <h3>What must be evaluated</h3>
+    <p>ISO 15189 (clause 7.3) requires documented evidence for:</p>
+    <ul>
+      <li><strong>Precision</strong> — repeatability and intermediate precision (EP05 or EP15)</li>
+      <li><strong>Trueness / Bias</strong> — against CRM, EQA, or reference method (EP09, bias study)</li>
+      <li><strong>Measurement uncertainty</strong> — combined estimate of all error sources</li>
+      <li><strong>Analytical measurement range (AMR)</strong> — the reportable range of the method</li>
+      <li><strong>Reference intervals</strong> — verified or established for the local population</li>
+      <li><strong>Interferences</strong> — haemolysis, lipaemia, icterus (HLI), common drugs</li>
+    </ul>
+    <div class="info">
+      <b>Verification scope:</b> For a commercial method, ISO 15189 accepts a reduced verification package — typically precision (EP15), bias against EQA or CRM, and confirmation of the reportable range. Full interference and reference interval studies are only required if the manufacturer's data cannot be applied to your patient population.
+    </div>
+
+    <h3>Practical decision guide — validation or verification?</h3>
+    <div class="callout">
+      Ask these questions in order:<br><br>
+      1. <b>Is this method commercially available and used exactly as the manufacturer intends?</b><br>
+      → Yes: verification is sufficient.<br><br>
+      2. <b>Have you changed anything?</b> (sample matrix, pre-treatment, calibrators, reportable range, instrument platform)<br>
+      → Yes to any: validation is required for the changed parameter(s).<br><br>
+      3. <b>Did you develop this method yourself?</b><br>
+      → Yes: full validation is required.<br><br>
+      4. <b>Is the manufacturer's performance data applicable to your population?</b><br>
+      → If not (e.g. paediatric reference intervals in an adult study): establish your own.
+    </div>
+
+    <h3>Documentation requirements</h3>
+    <p>ISO 15189 requires a written validation/verification plan before starting, and a report after completion including:</p>
+    <ul>
+      <li>Study design and acceptance criteria (defined before data collection)</li>
+      <li>Raw data and statistical analysis</li>
+      <li>Pass/fail conclusion against each acceptance criterion</li>
+      <li>Authorisation by the laboratory director before clinical release</li>
+    </ul>
+    <div class="warn">
+      <b>Pre-define your acceptance criteria.</b> ISO 15189 auditors specifically check that criteria were set before data collection — not adjusted after seeing the results. Always document your allowable bias and CV% targets in the validation plan before running the study.
+    </div>
+        <div class="info"><b>Next →</b> ISO 15189 tells you what to evaluate. EP05 tells you exactly how to do it for precision — the standard protocol for measuring repeatability and intermediate precision.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- 15 -->
   <div class="section" id="workflow">
-    <h2>24. Typical validation workflow</h2>
+    <h2>25. Typical validation workflow</h2>
     <p>
       In practice, analytical performance validation follows a standard three-step sequence. Each step builds on the previous one — you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
     </p>
@@ -1187,67 +1248,6 @@
   <hr class="divider"/>
 
   <!-- 18 -->
-  <div class="section" id="iso15189">
-    <h2>25. ISO 15189 — Validation and Verification Requirements</h2>
-    <p>
-      ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
-      accreditation standard for clinical laboratories. It requires that all measurement procedures
-      be evaluated for fitness for purpose before clinical use — but distinguishes clearly between
-      <strong>validation</strong> and <strong>verification</strong> depending on the type of method.
-    </p>
-
-    <h3>The core rule</h3>
-    <table>
-      <tr><th>Situation</th><th>Requirement</th><th>Typical protocol</th></tr>
-      <tr><td>Commercially available, used as intended by manufacturer</td><td><strong>Verification</strong></td><td>EP15 (precision) + bias check</td></tr>
-      <tr><td>Modified commercial method (different sample type, dilution, range)</td><td><strong>Validation</strong></td><td>EP05 + EP09 + full performance panel</td></tr>
-      <tr><td>In-house developed method</td><td><strong>Full validation</strong></td><td>EP05 + EP09 + linearity + interferences + reference interval</td></tr>
-      <tr><td>Method transferred from another laboratory</td><td><strong>Verification</strong></td><td>Confirm performance matches originating lab</td></tr>
-    </table>
-
-    <h3>What must be evaluated</h3>
-    <p>ISO 15189 (clause 7.3) requires documented evidence for:</p>
-    <ul>
-      <li><strong>Precision</strong> — repeatability and intermediate precision (EP05 or EP15)</li>
-      <li><strong>Trueness / Bias</strong> — against CRM, EQA, or reference method (EP09, bias study)</li>
-      <li><strong>Measurement uncertainty</strong> — combined estimate of all error sources</li>
-      <li><strong>Analytical measurement range (AMR)</strong> — the reportable range of the method</li>
-      <li><strong>Reference intervals</strong> — verified or established for the local population</li>
-      <li><strong>Interferences</strong> — haemolysis, lipaemia, icterus (HLI), common drugs</li>
-    </ul>
-    <div class="info">
-      <b>Verification scope:</b> For a commercial method, ISO 15189 accepts a reduced verification package — typically precision (EP15), bias against EQA or CRM, and confirmation of the reportable range. Full interference and reference interval studies are only required if the manufacturer's data cannot be applied to your patient population.
-    </div>
-
-    <h3>Practical decision guide — validation or verification?</h3>
-    <div class="callout">
-      Ask these questions in order:<br><br>
-      1. <b>Is this method commercially available and used exactly as the manufacturer intends?</b><br>
-      → Yes: verification is sufficient.<br><br>
-      2. <b>Have you changed anything?</b> (sample matrix, pre-treatment, calibrators, reportable range, instrument platform)<br>
-      → Yes to any: validation is required for the changed parameter(s).<br><br>
-      3. <b>Did you develop this method yourself?</b><br>
-      → Yes: full validation is required.<br><br>
-      4. <b>Is the manufacturer's performance data applicable to your population?</b><br>
-      → If not (e.g. paediatric reference intervals in an adult study): establish your own.
-    </div>
-
-    <h3>Documentation requirements</h3>
-    <p>ISO 15189 requires a written validation/verification plan before starting, and a report after completion including:</p>
-    <ul>
-      <li>Study design and acceptance criteria (defined before data collection)</li>
-      <li>Raw data and statistical analysis</li>
-      <li>Pass/fail conclusion against each acceptance criterion</li>
-      <li>Authorisation by the laboratory director before clinical release</li>
-    </ul>
-    <div class="warn">
-      <b>Pre-define your acceptance criteria.</b> ISO 15189 auditors specifically check that criteria were set before data collection — not adjusted after seeing the results. Always document your allowable bias and CV% targets in the validation plan before running the study.
-    </div>
-        <div class="info"><b>Next →</b> ISO 15189 tells you what to evaluate. EP05 tells you exactly how to do it for precision — the standard protocol for measuring repeatability and intermediate precision.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <!-- 15 -->
   <div class="section" id="ep05">
     <h2>26. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
     <p>
