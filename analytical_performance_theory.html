@@ -122,6 +122,7 @@
 
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#4338ca;margin:16px 0 6px;">Compliance</div>
     <ol start="19">
+      <li><a href="#why-compliance">What is compliance — and why does it matter?</a></li>
       <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
       <li><a href="#ep05">EP05 — Precision study protocol</a></li>
@@ -951,6 +952,72 @@
     </div>
 
         <div class="info"><b>Next →</b> The concepts section has covered what to measure and why. The compliance section that follows covers the how — the specific regulatory standards, protocols, and workflows that laboratories must follow.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Compliance introduction -->
+  <div class="section" id="why-compliance">
+    <h2>What is compliance — and why does it matter?</h2>
+    <p>Understanding precision, bias, and total error is not optional — it is a <b>regulatory requirement</b>. Clinical laboratories operate under strict quality frameworks that mandate how methods must be validated, verified, and monitored. These standards exist because a laboratory result is a medical act: it directly influences patient treatment.</p>
+
+    <h3>Compliance vs non-conformity</h3>
+    <table>
+      <tr><th>Term</th><th>What it means</th></tr>
+      <tr><td><b>Compliance</b></td><td>The <em>state</em> of meeting all requirements. Your laboratory is compliant when every method has documented validation, performance specifications, and ongoing QC.</td></tr>
+      <tr><td><b>Non-conformity</b></td><td>A specific <em>finding</em> where a requirement is not met. A non-conformity does not mean the entire laboratory is non-compliant — it means one specific area needs correction.</td></tr>
+    </table>
+    <p><b>Compliance is the goal</b>, and <b>non-conformities are the gaps</b> an auditor identifies on the way to that goal.</p>
+
+    <h3>Why does it matter?</h3>
+    <table>
+      <tr><th>Reason</th><th>What it means in practice</th></tr>
+      <tr><td><b>Patient safety</b></td><td>A method that has not been validated may produce results that lead to wrong diagnoses and wrong treatment.</td></tr>
+      <tr><td><b>Accreditation</b></td><td>Laboratories must be accredited under ISO 15189 to operate. Auditors check that every method has documented validation/verification evidence.</td></tr>
+      <tr><td><b>Legal responsibility</b></td><td>If a patient is harmed by a laboratory result, the laboratory must demonstrate that the method was properly validated. Without documentation, there is no defence.</td></tr>
+      <tr><td><b>Traceability</b></td><td>CLSI EP guidelines and ISO standards provide a standardised, reproducible framework. Every laboratory follows the same protocols, making results comparable across institutions.</td></tr>
+    </table>
+
+    <h3>Accreditation — what auditors look for</h3>
+    <p>In Denmark, clinical laboratories are accredited by <b>DANAK</b> (Den Danske Akkrediterings- og Metrologifond) under ISO 15189. Accreditation is not a one-time event — laboratories are audited regularly.</p>
+
+    <h3>Audit findings — the remark categories</h3>
+    <table>
+      <tr><th>Remark type</th><th>Danish term</th><th>Severity</th><th>Consequence</th></tr>
+      <tr><td><b>Observation</b></td><td>Observation</td><td>Low</td><td>Noted for awareness. No action required, but may become a non-conformity if not addressed.</td></tr>
+      <tr><td><b>Minor non-conformity</b></td><td>Mindre afvigelse</td><td>Medium</td><td>Must be corrected within a defined timeframe (typically before next audit).</td></tr>
+      <tr><td><b>Major non-conformity</b></td><td>Større afvigelse</td><td>High</td><td>Must be corrected immediately. Can lead to suspension of accreditation for the affected area.</td></tr>
+      <tr><td><b>Suspension</b></td><td>Suspendering</td><td>Critical</td><td>Accreditation temporarily withdrawn. The laboratory cannot report accredited results until resolved.</td></tr>
+    </table>
+
+    <div class="warn"><b>A single major non-conformity can shut down a method.</b> If an auditor finds that a method has no documented validation — no precision study, no bias assessment, no performance specification — the method can be suspended immediately.</div>
+
+    <h3>What auditors typically ask</h3>
+    <ul>
+      <li><b>"Show me the validation report for this method."</b> — You must have documented evidence of precision (CV%), bias (%), and total error.</li>
+      <li><b>"How did you set your performance specifications?"</b> — You must show the source: EFLM biological variation, state-of-the-art, or clinical decision limits.</li>
+      <li><b>"What happens when QC fails?"</b> — You must have a documented procedure: which Westgard rules, what action is taken, how patient results are handled.</li>
+      <li><b>"When was this method last verified?"</b> — After reagent lot changes, instrument maintenance, or software updates, re-verification may be required.</li>
+    </ul>
+
+    <div class="warn"><b>Real-world example — non-conformity:</b> A laboratory introduces a new HbA1c method. They run precision (CV% = 2.1%) and bias (1.8% vs peer group) — both acceptable. But they did not document which performance specification they used or why. DANAK issues a non-conformity: the laboratory can demonstrate performance but cannot demonstrate that the performance <em>meets a defined requirement</em>.</div>
+
+    <div class="callout"><b>Real-world example — method failure detected by EQA:</b> A laboratory's potassium results consistently fall 0.3 mmol/L below the peer group mean in three consecutive EQA rounds. Investigation reveals a calibrator lot with a systematic negative bias. The laboratory had passing IQC throughout — because IQC uses the same calibrator. Only the external comparison revealed the problem.</div>
+
+    <h3>How concepts map to standards</h3>
+    <table>
+      <tr><th>Concept</th><th>Standard</th><th>What it requires</th></tr>
+      <tr><td>Precision</td><td>CLSI EP05-A3 / EP15-A3</td><td>Documented precision study with CV%</td></tr>
+      <tr><td>Bias</td><td>CLSI EP09-A3</td><td>Method comparison or CRM-based bias assessment</td></tr>
+      <tr><td>Total Error &amp; Sigma</td><td>ISO 15189, Westgard</td><td>Combined evaluation against TAE</td></tr>
+      <tr><td>Stability</td><td>CLSI EP25-A</td><td>Time-course study with pre-defined criteria</td></tr>
+      <tr><td>Reference intervals</td><td>CLSI EP28-A3c</td><td>Establishment (≥120) or verification (20 samples)</td></tr>
+      <tr><td>Qualitative LOD</td><td>CLSI EP17-A2</td><td>Hit-rate testing with probit analysis</td></tr>
+    </table>
+
+    <div class="good"><b>The concepts section taught you <em>what</em> to measure and <em>why</em>.</b> This compliance section teaches you <em>how</em> — the specific protocols, standards, and workflows that regulatory bodies require.</div>
+    <div class="info"><b>Next →</b> We start with the typical validation workflow — the practical sequence of steps you follow when introducing a new method.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
