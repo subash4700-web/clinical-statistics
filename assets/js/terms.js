@@ -29,6 +29,12 @@ window.CLINICAL_TERMS = [
   { id:'circadian-effect', label:'Circadian effect', category:'Biological variation',
     def:'The predictable, ~24-hour biological rhythm that causes analyte concentrations to rise and fall at consistent times of day. Cortisol peaks in the early morning; potassium and iron show daytime variation. Circadian effects contribute to within-individual biological variation (CVi) and are one reason why specimen collection time should be standardised — particularly for analytes with large diurnal variation.' },
 
+  /* ── Signal & Noise ── */
+  { id:'signal', label:'Signal',               category:'General concepts',
+    def:'The true clinical change you want to detect — for example, a real rise in a patient\'s glucose level due to worsening diabetes. The signal is what matters clinically. The goal of analytical performance is to keep noise small enough that the signal can be reliably detected.' },
+  { id:'noise',  label:'Noise',                category:'General concepts',
+    def:'Random variation that obscures the signal. Noise comes from two sources: biological variation (the patient\'s natural fluctuation) and analytical variation (the instrument\'s imprecision). If the noise is larger than the signal, a clinician cannot tell whether a change in results reflects a real clinical event or just random variation. Reducing analytical noise (lower CV%) improves the ability to detect true clinical changes.' },
+
   /* ── Bias & Error ── */
   { id:'bias', label:'Bias',                 category:'Bias & Error',
     def:'Systematic error — a consistent shift in results in one direction relative to the true value. Unlike random error, bias does not cancel out over repeated measurements. Expressed as absolute value or as % of the true value.' },

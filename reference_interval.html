@@ -50,9 +50,80 @@
 <div class="wrap">
 
   <div class="info-box">
-    <strong>How to use:</strong> Paste or enter reference values from healthy individuals (one value per line or comma-separated).
+    <strong>How to use:</strong> Load a scenario below or paste your own reference values (one per line or comma-separated).
     Minimum 120 samples recommended (EP28). The tool calculates the 2.5th and 97.5th percentiles with 90% confidence intervals.
     Outliers are detected using Tukey's method (1.5 × IQR) or Dixon's Q test.
+  </div>
+
+  <!-- Scenario cards -->
+  <div class="panel">
+    <div class="panel-hd">Load a Scenario</div>
+    <div class="panel-bd">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;" id="scenarioGrid">
+
+        <div class="scenario-card" onclick="loadScenario(1)" id="sc1" style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#667085;margin-bottom:5px;">Scenario 1</div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;">Fasting Glucose</div>
+          <div style="font-size:11px;color:#667085;line-height:1.5;margin-bottom:10px;">Gaussian distribution. Classic parametric case — try both methods and compare.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">Glucose</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">n = 120</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">mmol/L</span>
+          </div>
+          <button style="width:100%;padding:7px;background:#0d9488;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Load scenario</button>
+        </div>
+
+        <div class="scenario-card" onclick="loadScenario(2)" id="sc2" style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#667085;margin-bottom:5px;">Scenario 2</div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;">Creatinine — Sex Partitioning</div>
+          <div style="font-size:11px;color:#667085;line-height:1.5;margin-bottom:10px;">Males have higher creatinine than females. Should you use one interval or two?</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">Creatinine</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">n = 120</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">µmol/L</span>
+          </div>
+          <button style="width:100%;padding:7px;background:#0d9488;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Load scenario</button>
+        </div>
+
+        <div class="scenario-card" onclick="loadScenario(3)" id="sc3" style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#667085;margin-bottom:5px;">Scenario 3</div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;">CRP — Skewed Distribution</div>
+          <div style="font-size:11px;color:#667085;line-height:1.5;margin-bottom:10px;">Right-skewed data. Non-parametric is the only valid approach here — see what happens with parametric.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">CRP</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">n = 120</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">mg/L</span>
+          </div>
+          <button style="width:100%;padding:7px;background:#0d9488;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Load scenario</button>
+        </div>
+
+        <div class="scenario-card" onclick="loadScenario(4)" id="sc4" style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#667085;margin-bottom:5px;">Scenario 4</div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;">Verification — 20 Samples</div>
+          <div style="font-size:11px;color:#667085;line-height:1.5;margin-bottom:10px;">Verify a manufacturer's TSH interval with 20 samples. Does ≤ 2 fall outside?</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">TSH</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">n = 20</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">mIU/L</span>
+          </div>
+          <button style="width:100%;padding:7px;background:#0d9488;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Load scenario</button>
+        </div>
+
+        <div class="scenario-card" onclick="loadScenario(5)" id="sc5" style="background:#fff;border:2px solid #e5e7eb;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#667085;margin-bottom:5px;">Scenario 5</div>
+          <div style="font-size:13px;font-weight:800;color:#1e3a5f;margin-bottom:6px;">Outlier Detection</div>
+          <div style="font-size:11px;color:#667085;line-height:1.5;margin-bottom:10px;">Potassium data with suspicious values. Tukey flags them — should you remove or investigate?</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">Potassium</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">n = 120</span>
+            <span style="background:#f3f4f6;border-radius:5px;padding:2px 7px;font-size:10px;font-weight:700;color:#374151;">mmol/L</span>
+          </div>
+          <button style="width:100%;padding:7px;background:#0d9488;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Load scenario</button>
+        </div>
+
+      </div>
+      <div id="scenarioInstructions" style="margin-top:12px;"></div>
+    </div>
   </div>
 
   <!-- Settings -->
@@ -98,8 +169,7 @@
 3.9
 ..." onchange="compute()"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="btn" onclick="loadExample()">Indlæs eksempel (glucose, n=120)</button>
-        <button class="btn" onclick="document.getElementById('dataInput').value='';compute()">Ryd</button>
+        <button class="btn" onclick="document.getElementById('dataInput').value='';compute()">Clear</button>
       </div>
     </div>
   </div>
@@ -308,18 +378,90 @@
     return sorted[lo] + (idx - lo) * (sorted[hi] - sorted[lo]);
   }
 
-  function loadExample() {
-    // Simulated glucose reference values (n=120, mean ~5.0, SD ~0.7)
-    const vals = [];
-    for (let i = 0; i < 120; i++) {
-      // Box-Muller transform for normal distribution
-      const u1 = Math.random(), u2 = Math.random();
-      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      vals.push((5.0 + 0.7 * z).toFixed(2));
+  // ── Scenario data ─────────────────────────────────────────────────────────
+  // Fixed datasets with realistic values aligned to EFLM biological variation
+  const SCENARIOS = {
+    1: {
+      name: 'Glucose', unit: 'mmol/L',
+      // Fasting glucose, Gaussian, EFLM ref interval ~4.1–5.9 mmol/L, CVi=5.6%, CVg=7.5%
+      values: [4.2,4.5,5.1,4.8,5.3,4.6,5.0,4.9,5.2,4.4,5.5,4.7,5.1,4.3,5.0,4.8,5.4,4.6,5.2,4.9,5.0,4.5,5.3,4.7,4.8,5.1,4.4,5.6,4.9,5.0,4.6,5.2,4.8,5.1,4.3,5.4,4.7,5.0,4.9,5.3,4.5,5.1,4.8,4.6,5.2,4.9,5.0,4.4,5.5,4.7,5.1,4.8,5.3,4.6,5.0,4.9,5.2,4.5,5.4,4.7,4.1,4.3,4.2,5.7,5.8,5.6,5.5,4.2,4.4,5.3,5.0,4.9,4.8,5.1,4.6,5.2,4.7,5.0,4.9,4.5,5.3,4.8,5.1,4.6,5.4,4.7,5.0,4.9,5.2,4.4,5.5,4.8,5.1,4.3,5.0,4.6,5.3,4.9,5.2,4.7,4.8,5.0,4.5,5.1,4.9,5.4,4.6,5.0,4.8,5.2,4.7,5.1,4.4,5.3,4.9,5.0,4.6,5.5,4.8,5.1],
+      instructions: `<b>Scenario 1 — Fasting Glucose (Gaussian)</b>
+<ol>
+  <li>Run the analysis with <b>non-parametric</b> (default). Note the 2.5th and 97.5th percentile values.</li>
+  <li>Switch to <b>parametric</b> (mean ± 1.96 SD). Compare: are the limits similar? They should be — because glucose in a healthy fasting population is approximately normally distributed.</li>
+  <li>Check the distribution chart — it should look roughly bell-shaped. This is one of the few analytes where the parametric method works well.</li>
+  <li><b>EFLM reference:</b> CVi = 5.6%, CVg = 7.5%. Expected reference interval ≈ 4.1–5.9 mmol/L. Does your result match?</li>
+  <li><b>Key point:</b> When both methods agree, the data are likely Gaussian. When they disagree, trust the non-parametric result.</li>
+</ol>`
+    },
+    2: {
+      name: 'Creatinine', unit: 'µmol/L',
+      // Combined male+female, males ~60-110, females ~45-85. Shows why partitioning matters.
+      // EFLM: CVi=4.3%, CVg=12.9%. Male ref ~62–106, Female ref ~44–80
+      values: [72,85,95,68,78,91,64,88,75,82,98,71,87,66,93,79,84,70,76,90,62,105,81,74,69,88,77,96,73,83,67,92,80,86,71,94,78,89,65,101,48,55,62,51,58,45,53,60,49,56,63,47,54,61,50,57,44,52,59,46,53,67,58,50,55,48,61,46,57,52,64,49,56,42,60,53,47,58,51,65,75,88,92,70,83,79,96,66,85,73,81,99,68,90,77,87,63,94,82,76,54,48,59,52,61,47,55,50,63,45,57,53,66,49,56,44,62,51,58,46],
+      instructions: `<b>Scenario 2 — Creatinine (Sex Partitioning)</b>
+<ol>
+  <li>Run the analysis. The reference interval will be wide — approximately 44–105 µmol/L. This is because <b>males and females are mixed</b>.</li>
+  <li>Look at the distribution chart. Do you see <b>two peaks</b> (bimodal)? That is a strong signal that the data should be partitioned.</li>
+  <li><b>EFLM reference intervals:</b> Male ≈ 62–106 µmol/L, Female ≈ 44–80 µmol/L. The combined interval masks the difference — a male result of 58 would be flagged as low, and a female result of 95 would be flagged as high.</li>
+  <li>EP28 recommends partitioning when the difference between subgroups exceeds 0.25 × the combined range. Here the difference is clearly large enough.</li>
+  <li><b>Key point:</b> A bimodal distribution in reference data almost always means you need separate intervals. Never force a single interval on data that should be split.</li>
+</ol>`
+    },
+    3: {
+      name: 'CRP', unit: 'mg/L',
+      // Right-skewed, most healthy individuals <3 mg/L, few up to 8-10
+      // EFLM: CVi=42.2%, CVg=76.3%. Upper ref limit ~5-10 mg/L
+      values: [0.5,0.8,1.2,0.3,0.6,1.5,0.4,0.9,2.1,0.7,1.0,0.2,0.8,1.3,0.5,0.6,0.4,1.8,0.3,1.1,0.7,0.9,0.5,1.4,0.6,0.3,2.5,0.8,0.4,1.0,0.7,0.5,1.6,0.3,0.9,0.6,1.2,0.4,0.8,2.8,0.5,0.7,1.0,0.3,0.6,1.3,0.4,0.9,0.5,3.2,0.8,0.6,1.1,0.3,0.7,1.5,0.4,0.5,0.8,2.0,0.6,0.3,1.0,0.9,0.4,1.7,0.5,0.7,0.8,0.3,1.2,0.6,0.4,0.9,3.5,0.5,0.8,1.1,0.7,0.3,0.6,1.4,0.4,0.5,2.3,0.8,0.9,0.3,1.0,0.6,0.7,0.4,1.6,0.5,0.8,4.1,0.3,0.9,0.6,1.2,0.7,0.4,0.5,1.8,0.3,0.8,0.6,5.2,0.9,0.4,1.0,0.5,0.7,0.3,1.3,0.6,0.8,0.4,7.8,0.5],
+      instructions: `<b>Scenario 3 — CRP (Skewed Distribution)</b>
+<ol>
+  <li>Run the analysis with <b>non-parametric</b>. Note the upper limit — it will be around 4–6 mg/L.</li>
+  <li>Now switch to <b>parametric</b>. The lower limit will likely go <b>negative</b> — which is biologically impossible (CRP cannot be less than 0). This shows why the parametric method fails for skewed data.</li>
+  <li>Look at the distribution chart — it is clearly right-skewed (long tail to the right). Most healthy individuals have CRP < 1 mg/L, but a few have values up to 5–8 mg/L.</li>
+  <li><b>EFLM reference:</b> CRP has extremely high biological variation (CVi = 42%, CVg = 76%). This is why the reference interval is wide and the distribution is skewed.</li>
+  <li><b>Key point:</b> If the parametric method produces an impossible limit (negative, or biologically unreasonable), the data are not Gaussian and you <b>must</b> use the non-parametric method.</li>
+</ol>`
+    },
+    4: {
+      name: 'TSH', unit: 'mIU/L',
+      // Verification: 20 samples, manufacturer claims 0.4–4.0 mIU/L
+      // Most within range, 1 borderline outside
+      values: [1.8,2.3,1.1,3.2,0.9,2.7,1.5,2.0,3.5,1.3,2.1,0.7,2.8,1.6,2.4,1.9,3.0,0.5,2.2,1.4],
+      instructions: `<b>Scenario 4 — TSH Verification (20 Samples)</b>
+<ol>
+  <li>This is a <b>verification</b> study — you are checking whether the manufacturer's claimed reference interval (0.4–4.0 mIU/L) is valid for your laboratory.</li>
+  <li>Count how many of the 20 results fall <b>outside</b> the claimed interval of 0.4–4.0 mIU/L.</li>
+  <li><b>EP28 rule:</b> If ≤ 2 out of 20 are outside → the interval is <b>verified</b>. If ≥ 3 are outside → the interval is <b>not transferable</b> to your laboratory.</li>
+  <li>Note: with only 20 samples, the tool will warn about small sample size. This is expected — verification uses fewer samples than establishment by design.</li>
+  <li><b>Key point:</b> Verification does not create a new interval. It only checks whether an existing interval applies to your population and instrument. If it fails, you need to investigate bias or establish your own interval with ≥ 120 samples.</li>
+</ol>`
+    },
+    5: {
+      name: 'Potassium', unit: 'mmol/L',
+      // Potassium with 3 suspicious outliers (haemolysed samples?)
+      // EFLM: CVi=4.8%, CVg=5.6%. Ref interval ~3.5–5.1 mmol/L
+      values: [4.0,4.2,3.8,4.5,4.1,3.9,4.3,4.0,4.4,3.7,4.2,4.1,3.9,4.5,4.0,4.3,3.8,4.1,4.4,4.2,3.6,4.0,4.3,4.1,3.9,4.5,4.2,4.0,4.4,3.8,4.1,4.3,4.0,3.9,4.2,4.5,3.7,4.1,4.0,4.3,3.9,4.4,4.2,4.0,3.8,4.1,4.5,4.3,4.0,4.2,3.9,4.1,4.4,3.7,4.0,4.3,4.2,3.8,4.5,4.1,4.0,3.9,4.2,4.3,4.1,4.4,3.8,4.0,4.5,4.2,3.9,4.1,4.3,4.0,3.7,4.4,4.2,4.1,3.9,4.0,4.3,4.5,3.8,4.1,4.2,4.0,3.9,4.4,4.1,4.3,4.0,4.2,3.7,4.5,4.1,3.9,4.0,4.3,4.2,4.4,3.8,4.1,4.0,4.5,4.2,3.9,4.3,4.1,4.0,4.4,3.8,4.2,4.1,4.0,3.9,4.3,4.5,6.8,7.2,6.5],
+      instructions: `<b>Scenario 5 — Potassium with Outliers</b>
+<ol>
+  <li>Run the analysis with <b>Tukey outlier detection</b> (default). The tool should flag 3 values around 6.5–7.2 mmol/L as outliers.</li>
+  <li>These values are far above the normal potassium range (3.5–5.1 mmol/L). In practice, they likely represent <b>haemolysed samples</b> — red blood cells release intracellular potassium when they break, falsely elevating the result.</li>
+  <li>Compare the reference interval <b>with</b> and <b>without</b> outlier removal (switch outlier detection to "None"). Notice how the upper limit shifts dramatically.</li>
+  <li><b>EFLM reference:</b> CVi = 4.8%, CVg = 5.6%. Expected reference interval ≈ 3.5–5.1 mmol/L. With outliers included, the upper limit is falsely elevated.</li>
+  <li><b>Key point:</b> Outliers should always be <b>investigated clinically</b> before removal. In this case, haemolysis is a pre-analytical error — these values do not belong in reference data. But never remove values just because they are statistically extreme — they might represent genuine biological variation.</li>
+</ol>`
     }
-    document.getElementById('dataInput').value = vals.join('\n');
-    document.getElementById('analyteName').value = 'Glucose';
-    document.getElementById('unit').value = 'mmol/L';
+  };
+
+  function loadScenario(id) {
+    const s = SCENARIOS[id];
+    document.getElementById('dataInput').value = s.values.join('\n');
+    document.getElementById('analyteName').value = s.name;
+    document.getElementById('unit').value = s.unit;
+    document.getElementById('scenarioInstructions').innerHTML = s.instructions;
+    // Highlight active card
+    document.querySelectorAll('.scenario-card').forEach(c => { c.style.borderColor = '#e5e7eb'; c.style.boxShadow = 'none'; });
+    const card = document.getElementById('sc' + id);
+    if (card) { card.style.borderColor = '#0d9488'; card.style.boxShadow = '0 0 0 3px rgba(13,148,136,.12)'; }
     compute();
   }
 

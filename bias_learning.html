@@ -178,6 +178,30 @@
           <button class="ex-btn">Load exercise</button>
         </div>
 
+        <div class="ex-card" id="exCard6" onclick="loadExercise(6)">
+          <div class="ex-num">Exercise 6</div>
+          <div class="ex-title">CRM matrix mismatch — is it real bias?</div>
+          <div class="ex-obj">CRM shows bias, but is it the method or the control material? Verify with pooled patient samples to find out.</div>
+          <div class="ex-params">
+            <span class="ex-param">CRM bias = +6%</span>
+            <span class="ex-param">Patient bias = 0%</span>
+            <span class="ex-param">Matrix effect</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
+        <div class="ex-card" id="exCard7" onclick="loadExercise(7)">
+          <div class="ex-num">Exercise 7</div>
+          <div class="ex-title">Turbidimetry — sample turbidity bias</div>
+          <div class="ex-obj">Lipæmic or turbid samples cause false-high absorbance readings. See how matrix interference creates concentration-dependent bias.</div>
+          <div class="ex-params">
+            <span class="ex-param">Turbidity bias = +8%</span>
+            <span class="ex-param">Clear sample = 0%</span>
+            <span class="ex-param">Photometric</span>
+          </div>
+          <button class="ex-btn">Load exercise</button>
+        </div>
+
       </div>
       <div class="ex-instructions" id="exInstructions"></div>
     </div>
@@ -733,6 +757,41 @@ var EXERCISES = {
       '<li>TE = 3.5 + 1.65 × 1.5 = 5.975% — just below TAE = 5%? Check the numbers.</li>' +
       '<li>The direction of bias matters clinically, even if the numbers pass.</li></ol>' +
       '<b>Key insight:</b> Negative bias can be just as harmful as positive bias — for critical analytes, systematic underestimation delays diagnoses and treatment even when total error technically passes.'
+  },
+  6: {
+    title: 'CRM matrix mismatch — is it real bias?',
+    params: { trueMean: 5.0, biasPct: 6, cvPct: 2.0, nMeas: 40, taePct: 8, mode: 'crm', matrix: true, patientBias: 0 },
+    instructions: '<b>Learning objective:</b> Learn the investigation workflow when a CRM suggests your method is biased — and how to distinguish matrix effect from true analytical bias.<br><br>' +
+      '<b>The scenario:</b> You run a certified reference material (CRM) for glucose on your new analyser. The CRM assigned value is 5.0 mmol/L, but your analyser reads 5.3 mmol/L — a +6% bias. Should you recalibrate?<br><br>' +
+      '<b>Step-by-step investigation:</b><br><ol>' +
+      '<li><b>Step 1 — observe the CRM result.</b> The simulation shows +6% bias. The distribution is shifted right. TE exceeds TAE. It looks like a real problem.</li>' +
+      '<li><b>Step 2 — ask: is this the CRM or the method?</b> The CRM contains stabilisers (bovine albumin, preservatives) that your analyser may react to differently than to native human plasma.</li>' +
+      '<li><b>Step 3 — verify with pooled patient samples.</b> Look at the patient sample distribution (toggle "Matrix effect" on). Patient bias = 0% — the method is correct on real patient samples!</li>' +
+      '<li><b>Step 4 — conclusion.</b> The CRM has a matrix effect on your analyser. The method does not need recalibration. If you had adjusted the calibration based on CRM alone, you would have introduced a real −6% bias into all patient results.</li>' +
+      '<li><b>Step 5 — try it yourself.</b> Change patient bias to +6%. Now both CRM and patient samples agree — this is a true bias that needs correction.</li></ol>' +
+      '<b>Key insight:</b> Never recalibrate based on CRM alone. Always verify with patient sample comparison (EP09 method comparison). A CRM that uses a different matrix than your patient samples can show apparent bias that does not exist in clinical use.<br><br>' +
+      '<b>Rule of thumb:</b><br>' +
+      '• CRM biased + patient samples OK → <span style="color:#059669;font-weight:700;">matrix effect — do NOT recalibrate</span><br>' +
+      '• CRM biased + patient samples biased → <span style="color:#dc2626;font-weight:700;">true bias — investigate and correct</span><br>' +
+      '• CRM OK + patient samples biased → <span style="color:#d97706;font-weight:700;">method-specific issue — investigate interference or calibration at patient concentrations</span>'
+  },
+  7: {
+    title: 'Turbidimetry — sample turbidity bias',
+    params: { trueMean: 5.0, biasPct: 8, cvPct: 2.5, nMeas: 40, taePct: 10, mode: 'crm', matrix: true, patientBias: 0 },
+    instructions: '<b>Learning objective:</b> Understand how turbidity (lipæmi, icterus, haemolysis) introduces positive bias in photometric and turbidimetric measurements.<br><br>' +
+      '<b>The scenario:</b> A turbidimetric CRP assay measures the increase in turbidity when anti-CRP antibodies bind to CRP in the sample, forming immune complexes that scatter light. The analyser measures absorbance increase — more scatter = more CRP.<br><br>' +
+      '<b>The problem:</b> A lipæmic (fatty) sample is already turbid before the antibody is added. The analyser cannot distinguish between turbidity from immune complexes (the real signal) and turbidity from lipid particles (interference).<br><br>' +
+      '<b>What happens:</b><br><ol>' +
+      '<li><b>Clear sample:</b> Baseline absorbance is low. The absorbance increase is entirely from CRP-antibody complexes. Result = correct.</li>' +
+      '<li><b>Lipæmic sample:</b> Baseline absorbance is already elevated. Some analysers compensate with a sample blank, but if the blank correction is insufficient, the extra absorbance is interpreted as CRP. Result = falsely elevated (+8% in this simulation).</li>' +
+      '<li><b>Look at the simulation:</b> The CRM (which uses a clear, processed matrix) shows +8% bias. But patient samples with normal lipid levels show 0% bias. The bias is sample-dependent, not method-dependent.</li>' +
+      '<li><b>Now imagine a patient with triglycerides of 15 mmol/L.</b> Their CRP result could be falsely elevated by 20–30%. A CRP of 5 mg/L could read as 6.5 mg/L — potentially triggering unnecessary antibiotic treatment.</li></ol>' +
+      '<b>How laboratories handle this:</b><br>' +
+      '• <b>Sample blank correction</b> — the analyser measures the sample before adding reagent and subtracts the baseline turbidity<br>' +
+      '• <b>Bichromatic measurement</b> — measure at two wavelengths; one for the reaction, one for background interference<br>' +
+      '• <b>Serum indices (HIL)</b> — automatic haemolysis/icterus/lipæmia detection flags samples that exceed interference thresholds<br>' +
+      '• <b>Ultracentrifugation or dilution</b> — remove lipid particles before re-analysis<br><br>' +
+      '<b>Key insight:</b> In turbidimetric and nephelometric assays, any substance that changes the optical properties of the sample (lipids, bilirubin, haemoglobin, paraproteins) can mimic or mask the analyte signal. This is why serum indices exist — they are not just for flagging; they protect against systematic photometric interference.'
   }
 };
 

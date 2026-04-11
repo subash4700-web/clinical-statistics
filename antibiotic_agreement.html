@@ -94,6 +94,91 @@
     </div>
   </div>
 
+  <!-- Legend -->
+  <div class="panel">
+    <div class="panel-hd">Interpretation Guide — How to Read the 3x3 Matrix</div>
+    <div class="panel-bd">
+
+      <p style="font-size:13px;line-height:1.7;color:#374151;margin-bottom:14px;">
+        The 3x3 matrix compares the <strong>reference method</strong> (gold standard) against the <strong>test method</strong> (the method being evaluated). Each cell shows how many isolates fell into that combination. The diagonal cells (S/S, I/I, R/R) are <strong>agreements</strong>. Off-diagonal cells are <strong>errors</strong> — classified by clinical severity:
+      </p>
+
+      <!-- Reference 3x3 table -->
+      <table style="border-collapse:collapse;width:100%;max-width:520px;margin:0 auto 18px;font-size:13px;text-align:center;">
+        <thead>
+          <tr>
+            <th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-size:11px;color:#6b7280;">Reference ↓ / Test →</th>
+            <th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#059669;font-weight:700;">Susceptible (S)</th>
+            <th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#d97706;font-weight:700;">Intermediate (I)</th>
+            <th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#dc2626;font-weight:700;">Resistant (R)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;color:#059669;">Susceptible (S)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#ecfdf5;color:#059669;font-weight:600;">✅ Agreement</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fffbeb;color:#d97706;">Minor Error (mE)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fef2f2;color:#dc2626;font-weight:600;">Major Error (ME)</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;color:#d97706;">Intermediate (I)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fffbeb;color:#d97706;">Minor Error (mE)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#ecfdf5;color:#059669;font-weight:600;">✅ Agreement</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fffbeb;color:#d97706;">Minor Error (mE)</td>
+          </tr>
+          <tr>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:700;color:#dc2626;">Resistant (R)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fef2f2;color:#dc2626;font-weight:700;">Very Major Error (VME)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#fffbeb;color:#d97706;">Minor Error (mE)</td>
+            <td style="padding:8px;border:1px solid #e5e7eb;background:#ecfdf5;color:#059669;font-weight:600;">✅ Agreement</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Error descriptions -->
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;">
+          <div style="flex-shrink:0;font-size:18px;">🔴</div>
+          <div style="font-size:12.5px;line-height:1.6;">
+            <strong style="color:#dc2626;">Very Major Error (VME)</strong> — Reference = R, Test = S<br>
+            The organism is truly resistant, but the test method calls it susceptible. The patient receives an antibiotic that will not work. This is the most dangerous error — it can lead to treatment failure, disease progression, and increased mortality.<br>
+            <strong>Acceptance limit: &lt; 3% of resistant isolates</strong>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fef2f2;border-left:4px solid #e05c2e;border-radius:0 8px 8px 0;">
+          <div style="flex-shrink:0;font-size:18px;">🟠</div>
+          <div style="font-size:12.5px;line-height:1.6;">
+            <strong style="color:#e05c2e;">Major Error (ME)</strong> — Reference = S, Test = R<br>
+            The organism is truly susceptible, but the test method calls it resistant. The patient is unnecessarily switched to a broader-spectrum antibiotic. This contributes to antimicrobial resistance and may increase side effects and cost.<br>
+            <strong>Acceptance limit: &lt; 3% of susceptible isolates</strong>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fffbeb;border-left:4px solid #d97706;border-radius:0 8px 8px 0;">
+          <div style="flex-shrink:0;font-size:18px;">🟡</div>
+          <div style="font-size:12.5px;line-height:1.6;">
+            <strong style="color:#d97706;">Minor Error (mE)</strong> — One method = I, the other = S or R<br>
+            A disagreement involving the intermediate category. Less clinically consequential because the I zone is a buffer — it signals that the antibiotic <em>may</em> work at higher doses or specific infection sites. Dose adjustment rather than drug change is typically considered.<br>
+            <strong>Preferred limit: &lt; 10% of all isolates</strong>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#ecfdf5;border-left:4px solid #059669;border-radius:0 8px 8px 0;">
+          <div style="flex-shrink:0;font-size:18px;">🟢</div>
+          <div style="font-size:12.5px;line-height:1.6;">
+            <strong style="color:#059669;">Agreement</strong> — Both methods report the same category (S/S, I/I, or R/R)<br>
+            The test method correctly reproduces the reference classification. The diagonal of the 3x3 matrix represents all agreements.<br>
+            <strong>Target: Category Agreement (CA) &ge; 90%</strong>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
   <!-- Results -->
   <div class="panel">
     <div class="panel-hd">Results</div>
