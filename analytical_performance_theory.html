@@ -217,6 +217,67 @@
   <hr class="divider">
 
   <!-- 3 -->
+  <div class="section" id="bioval">
+    <h2>10. Biological variation — CVi and CVg explained</h2>
+    <p>Biological variation describes the natural fluctuation in analyte concentrations in the human body. It has two components:</p>
+
+    <h3>CVi — Intra-individual biological variation</h3>
+    <p><strong>CVi</strong> (also written CV<sub>I</sub>) is the variation <em>within</em> a single person over time, when they are in a stable physiological state. Even a completely healthy person's blood analytes fluctuate from day to day and hour to hour due to normal biological rhythms, hydration, posture, and circadian effects.</p>
+    <div class="formula-box">
+      <span class="f-label">CVi example — Potassium:</span>
+      <span class="f-correct">CVi ≈ 4.6% → potassium fluctuates by ≈ 4.6% within the same person week to week</span>
+    </div>
+    <p>CVi is measured in studies where the same individual is sampled repeatedly over time, under controlled conditions. The <a href="https://biologicalvariation.eu" target="_blank" style="color:#0d766e;">EFLM Biological Variation Database</a> publishes CVi estimates for hundreds of analytes.</p>
+
+    <h3>CVg — Inter-individual biological variation</h3>
+    <p><strong>CVg</strong> (also written CV<sub>G</sub>) is the variation <em>between</em> different people. Even in a healthy population, people have different set-points for the same analyte. CVg is typically larger than CVi.</p>
+    <div class="formula-box">
+      <span class="f-label">CVg example — Potassium:</span>
+      <span class="f-correct">CVg ≈ 5.6% → different healthy people have potassium levels that differ by ≈ 5.6% between individuals</span>
+    </div>
+
+    <h3>Why CVi and CVg matter for analytical quality</h3>
+    <p>CVi and CVg are used to derive allowable limits for your analytical method — this is about setting <strong>quality goals for your analyser</strong>, not about interpreting individual patient results.</p>
+    <p>The reasoning behind the formulas:</p>
+    <ul>
+      <li><strong>Imprecision vs CVi:</strong> If your analytical CV% is large relative to CVi, analytical noise will obscure real biological signals — you cannot tell whether a change in a patient's result reflects true biology or measurement variation. The goal CVa ≤ 0.5 × CVi ensures your analytical noise is less than half the natural biological noise within a person.</li>
+      <li><strong>Bias vs CVi + CVg:</strong> If your method has systematic bias, it shifts results away from the true value. If that shift is large relative to the combined biological variation (CVi and CVg), it can displace results incorrectly relative to the population reference range. The goal Bias ≤ 0.25 × √(CVi² + CVg²) keeps bias small enough not to distort clinical interpretation.</li>
+    </ul>
+    <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive these specific, clinically meaningful allowable limits:</p>
+    <div class="formula-box">
+      <span class="f-label">Allowable imprecision (desirable goal):</span>
+      <span class="f-correct">CVa ≤ 0.5 × CVi</span>
+      <br/>
+      <span class="f-label">Allowable bias (desirable goal):</span>
+      <span class="f-correct">Bias_a ≤ 0.25 × √(CVi² + CVg²)</span>
+      <br/>
+      <span class="f-label">Allowable Total Error (desirable goal):</span>
+      <span class="f-correct">TAE_a ≤ 1.65 × CVa + Bias_a</span>
+    </div>
+    <p>The factor <strong>0.5</strong> for imprecision means: your analytical noise should be less than half the natural biological noise within a person. If it is, analytical imprecision does not meaningfully obscure biological signals.</p>
+    <p>The factor <strong>0.25</strong> for bias uses both CVi and CVg because bias shifts results relative to both the patient's own set-point and the population-based reference interval.</p>
+
+    <h3>Three levels of biological variation goals</h3>
+    <table>
+      <tr><th>Level</th><th>Imprecision (CVa)</th><th>Bias</th><th>When to use</th></tr>
+      <tr><td><span class="tag tag-green">Desirable</span></td><td>0.5 × CVi</td><td>0.25 × √(CVi² + CVg²)</td><td>Target for most clinical analytes</td></tr>
+      <tr><td><span class="tag tag-amber">Minimum</span></td><td>0.75 × CVi</td><td>0.375 × √(CVi² + CVg²)</td><td>Acceptable if desirable is not achievable</td></tr>
+      <tr><td><span class="tag tag-blue">Optimum</span></td><td>0.25 × CVi</td><td>0.125 × √(CVi² + CVg²)</td><td>Highest clinical demand (e.g. therapeutic drug monitoring)</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>Index of Individuality (II) = CVi / CVg:</b> When II &lt; 0.6, population-based reference intervals are poor at detecting changes within an individual patient. In this case, individual baseline values (reference change values) are more clinically useful than population reference ranges. Low II analytes include CRP, ferritin, and troponin.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
+    </div>
+        <div class="info"><b>Next →</b> Biological variation gives you the benchmark. But how do you turn CVi and CVg into specific, actionable limits for your method? The next section shows where allowable error limits come from.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 11 -->
   <div class="section" id="error">
     <h2>3. Sources of analytical error</h2>
     <p>Every measurement a laboratory makes contains some error. Understanding the <em>type</em> of error is the first step in knowing what to do about it.</p>
@@ -459,67 +520,6 @@
   <hr class="divider">
 
   <!-- 10 -->
-  <div class="section" id="bioval">
-    <h2>10. Biological variation — CVi and CVg explained</h2>
-    <p>Biological variation describes the natural fluctuation in analyte concentrations in the human body. It has two components:</p>
-
-    <h3>CVi — Intra-individual biological variation</h3>
-    <p><strong>CVi</strong> (also written CV<sub>I</sub>) is the variation <em>within</em> a single person over time, when they are in a stable physiological state. Even a completely healthy person's blood analytes fluctuate from day to day and hour to hour due to normal biological rhythms, hydration, posture, and circadian effects.</p>
-    <div class="formula-box">
-      <span class="f-label">CVi example — Potassium:</span>
-      <span class="f-correct">CVi ≈ 4.6% → potassium fluctuates by ≈ 4.6% within the same person week to week</span>
-    </div>
-    <p>CVi is measured in studies where the same individual is sampled repeatedly over time, under controlled conditions. The <a href="https://biologicalvariation.eu" target="_blank" style="color:#0d766e;">EFLM Biological Variation Database</a> publishes CVi estimates for hundreds of analytes.</p>
-
-    <h3>CVg — Inter-individual biological variation</h3>
-    <p><strong>CVg</strong> (also written CV<sub>G</sub>) is the variation <em>between</em> different people. Even in a healthy population, people have different set-points for the same analyte. CVg is typically larger than CVi.</p>
-    <div class="formula-box">
-      <span class="f-label">CVg example — Potassium:</span>
-      <span class="f-correct">CVg ≈ 5.6% → different healthy people have potassium levels that differ by ≈ 5.6% between individuals</span>
-    </div>
-
-    <h3>Why CVi and CVg matter for analytical quality</h3>
-    <p>CVi and CVg are used to derive allowable limits for your analytical method — this is about setting <strong>quality goals for your analyser</strong>, not about interpreting individual patient results.</p>
-    <p>The reasoning behind the formulas:</p>
-    <ul>
-      <li><strong>Imprecision vs CVi:</strong> If your analytical CV% is large relative to CVi, analytical noise will obscure real biological signals — you cannot tell whether a change in a patient's result reflects true biology or measurement variation. The goal CVa ≤ 0.5 × CVi ensures your analytical noise is less than half the natural biological noise within a person.</li>
-      <li><strong>Bias vs CVi + CVg:</strong> If your method has systematic bias, it shifts results away from the true value. If that shift is large relative to the combined biological variation (CVi and CVg), it can displace results incorrectly relative to the population reference range. The goal Bias ≤ 0.25 × √(CVi² + CVg²) keeps bias small enough not to distort clinical interpretation.</li>
-    </ul>
-    <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive these specific, clinically meaningful allowable limits:</p>
-    <div class="formula-box">
-      <span class="f-label">Allowable imprecision (desirable goal):</span>
-      <span class="f-correct">CVa ≤ 0.5 × CVi</span>
-      <br/>
-      <span class="f-label">Allowable bias (desirable goal):</span>
-      <span class="f-correct">Bias_a ≤ 0.25 × √(CVi² + CVg²)</span>
-      <br/>
-      <span class="f-label">Allowable Total Error (desirable goal):</span>
-      <span class="f-correct">TAE_a ≤ 1.65 × CVa + Bias_a</span>
-    </div>
-    <p>The factor <strong>0.5</strong> for imprecision means: your analytical noise should be less than half the natural biological noise within a person. If it is, analytical imprecision does not meaningfully obscure biological signals.</p>
-    <p>The factor <strong>0.25</strong> for bias uses both CVi and CVg because bias shifts results relative to both the patient's own set-point and the population-based reference interval.</p>
-
-    <h3>Three levels of biological variation goals</h3>
-    <table>
-      <tr><th>Level</th><th>Imprecision (CVa)</th><th>Bias</th><th>When to use</th></tr>
-      <tr><td><span class="tag tag-green">Desirable</span></td><td>0.5 × CVi</td><td>0.25 × √(CVi² + CVg²)</td><td>Target for most clinical analytes</td></tr>
-      <tr><td><span class="tag tag-amber">Minimum</span></td><td>0.75 × CVi</td><td>0.375 × √(CVi² + CVg²)</td><td>Acceptable if desirable is not achievable</td></tr>
-      <tr><td><span class="tag tag-blue">Optimum</span></td><td>0.25 × CVi</td><td>0.125 × √(CVi² + CVg²)</td><td>Highest clinical demand (e.g. therapeutic drug monitoring)</td></tr>
-    </table>
-
-    <div class="warn">
-      <b>Index of Individuality (II) = CVi / CVg:</b> When II &lt; 0.6, population-based reference intervals are poor at detecting changes within an individual patient. In this case, individual baseline values (reference change values) are more clinically useful than population reference ranges. Low II analytes include CRP, ferritin, and troponin.
-    </div>
-    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
-      → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
-    </div>
-        <div class="info"><b>Next →</b> Biological variation gives you the benchmark. But how do you turn CVi and CVg into specific, actionable limits for your method? The next section shows where allowable error limits come from.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 11 -->
   <div class="section" id="allowable">
     <h2>11. Allowable error — where limits come from</h2>
     <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
