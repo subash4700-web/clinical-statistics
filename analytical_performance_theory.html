@@ -111,26 +111,26 @@
       <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
       <li><a href="#sigma">The Sigma metric</a></li>
     </ol>
-    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Categorical Methods</div>
-    <ol start="19">
-      <li><a href="#categorical-mc">Categorical Method Comparison — Kappa and McNemar</a></li>
-      <li><a href="#stability">Stability Studies — CLSI EP25-A</a></li>
-    </ol>
-    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Clinical Accuracy</div>
-    <ol start="21">
-      <li><a href="#roc">ROC &amp; Diagnostic Accuracy REVIEW</a></li>
-      <li><a href="#antibiotic">Antibiotic Susceptibility Agreement — EUCAST/CLSI BETA REVIEW</a></li>
-    </ol>
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Compliance</div>
-    <ol start="23">
+    <ol start="19">
       <li><a href="#why-compliance">What is compliance — and why does it matter?</a></li>
-      <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
+      <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#ep05">EP05 — Precision Study Protocol (CLSI EP05-A3)</a></li>
       <li><a href="#ep15">EP15 — Precision Verification Protocol (CLSI EP15-A3)</a></li>
       <li><a href="#ep09">EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</a></li>
       <li><a href="#ref-interval">Reference Intervals — EP28 BETA REVIEW</a></li>
       <li><a href="#qual-lod">Qualitative Limit of Detection — EP17 BETA REVIEW</a></li>
+    </ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Categorical Methods</div>
+    <ol start="27">
+      <li><a href="#categorical-mc">Categorical Method Comparison — Kappa and McNemar</a></li>
+      <li><a href="#stability">Stability Studies — CLSI EP25-A</a></li>
+    </ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Clinical Accuracy</div>
+    <ol start="29">
+      <li><a href="#roc">ROC &amp; Diagnostic Accuracy REVIEW</a></li>
+      <li><a href="#antibiotic">Antibiotic Susceptibility Agreement — EUCAST/CLSI BETA REVIEW</a></li>
     </ol>
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Appendix</div>
     <ol start="31">
@@ -739,317 +739,8 @@
   <hr class="divider">
 
   <!-- Why we do controls -->
-  <div class="section" id="categorical-mc">
-    <h2>19. Categorical Method Comparison — Kappa and McNemar</h2>
-    <p>
-      When two methods report a <strong>qualitative (pos/neg) result</strong> rather than a measured value,
-      you cannot use Bland-Altman or regression. Instead, agreement is evaluated using a <strong>2×2 contingency table</strong>
-      and two complementary statistics: Cohen's Kappa and McNemar's test.
-    </p>
-
-    <h3>The 2×2 table</h3>
-    <table>
-      <tr><th></th><th>Method B: Positive</th><th>Method B: Negative</th></tr>
-      <tr><td><b>Method A: Positive</b></td><td><b>a</b> — both positive (agree)</td><td><b>b</b> — A+, B− (discordant)</td></tr>
-      <tr><td><b>Method A: Negative</b></td><td><b>c</b> — A−, B+ (discordant)</td><td><b>d</b> — both negative (agree)</td></tr>
-    </table>
-    <ul>
-      <li><b>a + d</b> = concordant pairs — used by Kappa</li>
-      <li><b>b + c</b> = discordant pairs — used by McNemar</li>
-    </ul>
-
-    <h3>Cohen's Kappa — overall concordance</h3>
-    <p>
-      Kappa measures agreement <strong>corrected for chance</strong>. Two methods with very different positive rates
-      can agree frequently by chance alone — Kappa removes that component.
-    </p>
-    <p><b>κ = (P<sub>o</sub> − P<sub>e</sub>) / (1 − P<sub>e</sub>)</b></p>
-    <ul>
-      <li><b>P<sub>o</sub></b> = observed agreement = (a + d) / N</li>
-      <li><b>P<sub>e</sub></b> = expected agreement by chance = [(a+b)(a+c) + (c+d)(b+d)] / N²</li>
-    </ul>
-    <table>
-      <tr><th>κ value</th><th>Interpretation (Landis &amp; Koch 1977)</th></tr>
-      <tr><td>&lt; 0.00</td><td>Poor — less than chance</td></tr>
-      <tr><td>0.00–0.20</td><td>Slight</td></tr>
-      <tr><td>0.21–0.40</td><td>Fair</td></tr>
-      <tr><td>0.41–0.60</td><td>Moderate</td></tr>
-      <tr><td>0.61–0.80</td><td>Substantial</td></tr>
-      <tr><td>0.81–1.00</td><td>Almost perfect</td></tr>
-    </table>
-    <div class="warn">
-      <b>Important:</b> Kappa is sensitive to prevalence. A low proportion of positives can produce a low κ even with high observed agreement.
-      Always report P<sub>o</sub> (observed agreement %) alongside κ.
-    </div>
-
-    <h3>McNemar's test — systematic tilt</h3>
-    <p>
-      McNemar's test uses <strong>only the discordant pairs</strong> (b and c) to ask:
-      are disagreements symmetric, or does one method systematically call more positives than the other?
-    </p>
-    <p><b>H₀: b = c</b> (no systematic bias) &nbsp;|&nbsp; <b>H₁: b ≠ c</b> (one method biased)</p>
-    <ul>
-      <li>When b + c ≥ 25: χ² = (|b − c| − 1)² / (b + c) with continuity correction</li>
-      <li>When b + c &lt; 25: exact binomial test (more accurate for small discordant counts)</li>
-      <li><b>p ≥ α</b>: no systematic bias — disagreements are random</li>
-      <li><b>p &lt; α, b &gt; c</b>: Method A calls more positives — may indicate lower specificity or genuine over-detection</li>
-      <li><b>p &lt; α, c &gt; b</b>: Method B calls more positives</li>
-    </ul>
-    <div class="good">
-      <b>Key principle:</b> Kappa and McNemar answer different questions and must be read together.
-      High κ + significant McNemar = systematic but small bias.
-      Low κ + non-significant McNemar = random but frequent disagreement.
-    </div>
-
-    <h3>Application: qualitative stability studies</h3>
-    <p>
-      For qualitative stability studies, the same panel of known samples is tested at T0 (fresh reference) and at each storage time point
-      (T1, T3, T6, T12 months). Each time point produces one 2×2 table — run the full Kappa + McNemar analysis at each.
-    </p>
-    <ul>
-      <li>Plot κ vs time — a declining κ indicates degrading agreement as material ages</li>
-      <li>Track McNemar direction — significant tilt usually means the aged material misses positives (loss of sensitivity)</li>
-      <li>The <b>functional expiry</b> is the last time point at which κ ≥ your pre-defined criterion AND McNemar p ≥ α</li>
-      <li>Pre-define acceptance criteria before the study (e.g. κ ≥ 0.80 and McNemar p ≥ 0.05)</li>
-    </ul>
-        <div class="info"><b>Next →</b> Kappa and McNemar evaluate agreement at a single time point. But what happens to agreement over time? Stability testing applies these same tools to track how material performance degrades.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 25 -->
-  <div class="section" id="stability">
-    <h2>20. Stability Studies — CLSI EP25-A</h2>
-
-    <div class="warn">
-      <b>Stability testing is conceptually separate from analytical performance.</b>
-      All other sections in this document evaluate the <em>method</em> — assuming the material is stable.
-      Stability testing evaluates the <em>material</em> — assuming the method is stable.
-      A stability result (e.g. 8% change at T6) is a material signal, not an analytical error.
-      You cannot apply sigma metrics or compare stability % change against your TAE.
-      See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
-    </div>
-
-    <p>
-      A stability study evaluates whether a reagent, test kit, or biological material
-      maintains its intended performance over time under defined storage conditions.
-      The goal is to <strong>determine functional expiry</strong> — the point at which performance is no longer acceptable.
-    </p>
-
-    <h3>Study design principles</h3>
-    <ul>
-      <li><b>Panel of samples:</b> use a fixed panel covering the clinically relevant range (typically 10–20 samples for quantitative; 20–60 for qualitative)</li>
-      <li><b>T0 = fresh reference:</b> all samples are measured at baseline before any aging begins</li>
-      <li><b>Time points:</b> typically T0, T1, T3, T6, T9, T12 months — select based on the intended shelf life</li>
-      <li><b>Same panel at each time point:</b> paired design maximises sensitivity to detect real changes</li>
-      <li><b>Pre-define acceptance criteria:</b> decide the criterion before collecting data — do not change it after seeing results</li>
-    </ul>
-
-    <h3>Quantitative stability — % change from T0</h3>
-    <p>
-      For analytes that produce a measured value, performance is tracked as <strong>% change from the T0 baseline</strong>.
-    </p>
-    <p><b>% change at T<sub>i</sub> for sample j</b> = (T<sub>i,j</sub> − T0<sub>j</sub>) / T0<sub>j</sub> × 100</p>
-    <p>For the full sample panel at each time point:</p>
-    <ul>
-      <li>Calculate mean % change and its 95% CI (paired t-test against 0)</li>
-      <li>Apply acceptance criterion: commonly <b>±10%</b> (CLSI EP25-A general recommendation) or ±5% for high-precision analytes</li>
-      <li>A time point <b>passes</b> if the mean % change is within the criterion</li>
-      <li>The <b>functional expiry</b> is the last passing time point</li>
-    </ul>
-    <h3>Trend analysis</h3>
-    <p>
-      Regression of mean % change vs time (months) gives the drift rate (% per month).
-      A significant slope indicates progressive degradation. Use the regression to <em>extrapolate</em>
-      when the material would cross the acceptance limit — but note this is indicative only beyond measured time points.
-    </p>
-    <table>
-      <tr><th>Drift direction</th><th>Meaning</th><th>Typical cause</th></tr>
-      <tr><td>Negative (reading lower)</td><td>Loss of reactivity</td><td>Antibody degradation, enzyme denaturation, pH shift</td></tr>
-      <tr><td>Positive (reading higher)</td><td>Overcall / false elevation</td><td>Degradation products cross-reacting, contamination</td></tr>
-    </table>
-
-    <h3>Qualitative stability — Kappa + McNemar over time</h3>
-    <p>
-      For pos/neg methods, each time point generates a 2×2 table (T0 vs T<sub>i</sub> results).
-      Apply Cohen's Kappa and McNemar's test at each time point (see Section 20).
-    </p>
-    <ul>
-      <li>Pass criterion example: κ ≥ 0.80 <em>and</em> McNemar p ≥ 0.05</li>
-      <li>Functional expiry = last time point meeting both criteria</li>
-      <li>Declining κ without systematic tilt = random degradation (reagent becoming inconsistent)</li>
-      <li>Significant McNemar (usually c &gt; b) = aged material systematically missing positives — loss of sensitivity</li>
-    </ul>
-
-    <h3>Acceptance criteria sources</h3>
-    <table>
-      <tr><th>Source</th><th>Criterion</th><th>Notes</th></tr>
-      <tr><td>CLSI EP25-A</td><td>±10% for most analytes</td><td>General recommendation</td></tr>
-      <tr><td>Biological variation (EFLM)</td><td>Based on desirable bias (0.25 × √(CVi² + CVg²))</td><td>Analyte-specific</td></tr>
-      <tr><td>Clinical decision limit</td><td>Based on clinical impact of shift</td><td>Requires clinical input</td></tr>
-      <tr><td>Manufacturer specification</td><td>As stated in IFU/package insert</td><td>Minimum requirement</td></tr>
-      <tr><td>ISO 15189 / regulatory</td><td>As required by accreditation body</td><td>Document rationale</td></tr>
-    </table>
-
-    <div class="good">
-      <b>CLSI EP25-A key principle:</b> Stability is a pass/fail decision based on pre-defined criteria.
-      The study design, acceptance criteria, and number of time points must all be documented in the protocol
-      before testing begins. Post-hoc changes to criteria are not acceptable.
-    </div>
-        <div class="info"><b>Next →</b> Beyond categorical agreement and stability, clinical laboratories also need to evaluate diagnostic accuracy — how well does a quantitative test discriminate between disease and no disease?</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 24 — ROC & Diagnostic Accuracy -->
-  <div class="section" id="roc">
-    <h2>21. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
-
-    <p>
-      A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
-    </p>
-
-    <h3>The 2×2 decision table</h3>
-    <p>
-      At any chosen cut-off, test results are classified into four categories:
-    </p>
-    <table>
-      <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
-      <tr><td><b>Test +</b></td><td>True Positive (TP)</td><td>False Positive (FP)</td></tr>
-      <tr><td><b>Test −</b></td><td>False Negative (FN)</td><td>True Negative (TN)</td></tr>
-    </table>
-
-    <h3>Key performance metrics</h3>
-    <ul>
-      <li><b>Sensitivity (TPR)</b> = TP / (TP + FN) — proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
-      <li><b>Specificity (TNR)</b> = TN / (TN + FP) — proportion of true negatives correctly identified. High specificity → few false alarms.</li>
-      <li><b>PPV (Positive Predictive Value)</b> = TP / (TP + FP) — probability that a positive result is truly positive. Depends on prevalence.</li>
-      <li><b>NPV (Negative Predictive Value)</b> = TN / (TN + FN) — probability that a negative result is truly negative. Depends on prevalence.</li>
-    </ul>
-
-    <div class="warn">
-      <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
-    </div>
-
-    <h3>The ROC curve</h3>
-    <p>
-      The ROC curve plots <strong>sensitivity (y-axis) vs 1 − specificity (x-axis)</strong> across all possible cut-off values. Each point on the curve represents one threshold. The curve shows the trade-off: moving the cut-off to catch more positives (higher sensitivity) inevitably increases false positives (lower specificity).
-    </p>
-    <ul>
-      <li>A <b>perfect test</b> passes through the top-left corner (100% sensitivity, 100% specificity) — AUC = 1.0</li>
-      <li>A <b>useless test</b> follows the diagonal — AUC = 0.5 (no better than coin-flip)</li>
-      <li>The further the curve bows towards the top-left, the better the discriminatory power</li>
-    </ul>
-
-    <h3>AUC — Area Under the Curve</h3>
-    <p>
-      The <strong>AUC</strong> summarises the overall discriminatory ability of the test in a single number between 0.5 and 1.0. It can be interpreted as: <em>the probability that a randomly chosen disease-positive individual has a higher test value than a randomly chosen disease-negative individual</em>.
-    </p>
-    <table>
-      <tr><th>AUC</th><th>Interpretation</th></tr>
-      <tr><td>0.90 – 1.00</td><td>Excellent discrimination</td></tr>
-      <tr><td>0.80 – 0.90</td><td>Good discrimination</td></tr>
-      <tr><td>0.70 – 0.80</td><td>Fair discrimination</td></tr>
-      <tr><td>0.60 – 0.70</td><td>Poor discrimination</td></tr>
-      <tr><td>0.50 – 0.60</td><td>Fail — no useful discrimination</td></tr>
-    </table>
-
-    <h3>Choosing an optimal cut-off</h3>
-    <p>
-      The "best" cut-off depends on the clinical context:
-    </p>
-    <ul>
-      <li><b>Youden's index</b> — maximises (sensitivity + specificity − 1). Gives the point on the ROC curve furthest from the diagonal. A balanced approach.</li>
-      <li><b>High sensitivity priority</b> — for screening tests where missing a case is dangerous (e.g., cancer screening). Accept more false positives.</li>
-      <li><b>High specificity priority</b> — for confirmatory tests where false positives have serious consequences (e.g., unnecessary surgery). Accept more false negatives.</li>
-      <li><b>Cost-based</b> — if you can quantify the cost of a false positive vs. a false negative, the optimal cut-off minimises total cost.</li>
-    </ul>
-
-    <div class="callout">
-      <b>Example:</b> A biomarker for sepsis has AUC = 0.88. At Youden's optimal cut-off of 12.5 ng/mL: sensitivity = 85%, specificity = 80%. But for ICU screening, you might lower the cut-off to 8 ng/mL (sensitivity 95%, specificity 60%) — missing sepsis is worse than running extra confirmatory tests.
-    </div>
-
-    <h3>Comparing two ROC curves</h3>
-    <p>
-      When comparing two biomarkers or two methods, you can test whether their AUCs are significantly different using the <strong>DeLong test</strong>. This accounts for the correlation between the two curves when they are measured on the same patients.
-    </p>
-
-    <h3>Logistic regression and combined markers</h3>
-    <p>
-      When a single analyte has moderate discrimination, <strong>logistic regression</strong> can combine multiple analytes into a single predicted probability. The ROC curve of the combined model often outperforms any individual marker. The tool in this app supports entering multiple analytes and building a combined ROC curve.
-    </p>
-
-    <div class="good">
-      <b>Key insight:</b> AUC tells you how good a test <em>can</em> be — but clinical usefulness depends on the cut-off you choose, the prevalence in your population, and the consequences of errors. A test with AUC = 0.85 can be clinically useless if the prevalence is very low (PPV collapses) or if there is no actionable treatment for detected cases.
-    </div>
-
-        <div class="info"><b>Next →</b> ROC analysis evaluates quantitative diagnostic tests. For antibiotic susceptibility testing, a specialised 3×3 error classification framework is used — with errors weighted by clinical severity.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 21 — Antibiotic Susceptibility Agreement -->
-  <div class="section" id="antibiotic">
-    <h2>22. Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
-
-    <p>
-      In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
-    </p>
-
-    <h3>The 3×3 agreement matrix</h3>
-    <p>
-      Results from the test method and the reference method are cross-tabulated in a <strong>3×3 matrix</strong>. Diagonal cells represent agreement; off-diagonal cells represent discrepancies classified by clinical severity:
-    </p>
-    <table>
-      <tr><th>Error type</th><th>Definition</th><th>Clinical impact</th></tr>
-      <tr><td><b>Very Major Error (VME)</b></td><td>Reference = R, Test = S</td><td>Most dangerous — a resistant organism is reported as susceptible. Patient may receive ineffective treatment.</td></tr>
-      <tr><td><b>Major Error (ME)</b></td><td>Reference = S, Test = R</td><td>Susceptible organism reported as resistant — patient denied effective, possibly first-line therapy.</td></tr>
-      <tr><td><b>Minor Error (mE)</b></td><td>Either method reports I when the other reports S or R</td><td>Less critical — treatment may still be appropriate but interpretation differs.</td></tr>
-    </table>
-
-    <h3>Key metrics</h3>
-    <ul>
-      <li><b>Category Agreement (CA)</b> — proportion of isolates where both methods agree on S/I/R. Target: ≥ 90%.</li>
-      <li><b>Essential Agreement (EA)</b> — proportion of MIC results within ±1 dilution of the reference. Applies only when MICs are available. Target: ≥ 90%.</li>
-      <li><b>VME rate</b> — calculated as VME / total Reference-R isolates. Target: ≤ 3%.</li>
-      <li><b>ME rate</b> — calculated as ME / total Reference-S isolates. Target: ≤ 3%.</li>
-      <li><b>mE rate</b> — calculated as mE / total isolates. Target: ≤ 10% (less stringent).</li>
-    </ul>
-
-    <div class="warn">
-      <b>VME and ME rates use different denominators.</b> VME is divided by the number of reference-R isolates, ME by the number of reference-S isolates — not total N. This means even a single VME can produce a high rate if few resistant isolates are tested.
-    </div>
-
-    <h3>Study design considerations</h3>
-    <ul>
-      <li>CLSI recommends testing at least <strong>100 isolates per species–drug combination</strong>, with a mix of S, I, and R organisms.</li>
-      <li>If resistant isolates are rare, the VME rate becomes unreliable — a single misclassification from 5 R isolates = 20% VME rate.</li>
-      <li>For disk diffusion vs. broth microdilution: classify MIC results using the same breakpoint table (EUCAST or CLSI) applied to both methods.</li>
-      <li>Report results per antibiotic and per organism — aggregate rates can mask species-specific problems.</li>
-    </ul>
-
-    <div class="callout">
-      <b>Example:</b> 100 isolates tested. Reference: 50 S, 10 I, 40 R. Test method: 1 VME (R→S), 2 ME (S→R), 3 mE.
-      CA = 94/100 = 94% ✓ · VME = 1/40 = 2.5% ✓ · ME = 2/50 = 4.0% ✗ (exceeds 3%).
-      Even though overall agreement is high, the ME rate flags a systematic problem — investigate which drug–organism pairs are affected.
-    </div>
-
-    <div class="good">
-      <b>EUCAST vs CLSI breakpoints:</b> Both organisations define S/I/R categories but may use different MIC or zone-diameter cut-offs. Always state which breakpoint table you applied — mixing tables invalidates the comparison.
-    </div>
-
-        <div class="info"><b>Next →</b> The concepts section has covered what to measure and why. The compliance section that follows covers the how — the specific regulatory standards, protocols, and workflows that laboratories must follow.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- Compliance introduction -->
   <div class="section" id="why-compliance">
-    <h2>23. What is compliance — and why does it matter?</h2>
+    <h2>19. What is compliance — and why does it matter?</h2>
     <p>Understanding precision, bias, and total error is not optional — it is a <b>regulatory requirement</b>. Clinical laboratories operate under strict quality frameworks that mandate how methods must be validated, verified, and monitored. These standards exist because a laboratory result is a medical act: it directly influences patient treatment.</p>
 
     <h3>Compliance vs non-conformity</h3>
@@ -1115,7 +806,7 @@
 
   <!-- Workflow -->
   <div class="section" id="iso15189">
-    <h2>24. ISO 15189 — Validation and Verification Requirements</h2>
+    <h2>20. ISO 15189 — Validation and Verification Requirements</h2>
     <p>
       ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
       accreditation standard for clinical laboratories. It requires that all measurement procedures
@@ -1176,7 +867,7 @@
 
   <!-- 15 -->
   <div class="section" id="workflow">
-    <h2>25. Typical validation workflow</h2>
+    <h2>21. Typical validation workflow</h2>
     <p>
       In practice, analytical performance validation follows a standard three-step sequence. Each step builds on the previous one — you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
     </p>
@@ -1249,7 +940,7 @@
 
   <!-- 18 -->
   <div class="section" id="ep05">
-    <h2>26. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
+    <h2>22. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
     <p>
       CLSI EP05 defines the standard protocol for evaluating the precision of a quantitative measurement procedure.
       Its purpose is to estimate <strong>repeatability (Sw)</strong> and <strong>intermediate precision (St)</strong>
@@ -1313,7 +1004,7 @@
 
   <!-- 16 -->
   <div class="section" id="ep15">
-    <h2>27. EP15 — Precision Verification Protocol (CLSI EP15-A3)</h2>
+    <h2>23. EP15 — Precision Verification Protocol (CLSI EP15-A3)</h2>
     <p>
       EP15 is a <strong>verification</strong> protocol — not a full evaluation. Its purpose is to confirm that
       a commercially available method performs in your laboratory as the manufacturer has claimed.
@@ -1364,7 +1055,7 @@
 
   <!-- 17 -->
   <div class="section" id="ep09">
-    <h2>28. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
+    <h2>24. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
     <p>
       CLSI EP09 defines the standard protocol for comparing two measurement procedures using patient samples.
       Its goal is to estimate <strong>systematic bias</strong> between methods and determine whether they are
@@ -1476,7 +1167,7 @@
 
   <!-- 23 — Reference Intervals -->
   <div class="section" id="ref-interval">
-    <h2>29. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>25. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       A <strong>reference interval</strong> (commonly called "normal range") defines the central 95% of results expected from a healthy reference population. It is used every day in clinical laboratories to flag abnormal patient results. CLSI EP28-A3c describes how to establish and verify these intervals.
@@ -1564,7 +1255,7 @@
 
   <!-- 22 — Qualitative LoD -->
   <div class="section" id="qual-lod">
-    <h2>30. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>26. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
@@ -1632,6 +1323,315 @@
   <hr class="divider">
 
   <!-- 22 -->
+  <div class="section" id="categorical-mc">
+    <h2>27. Categorical Method Comparison — Kappa and McNemar</h2>
+    <p>
+      When two methods report a <strong>qualitative (pos/neg) result</strong> rather than a measured value,
+      you cannot use Bland-Altman or regression. Instead, agreement is evaluated using a <strong>2×2 contingency table</strong>
+      and two complementary statistics: Cohen's Kappa and McNemar's test.
+    </p>
+
+    <h3>The 2×2 table</h3>
+    <table>
+      <tr><th></th><th>Method B: Positive</th><th>Method B: Negative</th></tr>
+      <tr><td><b>Method A: Positive</b></td><td><b>a</b> — both positive (agree)</td><td><b>b</b> — A+, B− (discordant)</td></tr>
+      <tr><td><b>Method A: Negative</b></td><td><b>c</b> — A−, B+ (discordant)</td><td><b>d</b> — both negative (agree)</td></tr>
+    </table>
+    <ul>
+      <li><b>a + d</b> = concordant pairs — used by Kappa</li>
+      <li><b>b + c</b> = discordant pairs — used by McNemar</li>
+    </ul>
+
+    <h3>Cohen's Kappa — overall concordance</h3>
+    <p>
+      Kappa measures agreement <strong>corrected for chance</strong>. Two methods with very different positive rates
+      can agree frequently by chance alone — Kappa removes that component.
+    </p>
+    <p><b>κ = (P<sub>o</sub> − P<sub>e</sub>) / (1 − P<sub>e</sub>)</b></p>
+    <ul>
+      <li><b>P<sub>o</sub></b> = observed agreement = (a + d) / N</li>
+      <li><b>P<sub>e</sub></b> = expected agreement by chance = [(a+b)(a+c) + (c+d)(b+d)] / N²</li>
+    </ul>
+    <table>
+      <tr><th>κ value</th><th>Interpretation (Landis &amp; Koch 1977)</th></tr>
+      <tr><td>&lt; 0.00</td><td>Poor — less than chance</td></tr>
+      <tr><td>0.00–0.20</td><td>Slight</td></tr>
+      <tr><td>0.21–0.40</td><td>Fair</td></tr>
+      <tr><td>0.41–0.60</td><td>Moderate</td></tr>
+      <tr><td>0.61–0.80</td><td>Substantial</td></tr>
+      <tr><td>0.81–1.00</td><td>Almost perfect</td></tr>
+    </table>
+    <div class="warn">
+      <b>Important:</b> Kappa is sensitive to prevalence. A low proportion of positives can produce a low κ even with high observed agreement.
+      Always report P<sub>o</sub> (observed agreement %) alongside κ.
+    </div>
+
+    <h3>McNemar's test — systematic tilt</h3>
+    <p>
+      McNemar's test uses <strong>only the discordant pairs</strong> (b and c) to ask:
+      are disagreements symmetric, or does one method systematically call more positives than the other?
+    </p>
+    <p><b>H₀: b = c</b> (no systematic bias) &nbsp;|&nbsp; <b>H₁: b ≠ c</b> (one method biased)</p>
+    <ul>
+      <li>When b + c ≥ 25: χ² = (|b − c| − 1)² / (b + c) with continuity correction</li>
+      <li>When b + c &lt; 25: exact binomial test (more accurate for small discordant counts)</li>
+      <li><b>p ≥ α</b>: no systematic bias — disagreements are random</li>
+      <li><b>p &lt; α, b &gt; c</b>: Method A calls more positives — may indicate lower specificity or genuine over-detection</li>
+      <li><b>p &lt; α, c &gt; b</b>: Method B calls more positives</li>
+    </ul>
+    <div class="good">
+      <b>Key principle:</b> Kappa and McNemar answer different questions and must be read together.
+      High κ + significant McNemar = systematic but small bias.
+      Low κ + non-significant McNemar = random but frequent disagreement.
+    </div>
+
+    <h3>Application: qualitative stability studies</h3>
+    <p>
+      For qualitative stability studies, the same panel of known samples is tested at T0 (fresh reference) and at each storage time point
+      (T1, T3, T6, T12 months). Each time point produces one 2×2 table — run the full Kappa + McNemar analysis at each.
+    </p>
+    <ul>
+      <li>Plot κ vs time — a declining κ indicates degrading agreement as material ages</li>
+      <li>Track McNemar direction — significant tilt usually means the aged material misses positives (loss of sensitivity)</li>
+      <li>The <b>functional expiry</b> is the last time point at which κ ≥ your pre-defined criterion AND McNemar p ≥ α</li>
+      <li>Pre-define acceptance criteria before the study (e.g. κ ≥ 0.80 and McNemar p ≥ 0.05)</li>
+    </ul>
+        <div class="info"><b>Next →</b> Kappa and McNemar evaluate agreement at a single time point. But what happens to agreement over time? Stability testing applies these same tools to track how material performance degrades.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 25 -->
+  <div class="section" id="stability">
+    <h2>28. Stability Studies — CLSI EP25-A</h2>
+
+    <div class="warn">
+      <b>Stability testing is conceptually separate from analytical performance.</b>
+      All other sections in this document evaluate the <em>method</em> — assuming the material is stable.
+      Stability testing evaluates the <em>material</em> — assuming the method is stable.
+      A stability result (e.g. 8% change at T6) is a material signal, not an analytical error.
+      You cannot apply sigma metrics or compare stability % change against your TAE.
+      See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
+    </div>
+
+    <p>
+      A stability study evaluates whether a reagent, test kit, or biological material
+      maintains its intended performance over time under defined storage conditions.
+      The goal is to <strong>determine functional expiry</strong> — the point at which performance is no longer acceptable.
+    </p>
+
+    <h3>Study design principles</h3>
+    <ul>
+      <li><b>Panel of samples:</b> use a fixed panel covering the clinically relevant range (typically 10–20 samples for quantitative; 20–60 for qualitative)</li>
+      <li><b>T0 = fresh reference:</b> all samples are measured at baseline before any aging begins</li>
+      <li><b>Time points:</b> typically T0, T1, T3, T6, T9, T12 months — select based on the intended shelf life</li>
+      <li><b>Same panel at each time point:</b> paired design maximises sensitivity to detect real changes</li>
+      <li><b>Pre-define acceptance criteria:</b> decide the criterion before collecting data — do not change it after seeing results</li>
+    </ul>
+
+    <h3>Quantitative stability — % change from T0</h3>
+    <p>
+      For analytes that produce a measured value, performance is tracked as <strong>% change from the T0 baseline</strong>.
+    </p>
+    <p><b>% change at T<sub>i</sub> for sample j</b> = (T<sub>i,j</sub> − T0<sub>j</sub>) / T0<sub>j</sub> × 100</p>
+    <p>For the full sample panel at each time point:</p>
+    <ul>
+      <li>Calculate mean % change and its 95% CI (paired t-test against 0)</li>
+      <li>Apply acceptance criterion: commonly <b>±10%</b> (CLSI EP25-A general recommendation) or ±5% for high-precision analytes</li>
+      <li>A time point <b>passes</b> if the mean % change is within the criterion</li>
+      <li>The <b>functional expiry</b> is the last passing time point</li>
+    </ul>
+    <h3>Trend analysis</h3>
+    <p>
+      Regression of mean % change vs time (months) gives the drift rate (% per month).
+      A significant slope indicates progressive degradation. Use the regression to <em>extrapolate</em>
+      when the material would cross the acceptance limit — but note this is indicative only beyond measured time points.
+    </p>
+    <table>
+      <tr><th>Drift direction</th><th>Meaning</th><th>Typical cause</th></tr>
+      <tr><td>Negative (reading lower)</td><td>Loss of reactivity</td><td>Antibody degradation, enzyme denaturation, pH shift</td></tr>
+      <tr><td>Positive (reading higher)</td><td>Overcall / false elevation</td><td>Degradation products cross-reacting, contamination</td></tr>
+    </table>
+
+    <h3>Qualitative stability — Kappa + McNemar over time</h3>
+    <p>
+      For pos/neg methods, each time point generates a 2×2 table (T0 vs T<sub>i</sub> results).
+      Apply Cohen's Kappa and McNemar's test at each time point (see Section 20).
+    </p>
+    <ul>
+      <li>Pass criterion example: κ ≥ 0.80 <em>and</em> McNemar p ≥ 0.05</li>
+      <li>Functional expiry = last time point meeting both criteria</li>
+      <li>Declining κ without systematic tilt = random degradation (reagent becoming inconsistent)</li>
+      <li>Significant McNemar (usually c &gt; b) = aged material systematically missing positives — loss of sensitivity</li>
+    </ul>
+
+    <h3>Acceptance criteria sources</h3>
+    <table>
+      <tr><th>Source</th><th>Criterion</th><th>Notes</th></tr>
+      <tr><td>CLSI EP25-A</td><td>±10% for most analytes</td><td>General recommendation</td></tr>
+      <tr><td>Biological variation (EFLM)</td><td>Based on desirable bias (0.25 × √(CVi² + CVg²))</td><td>Analyte-specific</td></tr>
+      <tr><td>Clinical decision limit</td><td>Based on clinical impact of shift</td><td>Requires clinical input</td></tr>
+      <tr><td>Manufacturer specification</td><td>As stated in IFU/package insert</td><td>Minimum requirement</td></tr>
+      <tr><td>ISO 15189 / regulatory</td><td>As required by accreditation body</td><td>Document rationale</td></tr>
+    </table>
+
+    <div class="good">
+      <b>CLSI EP25-A key principle:</b> Stability is a pass/fail decision based on pre-defined criteria.
+      The study design, acceptance criteria, and number of time points must all be documented in the protocol
+      before testing begins. Post-hoc changes to criteria are not acceptable.
+    </div>
+        <div class="info"><b>Next →</b> Beyond categorical agreement and stability, clinical laboratories also need to evaluate diagnostic accuracy — how well does a quantitative test discriminate between disease and no disease?</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 24 — ROC & Diagnostic Accuracy -->
+  <div class="section" id="roc">
+    <h2>29. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
+    </p>
+
+    <h3>The 2×2 decision table</h3>
+    <p>
+      At any chosen cut-off, test results are classified into four categories:
+    </p>
+    <table>
+      <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
+      <tr><td><b>Test +</b></td><td>True Positive (TP)</td><td>False Positive (FP)</td></tr>
+      <tr><td><b>Test −</b></td><td>False Negative (FN)</td><td>True Negative (TN)</td></tr>
+    </table>
+
+    <h3>Key performance metrics</h3>
+    <ul>
+      <li><b>Sensitivity (TPR)</b> = TP / (TP + FN) — proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
+      <li><b>Specificity (TNR)</b> = TN / (TN + FP) — proportion of true negatives correctly identified. High specificity → few false alarms.</li>
+      <li><b>PPV (Positive Predictive Value)</b> = TP / (TP + FP) — probability that a positive result is truly positive. Depends on prevalence.</li>
+      <li><b>NPV (Negative Predictive Value)</b> = TN / (TN + FN) — probability that a negative result is truly negative. Depends on prevalence.</li>
+    </ul>
+
+    <div class="warn">
+      <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
+    </div>
+
+    <h3>The ROC curve</h3>
+    <p>
+      The ROC curve plots <strong>sensitivity (y-axis) vs 1 − specificity (x-axis)</strong> across all possible cut-off values. Each point on the curve represents one threshold. The curve shows the trade-off: moving the cut-off to catch more positives (higher sensitivity) inevitably increases false positives (lower specificity).
+    </p>
+    <ul>
+      <li>A <b>perfect test</b> passes through the top-left corner (100% sensitivity, 100% specificity) — AUC = 1.0</li>
+      <li>A <b>useless test</b> follows the diagonal — AUC = 0.5 (no better than coin-flip)</li>
+      <li>The further the curve bows towards the top-left, the better the discriminatory power</li>
+    </ul>
+
+    <h3>AUC — Area Under the Curve</h3>
+    <p>
+      The <strong>AUC</strong> summarises the overall discriminatory ability of the test in a single number between 0.5 and 1.0. It can be interpreted as: <em>the probability that a randomly chosen disease-positive individual has a higher test value than a randomly chosen disease-negative individual</em>.
+    </p>
+    <table>
+      <tr><th>AUC</th><th>Interpretation</th></tr>
+      <tr><td>0.90 – 1.00</td><td>Excellent discrimination</td></tr>
+      <tr><td>0.80 – 0.90</td><td>Good discrimination</td></tr>
+      <tr><td>0.70 – 0.80</td><td>Fair discrimination</td></tr>
+      <tr><td>0.60 – 0.70</td><td>Poor discrimination</td></tr>
+      <tr><td>0.50 – 0.60</td><td>Fail — no useful discrimination</td></tr>
+    </table>
+
+    <h3>Choosing an optimal cut-off</h3>
+    <p>
+      The "best" cut-off depends on the clinical context:
+    </p>
+    <ul>
+      <li><b>Youden's index</b> — maximises (sensitivity + specificity − 1). Gives the point on the ROC curve furthest from the diagonal. A balanced approach.</li>
+      <li><b>High sensitivity priority</b> — for screening tests where missing a case is dangerous (e.g., cancer screening). Accept more false positives.</li>
+      <li><b>High specificity priority</b> — for confirmatory tests where false positives have serious consequences (e.g., unnecessary surgery). Accept more false negatives.</li>
+      <li><b>Cost-based</b> — if you can quantify the cost of a false positive vs. a false negative, the optimal cut-off minimises total cost.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Example:</b> A biomarker for sepsis has AUC = 0.88. At Youden's optimal cut-off of 12.5 ng/mL: sensitivity = 85%, specificity = 80%. But for ICU screening, you might lower the cut-off to 8 ng/mL (sensitivity 95%, specificity 60%) — missing sepsis is worse than running extra confirmatory tests.
+    </div>
+
+    <h3>Comparing two ROC curves</h3>
+    <p>
+      When comparing two biomarkers or two methods, you can test whether their AUCs are significantly different using the <strong>DeLong test</strong>. This accounts for the correlation between the two curves when they are measured on the same patients.
+    </p>
+
+    <h3>Logistic regression and combined markers</h3>
+    <p>
+      When a single analyte has moderate discrimination, <strong>logistic regression</strong> can combine multiple analytes into a single predicted probability. The ROC curve of the combined model often outperforms any individual marker. The tool in this app supports entering multiple analytes and building a combined ROC curve.
+    </p>
+
+    <div class="good">
+      <b>Key insight:</b> AUC tells you how good a test <em>can</em> be — but clinical usefulness depends on the cut-off you choose, the prevalence in your population, and the consequences of errors. A test with AUC = 0.85 can be clinically useless if the prevalence is very low (PPV collapses) or if there is no actionable treatment for detected cases.
+    </div>
+
+        <div class="info"><b>Next →</b> ROC analysis evaluates quantitative diagnostic tests. For antibiotic susceptibility testing, a specialised 3×3 error classification framework is used — with errors weighted by clinical severity.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 21 — Antibiotic Susceptibility Agreement -->
+  <div class="section" id="antibiotic">
+    <h2>30. Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
+    </p>
+
+    <h3>The 3×3 agreement matrix</h3>
+    <p>
+      Results from the test method and the reference method are cross-tabulated in a <strong>3×3 matrix</strong>. Diagonal cells represent agreement; off-diagonal cells represent discrepancies classified by clinical severity:
+    </p>
+    <table>
+      <tr><th>Error type</th><th>Definition</th><th>Clinical impact</th></tr>
+      <tr><td><b>Very Major Error (VME)</b></td><td>Reference = R, Test = S</td><td>Most dangerous — a resistant organism is reported as susceptible. Patient may receive ineffective treatment.</td></tr>
+      <tr><td><b>Major Error (ME)</b></td><td>Reference = S, Test = R</td><td>Susceptible organism reported as resistant — patient denied effective, possibly first-line therapy.</td></tr>
+      <tr><td><b>Minor Error (mE)</b></td><td>Either method reports I when the other reports S or R</td><td>Less critical — treatment may still be appropriate but interpretation differs.</td></tr>
+    </table>
+
+    <h3>Key metrics</h3>
+    <ul>
+      <li><b>Category Agreement (CA)</b> — proportion of isolates where both methods agree on S/I/R. Target: ≥ 90%.</li>
+      <li><b>Essential Agreement (EA)</b> — proportion of MIC results within ±1 dilution of the reference. Applies only when MICs are available. Target: ≥ 90%.</li>
+      <li><b>VME rate</b> — calculated as VME / total Reference-R isolates. Target: ≤ 3%.</li>
+      <li><b>ME rate</b> — calculated as ME / total Reference-S isolates. Target: ≤ 3%.</li>
+      <li><b>mE rate</b> — calculated as mE / total isolates. Target: ≤ 10% (less stringent).</li>
+    </ul>
+
+    <div class="warn">
+      <b>VME and ME rates use different denominators.</b> VME is divided by the number of reference-R isolates, ME by the number of reference-S isolates — not total N. This means even a single VME can produce a high rate if few resistant isolates are tested.
+    </div>
+
+    <h3>Study design considerations</h3>
+    <ul>
+      <li>CLSI recommends testing at least <strong>100 isolates per species–drug combination</strong>, with a mix of S, I, and R organisms.</li>
+      <li>If resistant isolates are rare, the VME rate becomes unreliable — a single misclassification from 5 R isolates = 20% VME rate.</li>
+      <li>For disk diffusion vs. broth microdilution: classify MIC results using the same breakpoint table (EUCAST or CLSI) applied to both methods.</li>
+      <li>Report results per antibiotic and per organism — aggregate rates can mask species-specific problems.</li>
+    </ul>
+
+    <div class="callout">
+      <b>Example:</b> 100 isolates tested. Reference: 50 S, 10 I, 40 R. Test method: 1 VME (R→S), 2 ME (S→R), 3 mE.
+      CA = 94/100 = 94% ✓ · VME = 1/40 = 2.5% ✓ · ME = 2/50 = 4.0% ✗ (exceeds 3%).
+      Even though overall agreement is high, the ME rate flags a systematic problem — investigate which drug–organism pairs are affected.
+    </div>
+
+    <div class="good">
+      <b>EUCAST vs CLSI breakpoints:</b> Both organisations define S/I/R categories but may use different MIC or zone-diameter cut-offs. Always state which breakpoint table you applied — mixing tables invalidates the comparison.
+    </div>
+
+        <div class="info"><b>Next →</b> The concepts section has covered what to measure and why. The compliance section that follows covers the how — the specific regulatory standards, protocols, and workflows that laboratories must follow.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Compliance introduction -->
   <div class="section" id="summary">
     <h2>31. Summary table</h2>
     <table>
