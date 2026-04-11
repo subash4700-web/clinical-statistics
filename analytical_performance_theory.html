@@ -120,12 +120,12 @@
       <li><a href="#ep15">EP15 — Precision Verification Protocol (CLSI EP15-A3)</a></li>
       <li><a href="#ep09">EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</a></li>
       <li><a href="#ref-interval">Reference Intervals — EP28 BETA REVIEW</a></li>
-      <li><a href="#qual-lod">Qualitative Limit of Detection — EP17 BETA REVIEW</a></li>
     </ol>
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Categorical Methods</div>
-    <ol start="27">
+    <ol start="26">
       <li><a href="#categorical-mc">Categorical Method Comparison — Kappa and McNemar</a></li>
       <li><a href="#stability">Stability Studies — CLSI EP25-A</a></li>
+      <li><a href="#qual-lod">Qualitative Limit of Detection — EP17 BETA REVIEW</a></li>
     </ol>
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Clinical Accuracy</div>
     <ol start="29">
@@ -1254,77 +1254,8 @@
   <hr class="divider">
 
   <!-- 22 — Qualitative LoD -->
-  <div class="section" id="qual-lod">
-    <h2>26. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
-
-    <p>
-      Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
-    </p>
-
-    <h3>What LoD means for qualitative methods</h3>
-    <p>
-      CLSI EP17-A2 defines LoD as the concentration at which the method detects the analyte in a specified proportion of replicates — typically <strong>≥ 95% of the time</strong>. Unlike quantitative LoD (defined via precision at low concentrations), qualitative LoD is based on a <strong>hit rate</strong>: the fraction of positive results at each concentration level.
-    </p>
-
-    <h3>Hit rate testing — the basic approach</h3>
-    <ol>
-      <li>Prepare a series of concentration levels spanning the expected detection limit (e.g., 5–8 levels).</li>
-      <li>Test each level with multiple replicates (at least 20 per level recommended; more gives tighter confidence intervals).</li>
-      <li>Record the number of positive results at each level.</li>
-      <li>Calculate the hit rate: <strong>Hit rate = positives / total replicates × 100%</strong></li>
-      <li>The LoD is the lowest concentration at which the hit rate meets or exceeds the target (e.g., 95%).</li>
-    </ol>
-
-    <div class="formula-box">
-      <span class="f-label">Hit rate</span>
-      Hit rate (%) = (number of positive results / total replicates) × 100
-      <br><br>
-      <span class="f-label">LoD criterion</span>
-      LoD = lowest concentration where hit rate ≥ target (typically 95%)
-    </div>
-
-    <h3>Probit analysis (optional refinement)</h3>
-    <p>
-      Rather than picking the first level that crosses the 95% threshold, <strong>probit regression</strong> fits a sigmoid curve to the hit rate data. This models the probability of detection as a function of concentration and interpolates the exact concentration at which the predicted hit rate equals the target. Probit analysis:
-    </p>
-    <ul>
-      <li>Provides a more precise LoD estimate than simple inspection of hit rates</li>
-      <li>Produces a confidence interval around the LoD</li>
-      <li>Works best with 5+ concentration levels and ≥ 20 replicates per level</li>
-      <li>Requires at least some levels below and above the target hit rate for reliable curve fitting</li>
-    </ul>
-
-    <h3>Confidence intervals</h3>
-    <p>
-      Each hit rate is a proportion, so its uncertainty is estimated using a binomial confidence interval (e.g., Clopper-Pearson exact method). With only 20 replicates and 19 positives:
-    </p>
-    <div class="callout">
-      <b>Example:</b> 19/20 = 95% hit rate. But the 95% CI is approximately 75–100%.
-      With 60 replicates and 57 positives: 95% hit rate with 95% CI ≈ 86–99%.
-      More replicates → narrower CI → more confident that you have truly reached the LoD.
-    </div>
-
-    <h3>Study design considerations</h3>
-    <ul>
-      <li><b>Blank / negative samples</b> — always include a zero-concentration level to confirm specificity (false positive rate).</li>
-      <li><b>Concentration spacing</b> — use closely spaced levels near the expected LoD for precise estimation. Widely spaced levels may miss the true LoD.</li>
-      <li><b>Matrix</b> — use clinically relevant sample matrices (serum, urine, swab, etc.) rather than buffer. Matrix effects can shift the LoD.</li>
-      <li><b>Replicates</b> — EP17 recommends a minimum of 20 replicates per level, but 40–60 gives much better precision.</li>
-    </ul>
-
-    <div class="warn">
-      <b>Common pitfall:</b> Testing only 3–5 replicates per level. With so few replicates, the difference between 80% and 100% hit rate is just 1 result — the confidence interval is too wide to draw meaningful conclusions.
-    </div>
-
-        <div class="info"><b>Next →</b> This concludes the compliance section. Next: categorical methods — statistical tools for evaluating qualitative (pos/neg, S/I/R) agreement.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 22 -->
   <div class="section" id="categorical-mc">
-    <h2>27. Categorical Method Comparison — Kappa and McNemar</h2>
+    <h2>26. Categorical Method Comparison — Kappa and McNemar</h2>
     <p>
       When two methods report a <strong>qualitative (pos/neg) result</strong> rather than a measured value,
       you cannot use Bland-Altman or regression. Instead, agreement is evaluated using a <strong>2×2 contingency table</strong>
@@ -1404,7 +1335,7 @@
 
   <!-- 25 -->
   <div class="section" id="stability">
-    <h2>28. Stability Studies — CLSI EP25-A</h2>
+    <h2>27. Stability Studies — CLSI EP25-A</h2>
 
     <div class="warn">
       <b>Stability testing is conceptually separate from analytical performance.</b>
@@ -1488,6 +1419,75 @@
   <hr class="divider">
 
   <!-- 24 — ROC & Diagnostic Accuracy -->
+  <div class="section" id="qual-lod">
+    <h2>28. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
+    </p>
+
+    <h3>What LoD means for qualitative methods</h3>
+    <p>
+      CLSI EP17-A2 defines LoD as the concentration at which the method detects the analyte in a specified proportion of replicates — typically <strong>≥ 95% of the time</strong>. Unlike quantitative LoD (defined via precision at low concentrations), qualitative LoD is based on a <strong>hit rate</strong>: the fraction of positive results at each concentration level.
+    </p>
+
+    <h3>Hit rate testing — the basic approach</h3>
+    <ol>
+      <li>Prepare a series of concentration levels spanning the expected detection limit (e.g., 5–8 levels).</li>
+      <li>Test each level with multiple replicates (at least 20 per level recommended; more gives tighter confidence intervals).</li>
+      <li>Record the number of positive results at each level.</li>
+      <li>Calculate the hit rate: <strong>Hit rate = positives / total replicates × 100%</strong></li>
+      <li>The LoD is the lowest concentration at which the hit rate meets or exceeds the target (e.g., 95%).</li>
+    </ol>
+
+    <div class="formula-box">
+      <span class="f-label">Hit rate</span>
+      Hit rate (%) = (number of positive results / total replicates) × 100
+      <br><br>
+      <span class="f-label">LoD criterion</span>
+      LoD = lowest concentration where hit rate ≥ target (typically 95%)
+    </div>
+
+    <h3>Probit analysis (optional refinement)</h3>
+    <p>
+      Rather than picking the first level that crosses the 95% threshold, <strong>probit regression</strong> fits a sigmoid curve to the hit rate data. This models the probability of detection as a function of concentration and interpolates the exact concentration at which the predicted hit rate equals the target. Probit analysis:
+    </p>
+    <ul>
+      <li>Provides a more precise LoD estimate than simple inspection of hit rates</li>
+      <li>Produces a confidence interval around the LoD</li>
+      <li>Works best with 5+ concentration levels and ≥ 20 replicates per level</li>
+      <li>Requires at least some levels below and above the target hit rate for reliable curve fitting</li>
+    </ul>
+
+    <h3>Confidence intervals</h3>
+    <p>
+      Each hit rate is a proportion, so its uncertainty is estimated using a binomial confidence interval (e.g., Clopper-Pearson exact method). With only 20 replicates and 19 positives:
+    </p>
+    <div class="callout">
+      <b>Example:</b> 19/20 = 95% hit rate. But the 95% CI is approximately 75–100%.
+      With 60 replicates and 57 positives: 95% hit rate with 95% CI ≈ 86–99%.
+      More replicates → narrower CI → more confident that you have truly reached the LoD.
+    </div>
+
+    <h3>Study design considerations</h3>
+    <ul>
+      <li><b>Blank / negative samples</b> — always include a zero-concentration level to confirm specificity (false positive rate).</li>
+      <li><b>Concentration spacing</b> — use closely spaced levels near the expected LoD for precise estimation. Widely spaced levels may miss the true LoD.</li>
+      <li><b>Matrix</b> — use clinically relevant sample matrices (serum, urine, swab, etc.) rather than buffer. Matrix effects can shift the LoD.</li>
+      <li><b>Replicates</b> — EP17 recommends a minimum of 20 replicates per level, but 40–60 gives much better precision.</li>
+    </ul>
+
+    <div class="warn">
+      <b>Common pitfall:</b> Testing only 3–5 replicates per level. With so few replicates, the difference between 80% and 100% hit rate is just 1 result — the confidence interval is too wide to draw meaningful conclusions.
+    </div>
+
+        <div class="info"><b>Next →</b> This concludes the compliance section. Next: categorical methods — statistical tools for evaluating qualitative (pos/neg, S/I/R) agreement.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 22 -->
   <div class="section" id="roc">
     <h2>29. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
