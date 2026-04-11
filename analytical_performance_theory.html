@@ -302,8 +302,99 @@
   <hr class="divider">
 
   <!-- Sources of analytical error -->
+  <div class="section" id="why-controls">
+    <h2>6. Why we do controls</h2>
+    <p>A laboratory cannot measure every patient sample twice. Instead, it runs <b>control materials</b> — samples with a known or expected value — alongside patient samples. If the control result is within acceptable limits, the patient results measured in the same run are considered reliable.</p>
+    <table>
+      <tr><th>Question</th><th>Control type</th><th>What it tells you</th></tr>
+      <tr><td>Is my method <b>precise</b> today?</td><td>Internal QC (IQC) — same material measured every run</td><td>Whether within-run and between-run variation is stable over time</td></tr>
+      <tr><td>Is my method <b>accurate</b> compared to others?</td><td>External QA (EQA/EQAS) — unknown sample from a proficiency program</td><td>Whether your result agrees with peer laboratories</td></tr>
+      <tr><td>Is my method <b>true</b>?</td><td>Certified Reference Material (CRM) — value assigned by a reference method</td><td>Whether your result matches the "true" value</td></tr>
+    </table>
+    <div class="callout"><b>Analogy:</b> IQC is like checking your bathroom scale every morning with a known weight — you detect if it drifts. EQA is like weighing yourself on a different scale at the doctor's office — you detect if your scale is systematically off compared to everyone else's.</div>
+    <div class="warn"><b>Controls are not patient samples.</b> A control material may behave differently from a real patient sample due to matrix effects (stabilisers, preservatives, animal-sourced proteins). A method can pass all QC checks and still produce biased results on patient samples.</div>
+    <div class="info"><b>Next →</b> The next sections look at the specific materials used for bias detection (CRM and EQA), the matrix effects that can mislead you, and the difference between using patient samples vs reference materials.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CRM vs EQA -->
+  <div class="section" id="crm-eqa">
+    <h2>7. CRM vs EQA — two ways to detect bias</h2>
+    <p>Bias can only be measured if you know the true value. There are two main ways to establish this in the clinical laboratory:</p>
+
+    <h3>Certified Reference Material (CRM)</h3>
+    <p>A material with a known, certified assigned value — traceable to a reference method or SI units. You measure it on your analyser and compare your result to the certified value.</p>
+    <ul>
+      <li><b>Advantage:</b> Direct, objective comparison to a known true value.</li>
+      <li><b>Limitation:</b> CRMs are expensive. Commutability must be verified — the CRM matrix should behave the same as real patient samples on your method.</li>
+    </ul>
+
+    <h3>External Quality Assessment (EQA)</h3>
+    <p>Also called proficiency testing (e.g. DEKS in Denmark, UKNEQAS in the UK). The same sample is sent to all participating laboratories. Your result is compared against the peer group mean or an assigned target value.</p>
+    <ul>
+      <li><b>Advantage:</b> Independent external check. Reveals systematic bias that internal QC would never detect — because internal QC only tells you if <em>you</em> are consistent, not if you are <em>correct</em>.</li>
+      <li><b>Limitation:</b> EQA materials are often lyophilized or stabilized. Their matrix may differ from real patient samples, so apparent bias may be a matrix effect rather than a true analytical problem.</li>
+    </ul>
+
+    <div class="info">
+      <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
+    </div>
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
+    </div>
+
+        <div class="info"><b>Next →</b> CRM and EQA are powerful tools for detecting bias — but they don't always behave like real patient samples. The next section explains why: the matrix of the control material can introduce artefacts that mimic or mask real bias.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 9 -->
+  <div class="section" id="matrix">
+    <h2>8. Matrix effects</h2>
+    <p>The matrix is everything in a sample other than the analyte being measured — water, proteins, lipids, salts, stabilizers. Different matrices can affect how an instrument responds to the same concentration of analyte.</p>
+    <p>This is why a bias seen in EQA or with QC material does not always mean your method is wrong. The material's matrix may simply behave differently from real patient samples on your analyser.</p>
+    <div class="warn">
+      <b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.
+    </div>
+        <div class="info"><b>Next →</b> Now that you understand the tools (CRM, EQA) and their limitations (matrix effects) — biological variation determines how good your analytical performance actually needs to be.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10 -->
+  <div class="section" id="patient-vs-qc">
+    <h2>9. Patient samples vs reference material for precision</h2>
+    <p>Precision can be studied using two types of material — and they answer different questions.</p>
+    <table>
+      <tr><th>Material</th><th>Advantages</th><th>Limitations</th></tr>
+      <tr>
+        <td><b>Patient samples</b><br><span class="tag tag-green">Preferred for validation</span></td>
+        <td>Native matrix — same composition as real patient samples. Results reflect true analytical performance on actual specimens.</td>
+        <td>Less stable. Must be aliquoted and frozen. Concentration may drift over time.</td>
+      </tr>
+      <tr>
+        <td><b>QC / reference material</b><br><span class="tag tag-blue">Used for monitoring</span></td>
+        <td>Stable, commercially available, ready to use. Ideal for day-to-day monitoring of ongoing precision.</td>
+        <td>Often lyophilized or stabilized — matrix differs from real patient samples. May give artificially good precision due to stabilizers.</td>
+      </tr>
+    </table>
+    <div class="warn">
+      <b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.
+    </div>
+    <p>Once validated, QC material is excellent for <b>ongoing monitoring</b> — detecting when precision drifts over time (Levey-Jennings charts, Westgard rules).</p>
+        <div class="info"><b>Next →</b> Precision tells you how reproducible your method is. But is it accurate? Systematic error — bias — shifts all results in one direction. Understanding and quantifying bias is the next step.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 7 -->
   <div class="section" id="precision">
-    <h2>6. Precision — what it means and how to measure it</h2>
+    <h2>10. Precision — what it means and how to measure it</h2>
     <p>Precision describes how <em>reproducible</em> your measurements are — how close repeated measurements of the same sample are to each other. It does <em>not</em> tell you whether the results are correct, only whether they are consistent.</p>
     <p>Precision is expressed as:</p>
     <ul>
@@ -328,7 +419,7 @@
 
   <!-- 3 -->
   <div class="section" id="repeatability">
-    <h2>7. Repeatability, intermediate precision, and reproducibility</h2>
+    <h2>11. Repeatability, intermediate precision, and reproducibility</h2>
     <p>These three terms describe precision under different conditions. The conditions you vary during your study determine which type you are measuring.</p>
 
     <div class="precision-ladder">
@@ -364,7 +455,7 @@
 
   <!-- 4 -->
   <div class="section" id="study-design">
-    <h2>8. Practical study design — the duplicate method</h2>
+    <h2>12. Practical study design — the duplicate method</h2>
     <p>The simplest precision study is to measure the same sample many times in one run and calculate the SD. This gives you <b>repeatability</b> — but nothing more.</p>
     <p>To capture real-world laboratory performance, you need to spread measurements across multiple days and runs. The formal protocol for this is CLSI EP05-A3:</p>
     <div class="info">
@@ -391,7 +482,7 @@
 
   <!-- 5 -->
   <div class="section" id="combining-variance">
-    <h2>9. Why you cannot add standard deviations</h2>
+    <h2>13. Why you cannot add standard deviations</h2>
     <p>When combining two sources of variation, it is tempting to simply add their SDs. This is <b>incorrect</b> and will always overestimate the true combined precision.</p>
     <p>The correct approach is to add the <b>variances</b> (SD²), then take the square root:</p>
     <div class="formula-box">
@@ -421,7 +512,7 @@
 
   <!-- 6 -->
   <div class="section" id="bias">
-    <h2>10. Bias — systematic error</h2>
+    <h2>14. Bias — systematic error</h2>
     <p>Bias is a consistent, directional difference between your method's results and the true value. Unlike random error, bias does not cancel out over many measurements — it shifts <em>all</em> results in the same direction.</p>
     <div class="formula-box">
       <span class="f-label">Absolute bias:</span>
@@ -453,7 +544,7 @@
 
   <!-- 8 -->
   <div class="section" id="allowable">
-    <h2>11. Allowable error — where limits come from</h2>
+    <h2>15. Allowable error — where limits come from</h2>
     <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
     <table>
       <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
@@ -488,7 +579,7 @@
 
   <!-- 12 -->
   <div class="section" id="tae">
-    <h2>12. Total Allowable Error (TAE) and Total Error (TE)</h2>
+    <h2>16. Total Allowable Error (TAE) and Total Error (TE)</h2>
     <p>A patient result contains both random and systematic error. <b>Total Error</b> is the maximum likely error in any single result, accounting for both bias and imprecision together.</p>
 
     <h3>Total Allowable Error (TAE)</h3>
@@ -564,7 +655,7 @@
 
   <!-- Local TAE -->
   <div class="section" id="local-tae">
-    <h2>13. Setting TAE locally — approach and considerations</h2>
+    <h2>17. Setting TAE locally — approach and considerations</h2>
     <p>Yes — TAE can and sometimes should be set locally by the laboratory. While external sources (biological variation databases, regulatory bodies) provide a starting point, the laboratory often needs to adapt or define its own TAE based on clinical context and technical reality.</p>
 
     <h3>The hierarchy — start here before setting TAE locally</h3>
@@ -614,7 +705,7 @@
 
   <!-- 12 -->
   <div class="section" id="sigma">
-    <h2>14. The Sigma metric</h2>
+    <h2>18. The Sigma metric</h2>
     <p>The Sigma metric is borrowed from Six Sigma industrial quality management. It expresses how many standard deviations of your method's imprecision fit within the allowable error budget after accounting for bias.</p>
 
     <div class="formula-box">
@@ -657,82 +748,9 @@
 
   <hr class="divider">
 
-  <!-- 20 -->
-  <div class="section" id="patient-vs-qc">
-    <h2>15. Patient samples vs reference material for precision</h2>
-    <p>Precision can be studied using two types of material — and they answer different questions.</p>
-    <table>
-      <tr><th>Material</th><th>Advantages</th><th>Limitations</th></tr>
-      <tr>
-        <td><b>Patient samples</b><br><span class="tag tag-green">Preferred for validation</span></td>
-        <td>Native matrix — same composition as real patient samples. Results reflect true analytical performance on actual specimens.</td>
-        <td>Less stable. Must be aliquoted and frozen. Concentration may drift over time.</td>
-      </tr>
-      <tr>
-        <td><b>QC / reference material</b><br><span class="tag tag-blue">Used for monitoring</span></td>
-        <td>Stable, commercially available, ready to use. Ideal for day-to-day monitoring of ongoing precision.</td>
-        <td>Often lyophilized or stabilized — matrix differs from real patient samples. May give artificially good precision due to stabilizers.</td>
-      </tr>
-    </table>
-    <div class="warn">
-      <b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.
-    </div>
-    <p>Once validated, QC material is excellent for <b>ongoing monitoring</b> — detecting when precision drifts over time (Levey-Jennings charts, Westgard rules).</p>
-        <div class="info"><b>Next →</b> Precision tells you how reproducible your method is. But is it accurate? Systematic error — bias — shifts all results in one direction. Understanding and quantifying bias is the next step.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 7 -->
-  <div class="section" id="crm-eqa">
-    <h2>16. CRM vs EQA — two ways to detect bias</h2>
-    <p>Bias can only be measured if you know the true value. There are two main ways to establish this in the clinical laboratory:</p>
-
-    <h3>Certified Reference Material (CRM)</h3>
-    <p>A material with a known, certified assigned value — traceable to a reference method or SI units. You measure it on your analyser and compare your result to the certified value.</p>
-    <ul>
-      <li><b>Advantage:</b> Direct, objective comparison to a known true value.</li>
-      <li><b>Limitation:</b> CRMs are expensive. Commutability must be verified — the CRM matrix should behave the same as real patient samples on your method.</li>
-    </ul>
-
-    <h3>External Quality Assessment (EQA)</h3>
-    <p>Also called proficiency testing (e.g. DEKS in Denmark, UKNEQAS in the UK). The same sample is sent to all participating laboratories. Your result is compared against the peer group mean or an assigned target value.</p>
-    <ul>
-      <li><b>Advantage:</b> Independent external check. Reveals systematic bias that internal QC would never detect — because internal QC only tells you if <em>you</em> are consistent, not if you are <em>correct</em>.</li>
-      <li><b>Limitation:</b> EQA materials are often lyophilized or stabilized. Their matrix may differ from real patient samples, so apparent bias may be a matrix effect rather than a true analytical problem.</li>
-    </ul>
-
-    <div class="info">
-      <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
-    </div>
-    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
-      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
-    </div>
-
-        <div class="info"><b>Next →</b> CRM and EQA are powerful tools for detecting bias — but they don't always behave like real patient samples. The next section explains why: the matrix of the control material can introduce artefacts that mimic or mask real bias.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 9 -->
-  <div class="section" id="matrix">
-    <h2>17. Matrix effects</h2>
-    <p>The matrix is everything in a sample other than the analyte being measured — water, proteins, lipids, salts, stabilizers. Different matrices can affect how an instrument responds to the same concentration of analyte.</p>
-    <p>This is why a bias seen in EQA or with QC material does not always mean your method is wrong. The material's matrix may simply behave differently from real patient samples on your analyser.</p>
-    <div class="warn">
-      <b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.
-    </div>
-        <div class="info"><b>Next →</b> Now that you understand the tools (CRM, EQA) and their limitations (matrix effects) — biological variation determines how good your analytical performance actually needs to be.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- 10 -->
+  <!-- Why we do controls -->
   <div class="section" id="categorical-mc">
-    <h2>18. Categorical Method Comparison — Kappa and McNemar</h2>
+    <h2>19. Categorical Method Comparison — Kappa and McNemar</h2>
     <p>
       When two methods report a <strong>qualitative (pos/neg) result</strong> rather than a measured value,
       you cannot use Bland-Altman or regression. Instead, agreement is evaluated using a <strong>2×2 contingency table</strong>
@@ -812,7 +830,7 @@
 
   <!-- 25 -->
   <div class="section" id="stability">
-    <h2>19. Stability Studies — CLSI EP25-A</h2>
+    <h2>20. Stability Studies — CLSI EP25-A</h2>
 
     <div class="warn">
       <b>Stability testing is conceptually separate from analytical performance.</b>
@@ -897,7 +915,7 @@
 
   <!-- 24 — ROC & Diagnostic Accuracy -->
   <div class="section" id="roc">
-    <h2>20. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>21. ROC &amp; Diagnostic Accuracy <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
@@ -985,7 +1003,7 @@
 
   <!-- 21 — Antibiotic Susceptibility Agreement -->
   <div class="section" id="antibiotic">
-    <h2>21. Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>22. Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
@@ -1041,7 +1059,7 @@
 
   <!-- Compliance introduction -->
   <div class="section" id="why-compliance">
-    <h2>22. What is compliance — and why does it matter?</h2>
+    <h2>23. What is compliance — and why does it matter?</h2>
     <p>Understanding precision, bias, and total error is not optional — it is a <b>regulatory requirement</b>. Clinical laboratories operate under strict quality frameworks that mandate how methods must be validated, verified, and monitored. These standards exist because a laboratory result is a medical act: it directly influences patient treatment.</p>
 
     <h3>Compliance vs non-conformity</h3>
@@ -1107,7 +1125,7 @@
 
   <!-- Workflow -->
   <div class="section" id="workflow">
-    <h2>23. Typical validation workflow</h2>
+    <h2>24. Typical validation workflow</h2>
     <p>
       In practice, analytical performance validation follows a standard three-step sequence. Each step builds on the previous one — you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
     </p>
@@ -1180,7 +1198,7 @@
 
   <!-- 18 -->
   <div class="section" id="iso15189">
-    <h2>24. ISO 15189 — Validation and Verification Requirements</h2>
+    <h2>25. ISO 15189 — Validation and Verification Requirements</h2>
     <p>
       ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
       accreditation standard for clinical laboratories. It requires that all measurement procedures
@@ -1241,7 +1259,7 @@
 
   <!-- 15 -->
   <div class="section" id="ep05">
-    <h2>25. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
+    <h2>26. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
     <p>
       CLSI EP05 defines the standard protocol for evaluating the precision of a quantitative measurement procedure.
       Its purpose is to estimate <strong>repeatability (Sw)</strong> and <strong>intermediate precision (St)</strong>
@@ -1305,7 +1323,7 @@
 
   <!-- 16 -->
   <div class="section" id="ep15">
-    <h2>26. EP15 — Precision Verification Protocol (CLSI EP15-A3)</h2>
+    <h2>27. EP15 — Precision Verification Protocol (CLSI EP15-A3)</h2>
     <p>
       EP15 is a <strong>verification</strong> protocol — not a full evaluation. Its purpose is to confirm that
       a commercially available method performs in your laboratory as the manufacturer has claimed.
@@ -1356,7 +1374,7 @@
 
   <!-- 17 -->
   <div class="section" id="ep09">
-    <h2>27. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
+    <h2>28. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
     <p>
       CLSI EP09 defines the standard protocol for comparing two measurement procedures using patient samples.
       Its goal is to estimate <strong>systematic bias</strong> between methods and determine whether they are
@@ -1468,7 +1486,7 @@
 
   <!-- 23 — Reference Intervals -->
   <div class="section" id="ref-interval">
-    <h2>28. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>29. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       A <strong>reference interval</strong> (commonly called "normal range") defines the central 95% of results expected from a healthy reference population. It is used every day in clinical laboratories to flag abnormal patient results. CLSI EP28-A3c describes how to establish and verify these intervals.
@@ -1556,7 +1574,7 @@
 
   <!-- 22 — Qualitative LoD -->
   <div class="section" id="qual-lod">
-    <h2>29. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>30. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
@@ -1625,7 +1643,7 @@
 
   <!-- 22 -->
   <div class="section" id="summary">
-    <h2>30. Summary table</h2>
+    <h2>31. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
