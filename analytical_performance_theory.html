@@ -92,6 +92,8 @@
 
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:12px 0 6px;">Analytical Performance</div>
     <ol>
+      <li><a href="#why-accuracy">Why accurate results matter</a></li>
+      <li><a href="#types-variation">Types of variation — biological and analytical</a></li>
       <li><a href="#error">Sources of analytical error</a></li>
       <li><a href="#precision">Precision — what it means and how to measure it</a></li>
       <li><a href="#repeatability">Repeatability, intermediate precision, and reproducibility</a></li>
@@ -104,7 +106,7 @@
       <li><a href="#bioval">Biological variation — CVi and CVg explained</a></li>
       <li><a href="#allowable">Allowable error — where limits come from</a></li>
       <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
-      <li><a href="#local-tae">13. Setting TAE locally — approach and considerations</a></li>
+      <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
       <li><a href="#sigma">The Sigma metric</a></li>
     </ol>
 
@@ -139,9 +141,84 @@
     </ol>
   </div>
 
-  <!-- 1 -->
+  <!-- 1 — Why accurate results matter -->
+  <div class="section" id="why-accuracy">
+    <h2>1. Why accurate results matter</h2>
+    <p>Every clinical decision — diagnosis, treatment, monitoring — depends on a laboratory result. When a clinician reads "potassium 6.2 mmol/L," they act on it: they may cancel surgery, administer emergency treatment, or order repeat testing. If that result is wrong, the patient may receive unnecessary treatment or, worse, miss treatment they need.</p>
+
+    <h3>What happens when results are wrong?</h3>
+    <table>
+      <tr><th>Error type</th><th>Clinical consequence</th><th>Example</th></tr>
+      <tr><td><b>False high</b></td><td>Unnecessary treatment, delayed procedures, patient anxiety</td><td>Potassium falsely elevated due to haemolysis → patient receives insulin/glucose they don't need</td></tr>
+      <tr><td><b>False low</b></td><td>Missed diagnosis, delayed treatment</td><td>Troponin falsely low → AMI missed → patient sent home</td></tr>
+      <tr><td><b>Imprecise</b></td><td>Unreliable monitoring, inconsistent follow-up decisions</td><td>HbA1c varies ±8% between runs → clinician can't tell if diabetes treatment is working</td></tr>
+      <tr><td><b>Consistently biased</b></td><td>Systematic misclassification of patients</td><td>Glucose reads 0.5 mmol/L too high → healthy patients flagged as pre-diabetic</td></tr>
+    </table>
+
+    <div class="callout">
+      <b>The laboratory's responsibility:</b> You do not just produce numbers — you produce clinical decisions. Every imprecision and every bias translates directly into a risk to patient care. Analytical performance evaluation exists to quantify that risk and ensure it stays within clinically acceptable limits.
+    </div>
+
+    <p>This module covers the concepts and tools you need to evaluate whether your method is fit for clinical use. We start with understanding where variation comes from, then move through the methods for measuring and controlling it.</p>
+
+    <div class="info"><b>Next →</b> Before we can evaluate analytical error, we need to understand the two fundamental sources of variation in any laboratory result: the patient themselves and the measurement system.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2 — Types of variation -->
+  <div class="section" id="types-variation">
+    <h2>2. Types of variation — biological and analytical</h2>
+    <p>Every laboratory result is a combination of two independent sources of variation:</p>
+    <table>
+      <tr><th>Source</th><th>What it is</th><th>Can you control it?</th></tr>
+      <tr><td><b>Biological variation</b> (from the patient)</td><td>The patient's own analyte levels fluctuate naturally — from hour to hour, day to day, and between individuals. This is not error; it is physiology.</td><td>No — it is inherent to the patient. But you must understand it to set meaningful performance limits.</td></tr>
+      <tr><td><b>Analytical variation</b> (from the instrument)</td><td>The measurement system introduces its own variation: pipetting, reagent stability, detector noise, calibration drift. This is the error your laboratory can and must control.</td><td>Yes — through quality control, calibration, and method validation.</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>The total variation in a result</b> is the sum of biological and analytical variation. A clinician cannot tell them apart — they only see the final number. Your job is to ensure that the analytical component is small enough that it does not obscure the clinical <b>signal</b>.
+    </div>
+
+    <h3>Signal vs noise</h3>
+    <p>If a patient's glucose rises from 5.0 to 5.4 mmol/L, is that a real clinical change or just normal biological fluctuation combined with measurement imprecision? The <b>signal</b> is the true clinical change you want to detect; the <b>noise</b> is all the random variation (biological + analytical) that obscures it. If the noise is larger than the signal, you cannot tell them apart.</p>
+
+    <div class="callout">
+      <b>Smaller biological variation → stricter analytical requirements.</b> An analyte with a narrow CVi (e.g. sodium, CVi ≈ 0.6%) leaves almost no room for analytical error — even a 1% CV from the instrument would dominate the total variation. In contrast, an analyte with wide CVi (e.g. CRP, CVi ≈ 42%) is far more tolerant of analytical imprecision because the patient's own variation is already large. This is why the EFLM biological variation database gives different allowable CV% for every analyte — the limits are derived directly from CVi.
+    </div>
+
+    <h3>Pre-analytical, analytical, and post-analytical errors</h3>
+    <p>A laboratory result passes through three phases. Errors can occur at any stage:</p>
+    <table>
+      <tr><th>Phase</th><th>What happens</th><th>Error examples</th><th>Frequency</th></tr>
+      <tr><td><b>Pre-analytical</b></td><td>Everything before the sample reaches the analyser</td><td>Haemolysis, wrong tube, insufficient fasting, delayed transport</td><td>~60–70% of all lab errors</td></tr>
+      <tr><td><b>Analytical</b></td><td>The measurement itself</td><td>Calibration drift, reagent degradation, matrix effects, pipetting imprecision</td><td>~10–15% of all lab errors</td></tr>
+      <tr><td><b>Post-analytical</b></td><td>Everything after the measurement</td><td>Transcription errors, wrong reference interval, delayed reporting</td><td>~20–25% of all lab errors</td></tr>
+    </table>
+    <div class="warn"><b>Pre-analytical errors are the most common</b> — but they are addressed through SOPs, training, and specimen rejection criteria, not statistics.</div>
+    <div class="good"><b>This module focuses on the analytical phase</b> — the part where you can quantify and control error using statistical methods. Precision studies, bias evaluation, and method validation all target the analytical phase specifically. When we say "error" in the following sections, we mean analytical error unless stated otherwise.</div>
+
+    <h3>Why we do controls</h3>
+    <p>A laboratory cannot measure every patient sample twice. Instead, it runs <b>control materials</b> — samples with a known or expected value — alongside patient samples. If the control result is within acceptable limits, the patient results measured in the same run are considered reliable.</p>
+    <table>
+      <tr><th>Question</th><th>Control type</th><th>What it tells you</th></tr>
+      <tr><td>Is my method <b>precise</b> today?</td><td>Internal QC (IQC) — same material measured every run</td><td>Whether within-run and between-run variation is stable over time</td></tr>
+      <tr><td>Is my method <b>accurate</b> compared to others?</td><td>External QA (EQA/EQAS) — unknown sample from a proficiency program</td><td>Whether your result agrees with peer laboratories</td></tr>
+      <tr><td>Is my method <b>true</b>?</td><td>Certified Reference Material (CRM) — value assigned by a reference method</td><td>Whether your result matches the "true" value</td></tr>
+    </table>
+    <div class="callout"><b>Analogy:</b> IQC is like checking your bathroom scale every morning with a known weight — you detect if it drifts. EQA is like weighing yourself on a different scale at the doctor's office — you detect if your scale is systematically off compared to everyone else's.</div>
+    <div class="warn"><b>Controls are not patient samples.</b> A control material may behave differently from a real patient sample due to matrix effects (stabilisers, preservatives, animal-sourced proteins). A method can pass all QC checks and still produce biased results on patient samples. This is why method validation includes testing on patient samples — not just control materials.</div>
+
+    <div class="info"><b>Next →</b> Now that you understand why accuracy matters, the types of variation, and the role of controls — the next section dives into the specifics of analytical error: random vs systematic, and how to quantify each.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3 -->
   <div class="section" id="error">
-    <h2>1. Sources of analytical error</h2>
+    <h2>3. Sources of analytical error</h2>
     <p>Every measurement a laboratory makes contains some error. Understanding the <em>type</em> of error is the first step in knowing what to do about it.</p>
     <table>
       <tr><th>Error type</th><th>What it means</th><th>Example</th></tr>
