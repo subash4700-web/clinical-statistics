@@ -463,41 +463,6 @@
     
 
   <hr class="divider">
-<!-- 24 — ROC & Diagnostic Accuracy -->
-  <div class="section" id="roc">
-    <h2>6. Clinical accuracy</h2>
-    <p>How good is a test at correctly classifying patients? This section covers the tools for evaluating diagnostic performance — from ROC analysis for quantitative biomarkers to categorical agreement for antibiotic susceptibility testing.</p>
-    <h2 class="level-child">6.1 ROC &amp; Diagnostic Accuracy</h2>
-
-    <p>
-      A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
-    </p>
-
-    <h3>The 2×2 decision table</h3>
-    <p>
-      At any chosen cut-off, test results are classified into four categories:
-    </p>
-    <table>
-      <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
-      <tr><td><b>Test +</b></td><td>True Positive (TP)</td><td>False Positive (FP)</td></tr>
-      <tr><td><b>Test −</b></td><td>False Negative (FN)</td><td>True Negative (TN)</td></tr>
-    </table>
-
-    <h3>Key performance metrics</h3>
-    <ul>
-      <li><b>Sensitivity (TPR)</b> = TP / (TP + FN) — proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
-      <li><b>Specificity (TNR)</b> = TN / (TN + FP) — proportion of true negatives correctly identified. High specificity → few false alarms.</li>
-      <li><b>PPV (Positive Predictive Value)</b> = TP / (TP + FP) — probability that a positive result is truly positive. Depends on prevalence.</li>
-      <li><b>NPV (Negative Predictive Value)</b> = TN / (TN + FN) — probability that a negative result is truly negative. Depends on prevalence.</li>
-    </ul>
-
-    <div class="warn">
-      <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
-    </div>
-
-    
-
-  <hr class="divider">
 <!-- 20 -->
   <div class="section" id="categorical-mc">
     <h2>5. Categorical methods</h2>
@@ -545,6 +510,98 @@
     </div>
 
     
+
+  <hr class="divider">
+
+  <div class="section" id="stability">
+    <h2 class="level-child">5.2 Stability testing — qualitative (Kappa over time)</h2>
+
+    <div class="warn">
+      <b>Stability testing is conceptually separate from analytical performance.</b>
+      All other sections in this document evaluate the <em>method</em> — assuming the material is stable.
+      Stability testing evaluates the <em>material</em> — assuming the method is stable.
+      A stability result (e.g. 8% change at T6) is a material signal, not an analytical error.
+      You cannot apply sigma metrics or compare stability % change against your TAE.
+      See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
+    </div>
+
+    
+
+  <hr class="divider">
+
+
+  <hr class="divider">
+<!-- 24 — ROC & Diagnostic Accuracy -->
+  <div class="section" id="roc">
+    <h2>6. Clinical accuracy</h2>
+    <p>How good is a test at correctly classifying patients? This section covers the tools for evaluating diagnostic performance — from ROC analysis for quantitative biomarkers to categorical agreement for antibiotic susceptibility testing.</p>
+    <h2 class="level-child">6.1 ROC &amp; Diagnostic Accuracy</h2>
+
+    <p>
+      A <strong>Receiver Operating Characteristic (ROC) curve</strong> evaluates how well a quantitative test discriminates between two clinical states — typically disease-positive and disease-negative. It is central to analytical performance because it answers: <em>at what cut-off does this measurement become a useful diagnostic tool?</em>
+    </p>
+
+    <h3>The 2×2 decision table</h3>
+    <p>
+      At any chosen cut-off, test results are classified into four categories:
+    </p>
+    <table>
+      <tr><th></th><th>Disease +</th><th>Disease −</th></tr>
+      <tr><td><b>Test +</b></td><td>True Positive (TP)</td><td>False Positive (FP)</td></tr>
+      <tr><td><b>Test −</b></td><td>False Negative (FN)</td><td>True Negative (TN)</td></tr>
+    </table>
+
+    <h3>Key performance metrics</h3>
+    <ul>
+      <li><b>Sensitivity (TPR)</b> = TP / (TP + FN) — proportion of true positives correctly identified. High sensitivity → few missed cases.</li>
+      <li><b>Specificity (TNR)</b> = TN / (TN + FP) — proportion of true negatives correctly identified. High specificity → few false alarms.</li>
+      <li><b>PPV (Positive Predictive Value)</b> = TP / (TP + FP) — probability that a positive result is truly positive. Depends on prevalence.</li>
+      <li><b>NPV (Negative Predictive Value)</b> = TN / (TN + FN) — probability that a negative result is truly negative. Depends on prevalence.</li>
+    </ul>
+
+    <div class="warn">
+      <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
+    </div>
+
+    
+
+  <hr class="divider">
+
+  <div class="section" id="antibiotic">
+    <h2 class="level-child">6.2 Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+
+    <p>
+      In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
+    </p>
+
+    <h3>The 3×3 agreement matrix</h3>
+    <p>
+      Results from the test method and the reference method are cross-tabulated in a <strong>3×3 matrix</strong>. Diagonal cells represent agreement; off-diagonal cells represent discrepancies classified by clinical severity:
+    </p>
+    <table>
+      <tr><th>Error type</th><th>Definition</th><th>Clinical impact</th></tr>
+      <tr><td><b>Very Major Error (VME)</b></td><td>Reference = R, Test = S</td><td>Most dangerous — a resistant organism is reported as susceptible. Patient may receive ineffective treatment.</td></tr>
+      <tr><td><b>Major Error (ME)</b></td><td>Reference = S, Test = R</td><td>Susceptible organism reported as resistant — patient denied effective, possibly first-line therapy.</td></tr>
+      <tr><td><b>Minor Error (mE)</b></td><td>Either method reports I when the other reports S or R</td><td>Less critical — treatment may still be appropriate but interpretation differs.</td></tr>
+    </table>
+
+    <h3>Key metrics</h3>
+    <ul>
+      <li><b>Category Agreement (CA)</b> — proportion of isolates where both methods agree on S/I/R. Target: ≥ 90%.</li>
+      <li><b>Essential Agreement (EA)</b> — proportion of MIC results within ±1 dilution of the reference. Applies only when MICs are available. Target: ≥ 90%.</li>
+      <li><b>VME rate</b> — calculated as VME / total Reference-R isolates. Target: ≤ 3%.</li>
+      <li><b>ME rate</b> — calculated as ME / total Reference-S isolates. Target: ≤ 3%.</li>
+      <li><b>mE rate</b> — calculated as mE / total isolates. Target: ≤ 10% (less stringent).</li>
+    </ul>
+
+    <div class="warn">
+      <b>VME and ME rates use different denominators.</b> VME is divided by the number of reference-R isolates, ME by the number of reference-S isolates — not total N. This means even a single VME can produce a high rate if few resistant isolates are tested.
+    </div>
+
+    
+
+  <hr class="divider">
+
 
   <hr class="divider">
 
@@ -599,113 +656,6 @@
   <hr class="divider">
 
   
-
-  <hr class="divider">
-
-<!-- COMPLIANCE -->
-  <div style="margin:8px 0 24px;padding:10px 16px;background:#eef2ff;border:1.5px solid #c7d2fe;border-radius:10px;">
-    <span style="font-size:14px;font-weight:900;color:#4338ca;letter-spacing:.03em;">COMPLIANCE</span>
-    <span style="font-size:12px;color:#6b7280;margin-left:8px;">Standards, protocols, and regulatory requirements</span>
-  </div>
-
-  <div class="section" id="why-compliance">
-    <p>Understanding precision, bias, and total error is not optional — it is a <b>regulatory requirement</b>. Clinical laboratories operate under strict quality frameworks.</p>
-    <h3>What is compliance?</h3>
-    <p>Compliance means demonstrating — with documented evidence — that your methods meet defined performance standards <em>before</em> clinical use and <em>continue</em> to meet them.</p>
-    <h3>Compliance vs non-conformity</h3>
-    <table>
-      <tr><th>Term</th><th>What it means</th></tr>
-      <tr><td><b>Compliance</b></td><td>The <em>state</em> of meeting all requirements.</td></tr>
-      <tr><td><b>Non-conformity</b></td><td>A specific <em>finding</em> where a requirement is not met.</td></tr>
-    </table>
-    <h3>Why does it matter?</h3>
-    <table>
-      <tr><th>Reason</th><th>What it means in practice</th></tr>
-      <tr><td><b>Patient safety</b></td><td>Unvalidated methods may produce wrong results.</td></tr>
-      <tr><td><b>Accreditation</b></td><td>Labs must be accredited under ISO 15189. Auditors check validation evidence.</td></tr>
-      <tr><td><b>Legal responsibility</b></td><td>If a patient is harmed, the lab must demonstrate proper validation.</td></tr>
-      <tr><td><b>Traceability</b></td><td>CLSI/ISO standards make results comparable across institutions.</td></tr>
-    </table>
-    <h3>Audit findings — remark categories</h3>
-    <table>
-      <tr><th>Remark type</th><th>Danish term</th><th>Severity</th><th>Consequence</th></tr>
-      <tr><td><b>Observation</b></td><td>Observation</td><td>Low</td><td>Noted. No action required.</td></tr>
-      <tr><td><b>Minor non-conformity</b></td><td>Mindre afvigelse</td><td>Medium</td><td>Must be corrected before next audit.</td></tr>
-      <tr><td><b>Major non-conformity</b></td><td>Større afvigelse</td><td>High</td><td>Must be corrected immediately. Can lead to suspension.</td></tr>
-      <tr><td><b>Suspension</b></td><td>Suspendering</td><td>Critical</td><td>Accreditation temporarily withdrawn.</td></tr>
-    </table>
-    <div class="warn"><b>A single major non-conformity can shut down a method.</b></div>
-    <h3>How concepts map to standards</h3>
-    <table>
-      <tr><th>Concept</th><th>Standard</th><th>Requirement</th></tr>
-      <tr><td>Precision</td><td>EP05 / EP15</td><td>Documented precision study</td></tr>
-      <tr><td>Bias</td><td>EP09</td><td>Method comparison or CRM assessment</td></tr>
-      <tr><td>Total Error</td><td>ISO 15189</td><td>Combined evaluation against TAE</td></tr>
-      <tr><td>Stability</td><td>EP25</td><td>Time-course study</td></tr>
-      <tr><td>Reference intervals</td><td>EP28</td><td>Establishment or verification</td></tr>
-      <tr><td>Qualitative LOD</td><td>EP17</td><td>Hit-rate / probit analysis</td></tr>
-    </table>
-    <div class="good"><b>Concepts taught you <em>what</em> and <em>why</em>.</b> Compliance teaches you <em>how</em>.</div>
-    <div class="info"><b>Next →</b> But CRM and EQA materials don't always behave like real patient samples. The next section explains why: matrix effects.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-
-  <div class="section" id="antibiotic">
-    <h2 class="level-child">6.2 Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
-
-    <p>
-      In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
-    </p>
-
-    <h3>The 3×3 agreement matrix</h3>
-    <p>
-      Results from the test method and the reference method are cross-tabulated in a <strong>3×3 matrix</strong>. Diagonal cells represent agreement; off-diagonal cells represent discrepancies classified by clinical severity:
-    </p>
-    <table>
-      <tr><th>Error type</th><th>Definition</th><th>Clinical impact</th></tr>
-      <tr><td><b>Very Major Error (VME)</b></td><td>Reference = R, Test = S</td><td>Most dangerous — a resistant organism is reported as susceptible. Patient may receive ineffective treatment.</td></tr>
-      <tr><td><b>Major Error (ME)</b></td><td>Reference = S, Test = R</td><td>Susceptible organism reported as resistant — patient denied effective, possibly first-line therapy.</td></tr>
-      <tr><td><b>Minor Error (mE)</b></td><td>Either method reports I when the other reports S or R</td><td>Less critical — treatment may still be appropriate but interpretation differs.</td></tr>
-    </table>
-
-    <h3>Key metrics</h3>
-    <ul>
-      <li><b>Category Agreement (CA)</b> — proportion of isolates where both methods agree on S/I/R. Target: ≥ 90%.</li>
-      <li><b>Essential Agreement (EA)</b> — proportion of MIC results within ±1 dilution of the reference. Applies only when MICs are available. Target: ≥ 90%.</li>
-      <li><b>VME rate</b> — calculated as VME / total Reference-R isolates. Target: ≤ 3%.</li>
-      <li><b>ME rate</b> — calculated as ME / total Reference-S isolates. Target: ≤ 3%.</li>
-      <li><b>mE rate</b> — calculated as mE / total isolates. Target: ≤ 10% (less stringent).</li>
-    </ul>
-
-    <div class="warn">
-      <b>VME and ME rates use different denominators.</b> VME is divided by the number of reference-R isolates, ME by the number of reference-S isolates — not total N. This means even a single VME can produce a high rate if few resistant isolates are tested.
-    </div>
-
-    
-
-  <hr class="divider">
-
-
-  <hr class="divider">
-
-  <div class="section" id="stability">
-    <h2 class="level-child">5.2 Stability testing — qualitative (Kappa over time)</h2>
-
-    <div class="warn">
-      <b>Stability testing is conceptually separate from analytical performance.</b>
-      All other sections in this document evaluate the <em>method</em> — assuming the material is stable.
-      Stability testing evaluates the <em>material</em> — assuming the method is stable.
-      A stability result (e.g. 8% change at T6) is a material signal, not an analytical error.
-      You cannot apply sigma metrics or compare stability % change against your TAE.
-      See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
-    </div>
-
-    
-
-  <hr class="divider">
-
 
   <hr class="divider">
 <!-- Workflow -->
