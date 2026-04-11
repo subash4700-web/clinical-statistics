@@ -193,13 +193,7 @@
     <p>If a patient's glucose rises from 5.0 to 5.4 mmol/L, is that a real clinical change or just <b>noise</b>? The <b>signal</b> is the true clinical change; the <b>noise</b> is all the random variation (biological + analytical) that obscures it. If the noise is larger than the signal, you cannot tell them apart.</p>
     <div class="callout"><b>Smaller biological variation → stricter analytical requirements.</b> An analyte with narrow CVi (e.g. sodium, CVi ≈ 0.6%) leaves almost no room for analytical error. An analyte with wide CVi (e.g. CRP, CVi ≈ 42%) is far more tolerant of analytical imprecision. This is why the EFLM database gives different allowable CV% for every analyte.</div>
     <div class="info"><b>Next →</b> Let's look at biological variation in detail — what CVi and CVg mean and why they are the foundation for all performance specifications.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-<!-- 10 -->
-  <div class="section" id="bioval">
-    <h2 class="level-child">2.1 Biological variation — CVi and CVg explained</h2>
+    <h2 class="level-child" id="bioval">2.1 Biological variation — CVi and CVg explained</h2>
     <p>Biological variation describes the natural fluctuation in analyte concentrations in the human body. It has two components:</p>
 
     <h3>CVi — Intra-individual biological variation</h3>
@@ -208,12 +202,7 @@
       <span class="f-label">CVi example — Potassium:</span>
       <span class="f-correct">CVi ≈ 4.6% → potassium fluctuates by ≈ 4.6% within the same person week to week</span>
     </div>
-    
-
-  <hr class="divider">
-
-  <div class="section" id="error-phases">
-    <h2>2.2 Pre-analytical, analytical, and post-analytical errors</h2>
+    <h2 class="level-child" id="error-phases">2.2 Pre-analytical, analytical, and post-analytical errors</h2>
     <p>A laboratory result passes through three phases before it reaches the clinician. Errors can occur at any stage:</p>
     <table>
       <tr><th>Phase</th><th>What happens</th><th>Error examples</th><th>Frequency</th></tr>
@@ -244,13 +233,7 @@
     <div class="callout"><b>Analogy:</b> IQC is like checking your bathroom scale every morning with a known weight — you detect drift. EQA is like weighing yourself on a different scale at the doctor's office — you detect if your scale is systematically off.</div>
     <div class="warn"><b>Controls are not patient samples.</b> A control material may behave differently from a real patient sample due to matrix effects. A method can pass all QC checks and still produce biased results on patient samples.</div>
     <div class="info"><b>Next →</b> The next sections look at CRM and EQA in detail, matrix effects, and patient samples vs reference materials.</div>
-    <a href="#" class="back-top">↑ Back to top</a>
-  </div>
-
-  <hr class="divider">
-<!-- 8 -->
-  <div class="section" id="crm-eqa">
-    <h2 class="level-child">3.1 CRM vs EQA — two ways to detect bias</h2>
+    <h2 class="level-child" id="crm-eqa">3.1 CRM vs EQA — two ways to detect bias</h2>
     <p>Bias can only be measured if you know the true value. There are two main ways to establish this in the clinical laboratory:</p>
 
     <h3>Certified Reference Material (CRM)</h3>
@@ -270,23 +253,13 @@
     <div class="info">
       <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
     </div>
-    
-
-  <hr class="divider">
-<!-- 9 -->
-  <div class="section" id="matrix">
-    <h2 class="level-child">3.2 Matrix effects</h2>
+    <h2 class="level-child" id="matrix">3.2 Matrix effects</h2>
     <p>The matrix is everything in a sample other than the analyte being measured — water, proteins, lipids, salts, stabilizers. Different matrices can affect how an instrument responds to the same concentration of analyte.</p>
     <p>This is why a bias seen in EQA or with QC material does not always mean your method is wrong. The material's matrix may simply behave differently from real patient samples on your analyser.</p>
     <div class="warn">
       <b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.
     </div>
-    
-
-  <hr class="divider">
-<!-- 6 -->
-  <div class="section" id="patient-vs-qc">
-    <h2 class="level-child">3.3 Patient samples vs reference material (CRM and EQA) for precision</h2>
+    <h2 class="level-child" id="patient-vs-qc">3.3 Patient samples vs reference material (CRM and EQA) for precision</h2>
     <p>Precision can be studied using two types of material — and they answer different questions.</p>
     <table>
       <tr><th>Material</th><th>Advantages</th><th>Limitations</th></tr>
@@ -304,10 +277,11 @@
     <div class="warn">
       <b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.
     </div>
-    
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
 
   <hr class="divider">
-<!-- 1 -->
+
   <div class="section" id="error">
     <h2>4. Sources of analytical error — precision, bias, and total error</h2>
     <p>Every measurement a laboratory makes contains some error. Understanding the <em>type</em> of error is the first step in knowing what to do about it.</p>
@@ -319,20 +293,11 @@
     </table>
     <div class="good">
       <b>Key principle:</b> Precision addresses random error. Bias addresses systematic error. Total error addresses both together. You need all three to evaluate whether your method is fit for clinical use.
-    </div>
     
-
-  <hr class="divider">
-
-  <div class="section" id="precision-parent">
-    <h2 class="level-child">4.1 Precision (random error)</h2>
+    <h2 class="level-child" id="precision-parent">4.1 Precision (random error)</h2>
     <p>Precision describes how <em>reproducible</em> your measurements are. The following subsections cover what it means, how to measure it, and common pitfalls.</p>
-  </div>
-
-  <hr class="divider">
-<!-- 2 -->
-  <div class="section" id="precision">
-    <h2 class="level-grandchild">4.1.1 Precision — what it means and how to measure it</h2>
+  
+    <h2 class="level-grandchild" id="precision">4.1.1 Precision — what it means and how to measure it</h2>
     <p>Precision describes how <em>reproducible</em> your measurements are — how close repeated measurements of the same sample are to each other. It does <em>not</em> tell you whether the results are correct, only whether they are consistent.</p>
     <p>Precision is expressed as:</p>
     <ul>
@@ -342,35 +307,20 @@
     <div class="formula-box">
       <span class="f-label">CV% formula:</span>
       CV% = (SD / Mean) × 100
-    </div>
     
-
-  <hr class="divider">
-<!-- 3 -->
-  <div class="section" id="repeatability">
-    <h2 class="level-grandchild">4.1.2 Repeatability, intermediate precision, and reproducibility</h2>
+    <h2 class="level-grandchild" id="repeatability">4.1.2 Repeatability, intermediate precision, and reproducibility</h2>
     <p>These three terms describe precision under different conditions. The conditions you vary during your study determine which type you are measuring.</p>
 
     <div class="precision-ladder">
       <div class="ladder-item">
-        <div class="l-title">🟢 Repeatability (within-run)</div>
-        
-
-  <hr class="divider">
-<!-- 4 -->
-  <div class="section" id="study-design">
-    <h2 class="level-grandchild">4.1.3 Practical study design — the duplicate method</h2>
+        <div class="l-title">🟢 Repeatability (within-run)
+    <h2 class="level-grandchild" id="study-design">4.1.3 Practical study design — the duplicate method</h2>
     <p>The simplest precision study is to measure the same sample many times in one run and calculate the SD. This gives you <b>repeatability</b> — but nothing more.</p>
     <p>To capture real-world laboratory performance, you need to spread measurements across multiple days and runs. The formal protocol for this is CLSI EP05-A3:</p>
     <div class="info">
       <b>CLSI EP05-A3 design:</b> Measure at least 2 concentration levels over <b>20 days × 2 runs/day × 2 replicates/run</b> = 80 measurements per level. This structured design allows nested ANOVA to partition within-run variation (Sw) from between-run variation (Sb).
-    </div>
     
-
-  <hr class="divider">
-<!-- 5 -->
-  <div class="section" id="combining-variance">
-    <h2 class="level-grandchild">4.1.4 Why you cannot add standard deviations</h2>
+    <h2 class="level-grandchild" id="combining-variance">4.1.4 Why you cannot add standard deviations</h2>
     <p>When combining two sources of variation, it is tempting to simply add their SDs. This is <b>incorrect</b> and will always overestimate the true combined precision.</p>
     <p>The correct approach is to add the <b>variances</b> (SD²), then take the square root:</p>
     <div class="formula-box">
@@ -379,13 +329,8 @@
       <br>
       <span class="f-label">Correct — combine variances:</span>
       <span class="f-correct">St = √(Sw² + Sb²)</span>
-    </div>
     
-
-  <hr class="divider">
-<!-- 7 -->
-  <div class="section" id="bias">
-    <h2 class="level-child">4.2 Bias — systematic error</h2>
+    <h2 class="level-child" id="bias">4.2 Bias — systematic error</h2>
     <p>Bias is a consistent, directional difference between your method's results and the true value. Unlike random error, bias does not cancel out over many measurements — it shifts <em>all</em> results in the same direction.</p>
     <div class="formula-box">
       <span class="f-label">Absolute bias:</span>
@@ -393,13 +338,8 @@
       <br>
       <span class="f-label">Relative bias (%):</span>
       Bias% = ((Your mean − True value) / True value) × 100
-    </div>
     
-
-  <hr class="divider">
-<!-- 11 -->
-  <div class="section" id="allowable">
-    <h2 class="level-child">4.3 Allowable error — where limits come from</h2>
+    <h2 class="level-child" id="allowable">4.3 Allowable error — where limits come from</h2>
     <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
     <table>
       <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
@@ -421,13 +361,8 @@
     </table>
     <div class="good">
       <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, analytical imprecision is not the dominant driver of variability between consecutive results — the patient's own physiology is.
-    </div>
     
-
-  <hr class="divider">
-<!-- 12 -->
-  <div class="section" id="tae">
-    <h2 class="level-child">4.4 Total Allowable Error (TAE) and Total Error (TE)</h2>
+    <h2 class="level-child" id="tae">4.4 Total Allowable Error (TAE) and Total Error (TE)</h2>
     <p>A patient result contains both random and systematic error. <b>Total Error</b> is the maximum likely error in any single result, accounting for both bias and imprecision together.</p>
 
     <h3>Total Allowable Error (TAE)</h3>
@@ -441,26 +376,15 @@
       <br/>
       <span class="f-label">Alternative (97.5% one-tailed / stricter):</span>
       <span class="f-correct">TE = |Bias%| + 2.0 × CV%</span>
-    </div>
-
     
-
-  <hr class="divider">
-<!-- Local TAE -->
-  <div class="section" id="local-tae">
-    <h2 class="level-child">4.5 Setting TAE locally — approach and considerations</h2>
+    <h2 class="level-child" id="local-tae">4.5 Setting TAE locally — approach and considerations</h2>
     <p>Yes — TAE can and sometimes should be set locally by the laboratory. While external sources (biological variation databases, regulatory bodies) provide a starting point, the laboratory often needs to adapt or define its own TAE based on clinical context and technical reality.</p>
 
     <h3>The hierarchy — start here before setting TAE locally</h3>
     <div class="precision-ladder">
       <div class="ladder-item">
-        <div class="l-title">1st choice: Biological variation (EFLM database)</div>
-        
-
-  <hr class="divider">
-<!-- 12 -->
-  <div class="section" id="sigma">
-    <h2 class="level-child">4.6 The Sigma metric</h2>
+        <div class="l-title">1st choice: Biological variation (EFLM database)
+    <h2 class="level-child" id="sigma">4.6 The Sigma metric</h2>
     <p>The Sigma metric is borrowed from Six Sigma industrial quality management. It expresses how many standard deviations of your method's imprecision fit within the allowable error budget after accounting for bias.</p>
 
     <div class="formula-box">
@@ -517,12 +441,7 @@
       Always report P<sub>o</sub> (observed agreement %) alongside κ.
     </div>
 
-    
-
-  <hr class="divider">
-
-  <div class="section" id="stability">
-    <h2 class="level-child">5.2 Stability testing — qualitative (Kappa over time)</h2>
+    <h2 class="level-child" id="stability">5.2 Stability testing — qualitative (Kappa over time)</h2>
 
     <div class="warn">
       <b>Stability testing is conceptually separate from analytical performance.</b>
@@ -533,13 +452,11 @@
       See the dedicated <strong>Stability &amp; Time</strong> section for the full conceptual guide and tools.
     </div>
 
-    
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
 
   <hr class="divider">
 
-
-  <hr class="divider">
-<!-- 24 — ROC & Diagnostic Accuracy -->
   <div class="section" id="roc">
     <h2>6. Clinical accuracy</h2>
     <p>How good is a test at correctly classifying patients? This section covers the tools for evaluating diagnostic performance — from ROC analysis for quantitative biomarkers to categorical agreement for antibiotic susceptibility testing.</p>
@@ -571,12 +488,7 @@
       <b>PPV and NPV depend on prevalence.</b> A test with 95% sensitivity and 95% specificity has PPV = 50% when prevalence is 5%, but PPV = 95% when prevalence is 50%. Always interpret predictive values in the context of the population being tested.
     </div>
 
-    
-
-  <hr class="divider">
-
-  <div class="section" id="antibiotic">
-    <h2 class="level-child">6.2 Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2 class="level-child" id="antibiotic">6.2 Antibiotic Susceptibility Agreement — EUCAST/CLSI <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
     <p>
       In clinical microbiology, a new antimicrobial susceptibility testing (AST) method is validated by comparing it against a <strong>reference method</strong> (typically broth microdilution). Unlike quantitative method comparison, the outcome is a <strong>categorical classification</strong>: Susceptible (S), Intermediate / Susceptible-Increased exposure (I), or Resistant (R).
