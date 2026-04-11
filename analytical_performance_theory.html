@@ -1182,8 +1182,62 @@
 
     <h3>Why 120 samples?</h3>
     <p>
-      The 2.5th and 97.5th percentiles are estimated from the tails of the distribution. With fewer samples, the <strong>90% confidence intervals</strong> around these limits become very wide. CLSI EP28 requires 120 as the minimum for a non-parametric approach because this is the smallest n that gives acceptable confidence intervals around both limits.
+      The reference interval covers the central <strong>95%</strong> of results (from the 2.5th to the 97.5th percentile). But how precisely have you estimated those two limits? That precision is expressed as a <strong>90% confidence interval around each limit</strong> — a separate concept from the 95% interval itself. With fewer samples, these confidence intervals become very wide. CLSI EP28 requires 120 as the minimum for the non-parametric approach because this is the smallest n that gives acceptably narrow 90% CIs around both limits.
     </p>
+
+    <!-- Reference interval diagram -->
+    <div style="margin:20px 0;text-align:center;">
+      <svg viewBox="0 0 700 200" style="max-width:680px;width:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <defs>
+          <linearGradient id="bellGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#dbeafe" stop-opacity="0.1"/>
+          </linearGradient>
+        </defs>
+        <!-- Smooth bell curve -->
+        <path d="M50,160 Q50,160 70,160 Q90,159.5 110,157 Q130,153 150,146 Q170,135 190,120 Q210,102 230,82 Q250,63 270,46 Q290,33 310,22 Q325,16 340,12 Q345,10.5 350,10 Q355,10.5 360,12 Q375,16 390,22 Q410,33 430,46 Q450,63 470,82 Q490,102 510,120 Q530,135 550,146 Q570,153 590,157 Q610,159.5 630,160 Q650,160 650,160" fill="url(#bellGrad)" stroke="#93c5fd" stroke-width="2"/>
+
+        <!-- Reference interval span (95%) -->
+        <rect x="130" y="145" width="440" height="20" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="350" y="159" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">Reference interval — central 95%</text>
+
+        <!-- Lower limit line -->
+        <line x1="130" y1="130" x2="130" y2="170" stroke="#dc2626" stroke-width="2.5"/>
+        <text x="130" y="185" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">Lower limit</text>
+        <text x="130" y="196" text-anchor="middle" font-size="9" fill="#6b7280">(2.5th percentile)</text>
+
+        <!-- Upper limit line -->
+        <line x1="570" y1="130" x2="570" y2="170" stroke="#dc2626" stroke-width="2.5"/>
+        <text x="570" y="185" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">Upper limit</text>
+        <text x="570" y="196" text-anchor="middle" font-size="9" fill="#6b7280">(97.5th percentile)</text>
+
+        <!-- 90% CI around lower limit -->
+        <rect x="105" y="120" width="50" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" opacity="0.8"/>
+        <line x1="105" y1="127" x2="155" y2="127" stroke="#f59e0b" stroke-width="2"/>
+        <line x1="105" y1="122" x2="105" y2="132" stroke="#f59e0b" stroke-width="1.5"/>
+        <line x1="155" y1="122" x2="155" y2="132" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="130" y="115" text-anchor="middle" font-size="9" font-weight="600" fill="#b45309">90% CI</text>
+
+        <!-- 90% CI around upper limit -->
+        <rect x="545" y="120" width="50" height="14" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" opacity="0.8"/>
+        <line x1="545" y1="127" x2="595" y2="127" stroke="#f59e0b" stroke-width="2"/>
+        <line x1="545" y1="122" x2="545" y2="132" stroke="#f59e0b" stroke-width="1.5"/>
+        <line x1="595" y1="122" x2="595" y2="132" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="570" y="115" text-anchor="middle" font-size="9" font-weight="600" fill="#b45309">90% CI</text>
+
+        <!-- Tail labels -->
+        <text x="75" y="150" text-anchor="middle" font-size="10" fill="#6b7280">2.5%</text>
+        <text x="625" y="150" text-anchor="middle" font-size="10" fill="#6b7280">2.5%</text>
+
+        <!-- Title -->
+        <text x="350" y="75" text-anchor="middle" font-size="10" fill="#374151">Distribution of reference values</text>
+      </svg>
+      <div style="display:flex;justify-content:center;gap:24px;margin-top:8px;font-size:11px;color:#374151;">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#dbeafe;border:1.5px solid #3b82f6;border-radius:2px;vertical-align:middle;margin-right:4px;"></span> Reference interval (95%)</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:2px;vertical-align:middle;margin-right:4px;"></span> 90% CI around each limit</span>
+        <span><span style="display:inline-block;width:12px;height:3px;background:#dc2626;border-radius:1px;vertical-align:middle;margin-right:4px;"></span> Estimated limit</span>
+      </div>
+    </div>
 
     <div class="formula-box">
       <span class="f-label">Non-parametric reference interval</span>
