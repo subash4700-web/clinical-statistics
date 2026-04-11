@@ -304,7 +304,8 @@ const TREE = {
     info: "Select the category that best describes what you are trying to do.",
     options: [
       { label: "Compare groups or test a hypothesis — quantitative or categorical data",                        icon: "📐", next: "data_type" },
-      { label: "Evaluate whether a method meets its performance specifications (imprecision, bias, agreement)", icon: "🔬", next: "ap_specs"  }
+      { label: "Evaluate whether a method meets its performance specifications (imprecision, bias, agreement)", icon: "🔬", next: "ap_specs"  },
+      { label: "Microbiology — bacterial growth, identification, colony count, or enzyme activity",            icon: "🧫", next: "micro_goal" }
     ]
   },
 
@@ -335,7 +336,9 @@ const TREE = {
       { label: "Precision — random error, reproducibility of repeated measurements",                              icon: "🎯", next: "ap_precision_type"  },
       { label: "Trueness / Bias — systematic error against a reference value or method",                          icon: "⚖️", next: "ap_bias_type"       },
       { label: "Total Error & Sigma — combine precision and bias to evaluate against allowable total error",      icon: "📊", next: "ap_tae_result"      },
-      { label: "Method comparison — agreement or equivalence between two methods",                                icon: "🔀", next: "ap_method_goal"     }
+      { label: "Method comparison — agreement or equivalence between two methods",                                icon: "🔀", next: "ap_method_goal"     },
+      { label: "Reference interval — establish normal ranges from a healthy population",                          icon: "📐", next: "ap_ref_interval"    },
+      { label: "Qualitative LOD — limit of detection for qualitative assays",                                     icon: "🎯", next: "ap_qual_lod"        }
     ]
   },
 
@@ -408,6 +411,74 @@ const TREE = {
       file: "method_comparison.html",
       description: "Compares two measurement methods using the same patient samples measured in parallel. The tool automatically runs both Bland-Altman analysis (agreement — are the methods clinically interchangeable?) and Passing-Bablok regression (bias — is there a constant or proportional difference across the measurement range?). You do not need to choose between them — both are calculated and displayed together.",
       note: "Measurements must be paired — the same sample measured by both methods. Enter your allowable difference limit to get a PASS/FAIL verdict on clinical interchangeability."
+    }
+  },
+
+  ap_ref_interval: {
+    result: {
+      test: "Reference Interval Estimation",
+      file: "reference_interval.html",
+      description: "Estimates reference intervals from a healthy population using parametric (mean ± 1.96 SD) and non-parametric (2.5th–97.5th percentile) methods per CLSI EP28-A3c. Includes outlier detection, normality testing, and partitioning by subgroups (age, sex).",
+      note: "Minimum 120 reference individuals recommended (CLSI). Non-parametric method preferred unless data are clearly Gaussian. Always exclude known pathological samples before analysis."
+    }
+  },
+
+  ap_qual_lod: {
+    result: {
+      test: "Qualitative LOD — Limit of Detection",
+      file: "qualitative_lod.html",
+      description: "Determines the limit of detection for qualitative (positive/negative) assays using probit analysis and hit-rate data per CLSI EP12-A2. Calculates the concentration at which a specified detection rate (e.g. 95%) is achieved.",
+      note: "Test a dilution series across 5–10 concentration levels near the expected LOD, with at least 20 replicates per level. The tool fits a probit curve and reports LOD with 95% CI."
+    }
+  },
+
+  // ── Microbiology branch ─────────────────────────────────────────────────
+
+  micro_goal: {
+    question: "What is the goal of your microbiology analysis?",
+    info: "Select the calculation or analysis you need to perform.",
+    options: [
+      { label: "Bacterial growth curve — plot growth phases and calculate generation time",       icon: "📈", next: "micro_growth"     },
+      { label: "Bacterial identification — morphology and biochemical test interpretation",       icon: "🔬", next: "micro_id"         },
+      { label: "Colony count — calculate CFU/mL from plate counts and dilution factors",          icon: "🧫", next: "micro_colony"     },
+      { label: "Enzyme activity — calculate U/L from absorbance change over time",               icon: "⚗️", next: "micro_enzyme"     },
+      { label: "Antibiotic susceptibility — compare two AST methods (S/I/R agreement)",          icon: "💊", next: "antibiotic_agreement" }
+    ]
+  },
+
+  micro_growth: {
+    result: {
+      test: "Bacterial Growth Curve",
+      file: "bacterial_growth.html",
+      description: "Plots bacterial growth from OD or CFU measurements over time. Identifies lag, log (exponential), stationary, and death phases. Calculates generation time and specific growth rate from the log phase.",
+      note: "Enter time points and corresponding OD₆₀₀ or CFU values. The tool fits the exponential phase to calculate doubling time."
+    }
+  },
+
+  micro_id: {
+    result: {
+      test: "Bacterial Identification",
+      file: "bacterial_id.html",
+      description: "Systematic bacterial identification tool using colony morphology, Gram stain, and biochemical test results. Guides through catalase, oxidase, coagulase, and other key tests to narrow down the organism.",
+      note: "Always correlate with clinical context and specimen source. Confirmatory testing (e.g. MALDI-TOF, 16S rRNA) may be required."
+    }
+  },
+
+  micro_colony: {
+    result: {
+      test: "Colony Count Calculator",
+      file: "colony_count.html",
+      description: "Calculates colony-forming units per millilitre (CFU/mL) from plate counts, accounting for dilution factors and plating volume. Supports multiple dilution levels and averaging.",
+      note: "Count plates with 30–300 colonies for reliable results. Report as CFU/mL with the appropriate dilution factor."
+    }
+  },
+
+  micro_enzyme: {
+    result: {
+      test: "Enzyme Activity Calculator",
+      file: "enzyme_activity.html",
+      description: "Calculates enzyme activity in U/L (international units per litre) from the rate of absorbance change (ΔA/min), path length, molar extinction coefficient, and sample volume.",
+      note: "1 U = the amount of enzyme that converts 1 µmol of substrate per minute under defined conditions. Ensure the reaction is in the linear phase when measuring ΔA/min."
     }
   },
 
@@ -566,7 +637,8 @@ const TREE = {
     options: [
       { label: "Compare observed category frequencies to an expected distribution", icon: "📊", next: "chi_gof"      },
       { label: "Test for an association between two categorical variables",         icon: "🔍", next: "assoc_paired"  },
-      { label: "Assess agreement between two raters or methods",                   icon: "✏️", next: "rater_scale"   }
+      { label: "Assess agreement between two raters or methods",                   icon: "✏️", next: "rater_scale"   },
+      { label: "Antibiotic susceptibility — categorical agreement between two AST methods", icon: "💊", next: "antibiotic_agreement" }
     ]
   },
 
@@ -648,6 +720,15 @@ const TREE = {
       file: "weighted_kappa.html",
       description: "Extends Cohen's kappa for ordinal scales, applying penalties proportional to the distance of disagreement between rater categories.",
       note: "Quadratic weights are preferred in most clinical contexts. Report which weighting scheme was used."
+    }
+  },
+
+  antibiotic_agreement: {
+    result: {
+      test: "Antibiotic Agreement",
+      file: "antibiotic_agreement.html",
+      description: "Evaluates categorical agreement between two antibiotic susceptibility testing (AST) methods per CLSI M52. Calculates essential agreement (EA), categorical agreement (CA), very major errors (VME), major errors (ME), and minor errors (mE) for S/I/R classifications.",
+      note: "CLSI M52 acceptance criteria: EA ≥ 90%, CA ≥ 90%, VME ≤ 1.5%, ME ≤ 3%. At least 50 isolates per organism–drug combination recommended."
     }
   },
 
