@@ -1,4 +1,4 @@
 window.APP_META = Object.freeze({
-  version: '2.1.0',
-  build: 22
+  version: '2.2.0',
+  build: 23
 });
