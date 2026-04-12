@@ -1143,7 +1143,7 @@
       <!-- Search -->
       <div class="search-wrap" id="searchWrap">
         <span class="search-icon">🔍</span>
-        <input class="search-input" id="searchInput" type="text" placeholder="Search tools…"
+        <input class="search-input" id="searchInput" type="text" placeholder="Search all…"
           oninput="doSearch(this.value)" onkeydown="searchKeydown(event)"
           autocomplete="off" spellcheck="false">
         <div class="search-results" id="searchResults"></div>
@@ -1270,6 +1270,8 @@
         <div>
           <!-- Data group -->
           <input type="file" id="loadDataInput" accept=".json" style="display:none;" onchange="loadToolData(event)">
+          <!-- Page search -->
+          <button class="report-btn" id="pageSearchBtn" onclick="openPageSearch()" title="Search this page">&#128269; Search page</button>
           <!-- Report -->
           <button class="report-btn" id="reportBtn" onclick="openReportPanel()">&#128196; Report</button>
           <!-- UI -->
@@ -2557,7 +2559,7 @@
       'home.analytical':'Analytical Performance',
       'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP05/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
       'home.stability':'Sample Validation',
-      'home.stabilityDesc':'Determine whether patient material or reagent lots remain stable over time. Calculate % change from baseline, detect trends, and document functional expiry.',
+      'home.stabilityDesc':'Validate every part of the pre-analytical pathway — tube changes, additives, storage, transport, centrifugation, and reagent/sample stability over time. Paired-sample bias studies, CLSI EP25-A time-course studies, and EP30 commutability in one framework.',
       'home.regression':'Correlation &amp; Regression',
       'home.regressionDesc':'Explore relationships between continuous variables — understand correlation coefficients, R², and build linear regression models.',
       'home.pcr':'PCR',
@@ -2604,7 +2606,7 @@
       'home.analytical':'Analytisk Præstation',
       'home.analyticalDesc':'Lær og beregn præcision, bias og total fejl. Dækker EP05/EP15-validering, metodekomparing, TAE og sigma-metrikker.',
       'home.stability':'Prøvevalidering',
-      'home.stabilityDesc':'Vurder om patientmateriale eller reagenspartier forbliver stabile over tid. Beregn % afvigelse fra baseline og dokumenter funktionel udløbsdato.',
+      'home.stabilityDesc':'Valider hele den præanalytiske fase — ændringer i rør, additiver, opbevaring, transport, centrifugering og stabilitet over tid. Parrede bias-studier, CLSI EP25-A tidsforløbsstudier og EP30 kommutabilitet i ét samlet framework.',
       'home.regression':'Regression &amp; Diagnostik',
       'home.regressionDesc':'Undersøg sammenhænge mellem variable og evaluer den diagnostiske præstation af tests og biomarkører.',
       'home.pcr':'PCR',
@@ -3057,6 +3059,17 @@
     a.click();
     URL.revokeObjectURL(a.href);
     showToast("Data saved — load it later with ⬆ Load data to restore your inputs.");
+  }
+
+  function openPageSearch() {
+    const frame = document.getElementById('toolIframe');
+    try {
+      if (frame && frame.contentWindow && typeof frame.contentWindow.openPageSearch === 'function') {
+        frame.contentWindow.openPageSearch();
+        return;
+      }
+    } catch (e) {}
+    showToast("Search is available on theory pages. Open a Concepts & Theory page first.");
   }
 
   function loadToolData(event) {

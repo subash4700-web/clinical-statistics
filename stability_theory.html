@@ -83,12 +83,37 @@
   <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
 </div>
 
-  <h1>Stability &amp; Time — Concepts &amp; Theory <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;vertical-align:middle;">BETA</span></h1>
-  <p class="lead">A guide to stability testing for clinical laboratory scientists — what stability studies measure, why they are fundamentally different from analytical performance studies, and how to design, run, and interpret them according to CLSI EP25-A.</p>
+  <h1>Sample Validation — Concepts &amp; Theory <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;vertical-align:middle;">BETA</span> <span style="background:#f59e0b;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;vertical-align:middle;">NEEDS FULL REVIEW</span></h1>
+
+  <p class="lead">A guide to sample validation for clinical laboratory scientists — how to validate every part of the pre-analytical pathway (tubes, additives, collection protocols, transport, centrifugation, storage, stability over time) so that the sample reaching the instrument still gives the right answer. Covers stability studies (CLSI EP25-A), paired-sample bias studies, and commutability (CLSI EP30) in one framework.</p>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin:12px 0 18px;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;">How this module is organised</div>
+    <p style="margin:0 0 8px 0;font-size:13px;">The module has three parts, in the same order as the Analytical Performance module:</p>
+    <ul style="margin:0 0 8px 0;padding-left:20px;font-size:13px;line-height:1.7;">
+      <li><b>Concepts — stability theory.</b> What stability means, why it is distinct from analytical performance, how to design a stability study (CLSI EP25-A), quantitative and qualitative stability analysis, functional expiry, acceptance criteria.</li>
+      <li><b>Compliance — pre-analytical validation.</b> How ISO 15189 frames pre-analytical validation; what an APS for a pre-analytical change looks like; triggers that require validation (new tube, additive, transport, storage, centrifugation, collection protocol); study designs to use (paired-sample bias, stability, commutability); standards that govern each.</li>
+      <li><b>Appendix.</b> Summary table and references.</li>
+    </ul>
+    <p style="margin:0;font-size:12px;color:#475569;font-style:italic;">If a pre-analytical factor has changed and you need to decide <em>what study to run</em>, jump to the Compliance section. If you need the theory behind stability testing, read the Concepts section first.</p>
+  </div>
+
+  <div id="four-layers" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 20px;margin-bottom:24px;">
+    <h3 style="margin-top:0;">The four layers at a glance</h3>
+    <p>Sample validation sits inside the same ISO 15189 framework as analytical performance — only the <em>scope</em> differs. The structural map is the same:</p>
+    <ul>
+      <li><b>ISO 15189</b> — §7.2 (pre-examination processes) and §7.3.2 (method validation extends to pre-analytical conditions) require the lab to hold a documented validation record whenever the pre-analytical pathway changes. It says <em>when</em>; it does not specify the statistics.</li>
+      <li><b>APS (Analytical Performance Specification)</b> — the acceptance criteria the change must meet. For pre-analytical work the most common criterion is <b>allowable bias</b> (shift caused by the change) or <b>allowable % change from baseline</b> (for stability over time).</li>
+      <li><b>Study design</b> — depends on what changed: paired-sample bias study (new tube, additive, centrifugation), time-course stability (new storage, transport duration), commutability (CLSI EP30, for reference materials crossing into the patient-sample pathway).</li>
+      <li><b>Pass/fail</b> — per-characteristic verdict against the pre-defined APS. Meets specification: yes / no.</li>
+    </ul>
+    <p style="margin-bottom:0;"><i>Read in order: ISO tells you when validation is required, APS tells you the allowable shift, the study design tells you how to measure it, and the verdict is reached by comparing the observed shift to the acceptance criterion.</i></p>
+  </div>
 
   <div class="index">
     <h3>Contents</h3>
-    <ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:12px 0 6px;">Concepts — stability theory</div>
+    <ol start="1">
       <li><a href="#distinction">The fundamental distinction — material vs method</a></li>
       <li><a href="#what-is-stability">What is a stability study?</a></li>
       <li><a href="#why-separate">Why stability is not part of analytical performance</a></li>
@@ -98,6 +123,18 @@
       <li><a href="#qual">Qualitative stability — Kappa and McNemar over time</a></li>
       <li><a href="#expiry">Functional expiry — definition and determination</a></li>
       <li><a href="#criteria">Acceptance criteria</a></li>
+    </ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Compliance — pre-analytical validation</div>
+    <ol start="10">
+      <li><a href="#iso-preana">ISO 15189 and pre-analytical validation</a></li>
+      <li><a href="#pre-aps">Defining the APS for a pre-analytical change</a></li>
+      <li><a href="#pre-triggers">Pre-analytical triggers — what study to run</a></li>
+      <li><a href="#paired-bias">Paired-sample bias study — the workhorse of pre-analytical validation</a></li>
+      <li><a href="#commutability">Commutability — CLSI EP30</a></li>
+      <li><a href="#pre-standards">Standards governing sample validation</a></li>
+    </ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Appendix</div>
+    <ol start="16">
       <li><a href="#summary">Summary table</a></li>
       <li><a href="#references">References</a></li>
     </ol>
@@ -406,9 +443,172 @@
 
   <hr class="divider">
 
+  <div class="section" id="iso-preana">
+    <h2>10. ISO 15189 and pre-analytical validation <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>ISO 15189:2022 does not carve out a separate chapter for pre-analytical validation — it treats the sample pathway as part of the overall method. Two clauses do the work:</p>
+    <ul>
+      <li><b>§7.2 Pre-examination processes</b> — the lab must define, document, and periodically review requirements for patient preparation, specimen type, collection, transport, and handling. Any deviation or change to these requirements must be validated before clinical use.</li>
+      <li><b>§7.3.2 Validation of examination methods</b> — explicitly includes the pre-examination conditions under which the method is validated (sample type, container, storage, transport time). If any of those change, the method is no longer validated for the new conditions.</li>
+    </ul>
+    <p>Together the two clauses establish a principle: <b>a change to the sample pathway is a change to the method's validation envelope, not a free-standing change to a procedure.</b> That is the reason a new tube must be validated even when everything downstream is unchanged.</p>
+
+    <h3>What ISO 15189 mandates (and what it does not)</h3>
+    <ul>
+      <li><b>Mandates:</b> that the change is identified, documented, validated, and signed off; that the validation record meets its pre-defined acceptance criteria; that ongoing performance is monitored.</li>
+      <li><b>Does not mandate:</b> the study design, the statistics, the sample size, or the acceptance criterion. Those come from CLSI guidelines (GP41, GP44, EP25, EP30) and the lab's own APS.</li>
+    </ul>
+    <div class="info"><b>Next →</b> ISO 15189 says <em>validate</em>. The next section covers what the <em>acceptance criterion</em> for a pre-analytical change should look like.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="pre-aps">
+    <h2>11. Defining the APS for a pre-analytical change <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>The Analytical Performance Specification (APS) concept applies directly to pre-analytical validation — but with one shift in focus. For analytical methods, the APS is about method behaviour (CVa, bias, TAE). For a pre-analytical change, the APS is about the <b>shift the change is allowed to introduce</b>.</p>
+
+    <h3>What the APS should contain for a pre-analytical change</h3>
+    <ul>
+      <li><b>Intended clinical use of the analyte</b> — same as for any method APS: population, decision the result drives, medical decision points.</li>
+      <li><b>Allowable bias</b> — the largest systematic shift the change may introduce without affecting clinical interpretation. Usually derived from biological variation (Bias ≤ 0.25 × √(CVi² + CVg²), EFLM) or from clinical tolerance at the medical decision point.</li>
+      <li><b>Allowable imprecision</b> — only relevant if the change could plausibly affect the within-sample variation (e.g. a new centrifugation introducing variable separation). For most pre-analytical changes, imprecision is unchanged.</li>
+      <li><b>Allowable % change from baseline</b> — for time-course stability studies: typically ±10% (CLSI EP25-A default) or tighter where biological variation is narrow (e.g. sodium, potassium).</li>
+      <li><b>Source of each criterion</b> — biological variation, clinical outcome data, state-of-the-art, or regulatory minimum. Same Milan hierarchy used in analytical performance.</li>
+    </ul>
+
+    <h3>Where the APS comes from</h3>
+    <p>For routine analytes the APS for a pre-analytical change is typically derived directly from the analyte's analytical APS. If the method's allowable bias is 2%, a new tube that introduces more than 2% shift has consumed the entire allowable bias budget in the pre-analytical stage alone — leaving nothing for the analytical method's own bias. In practice, labs allow a fraction of the total bias budget for pre-analytical shifts (e.g. 1%) so that the analytical stage still has room.</p>
+
+    <div class="warn"><b>Write the APS before the study.</b> Same audit principle as for analytical validation: the acceptance criterion must be documented in the study plan before data is collected. A shift judged acceptable after the fact is a classic non-conformity finding.</div>
+
+    <div class="info"><b>Next →</b> APS sets the acceptance criterion. The next section is the trigger-to-design table — given a change, which study design is appropriate.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="pre-triggers">
+    <h2>12. Pre-analytical triggers — what study to run <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>The pre-analytical pathway has many components. Each kind of change has a matching study design — some require a head-to-head bias check, some require a time-course stability study, some require both.</p>
+    <table>
+      <tr><th>Trigger (what changed)</th><th>Main question to answer</th><th>Study design</th><th>Primary tool / protocol</th></tr>
+      <tr><td><b>New tube type or manufacturer</b></td><td>Does the tube introduce a systematic shift vs the old tube, at every concentration level?</td><td>Paired-sample bias study — both tubes drawn from the same patients, measured same-day</td><td>CLSI GP41 (collection) + paired-sample design (see §13). Typically ≥ 40 patients across the measuring range.</td></tr>
+      <tr><td><b>New additive or anticoagulant</b> (e.g. Li-heparin → EDTA)</td><td>Does the additive interfere with the analyte or change its recovery?</td><td>Paired-sample bias + interference check</td><td>Paired-sample design (§13); for suspected interference, run an EP07-style spiked vs unspiked comparison.</td></tr>
+      <tr><td><b>Longer transport time</b> or new transport mode (pneumatic tube, courier, cooled vs ambient)</td><td>Is the analyte stable over the new transport window and temperature profile?</td><td>Time-course stability study along the transport envelope (e.g. T0, +30 min, +2 h, +6 h, +24 h at the transport temperature)</td><td>CLSI EP25-A stability design — quantitative stability tool. For courier/pneumatic-tube changes, run at both ends (mild and worst-case temperature).</td></tr>
+      <tr><td><b>Changed centrifugation</b> (speed, time, temperature, single vs double spin)</td><td>Does the new spin change analyte recovery, or leave residual cells/platelets that interfere?</td><td>Paired-sample bias; inspect for haemolysis/platelet contamination visually and with HIL indices</td><td>Paired-sample design (§13) on ≥ 20 samples; include HIL index measurement on both conditions.</td></tr>
+      <tr><td><b>New storage temperature, container, or duration</b></td><td>Is the analyte stable at the new conditions for the required storage window?</td><td>Time-course stability study at the new temperature/container</td><td>CLSI EP25-A stability design — quantitative stability tool. Include the maximum intended storage duration as a time point.</td></tr>
+      <tr><td><b>New freeze-thaw cycle</b> or extended frozen storage</td><td>Does the analyte survive the additional freeze-thaw or the longer frozen window?</td><td>Controlled freeze-thaw stability study (e.g. T0 vs 1, 3, 5 cycles; or T0 vs 3, 6, 12 months frozen)</td><td>CLSI EP25-A stability design.</td></tr>
+      <tr><td><b>Changed collection protocol</b> (fasting, posture, time of day, tourniquet time)</td><td>Does the new protocol give results comparable to the old protocol in the intended population?</td><td>Paired-sample bias under both protocols + population check against the existing reference interval</td><td>Paired-sample design (§13) where both protocols can be run on the same individual; otherwise a controlled cohort comparison. Verify against reference interval (EP28 verification, 20 samples, ≤ 2 outside rule).</td></tr>
+      <tr><td><b>New reference material or EQA sample type</b> (crossing into the patient-sample pathway)</td><td>Does the reference material behave like a real patient sample on your method?</td><td>Commutability study — see §14</td><td>CLSI EP30.</td></tr>
+    </table>
+    <p><i>Most triggers reduce to one of three study designs: a <b>paired-sample bias study</b>, a <b>time-course stability study</b>, or a <b>commutability study</b>. §13 and §14 cover the first and third; the time-course design is the same CLSI EP25-A framework already covered in §4–§9 of the concepts section.</i></p>
+    <div class="info"><b>Next →</b> The next section covers the paired-sample bias study design in detail — the workhorse for most pre-analytical validations.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="paired-bias">
+    <h2>13. Paired-sample bias study — the workhorse of pre-analytical validation <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>Most pre-analytical changes — a new tube, a new additive, a new centrifugation protocol — are validated by a <b>paired-sample bias study</b>. The design is simple: draw two samples from the same patient at the same time, one handled the old way and one handled the new way, measure both on the same method, and ask whether the new condition produces a systematic shift.</p>
+
+    <h3>Design</h3>
+    <ul>
+      <li><b>Pair every patient with themselves.</b> The two conditions are measured on the same individual — so biological between-patient variation cancels out completely, exactly like in a stability study paired against T0.</li>
+      <li><b>Number of samples:</b> typically <b>≥ 40 patient pairs</b> spanning the measuring range (low, normal, high). Parallel to CLSI EP09 method-comparison guidance.</li>
+      <li><b>Same-day measurement of both conditions</b> — ideally within a short time window after collection, to rule out time-course effects that would otherwise confound the conditional effect.</li>
+      <li><b>Single measurement per sample</b> — replicates are not needed; variance comes from the paired differences.</li>
+      <li><b>Include HIL indices</b> where relevant (centrifugation and tube changes can affect haemolysis/lipaemia/icterus).</li>
+    </ul>
+
+    <h3>Statistical analysis</h3>
+    <ul>
+      <li><b>Paired differences:</b> for each patient, compute d<sub>i</sub> = new − old (or new − old as %).</li>
+      <li><b>Mean difference</b> is the estimated systematic bias introduced by the change.</li>
+      <li><b>Paired t-test (or Wilcoxon signed-rank if the differences are non-normal)</b> tests whether the mean difference is statistically distinguishable from zero.</li>
+      <li><b>95% CI on the mean difference</b> — the most useful output. Compare the CI to the APS-defined allowable bias.</li>
+      <li><b>Bland-Altman of the paired differences</b> — visualises whether the shift is constant across the range or varies with concentration (proportional bias).</li>
+    </ul>
+
+    <h3>Decision rule</h3>
+    <ul>
+      <li><b>CI on the mean bias is entirely within the APS allowable bias</b> → change passes.</li>
+      <li><b>CI contains zero but is wider than the APS limit</b> → underpowered; run more samples before concluding.</li>
+      <li><b>CI excludes zero but is within APS</b> → a real but clinically acceptable shift. Document and monitor.</li>
+      <li><b>CI excludes zero and exceeds APS</b> → the change introduces unacceptable bias. Do not implement without correction (calibrator adjustment) or investigation.</li>
+    </ul>
+
+    <h3>Pitfalls</h3>
+    <ul>
+      <li><b>Under-powered studies</b> — a narrow APS (say 1% allowable bias) needs many more pairs than a wide one (5%). Check the CI width is adequate before starting.</li>
+      <li><b>Time-course confound</b> — if the two samples are measured hours apart, analyte degradation can masquerade as conditional bias. Alternate measurement order between paired samples.</li>
+      <li><b>Proportional bias missed by the mean</b> — a mean difference near zero can hide a proportional bias that cancels out on average. Always plot the Bland-Altman.</li>
+      <li><b>Spanning the measuring range</b> — a shift that is acceptable at normal levels may be unacceptable near a clinical decision point. Stratify the analysis if the shift varies with concentration.</li>
+    </ul>
+
+    <div class="info"><b>Next →</b> Paired-sample bias handles most changes to the patient-sample pathway. The next section covers the different-but-related question: does a <em>non-patient</em> material (CRM, EQA sample) behave like a real patient sample?</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="commutability">
+    <h2>14. Commutability — CLSI EP30 <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p><b>Commutability</b> is the property that a reference material or a control — which is <em>not</em> a real patient sample — behaves on your method the way real patient samples at the same concentration would. A commutable material gives the same method-to-method comparison result as patient samples would. A non-commutable material shows apparent bias that does not exist for patients, because of matrix effects.</p>
+
+    <h3>Why commutability matters in sample validation</h3>
+    <p>Commutability is what connects reference materials to the patient pathway. A CRM that is not commutable cannot be used to assess bias on patient samples — any bias observed is a matrix artefact, not real method disagreement. The same applies to EQA samples (often lyophilised or stabilised) and to QC materials with modified matrices.</p>
+
+    <h3>CLSI EP30 study design</h3>
+    <ul>
+      <li><b>Candidate material</b> — the CRM, EQA sample, or control whose commutability you are assessing.</li>
+      <li><b>Reference patient panel</b> — typically ≥ 20 native patient samples spanning the measuring range.</li>
+      <li><b>Two (or more) methods</b> — measure both the candidate material and the patient panel on all methods being compared.</li>
+      <li><b>Plot candidate vs. patient regression</b> — fit the candidate's position on a regression line built from patient-sample pairs. The material is <b>commutable</b> if it falls inside the patient-sample prediction interval at the same concentration.</li>
+    </ul>
+
+    <h3>Output</h3>
+    <ul>
+      <li><b>Commutable</b> — the material sits within the patient-sample prediction interval. Safe to use for bias assessment across methods.</li>
+      <li><b>Non-commutable</b> — the material sits outside the interval. Apparent method bias when using this material is (at least partly) a matrix artefact. Use another material for cross-method bias studies.</li>
+    </ul>
+
+    <h3>Where this fits in daily practice</h3>
+    <ul>
+      <li><b>New CRM or EQA material</b> — the provider should state commutability on the certificate. JCTLM publishes a list of commutable, SI-traceable CRMs.</li>
+      <li><b>Investigating an unexpected EQA bias</b> — if bias is seen in EQA but not in patient-based method comparison (EP09), suspect a non-commutable EQA sample.</li>
+      <li><b>New QC lot</b> — for within-lab QC you do not usually need a full EP30 study, but a short bridging check when a new lot is introduced will flag any matrix shift.</li>
+    </ul>
+
+    <div class="info"><b>Next →</b> The final section collects all the standards that govern sample validation — the references auditors work from.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="pre-standards">
+    <h2>15. Standards governing sample validation <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>Sample validation sits across ISO and CLSI documents. ISO mandates <em>that</em> it be done; CLSI provides the study designs. National accreditation bodies enforce both.</p>
+    <table>
+      <tr><th>Standard</th><th>What it covers</th><th>Level</th></tr>
+      <tr><td><b>ISO 15189:2022 §7.2</b></td><td>Pre-examination processes. The lab must define, document, and periodically review requirements for patient preparation, specimen type, collection, transport, and handling. Any change must be validated before clinical use.</td><td>Mandatory for accredited labs</td></tr>
+      <tr><td><b>ISO 15189:2022 §7.3.2</b></td><td>Validation of examination methods. Explicitly includes pre-examination conditions — the method is validated under specific sample conditions, and a change to those conditions requires re-validation.</td><td>Mandatory for accredited labs</td></tr>
+      <tr><td><b>CLSI GP41</b></td><td>Collection of diagnostic venous blood specimens. Tube types, order of draw, additives, patient preparation.</td><td>De facto standard for collection procedures</td></tr>
+      <tr><td><b>CLSI GP44</b></td><td>Procedures for the handling and processing of blood specimens for common laboratory tests. Centrifugation, separation, storage, transport.</td><td>De facto standard for sample processing</td></tr>
+      <tr><td><b>CLSI EP25-A</b></td><td>Evaluation of stability of in vitro diagnostic reagents. The time-course stability study design used for reagents, calibrators, patient samples, and storage condition validation.</td><td>De facto standard for stability studies</td></tr>
+      <tr><td><b>CLSI EP30</b></td><td>Characterization and qualification of commutable reference materials for clinical chemistry. The commutability study design.</td><td>De facto standard for commutability</td></tr>
+      <tr><td><b>National accreditation bodies</b> (DANAK, SWEDAC, Norsk Akkreditering, FINAS, ISAC)</td><td>Enforce ISO 15189 at the lab level. A tube or storage change without a documented validation is a classic audit finding.</td><td>Enforces the above</td></tr>
+      <tr><td><b>EU IVDR (Regulation 2017/746)</b></td><td>Manufacturer-side regulation: a CE-marked IVD's instructions for use state the validated sample conditions. Using the IVD outside those conditions shifts responsibility for re-validation to the lab.</td><td>Regulatory framing for commercial IVDs</td></tr>
+    </table>
+    <p><i>The ISO/CLSI/SOP hierarchy is the same as in the Analytical Performance module: ISO says <em>do it</em>; CLSI says <em>here is how</em>; your SOP says <em>this is what we do</em> and is binding once documented.</i></p>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
   <!-- 10 -->
   <div class="section" id="summary">
-    <h2>10. Summary table</h2>
+    <h2>16. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
       <tr><td><b>Quantitative stability</b></td><td>Whether a material's measured value changes from baseline over time</td><td>Mean % change from T0 · 95% CI · drift rate · functional expiry</td><td>Quantitative Stability Study</td></tr>
@@ -450,5 +650,7 @@
     document.getElementById('ftSize').textContent = currentSize + 'px';
   }
 </script>
+<script src="assets/js/auto-toc.js" defer></script>
+<script src="assets/js/page-search.js" defer></script>
 </body>
 </html>

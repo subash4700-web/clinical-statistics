@@ -87,6 +87,17 @@
   <h1>Analytical Performance — Concepts &amp; Theory</h1>
   <p class="lead">A practical guide to precision, bias, total error, and method validation — written for clinical laboratory scientists. Covers the concepts behind the tools and explains when and how to use them.</p>
 
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin:12px 0 18px;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;">How this module is organised</div>
+    <p style="margin:0 0 8px 0;font-size:13px;">The module is structured in three parts:</p>
+    <ul style="margin:0 0 8px 0;padding-left:20px;font-size:13px;line-height:1.7;">
+      <li><b>Analytical Performance — the concepts.</b> What accuracy, precision, bias, total error, and Sigma mean; where allowable limits come from; how biological variation sets the noise floor. Every subsequent section rests on these.</li>
+      <li><b>Compliance — the rules and the protocols.</b> How ISO 15189 frames validation and verification; what an APS is and how to set acceptance criteria; the CLSI EP protocols that measure each performance characteristic (EP05, EP15, EP09, EP15 trueness, EQA bias monitoring, EP28).</li>
+      <li><b>Categorical methods, clinical accuracy, and appendix.</b> Qualitative methods (EP12, EP17), diagnostic accuracy (ROC), antibiotic susceptibility agreement, summary table, and references.</li>
+    </ul>
+    <p style="margin:0;font-size:12px;color:#475569;font-style:italic;">Read the concepts section first if the theory is new to you; skip to the compliance section if you already know the theory and need the rules and protocols for running a study.</p>
+  </div>
+
   <div class="index">
     <h3>Contents</h3>
 
@@ -98,7 +109,7 @@
       <li><a href="#error">Sources of analytical error</a></li>
       <li><a href="#error-phases">Pre-analytical, analytical, and post-analytical errors</a></li>
       <li><a href="#why-controls">Why we do controls</a></li>
-      <li><a href="#crm-eqa">CRM vs EQA — two ways to detect bias</a></li>
+      <li><a href="#crm-eqa">IQC, CRM, and EQA — monitoring and detecting bias</a></li>
       <li><a href="#matrix">Matrix effects</a></li>
       <li><a href="#patient-vs-qc">Patient samples vs reference material for precision</a></li>
       <li><a href="#precision">Precision — what it means and how to measure it</a></li>
@@ -106,6 +117,7 @@
       <li><a href="#study-design">Practical study design — the duplicate method</a></li>
       <li><a href="#combining-variance">Why you cannot add standard deviations</a></li>
       <li><a href="#bias">Bias — systematic error</a></li>
+      <li><a href="#bias-measurement">Measuring bias in practice</a></li>
       <li><a href="#allowable">Allowable error — where limits come from</a></li>
       <li><a href="#tae">Total Allowable Error (TAE) and Total Error (TE)</a></li>
       <li><a href="#local-tae">Setting TAE locally — approach and considerations</a></li>
@@ -116,9 +128,12 @@
       <li><a href="#why-compliance">What is compliance — and why does it matter?</a></li>
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
       <li><a href="#workflow">Typical validation workflow</a></li>
+      <li><a href="#workflow-verification">Typical verification workflow</a></li>
       <li><a href="#ep05">EP05 — Precision Study Protocol (CLSI EP05-A3)</a></li>
       <li><a href="#ep15">EP15 — Precision Verification Protocol (CLSI EP15-A3)</a></li>
-      <li><a href="#ep09">EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</a></li>
+      <li><a href="#ep09">EP09 — Method Comparison (bias against another method)</a></li>
+      <li><a href="#ep15-trueness">EP15 trueness — bias against a CRM</a></li>
+      <li><a href="#eqa-bias">EQA bias monitoring — bias against peer consensus</a></li>
       <li><a href="#ref-interval">Reference Intervals — EP28 BETA REVIEW</a></li>
     </ol>
     <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Categorical Methods</div>
@@ -157,7 +172,7 @@
 
     <p>Think of it as <b>signal vs noise</b>: the <b>signal</b> is the true clinical change the clinician needs to see (a real rise in potassium, a real drop in HbA1c). The <b>noise</b> is everything that obscures it — biological fluctuation plus analytical imprecision and bias. If the noise is too large, the signal disappears into it and the clinical decision is made on the wrong information.</p>
 
-    <p><b>This module is, at its core, about one question:</b> is the total noise in the result small enough that the clinical signal still gets through? Total noise has three sources — biological, pre-analytical, and analytical<a href="#post-analytical-note" style="text-decoration:none;">*</a> — and only the analytical component is what this module unpacks in depth. The other two are introduced in section 2 (where each source is broken down) and section 5 (where the error phases are framed together).</p>
+    <p><b>This module is, at its core, about one question:</b> is the total noise in the result small enough that the clinical signal still gets through? Total noise has three sources — biological, pre-analytical, and analytical<a href="#post-analytical-note" style="text-decoration:none;">*</a> — and only the analytical component is what this module unpacks in depth. The other two are introduced in <a href="#types-variation" data-secref></a> (where each source is broken down) and <a href="#error-phases" data-secref></a> (where the error phases are framed together).</p>
     <p id="post-analytical-note"><i>* Post-analytical errors (transcription, wrong reference interval, miscommunication) also affect the final result, but they are discrete mistakes rather than statistical noise.</i></p>
 
     <div class="info"><b>Next →</b> Signal and noise both come from variation — so before we can evaluate analytical error, we need to understand the two fundamental sources of variation in any laboratory result: the <b>patient</b> (biological variation — the unavoidable baseline noise we cannot remove) and the <b>measurement system</b> (analytical variation — the noise we add on top, and the only one we can control). Together they define how much noise sits between the clinician and the true clinical signal.</div>
@@ -176,7 +191,7 @@
       <tr><td><b>Pre-analytical variation</b> (from sample handling)</td><td>Everything that happens to the sample <i>before</i> it reaches the instrument: patient preparation (fasting, posture, time of day), tube type, tourniquet time, transport, centrifugation, storage. Often the <b>largest</b> source of noise — and the cause of ~60–70% of all lab errors.</td><td>Partly — through SOPs, training, sample acceptance criteria, and standardised collection. Cannot be removed by statistics. Validation of changes to any of these factors is covered in <a href="#" onclick="window.parent.loadTool('stability_theory.html','Concepts &amp; Theory — Sample Validation');return false;" style="color:#1e40af;font-weight:600;">Sample Validation → Concepts &amp; Theory</a>.</td></tr>
       <tr><td><b>Analytical variation</b> (from the instrument)</td><td>The measurement system introduces its own variation: pipetting, reagent stability, detector noise, calibration drift. This is the error your laboratory can and must control.</td><td>Yes — through quality control, calibration, and method validation.</td></tr>
     </table>
-    <p><i>(Post-analytical errors — transcription, wrong reference interval applied, miscommunication with the clinician — also affect the final result, but they are mistakes rather than statistical variation. See section 5.)</i></p>
+    <p><i>(Post-analytical errors — transcription, wrong reference interval applied, miscommunication with the clinician — also affect the final result, but they are mistakes rather than statistical variation. See <a href="#error-phases" data-secref></a>.)</i></p>
 
     <p><b>Biological variation is the baseline noise</b> — it is always there and cannot be reduced. Pre-analytical and analytical noise stack on top of that baseline. The <b>total noise in a result</b> is therefore biological (baseline) + pre-analytical + analytical. A clinician cannot tell them apart — they only see the final number. Your job is to keep the two components on top of the baseline small enough that the clinical <b>signal</b> still gets through.</p>
 
@@ -201,7 +216,7 @@
       <span class="f-label">CVi example — Potassium:</span>
       <span class="f-correct">CVi ≈ 4.6% → potassium fluctuates by ≈ 4.6% within the same person week to week</span>
     </div>
-    <p>CVi is measured in studies where the same individual is sampled repeatedly over time, under controlled conditions. The <a href="https://biologicalvariation.eu" target="_blank" style="color:#0d766e;">EFLM Biological Variation Database</a> publishes CVi estimates for hundreds of analytes.</p>
+    <p>CVi is measured in studies where the same individual is sampled repeatedly over time, under controlled conditions.</p>
 
     <h3>CVg — Inter-individual biological variation</h3>
     <p><strong>CVg</strong> (also written CV<sub>G</sub>) is the variation <em>between</em> different people. Even in a healthy population, people have different set-points for the same analyte. CVg is typically larger than CVi.</p>
@@ -210,12 +225,15 @@
       <span class="f-correct">CVg ≈ 5.6% → different healthy people have potassium levels that differ by ≈ 5.6% between individuals</span>
     </div>
 
+    <p>The <a href="https://biologicalvariation.eu" target="_blank" style="color:#0d766e;">EFLM Biological Variation Database</a> publishes both CVi and CVg estimates for hundreds of analytes — the authoritative source for the values used in the formulas below.</p>
+
     <h3>Why CVi and CVg matter for analytical quality</h3>
     <p>CVi and CVg are used to derive allowable limits for your analytical method — this is about setting <strong>quality goals for your analyser</strong>, not about interpreting individual patient results.</p>
     <p>The reasoning behind the formulas:</p>
     <ul>
       <li><strong>Imprecision vs CVi:</strong> If your analytical CV% is large relative to CVi, analytical noise will obscure real biological signals — you cannot tell whether a change in a patient's result reflects true biology or measurement variation. The goal CVa ≤ 0.5 × CVi ensures your analytical noise is less than half the natural biological noise within a person.</li>
       <li><strong>Bias vs CVi + CVg:</strong> If your method has systematic bias, it shifts results away from the true value. If that shift is large relative to the combined biological variation (CVi and CVg), it can displace results incorrectly relative to the population reference range. The goal Bias ≤ 0.25 × √(CVi² + CVg²) keeps bias small enough not to distort clinical interpretation.</li>
+      <li><strong>Total Allowable Error (TAE):</strong> A single patient result is affected by imprecision <em>and</em> bias at the same time, so a single combined limit is needed. Bias is added directly because it always shifts results in one direction. Imprecision is multiplied by 1.65 — the z-score for the one-sided 95% bound of a normal distribution — so that 95% of single results stay within the limit. The combined goal TAE_a ≤ 1.65 × CVa + Bias_a therefore caps the worst plausible error in any one result. Unpacked properly in <a href="#tae" data-secref></a>.</li>
     </ul>
     <p>The EFLM/Westgard hierarchy of quality goals uses CVi and CVg to derive these specific, clinically meaningful allowable limits:</p>
     <div class="formula-box">
@@ -239,9 +257,22 @@
       <tr><td><span class="tag tag-blue">Optimum</span></td><td>0.25 × CVi</td><td>0.125 × √(CVi² + CVg²)</td><td>Highest clinical demand (e.g. therapeutic drug monitoring)</td></tr>
     </table>
 
-    <div class="warn">
-      <b>Index of Individuality (II) = CVi / CVg:</b> When II &lt; 0.6, population-based reference intervals are poor at detecting changes within an individual patient. In this case, individual baseline values (reference change values) are more clinically useful than population reference ranges. Low II analytes include CRP, ferritin, and troponin.
+    <h3>Index of Individuality (II)</h3>
+    <p>The ratio of within-person to between-person biological variation tells you whether the population reference interval is even useful for a given analyte. It is calculated as:</p>
+    <div class="formula-box">
+      <span class="f-label">Index of Individuality:</span>
+      <span class="f-correct">II = CVi / CVg</span>
     </div>
+    <p>If a person fluctuates a lot relative to how much people differ from each other (high II), the population range covers their variation well. If a person barely fluctuates compared with how different people are (low II), each person sits in their own narrow band <em>inside</em> the population range — and a value can change a lot for that individual while still looking "normal" against the population.</p>
+
+    <p>The conventional thresholds:</p>
+    <table>
+      <tr><th>II</th><th>Interpretation</th><th>What to use clinically</th></tr>
+      <tr><td><b>≥ 1.4 (high)</b></td><td>Patient fluctuates a lot relative to between-person differences. The population <b>reference interval (RI)</b> — the range derived from healthy people, covered fully in <a href="#ref-interval" data-secref></a> — covers the patient's natural range well.</td><td>Population RI is meaningful.</td></tr>
+      <tr><td><b>0.6 – 1.4 (intermediate)</b></td><td>Population RI is usable but with caution — both individual and population variation matter.</td><td>Population RI + clinical context.</td></tr>
+      <tr><td><b>&lt; 0.6 (low)</b></td><td>Each patient sits in their own narrow band inside the population RI. A value can change substantially for that patient while still appearing "normal" against the population.</td><td>Patient's own baseline + Reference Change Value (RCV). Examples: CRP, ferritin, troponin.</td></tr>
+    </table>
+    <p>This is why a troponin "in the normal range" can still represent a clinically important rise from that patient's own baseline — and why the meaningful reference for low-II analytes is the patient, not the population.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
     </div>
@@ -261,9 +292,7 @@
       <tr><td><b>Systematic error (bias)</b></td><td>Consistent shift in one direction. Results are always too high or always too low.</td><td>Mis-calibration, reagent lot change</td></tr>
       <tr><td><b>Total error</b></td><td>The combined effect of random and systematic error on any single patient result.</td><td>TE = |Bias| + z × SD</td></tr>
     </table>
-    <div class="good">
-      <b>Key principle:</b> Precision addresses random error. Bias addresses systematic error. Total error addresses both together. You need all three to evaluate whether your method is fit for clinical use.
-    </div>
+    <p><b>Key principle:</b> Precision addresses random error. Bias addresses systematic error. Total error addresses both together. You need all three to evaluate whether your method is fit for clinical use.</p>
         <div class="info"><b>Next →</b> Precision addresses random error, bias addresses systematic error, and total error combines both. But first — errors occur in three phases of the laboratory process. The next section explains which phase this module focuses on.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -278,11 +307,10 @@
       <tr><th>Phase</th><th>What happens</th><th>Error examples</th><th>Frequency</th></tr>
       <tr><td><b>Pre-analytical</b></td><td>Everything before the sample reaches the analyser: patient preparation, sample collection, transport, centrifugation, storage</td><td>Haemolysis, wrong tube, insufficient fasting, delayed transport, incorrect labelling</td><td>~60–70% of all lab errors</td></tr>
       <tr><td><b>Analytical</b></td><td>The measurement itself: calibration, reagent performance, instrument precision, interference</td><td>Calibration drift, reagent degradation, matrix effects, pipetting imprecision</td><td>~10–15% of all lab errors</td></tr>
-      <tr><td><b>Post-analytical</b></td><td>Everything after the measurement: result validation, reporting, interpretation, communication</td><td>Transcription errors, wrong reference interval applied, delayed reporting, misinterpretation</td><td>~20–25% of all lab errors</td></tr>
+      <tr><td><b>Post-analytical</b></td><td>Everything after the measurement: result validation, reporting, interpretation, communication</td><td>Transcription errors (correctly measured result mis-copied — e.g. typing "1.4" instead of "4.1" into the LIS, mis-hearing a phoned value), wrong reference interval applied, delayed reporting, misinterpretation</td><td>~20–25% of all lab errors</td></tr>
     </table>
-    <div class="warn"><b>Pre-analytical errors are the most common</b> — but they are addressed through SOPs, training, and specimen rejection criteria, not statistics.</div>
-    <div class="good"><b>This module focuses on the analytical phase</b> — the part where you can quantify and control error using statistical methods. When we say "error" in the following sections, we mean analytical error unless stated otherwise.</div>
-    <p>Even though analytical errors account for the smallest proportion, they are the most systematically measurable — and the only ones you can evaluate <em>before</em> a method goes into clinical use.</p>
+    <p>Pre-analytical errors are by far the most common, but day-to-day they are controlled through SOPs, training, and specimen rejection criteria — not through statistical monitoring of the running method. When the pre-analytical pathway itself <em>changes</em> (a new tube, additive, transport, storage), statistics does come in: that validation work is covered in <a href="#" onclick="window.parent.loadTool('stability_theory.html','Concepts &amp; Theory — Sample Validation');return false;" style="color:#1e40af;font-weight:600;">Sample Validation → Concepts &amp; Theory</a>. Post-analytical errors are mostly discrete mistakes, controlled by IT systems, double-checks, and reporting workflows.</p>
+    <p>The rest of this module focuses on the <b>analytical phase</b> — the part where the method itself is continuously quantified and controlled using statistics (precision, bias, total error, QC, EQA). When we say "error" in the following sections, we mean analytical error unless stated otherwise.</p>
     <div class="info"><b>Next →</b> How do we detect and monitor analytical error in practice? The answer is quality control — running control materials alongside patient samples to verify that the method is performing correctly.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -294,14 +322,14 @@
     <h2>6. Why we do controls</h2>
     <p>A laboratory cannot measure every patient sample twice. Instead, it runs <b>control materials</b> — samples with a known or expected value — alongside patient samples. If the control result is within acceptable limits, the patient results measured in the same run are considered reliable.</p>
     <table>
-      <tr><th>Question</th><th>Control type</th><th>What it tells you</th></tr>
-      <tr><td>Is my method <b>precise</b> today?</td><td>Internal QC (IQC) — same material measured every run</td><td>Whether within-run and between-run variation is stable over time</td></tr>
-      <tr><td>Is my method <b>accurate</b> compared to others?</td><td>External QA (EQA/EQAS) — unknown sample from a proficiency program</td><td>Whether your result agrees with peer laboratories</td></tr>
-      <tr><td>Is my method <b>true</b>?</td><td>Certified Reference Material (CRM) — value assigned by a reference method</td><td>Whether your result matches the "true" value</td></tr>
+      <tr><th>Question</th><th>Control type</th><th>What it tells you</th><th>Performance term measured</th></tr>
+      <tr><td>Am I <b>consistent with myself</b> over time?</td><td><b>IQC</b> — internal quality control: same stable material run every batch, compared to your own historical mean ± SD</td><td>Random variation and drift in your method, run to run and day to day</td><td><b>Imprecision (CVa)</b> — the random-error term of TAE. Cannot detect bias on its own.</td></tr>
+      <tr><td>Do I <b>agree with my peers</b>?</td><td><b>EQA / EQAS</b> — external quality assessment: blinded sample sent to many labs; your result compared to peer-group mean</td><td>Whether your result is shifted relative to the consensus of other labs running the same analyte</td><td><b>Bias vs. peer consensus</b> — the systematic-error term of TAE, relative to peers.</td></tr>
+      <tr><td>Am I <b>correct in absolute terms</b>?</td><td><b>CRM</b> — certified reference material: value assigned by a reference method, traceable to SI units</td><td>Whether your result matches the true value, independently of what other labs do</td><td><b>Bias vs. true value</b> — the systematic-error term of TAE, against an absolute reference.</td></tr>
     </table>
-    <div class="callout"><b>Analogy:</b> IQC is like checking your bathroom scale every morning with a known weight — you detect if it drifts. EQA is like weighing yourself on a different scale at the doctor's office — you detect if your scale is systematically off compared to everyone else's.</div>
-    <div class="warn"><b>Controls are not patient samples.</b> A control material may behave differently from a real patient sample due to matrix effects (stabilisers, preservatives, animal-sourced proteins). A method can pass all QC checks and still produce biased results on patient samples.</div>
-    <div class="info"><b>Next →</b> The next sections look at the specific materials used for bias detection (CRM and EQA), the matrix effects that can mislead you, and the difference between using patient samples vs reference materials.</div>
+    <p><b>Analogy:</b> Imagine you have a 10 kg calibration weight. <b>IQC</b> is weighing that same 10 kg weight on your own scale every morning — if the reading drifts away from 10 kg over time, you know your scale is changing. <b>EQA</b> is sending that same 10 kg weight (or an identical one) to several other labs to weigh on their scales — if your scale reads 10.0 kg but the others all read 10.3 kg, your scale is systematically off compared to everyone else's, even though it looks stable in your own daily check.</p>
+    <p><b>Controls are not patient samples.</b> A control material may behave differently from a real patient sample due to matrix effects (stabilisers, preservatives, animal-sourced proteins). A method can pass all QC checks and still produce biased results on patient samples.</p>
+    <div class="info"><b>Next →</b> The next sections look at the specific materials used for control and bias detection (IQC, CRM, and EQA), the matrix effects that can mislead you, and the difference between using patient samples vs reference materials.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -309,14 +337,27 @@
 
   <!-- CRM vs EQA -->
   <div class="section" id="crm-eqa">
-    <h2>7. CRM vs EQA — two ways to detect bias</h2>
-    <p>Bias can only be measured if you know the true value. There are two main ways to establish this in the clinical laboratory:</p>
+    <h2>7. IQC, CRM, and EQA — monitoring and detecting bias</h2>
+    <p>Three control types work together. <b>IQC</b> monitors day-to-day stability and precision; <b>CRM</b> and <b>EQA</b> are the two ways to actually detect bias, since bias can only be measured when you know (or can compare to) the true value.</p>
+
+    <h3>Internal Quality Control (IQC)</h3>
+    <p>A stable control material run alongside patient samples in every run. The mean and SD are established from your own initial runs (typically 20 days), and every subsequent result is compared to those limits using Westgard or similar rules.</p>
+    <ul>
+      <li><b>Advantage:</b> Cheap, continuous, and immediate — flags drift, shifts, or sudden imprecision in real time.</li>
+      <li><b>Limitation:</b> Cannot detect <em>bias</em> on its own — the target value is your own historical mean, so a method that has been wrong from day one will pass IQC indefinitely. IQC tells you whether you are <em>consistent with yourself</em>, not whether you are <em>correct</em>.</li>
+    </ul>
 
     <h3>Certified Reference Material (CRM)</h3>
     <p>A material with a known, certified assigned value — traceable to a reference method or SI units. You measure it on your analyser and compare your result to the certified value.</p>
     <ul>
       <li><b>Advantage:</b> Direct, objective comparison to a known true value.</li>
       <li><b>Limitation:</b> CRMs are expensive. Commutability must be verified — the CRM matrix should behave the same as real patient samples on your method.</li>
+    </ul>
+    <p><b>Pitfalls — not every CRM works for every method:</b></p>
+    <ul>
+      <li><b>Method-specific CRMs:</b> some are assigned using one specific assay (often immunoassays). Measuring on a different platform can show "bias" that is really just a difference in what each method detects.</li>
+      <li><b>Commutability</b> (does the material behave like a real patient sample on your analyser?)<b>:</b> a CRM matrix can behave differently from patient samples on your analyser. An apparent bias may be a matrix effect, not real method error. Always check the certificate for a commutability statement.</li>
+      <li><b>Wrong concentration level:</b> a CRM only assesses bias at its own level. A method can be unbiased at the medical decision point and biased at the upper end of the measuring range — or vice versa.</li>
     </ul>
 
     <h3>External Quality Assessment (EQA)</h3>
@@ -326,9 +367,7 @@
       <li><b>Limitation:</b> EQA materials are often lyophilized or stabilized. Their matrix may differ from real patient samples, so apparent bias may be a matrix effect rather than a true analytical problem.</li>
     </ul>
 
-    <div class="info">
-      <b>Key difference:</b> CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. Both are valuable — use them together. A bias confirmed in both CRM and EQA is almost certainly real.
-    </div>
+    <p><b>How they complement each other:</b> IQC catches drift and imprecision continuously but cannot find bias. CRM gives you an absolute bias against a known true value. EQA gives you a relative bias compared to your peers. A bias confirmed in both CRM and EQA is almost certainly real — and IQC tells you whether the rest of the time the method is at least <em>stable</em> at that bias level.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
     </div>
@@ -344,9 +383,7 @@
     <h2>8. Matrix effects</h2>
     <p>The matrix is everything in a sample other than the analyte being measured — water, proteins, lipids, salts, stabilizers. Different matrices can affect how an instrument responds to the same concentration of analyte.</p>
     <p>This is why a bias seen in EQA or with QC material does not always mean your method is wrong. The material's matrix may simply behave differently from real patient samples on your analyser.</p>
-    <div class="warn">
-      <b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.
-    </div>
+    <p><b>Never conclude there is a bias based on a single material alone.</b> Confirm bias using a commutable material — one whose matrix behaves like real patient samples on your method. Patient-based bias estimation (e.g. method comparison against a reference method) is the most reliable approach.</p>
         <div class="info"><b>Next →</b> Matrix effects explain why control materials don't always behave like patient samples. The next section covers the practical choice: when to use patient samples vs reference materials for your precision studies.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -358,21 +395,21 @@
     <h2>9. Patient samples vs reference material for precision</h2>
     <p>Precision can be studied using two types of material — and they answer different questions.</p>
     <table>
-      <tr><th>Material</th><th>Advantages</th><th>Limitations</th></tr>
+      <tr><th>Material</th><th>Advantages</th><th>Limitations</th><th>Where it fits in analytical performance assessment</th></tr>
       <tr>
         <td><b>Patient samples</b><br><span class="tag tag-green">Preferred for validation</span></td>
         <td>Native matrix — same composition as real patient samples. Results reflect true analytical performance on actual specimens.</td>
         <td>Less stable. Must be aliquoted and frozen. Concentration may drift over time.</td>
+        <td><b>Method comparison &amp; bias (CLSI EP09-A3)</b> — paired patient samples on candidate vs. comparison method.<br><b>Reference interval studies (CLSI EP28-A3c)</b> — fresh samples from a defined reference population.<br><b>Commutability / matrix-effect studies</b> — patient pools as the reference behaviour CRMs/EQA must match.</td>
       </tr>
       <tr>
-        <td><b>QC / reference material</b><br><span class="tag tag-blue">Used for monitoring</span></td>
+        <td><b>QC / reference material</b><br><span style="font-size:11px;color:#475569;">(IQC, CRM, EQA)</span><br><span class="tag tag-blue">Used for monitoring</span></td>
         <td>Stable, commercially available, ready to use. Ideal for day-to-day monitoring of ongoing precision.</td>
         <td>Often lyophilized or stabilized — matrix differs from real patient samples. May give artificially good precision due to stabilizers.</td>
+        <td><b>Precision studies (CLSI EP05-A3 / EP15-A3)</b> — same QC material run repeatedly to estimate Sw, Sb, St / CVa.<br><b>Routine IQC monitoring</b> — daily Westgard rules using stable QC material.<br><b>Trueness / bias against true value</b> — using a CRM (with commutability verified).<br><b>External comparability</b> — EQA / proficiency testing material (DEKS, UKNEQAS, etc.).</td>
       </tr>
     </table>
-    <div class="warn">
-      <b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.
-    </div>
+    <p><b>Do not use QC material alone for method validation.</b> Its modified matrix can make precision appear better than it actually is on real patient samples. CLSI EP05-A3 recommends patient samples for the validation study.</p>
     <p>Once validated, QC material is excellent for <b>ongoing monitoring</b> — detecting when precision drifts over time (Levey-Jennings charts, Westgard rules).</p>
         <div class="info"><b>Next →</b> Now that you understand the materials — we dive deep into analytical error. Starting with random error: precision. How reproducible are your measurements, and how do you quantify that?</div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -393,9 +430,7 @@
       <span class="f-label">CV% formula:</span>
       CV% = (SD / Mean) × 100
     </div>
-    <div class="warn">
-      <b>Precision ≠ accuracy.</b> A method can be very precise (low CV%) but systematically biased. Think of a scale that always reads 0.5 kg too high — consistent but wrong. Both precision and bias must be evaluated independently.
-    </div>
+    <p><b>Precision ≠ accuracy.</b> A method can be very precise (low CV%) but systematically biased. Think of a scale that always reads 0.5 kg too high — consistent but wrong. Both precision and bias must be evaluated independently.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision</a>
     </div>
@@ -425,11 +460,7 @@
       </div>
     </div>
 
-    <div class="warn">
-      <b>Important:</b> There is no single "intermediate precision." What you vary defines what you measure. If you vary days only, you get day-to-day intermediate precision. If you also vary operators and reagent lots, you get a broader measure. Always state what conditions were varied when reporting intermediate precision.
-    </div>
-
-    <p>Intermediate precision is always <b>≥ repeatability</b> because it includes all the within-run variation <em>plus</em> additional between-day sources.</p>
+    <p>There is no single "intermediate precision" — what you vary defines what you measure. If you vary days only, you get day-to-day intermediate precision; if you also vary operators and reagent lots, you get a broader measure. Always state what conditions were varied when reporting it. Intermediate precision is always <b>≥ repeatability</b> because it includes all the within-run variation <em>plus</em> additional between-day sources.</p>
 
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision</a><br>
@@ -445,20 +476,14 @@
   <div class="section" id="study-design">
     <h2>12. Practical study design — the duplicate method</h2>
     <p>The simplest precision study is to measure the same sample many times in one run and calculate the SD. This gives you <b>repeatability</b> — but nothing more.</p>
-    <p>To capture real-world laboratory performance, you need to spread measurements across multiple days and runs. The formal protocol for this is CLSI EP05-A3:</p>
-    <div class="info">
-      <b>CLSI EP05-A3 design:</b> Measure at least 2 concentration levels over <b>20 days × 2 runs/day × 2 replicates/run</b> = 80 measurements per level. This structured design allows nested ANOVA to partition within-run variation (Sw) from between-run variation (Sb).
-    </div>
-    <p>What this gives you depends on how the days are spread:</p>
+    <p>To capture real-world laboratory performance, you need to spread measurements across multiple days and runs. CLSI publishes two formal protocols — EP05-A3 for full validation and EP15-A3 for verification — each with a specific recommended layout (see the last column of the table below).</p>
     <table>
-      <tr><th>Design</th><th>What you measure</th><th>Use for</th></tr>
-      <tr><td>All measurements on <b>one day</b></td><td>Repeatability only (Sw)</td><td>Best-case precision estimate</td></tr>
-      <tr><td>Measurements spread across <b>multiple days</b></td><td>Intermediate precision (St = √(Sw² + Sb²))</td><td>Real-world performance estimate</td></tr>
+      <tr><th>Design</th><th>What you measure</th><th>Use for</th><th>Recommended layout (CLSI)</th></tr>
+      <tr><td>All measurements on <b>one day</b></td><td>Repeatability only (Sw)</td><td>Best-case precision estimate</td><td><b>Within-run only</b> — typically ≥ 20 replicates of each level on the same day. Use only as a quick check; not sufficient for validation. There is no standalone CLSI protocol for repeatability — Sw simply falls out of EP05/EP15. The term itself is defined in ISO 5725-2 and VIM (JCGM 200) §2.20.</td></tr>
+      <tr><td>Measurements spread across <b>multiple days</b></td><td>Intermediate precision (St = √(Sw² + Sb²))</td><td>Real-world performance estimate</td><td><b>EP05-A3 (full validation):</b> 20 days × 2 runs/day × 2 replicates/run = 80 measurements per level (commonly written <b>20 × 2 × 2</b>). This structured design lets nested ANOVA partition within-run (Sw) from between-run/between-day (Sb).<br><b>EP15-A3 (verification of manufacturer's claim):</b> 5 days × 5 replicates/day = 25 measurements per level (<b>5 × 5</b>).<br>Run at least 2 concentration levels (low + high covering the medical decision range).</td></tr>
     </table>
     <p>The replicates within each run give you the <b>within-run SD (Sw)</b>. The variation of run means around the grand mean gives you the <b>between-run component (Sb)</b>. Combined, they give you the <b>intermediate precision SD (St)</b>.</p>
-    <div class="good">
-      <b>Recommendation:</b> Always spread your precision study across multiple days. A one-day study will make your method look more precise than it actually is under real laboratory conditions.
-    </div>
+    <p><b>Recommendation:</b> Always spread your precision study across multiple days. A one-day study will make your method look more precise than it actually is under real laboratory conditions.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
     </div>
@@ -486,9 +511,7 @@
       <li>Correct: √(2.0² + 2.0²) = √8 = <b>2.83</b></li>
     </ul>
     <p>In this example the incorrect addition gives a result <b>41% higher</b> than the correct value. The overestimate depends on the relative size of the two components — it is largest when they are equal, and smaller when one dominates — but it is always an overestimate. This is not a small rounding difference — it is a fundamental statistical error.</p>
-    <div class="good">
-      <b>Rule:</b> Variances add. Standard deviations do not. This applies everywhere in statistics — not just to precision calculations.
-    </div>
+    <p><b>Rule:</b> Variances add. Standard deviations do not. This applies everywhere in statistics — not just to precision calculations.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('precision_learning.html','Understanding Precision');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Precision — exercise: Why you cannot add SDs</a>
     </div>
@@ -509,6 +532,14 @@
       <span class="f-label">Relative bias (%):</span>
       Bias% = ((Your mean − True value) / True value) × 100
     </div>
+    <h3>Constant vs proportional bias</h3>
+    <p>Bias does not always behave the same way across the measuring range. Two distinct shapes matter clinically:</p>
+    <ul>
+      <li><b>Constant bias</b> — a fixed offset that does not change with concentration. Every result is shifted by the same amount. Example: a method reads 0.5 mmol/L too high at every level — at 2 mmol/L it reports 2.5; at 20 mmol/L it reports 20.5. Typical causes: calibrator offset, baseline drift, reagent blank error. In regression against a reference method, constant bias shows up as an <b>intercept ≠ 0</b>.</li>
+      <li><b>Proportional bias</b> — a scaling error that grows with concentration. The <em>fractional</em> deviation is constant, but the absolute gap widens. Example: a method reads 5% too high — at 10 mmol/L it reports 10.5; at 100 mmol/L it reports 105. Typical causes: calibrator value error, matrix effects that scale with analyte, method specificity differences. In regression, proportional bias shows up as a <b>slope ≠ 1</b>.</li>
+    </ul>
+    <p>A method can have both at once (slope ≠ 1 <em>and</em> intercept ≠ 0). The four combinations are summarised in the method-comparison section (slope/intercept interpretation table). Clinically they matter differently: constant bias affects low-concentration results most (the fixed offset is a larger fraction of the true value there); proportional bias affects high-concentration results most (the absolute error grows with concentration).</p>
+
     <h3>Common causes of bias</h3>
     <ul>
       <li>Incorrect calibration or calibrator lot change</li>
@@ -517,14 +548,66 @@
       <li>Carry-over from high-concentration samples</li>
       <li>Incorrect reference interval or assigned value</li>
     </ul>
-    <div class="callout">
-      <b>Bias vs imprecision:</b> Bias shifts the entire distribution of results. Imprecision spreads it. A biased method gives results that cluster around the wrong value. An imprecise method gives results scattered around the right value. Total error combines both effects.
-    </div>
+    <p><b>Bias vs imprecision:</b> Bias shifts the entire distribution of results. Imprecision spreads it. A biased method gives results that cluster around the wrong value. An imprecise method gives results scattered around the right value. Total error combines both effects.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('bias_learning.html','Understanding Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Bias</a><br>
       → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a>
     </div>
-        <div class="info"><b>Next →</b> You can now measure both precision (CV%) and bias (%). But how do you know if those numbers are acceptable? The answer is allowable error — performance specifications derived from biological variation.</div>
+    <p><i>Bias is measured against one of three references: a certified reference material (CRM), EQA / peer consensus, or another method. Each is governed by a different standard. See <a href="#iso15189" data-secref="Section"></a> — <b>"Which standards govern each bias reference"</b> — for the mapping of reference → governing standard.</i></p>
+
+        <div class="info"><b>Next →</b> Section 14 told you what bias is. The next section covers how to <em>measure</em> it — the three reference types, how to choose between them, and the pitfalls that trip up real studies.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="bias-measurement">
+    <h2>15. Measuring bias in practice <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>Bias requires a <b>reference</b> — something with a known or agreed value to compare your result against. The three reference types each answer a slightly different question and carry different trade-offs.</p>
+
+    <h3>The three bias references</h3>
+    <table>
+      <tr><th>Reference</th><th>What you compare to</th><th>What it tells you</th><th>Pitfalls</th></tr>
+      <tr><td><b>Certified Reference Material (CRM)</b></td><td>A material with an assigned value certified by a reference measurement procedure, traceable to SI units where possible.</td><td><b>Trueness against a true value</b> — the most rigorous bias estimate. "Is my result correct in absolute terms?"</td><td>Not all CRMs are <b>commutable</b> — a non-commutable CRM can show apparent bias that does not exist for patient samples. Commutability must be verified (see CLSI EP30). Method-specific CRMs (e.g. immunoassay) cannot be used across platforms.</td></tr>
+      <tr><td><b>EQA / peer consensus</b></td><td>The peer-group mean from an external proficiency testing scheme (DEKS, UKNEQAS, Equalis, CAP, RfB).</td><td><b>Bias relative to peers</b> — "Is my result the same as what other labs get?" The best ongoing, practical check available for most analytes.</td><td>Peer consensus is <em>not</em> a true value. A whole peer group can share the same bias. EQA materials may also be non-commutable, especially for immunoassays.</td></tr>
+      <tr><td><b>Another method</b> (comparator)</td><td>A reference measurement procedure, or the routine method being replaced, measured on paired patient samples.</td><td><b>Method-to-method bias</b> — "Does my new method agree with the comparator across the measuring range?" Can reveal proportional and constant bias separately via regression.</td><td>Because both methods measure real patient samples, matrix effects cancel out and are not a concern here (unlike CRM and EQA). But the comparator method must itself be trustworthy — if the comparator has its own bias, your new method will look unbiased when it actually inherits that bias. Ideally the comparator is a reference measurement procedure or a well-characterised routine method with documented performance.</td></tr>
+    </table>
+
+    <h3>Choosing between references</h3>
+    <p>In practice, labs use a combination. The choice depends on what exists for the analyte and what question you are answering:</p>
+    <ul>
+      <li><b>New method validation (in-house, modified, or comparator replacement):</b> full method comparison against the current routine method — <b>CLSI EP09-A3</b>, ≥ 40 paired patient samples spanning the measuring range. Supplement with a CRM measurement if one exists for the analyte.</li>
+      <li><b>Commercial IVD verification:</b> bias against EQA (ongoing participation) or CRM — the bias check defined in <b>CLSI EP15-A3</b> (run alongside the EP15 precision verification). A full EP09 is not required unless the manufacturer's bias data cannot be applied to your population.</li>
+      <li><b>Ongoing monitoring (routine use):</b> EQA participation is the default. Frequency depends on the scheme — typically 4–6 rounds per year for most clinical chemistry, more frequent for haematology and coagulation. Each round covers multiple analytes at once. Trends over several rounds detect slow drift that a single round cannot.</li>
+      <li><b>Investigating a suspected bias:</b> use at least two independent references — a bias seen in EQA but not in CRM points to a matrix issue; a bias seen in both points to a real method problem.</li>
+    </ul>
+
+    <h3>Pitfalls that trip up real studies</h3>
+    <ul>
+      <li><b>Commutability</b> — probably the single biggest pitfall. Control materials, EQA samples, and even some CRMs can behave differently from patient samples on your analyser. A non-commutable material shows apparent bias that is entirely a matrix artefact. Verify commutability before drawing conclusions; prefer patient-based references (EP09) for definitive bias assessment.</li>
+      <li><b>Wrong concentration level</b> — a CRM only tells you about bias at its own level. A method can be unbiased at the medical decision point and biased at the top or bottom of the measuring range. Use multi-level references or run method comparison across the full range.</li>
+      <li><b>Peer-group groupthink</b> — all labs using the same reagent lot, same calibrator, or same method family can share the same bias. EQA agreement with your peers does not guarantee trueness — it only guarantees you agree with them.</li>
+      <li><b>Method-specific CRMs across platforms</b> — a CRM assigned by one specific assay (common in immunoassays) will show false bias when measured on a different platform. Check the CRM certificate for the assigned method; JCTLM publishes a list of commutable, SI-traceable CRMs.</li>
+      <li><b>Insufficient sample numbers</b> — a mean bias from 5 paired samples has a CI wide enough to hide clinically significant bias. EP09 recommends ≥ 40 samples for method comparison; fewer is acceptable only for verification.</li>
+      <li><b>Bias varies with time</b> — lot changes, calibrator drift, and reagent ageing can introduce or remove bias mid-study. A single point-in-time bias estimate should be confirmed by ongoing EQA trending.</li>
+    </ul>
+
+    <h3>What "passing" looks like</h3>
+    <p>Each measured bias is compared against the allowable bias defined in the APS:</p>
+    <ul>
+      <li><b>Statistical pass/fail:</b> measured bias is within the APS acceptance criterion (e.g. |Bias%| ≤ 2.0%).</li>
+      <li><b>Confidence interval view:</b> the 95% CI on the bias should sit inside the allowable range. A bias whose CI straddles the acceptance criterion is ambiguous — repeat with more samples before concluding.</li>
+      <li><b>Clinical view:</b> even a statistically passing bias must make clinical sense. A bias at the medical decision point has more impact than a bias at the extreme ends of the measuring range.</li>
+    </ul>
+    <p><b>If bias fails:</b> investigate the root cause (calibration, matrix, interference, method specificity) before re-running. A bias correction factor may be applied if the correction is stable, documented, and validated — but the underlying cause must be understood first.</p>
+
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('bias_learning.html','Understanding Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Bias</a><br>
+      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a><br>
+      → <a href="#" onclick="window.parent.loadTool('method_comparison.html','Method Comparison');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Method Comparison (EP09)</a>
+    </div>
+
+    <div class="info"><b>Next →</b> You can now measure both precision (CV%) and bias (%). But how do you know if those numbers are acceptable? The answer is allowable error — performance specifications derived from biological variation.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -532,19 +615,19 @@
 
   <!-- 8 -->
   <div class="section" id="allowable">
-    <h2>15. Allowable error — where limits come from</h2>
+    <h2>16. Allowable error — where limits come from</h2>
     <p>Before you can judge whether your precision or bias is acceptable, you need a limit to compare against. These allowable error limits come from three main sources:</p>
     <table>
       <tr><th>Source</th><th>Basis</th><th>Example</th></tr>
       <tr>
         <td><b>Biological variation</b><br><span class="tag tag-green">Recommended</span></td>
-        <td>Derived from intra-individual (CVi) and inter-individual (CVg) biological variation. Published in the EFLM biological variation database.</td>
+        <td>Derived from intra-individual (CVi) and inter-individual (CVg) biological variation. Published in the EFLM biological variation database. <b>Recommended</b> because it links the allowable error directly to clinical impact: if analytical noise is small compared with the patient's own biological fluctuation, the method is not the dominant source of uncertainty in the result.</td>
         <td>Allowable CV% = 0.5 × CVi<br>Allowable bias% = 0.25 × √(CVi² + CVg²)</td>
       </tr>
       <tr>
-        <td><b>Regulatory / external requirements</b></td>
-        <td>Fixed limits set by national or international bodies (e.g. ISO 15189, CLIA, Danish accreditation).</td>
-        <td>HbA1c: ≤ 6 mmol/mol or ≤ 6%</td>
+        <td><b>Regulatory total error limits</b></td>
+        <td>Fixed <b>TAE</b> limits set by national authorities for specific analytes. <b>ISO 15189</b> requires the lab to define and meet performance specifications but does not itself specify numbers. <b>CLIA</b> (US, 42 CFR §493.1253) does specify TAE for ~80 regulated analytes. Many EU countries (incl. Denmark via DANAK) delegate to EFLM biological variation goals. Bias and imprecision are not regulated separately — only their combined effect (TAE).</td>
+        <td>CLIA TAE for glucose: ±10% or ±6 mg/dL (whichever is greater)</td>
       </tr>
       <tr>
         <td><b>State of the art</b></td>
@@ -552,9 +635,7 @@
         <td>Peer group CV from EQA scheme</td>
       </tr>
     </table>
-    <div class="good">
-      <b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, analytical imprecision is not the dominant driver of variability between consecutive results — the patient's own physiology is.
-    </div>
+    <p><b>Biological variation is the gold standard</b> for setting quality goals because it links analytical performance directly to clinical impact. If your method's imprecision is small relative to the natural variation within a patient, analytical imprecision is not the dominant driver of variability between consecutive results — the patient's own physiology is. How TAE is defined, calculated, and set locally — and how the three sources above are combined into a working limit — is exactly what the next two sections (<a href="#tae" data-secref></a> and <a href="#local-tae" data-secref></a>) explore.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('tae_learning.html','Understanding TAE');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding TAE</a><br>
       → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
@@ -568,12 +649,17 @@
   <!-- 12 -->
   <div class="section" id="tae">
     <h2>16. Total Allowable Error (TAE) and Total Error (TE)</h2>
-    <p>A patient result contains both random and systematic error. <b>Total Error</b> is the maximum likely error in any single result, accounting for both bias and imprecision together.</p>
+    <p>Recall the framing from <a href="#why-accuracy" data-secref></a>: the question is whether the total noise in a result is small enough that the clinical signal still gets through. Total noise is biological variation (the unavoidable baseline) <em>plus</em> the two analytical components — imprecision (random error) and bias (systematic error). The lab cannot do anything about biological variation, so the focus here is the analytical part. A patient result is affected by both imprecision and bias at the same time, and <b>Total Error (TE)</b> combines them into the maximum likely <em>analytical</em> error in any one result — the single number that tells you how much of the clinical signal could be obscured by the method on a given measurement.</p>
+
+    <p><b>From signal/noise to a concrete analytical requirement:</b> the smallest clinical change a method needs to detect (the <em>signal</em>) sets the ceiling on the analytical noise it can carry. If a clinically meaningful change in HbA1c is, say, 5 mmol/mol, then the method's TE must be small enough that a true 5 mmol/mol shift is not lost inside the analytical noise. <b>Total Allowable Error (TAE)</b> is exactly that ceiling — the largest TE a method may have while still letting the clinical signal through. The condition <b>TE ≤ TAE</b> is the formal version of "noise small enough that the signal gets through".</p></p>
 
     <h3>Total Allowable Error (TAE)</h3>
-    <p>The maximum total error that is clinically acceptable. It is a pre-defined limit based on biological variation or regulatory requirements. It represents the error budget — how much total error the clinical use of the result can tolerate.</p>
+    <p>TAE is the formal name for the ceiling introduced above — the maximum total analytical error the clinical use of the result can tolerate before the signal is at risk of being lost in the noise. It is set <em>before</em> the method is evaluated, derived from biological variation (preferred) or fixed by regulatory requirements (e.g. CLIA), and acts as the laboratory's error budget for that analyte. The method is fit for clinical use when <b>TE ≤ TAE</b>.</p>
 
-    <h3>Calculating Total Error (TE)</h3>
+    <h3>Total Error (TE)</h3>
+    <p>TE is the <em>actual</em> maximum analytical error the method delivers in any one patient result, given its current bias and imprecision. While TAE is the ceiling set before the study, TE is the number you get out of the study — the worst plausible single-result error your method actually has, combining both error types into one figure. Whether the method passes is decided by comparing the two: <b>TE ≤ TAE → fit for clinical use</b>.</p>
+
+    <h4>Calculating TE</h4>
     <p>TE is calculated as:</p>
     <div class="formula-box">
       <span class="f-label">Most common (CLSI/Westgard — 95% one-tailed):</span>
@@ -607,19 +693,9 @@
       </tr>
     </table>
 
-    <div class="warn">
-      <b>The one-tailed vs two-tailed distinction:</b> We use a <em>one-tailed</em> z-score because we care about errors in the worst direction (results that are too high OR too low — whichever pushes past the TAE limit). The bias is already included separately, so we only need to model how far random error can push a result in one additional direction. That is why 1.65 (not 1.96) corresponds to 95%.
-    </div>
+    <p><b>The one-tailed vs two-tailed distinction:</b> we use a <em>one-tailed</em> z-score because we care about errors in the worst direction (results that are too high OR too low — whichever pushes past the TAE limit). The bias is already included separately, so we only need to model how far random error can push a result in one additional direction. That is why 1.65 (not 1.96) corresponds to 95%. <b>Practical guidance:</b> use <b>1.65</b> when following CLSI EP15/Westgard protocols, biological variation goals, or Six Sigma calculations — this is the international standard. Use <b>2.0</b> if your laboratory policy or accreditation body requires greater assurance, or for high-stakes analytes. Be consistent — use the same multiplier throughout your validation and your TAE definition.</p>
 
-    <div class="info">
-      <b>Practical guidance:</b> Use <strong>1.65</strong> when following CLSI EP15/Westgard protocols, biological variation goals, or Six Sigma calculations — this is the international standard. Use <strong>2.0</strong> if your laboratory policy or accreditation body requires greater assurance, or for high-stakes analytes. Be consistent — use the same multiplier throughout your validation and your TAE definition.
-    </div>
-
-    <p>The method passes if: <b>TE ≤ TAE</b></p>
-
-    <div class="info">
-      <b>Interpreting TE:</b> Bias and imprecision both consume part of the error budget. A method with large bias has less room for imprecision, and vice versa. A method can fail on total error even if both bias and imprecision individually appear acceptable — because they accumulate.
-    </div>
+    <p>The method passes if <b>TE ≤ TAE</b>. <b>Interpreting TE:</b> bias and imprecision both consume part of the error budget, so a method with large bias has less room for imprecision and vice versa. A method can fail on total error even if both bias and imprecision individually appear acceptable — because they accumulate.</p>
 
     <h3>Example</h3>
     <table>
@@ -701,6 +777,8 @@
       Sigma = (TAE% − |Bias%|) / CV%
     </div>
 
+    <p><i>Note on the implicit multiplier:</i> Sigma is the Six Sigma counterpart of the TE pass condition. It is built on the same one-tailed 95% z-score (1.65) used in TE = |Bias%| + 1.65 × CV%, which is the international standard (CLSI EP15, Westgard, biological-variation goals, Six Sigma). Some labs use 2.0 instead when local policy or accreditation requires greater assurance — if you do, use the same multiplier consistently in both TE and Sigma.</p>
+
     <p>Sigma tells you how much room is left in the error budget for random variation:</p>
     <table>
       <tr><th>Sigma</th><th>Performance level</th><th>Interpretation</th></tr>
@@ -719,13 +797,7 @@
       <tr><td>Sigma = (6.0 − 1.5) / 2.0</td><td><b>2.25</b> <span class="tag tag-red">Poor</span></td></tr>
     </table>
 
-    <div class="warn">
-      <b>Even if bias and imprecision individually pass their allowable limits, the Sigma metric can still be poor</b> if they together consume too much of the error budget. A high Sigma means your QC can be simple. A low Sigma means you need to run more QC to protect patients.
-    </div>
-
-    <div class="good">
-      <b>Practical use:</b> The Sigma metric is a single number that summarises the overall quality of your method. It can be used to design a rational QC strategy — methods with high Sigma need less QC, methods with low Sigma need more.
-    </div>
+    <p><b>Even if bias and imprecision individually pass their allowable limits, the Sigma metric can still be poor</b> if they together consume too much of the error budget. A high Sigma means your QC can be simple; a low Sigma means you need to run more QC to protect patients. <b>Practical use:</b> Sigma is a single number that summarises the overall quality of your method, and it can be used to design a rational QC strategy — methods with high Sigma need less QC, methods with low Sigma need more.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
     </div>
@@ -739,7 +811,19 @@
   <!-- Why we do controls -->
   <div class="section" id="why-compliance">
     <h2>19. What is compliance — and why does it matter?</h2>
-    <p>Understanding precision, bias, and total error is not optional — it is a <b>regulatory requirement</b>. Clinical laboratories operate under strict quality frameworks that mandate how methods must be validated, verified, and monitored. These standards exist because a laboratory result is a medical act: it directly influences patient treatment.</p>
+    <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">MOVED</span><b>The concepts section taught you <em>what</em> to measure and <em>why</em>.</b> This compliance section teaches you <em>how</em> — the specific protocols, standards, and workflows that regulatory bodies require.</p>
+    <p>Understanding precision, bias, and total error is, at minimum, a <b>professional standard</b> — and in most jurisdictions, a <b>regulatory requirement</b>. Accreditation to ISO 15189 is common across the Nordic countries (DANAK, SWEDAC, Norsk Akkreditering, FINAS, ISAC) and much of Europe, but the legal picture is not uniform: in some Nordic countries it is no longer strictly mandatory and hospital laboratories accredit voluntarily as a quality standard. The US operates under CLIA as the federal floor, with ISO 15189 / CAP accreditation remaining optional, and in many other countries accreditation is voluntary altogether. Even where it is not legally required, the same statistical principles apply — because a laboratory result is a medical act that directly influences patient treatment, and the logic of <em>why</em> methods must be validated does not depend on the country.</p>
+
+    <p><b>Why labs choose ISO 15189 and CLSI even when it is not mandatory:</b></p>
+    <ul>
+      <li><b>Patient safety and clinical trust</b> — accredited labs demonstrate that their results are traceable, validated, and fit for clinical use, which underpins clinician trust in the numbers they act on.</li>
+      <li><b>Defensibility</b> — when a result is questioned (clinically, legally, or in a complaint), a documented ISO 15189 / CLSI-compliant validation is the clearest defence the lab has.</li>
+      <li><b>Inter-laboratory comparability</b> — results from accredited labs are directly comparable because they share the same validation logic and metrological traceability. A patient transferred between hospitals gets consistent interpretation.</li>
+      <li><b>International recognition</b> — ISO 15189 accreditation is mutually recognised across participating countries (via ILAC), so results travel with the patient across borders.</li>
+      <li><b>Structured method evaluation</b> — the CLSI EP protocols give a concrete, statistically sound framework instead of each lab reinventing the wheel. Less work, fewer errors, better defensibility.</li>
+      <li><b>Procurement and tender requirements</b> — many buyers (insurers, public health systems, industry partners, clinical trials) require accredited results before contracting with the lab.</li>
+      <li><b>Staff training and audit readiness</b> — accreditation creates an internal quality culture; every method has an owner, a protocol, and a review cycle. The cost is real, but so is the operational benefit.</li>
+    </ul>
 
     <h3>Compliance vs non-conformity</h3>
     <table>
@@ -749,28 +833,17 @@
     </table>
     <p><b>Compliance is the goal</b>, and <b>non-conformities are the gaps</b> an auditor identifies on the way to that goal.</p>
 
-    <h3>Why does it matter?</h3>
-    <table>
-      <tr><th>Reason</th><th>What it means in practice</th></tr>
-      <tr><td><b>Patient safety</b></td><td>A method that has not been validated may produce results that lead to wrong diagnoses and wrong treatment.</td></tr>
-      <tr><td><b>Accreditation</b></td><td>Laboratories must be accredited under ISO 15189 to operate. Auditors check that every method has documented validation/verification evidence.</td></tr>
-      <tr><td><b>Legal responsibility</b></td><td>If a patient is harmed by a laboratory result, the laboratory must demonstrate that the method was properly validated. Without documentation, there is no defence.</td></tr>
-      <tr><td><b>Traceability</b></td><td>CLSI EP guidelines and ISO standards provide a standardised, reproducible framework. Every laboratory follows the same protocols, making results comparable across institutions.</td></tr>
-    </table>
-
-    <h3>Accreditation — what auditors look for</h3>
-    <p>In Denmark, clinical laboratories are accredited by <b>DANAK</b> (Den Danske Akkrediterings- og Metrologifond) under ISO 15189. Accreditation is not a one-time event — laboratories are audited regularly.</p>
 
     <h3>Audit findings — the remark categories</h3>
     <table>
-      <tr><th>Remark type</th><th>Danish term</th><th>Severity</th><th>Consequence</th></tr>
-      <tr><td><b>Observation</b></td><td>Observation</td><td>Low</td><td>Noted for awareness. No action required, but may become a non-conformity if not addressed.</td></tr>
-      <tr><td><b>Minor non-conformity</b></td><td>Mindre afvigelse</td><td>Medium</td><td>Must be corrected within a defined timeframe (typically before next audit).</td></tr>
-      <tr><td><b>Major non-conformity</b></td><td>Større afvigelse</td><td>High</td><td>Must be corrected immediately. Can lead to suspension of accreditation for the affected area.</td></tr>
-      <tr><td><b>Suspension</b></td><td>Suspendering</td><td>Critical</td><td>Accreditation temporarily withdrawn. The laboratory cannot report accredited results until resolved.</td></tr>
+      <tr><th>Remark type</th><th>Severity</th><th>Consequence</th></tr>
+      <tr><td><b>Observation</b></td><td>Low</td><td>Noted for awareness. No action required, but may become a non-conformity if not addressed.</td></tr>
+      <tr><td><b>Minor non-conformity</b></td><td>Medium</td><td>Must be corrected within a defined timeframe (typically before next audit).</td></tr>
+      <tr><td><b>Major non-conformity</b></td><td>High</td><td>Must be corrected immediately. Can lead to suspension of accreditation for the affected area.</td></tr>
+      <tr><td><b>Suspension</b></td><td>Critical</td><td>Accreditation temporarily withdrawn. The laboratory cannot report accredited results until resolved.</td></tr>
     </table>
 
-    <div class="warn"><b>A single major non-conformity can shut down a method.</b> If an auditor finds that a method has no documented validation — no precision study, no bias assessment, no performance specification — the method can be suspended immediately.</div>
+    <p><b>A single major non-conformity can shut down a method.</b> If an auditor finds that a method has no documented validation — no precision study, no bias assessment, no performance specification — the method can be suspended immediately.</p>
 
     <h3>What auditors typically ask</h3>
     <ul>
@@ -784,18 +857,23 @@
 
     <div class="callout"><b>Real-world example — method failure detected by EQA:</b> A laboratory's potassium results consistently fall 0.3 mmol/L below the peer group mean in three consecutive EQA rounds. Investigation reveals a calibrator lot with a systematic negative bias. The laboratory had passing IQC throughout — because IQC uses the same calibrator. Only the external comparison revealed the problem.</div>
 
-    <h3>How concepts map to standards</h3>
+    <h3><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">EXPANDED</span>Standards that cover each concept</h3>
     <table>
       <tr><th>Concept</th><th>Standard</th><th>What it requires</th></tr>
-      <tr><td>Precision</td><td>CLSI EP05-A3 / EP15-A3</td><td>Documented precision study with CV%</td></tr>
-      <tr><td>Bias</td><td>CLSI EP09-A3</td><td>Method comparison or CRM-based bias assessment</td></tr>
-      <tr><td>Total Error &amp; Sigma</td><td>ISO 15189, Westgard</td><td>Combined evaluation against TAE</td></tr>
-      <tr><td>Stability</td><td>CLSI EP25-A</td><td>Time-course study with pre-defined criteria</td></tr>
-      <tr><td>Reference intervals</td><td>CLSI EP28-A3c</td><td>Establishment (≥120) or verification (20 samples)</td></tr>
-      <tr><td>Qualitative LOD</td><td>CLSI EP17-A2</td><td>Hit-rate testing with probit analysis</td></tr>
+      <tr><td><b>Precision</b></td><td>CLSI EP05-A3 (validation) / EP15-A3 (verification)</td><td>Documented precision study with CV% — EP05 design 20 × 2 × 2 for validation, EP15 design 5 × 5 for verification</td></tr>
+      <tr><td><b>Bias / trueness</b></td><td>CLSI EP09-A3 (method comparison), CLSI EP15-A3 (trueness vs CRM), ISO/IEC 17043 + CLSI GP27-A3 (EQA / peer consensus)</td><td>Bias assessment against CRM, EQA, or another method — choose based on the reference available. EQA has no CLSI design of its own: the <em>scheme</em> is designed and scored by the PT provider under ISO/IEC 17043, and CLSI GP27 is lab-side guidance on how to interpret the reports.</td></tr>
+      <tr><td><b>Total Error &amp; Sigma</b></td><td>ISO 15189, Westgard; Six Sigma framework</td><td>Combined evaluation TE = 1.65 × CVa + |Bias| against pre-defined TAE; Sigma ≥ 3 for clinical use</td></tr>
+      <tr><td><b>Linearity / measuring range</b></td><td>CLSI EP06-Ed2</td><td>≥ 5 equally-spaced concentration levels across the measurement range, polynomial fit test for non-linearity</td></tr>
+      <tr><td><b>Interferences</b></td><td>CLSI EP07-A3</td><td>Paired-difference study with spiked interferents (HIL, common drugs) against unspiked controls</td></tr>
+      <tr><td><b>Detection capability (LoB / LoD / LoQ)</b></td><td>CLSI EP17-A2</td><td>Blank and low-level replicates for quantitative LoB/LoD; probit hit-rate analysis for qualitative LoD</td></tr>
+      <tr><td><b>Carry-over</b></td><td>CLSI EP10-A3 (chemistry analysers)</td><td>High-concentration sample followed by low-concentration sample; detect contamination signal</td></tr>
+      <tr><td><b>Reference intervals</b></td><td>CLSI EP28-A3c</td><td>Establishment (≥ 120 reference individuals, non-parametric) or verification (20 samples, ≤ 2 outside the limits)</td></tr>
+      <tr><td><b>Stability</b></td><td>CLSI EP25-A</td><td>Time-course study with pre-defined time points and acceptance criteria; outputs % change and functional expiry</td></tr>
+      <tr><td><b>Qualitative method performance</b></td><td>CLSI EP12-A2</td><td>Agreement study (≥ 50 pos + ≥ 50 neg against reference method); outputs kappa, sensitivity, specificity, positive/negative agreement</td></tr>
+      <tr><td><b>Metrological traceability</b></td><td>ISO 17511</td><td>Calibrators and measurement results traceable through an unbroken chain to a reference method or SI unit</td></tr>
+      <tr><td><b>Accreditation (meta-standard)</b></td><td>ISO 15189</td><td>Defines that all above characteristics must be validated/verified, documented, and audited — but does not prescribe the statistics</td></tr>
     </table>
 
-    <div class="good"><b>The concepts section taught you <em>what</em> to measure and <em>why</em>.</b> This compliance section teaches you <em>how</em> — the specific protocols, standards, and workflows that regulatory bodies require.</div>
     <div class="info"><b>Next →</b> We start with ISO 15189 — the international accreditation standard that defines what laboratories must validate and verify.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
@@ -805,69 +883,112 @@
   <!-- Workflow -->
   <div class="section" id="iso15189">
     <h2>20. ISO 15189 — Validation and Verification Requirements</h2>
-    <p>
-      ISO 15189 (Medical laboratories — Requirements for quality and competence) is the international
-      accreditation standard for clinical laboratories. It requires that all measurement procedures
-      be evaluated for fitness for purpose before clinical use — but distinguishes clearly between
-      <strong>validation</strong> and <strong>verification</strong> depending on the type of method.
-    </p>
+    <p>ISO 15189 (<em>Medical laboratories — Requirements for quality and competence</em>) is the international accreditation standard for clinical laboratories. It demands that every measurement procedure is shown to be fit for clinical use <em>before</em> results are reported, and that the evidence stays current over the life of the method. Two axes determine what that evaluation looks like in practice: the <b>type of method</b> (what prior validation exists — full, partial, or none?) and the <b>event that triggers</b> the work (new install? lot change? relocation?). Both must be answered before a lab can say <em>which</em> CLSI protocol to run and <em>how much</em> of it.</p>
 
-    <h3>The core rule</h3>
-    <table>
-      <tr><th>Situation</th><th>Requirement</th><th>Typical protocol</th></tr>
-      <tr><td>Commercially available, used as intended by manufacturer</td><td><strong>Verification</strong></td><td>EP15 (precision) + bias check</td></tr>
-      <tr><td>Modified commercial method (different sample type, dilution, range)</td><td><strong>Validation</strong></td><td>EP05 + EP09 + full performance panel</td></tr>
-      <tr><td>In-house developed method</td><td><strong>Full validation</strong></td><td>EP05 + EP09 + linearity + interferences + reference interval</td></tr>
-      <tr><td>Method transferred from another laboratory</td><td><strong>Verification</strong></td><td>Confirm performance matches originating lab</td></tr>
-    </table>
+    <p>A third, looser layer sits on top. ISO 15189 mandates the <b>requirement</b>: for every method in clinical use, the lab must hold a (re-)verification or validation <em>record</em> — a written study with its data, analysis, and pass/fail conclusion — and that record must show the method met its pre-defined specifications. What ISO 15189 does <em>not</em> do is prescribe the statistics or the study design that produced the record. The CLSI EP protocols are the <b>de facto standard</b> for producing that record — widely used, widely accepted, but not themselves law. A lab is free to use an equivalent protocol if it can defend the statistics. What genuinely binds a lab is its own SOP: once the lab has written "we use EP15 after a reagent lot change", auditors will hold it to that. In short: ISO says <em>do it</em>; CLSI says <em>here is how</em>; your SOP says <em>this is what we do</em>.</p>
 
-    <h3>What must be evaluated</h3>
-    <p>ISO 15189 (clause 7.3) requires documented evidence for:</p>
-    <ul>
-      <li><strong>Precision</strong> — repeatability and intermediate precision (EP05 or EP15)</li>
-      <li><strong>Trueness / Bias</strong> — against CRM, EQA, or reference method (EP09, bias study)</li>
-      <li><strong>Measurement uncertainty</strong> — combined estimate of all error sources</li>
-      <li><strong>Analytical measurement range (AMR)</strong> — the reportable range of the method</li>
-      <li><strong>Reference intervals</strong> — verified or established for the local population</li>
-      <li><strong>Interferences</strong> — haemolysis, lipaemia, icterus (HLI), common drugs</li>
-    </ul>
-    <div class="info">
-      <b>Verification scope:</b> For a commercial method, ISO 15189 accepts a reduced verification package — typically precision (EP15), bias against EQA or CRM, and confirmation of the reportable range. Full interference and reference interval studies are only required if the manufacturer's data cannot be applied to your patient population.
-    </div>
+    <h3>The four layers at a glance</h3>
+      <p>Before diving in, here is the structural map everything below expands on:</p>
+      <ul>
+        <li><b>ISO 15189</b> — says <em>when</em> a validation or verification is required, and the mandatory menu of performance characteristics to evaluate (precision, bias, TAE, measuring range, reference interval, interferences). It does <em>not</em> specify the acceptance criteria or the protocol.</li>
+        <li><b>APS (Analytical Performance Specification)</b> — a written document stating the method's <em>intended clinical use</em> and the resulting <em>acceptance criteria</em> (allowable CVa, bias, TAE, required LoD, etc.). Each criterion is derived from the Milan hierarchy; the document is finalised <em>before</em> any study is run.</li>
+        <li><b>CLSI EP protocols</b> — the standard <em>protocols for investigating</em> each performance characteristic (EP05, EP09, EP06, EP07, EP17, EP25, EP28 …). The lab can substitute an equivalent design if it can be defended statistically.</li>
+        <li><b>Pass/fail</b> — the verdict works at two levels. <b>Per characteristic:</b> each performance characteristic in the APS is tested independently against its own acceptance criterion — a <b>meets specification: yes / no</b> verdict for each (precision CVa, bias, combined TE ≤ TAE, linearity, LoD, interferences, stability, measuring range, and so on). <b>Overall:</b> the method is fit for clinical use only when <em>every</em> per-characteristic verdict passes. There is no averaging or trade-off between characteristics.<br><i><b>Note on bias, precision, and TAE — two philosophies:</b> The <b>Westgard view</b> treats TAE as a single combined budget — as long as <b>TE ≤ TAE</b>, the method passes; the individual bias and CVa limits are guidelines for balancing the budget. The <b>EFLM / Milan view</b> keeps each characteristic as its own independent verdict — precision, bias, <em>and</em> TAE all have to pass on their own; excessive bias is a fail even when TE stays within TAE, because bias is systematic and correctable. Most European accreditation bodies follow the EFLM / Milan view. A lab that prefers the Westgard combined-budget approach must document that choice in its APS and defend it at audit.</i></li>
+      </ul>
+      <p><i>Read in order: ISO tells you what is required, APS sets the acceptance criteria, the protocol is used to evaluate the method's performance, and you reach a pass/fail verdict by comparing each result to its acceptance criterion.</i></p>
 
-    <h3>Practical decision guide — validation or verification?</h3>
-    <div class="callout">
-      Ask these questions in order:<br><br>
-      1. <b>Is this method commercially available and used exactly as the manufacturer intends?</b><br>
-      → Yes: verification is sufficient.<br><br>
-      2. <b>Have you changed anything?</b> (sample matrix, pre-treatment, calibrators, reportable range, instrument platform)<br>
-      → Yes to any: validation is required for the changed parameter(s).<br><br>
-      3. <b>Did you develop this method yourself?</b><br>
-      → Yes: full validation is required.<br><br>
-      4. <b>Is the manufacturer's performance data applicable to your population?</b><br>
-      → If not (e.g. paediatric reference intervals in an adult study): establish your own.
-    </div>
+      <h3>ISO 15189 in practice</h3>
+      <p>ISO 15189 requires documented evidence that every method in clinical use meets its performance specifications. It says <em>what</em> must exist — an APS, a validation plan, and a validation report — but does not prescribe <em>how</em> (study design, statistics, or report format). The <b>APS</b> fulfils the acceptance-criteria requirement (the specification itself, with justification — see the APS subsection below). The <b>validation plan and report</b> fulfil the evidence requirement: how the method was tested and what the result was.</p>
+      <p>ISO 15189 §7.3 lists the performance characteristics that must be evaluated, regardless of whether the scope is verification or validation. This is the checklist auditors work from:</p>
+      <ul>
+        <li><b>Precision</b> — repeatability and intermediate precision</li>
+        <li><b>Trueness / bias</b> — against CRM, EQA, or reference method</li>
+        <li><b>Measurement uncertainty</b> — combined estimate of all error sources</li>
+        <li><b>Analytical measurement range (AMR)</b> — the reportable range</li>
+        <li><b>Reference intervals</b> — verified or established for the local population</li>
+        <li><b>Interferences</b> — HIL and common drugs</li>
+      </ul>
+      <p>ISO 15189 also specifies the minimum content of the validation plan and the validation report — the plan written <em>before</em> data collection, the report <em>after</em>:</p>
+      <ul>
+        <li>Study design and <b>justification of acceptance criteria</b> defined before data collection</li>
+        <li>Raw data and statistical analysis</li>
+        <li>Pass/fail conclusion against each acceptance criterion</li>
+        <li>Authorisation by the laboratory director before clinical release</li>
+      </ul>
+      <p><b>Pre-defined acceptance criteria are where auditors focus.</b> A criterion adjusted after seeing results is a direct non-conformity finding — the lab must show that allowable bias and CV% targets were set <em>in the validation plan</em>, not derived from the data itself.</p>
 
-    <h3>Documentation requirements</h3>
-    <p>ISO 15189 requires a written validation/verification plan before starting, and a report after completion including:</p>
-    <ul>
-      <li>Study design and acceptance criteria (defined before data collection)</li>
-      <li>Raw data and statistical analysis</li>
-      <li>Pass/fail conclusion against each acceptance criterion</li>
-      <li>Authorisation by the laboratory director before clinical release</li>
-    </ul>
-    <div class="warn">
-      <b>Pre-define your acceptance criteria.</b> ISO 15189 auditors specifically check that criteria were set before data collection — not adjusted after seeing the results. Always document your allowable bias and CV% targets in the validation plan before running the study.
-    </div>
-        <div class="info"><b>Next →</b> ISO 15189 defines the requirements. The next section shows the practical validation workflow — the step-by-step sequence laboratories follow when introducing a new method.</div>
+      <h3>The APS in practice</h3>
+      <p>The APS is a written document with two parts: a description of the method's <b>intended clinical use</b> (patient population, the decision the result will drive, the medical decision points the method must discriminate across), and the <b>justification of the acceptance criteria</b> derived from it — the quantitative acceptance criteria the validation will be measured against (allowable TAE, allowable CVa and bias, required measuring range, required LoD/LoQ at the medical decision point), together with the source used to derive each (biological variation, clinical outcome, state-of-the-art, or regulatory minimum). The audit test is simple: can you show an auditor that the APS was written <em>before</em> any data was collected? A study run with targets adjusted after seeing the data is a classic non-conformity finding.</p>
+
+      <h3>When implementing a method</h3>
+      <p>The first question is what is needed when a method is <b>first brought into clinical use</b>. The answer depends on what prior validation already exists for the method.</p>
+      <table>
+        <tr><th style="min-width:170px;">Method type</th><th>Requirement at introduction</th></tr>
+        <tr><td><b>Commercial IVD</b> (used as intended)</td><td><b>Verification</b> — EP15 (precision) + bias against EQA or CRM + confirmation of the reportable range.</td></tr>
+        <tr><td><b>Modified commercial method</b> (changed sample type, dilution, range)</td><td><b>Validation</b> of the changed characteristics — EP05 + EP09 + whichever of EP06 / EP07 / EP17 the modification affects. Unchanged characteristics may still be accepted from the supplier.</td></tr>
+        <tr><td><b>In-house developed method</b></td><td><b>Full validation</b> of every performance characteristic required by the <b>APS</b>. Typically this means EP05 + EP09 + EP06 + EP07 + EP17, plus EP28 if the method reports against a reference interval and EP25 if storage/stability is part of the intended use. Characteristics that the APS does not require (e.g. reference interval for a method feeding an algorithm, or stability for a point-of-care assay run on fresh samples) do not need to be established.</td></tr>
+        <tr><td><b>Method transferred from another lab</b></td><td><b>Verification</b> — EP15 abbreviated + paired patient samples run at both sites (mini EP09).</td></tr>
+      </table>
+      <p><i>"Full validation" is informal emphasis on scope — ISO 15189 and CLSI recognise only two formal categories: <b>verification</b> (lighter) and <b>validation</b> (establish from scratch).</i></p>
+
+      <h3>When something changes</h3>
+      <p>Once a method is in routine use, specific events trigger a re-check. The response is largely <b>independent of method type</b> — the event itself dictates the scope. Each of these should be defined in the lab's SOP so the response is predictable.</p>
+      <table>
+        <tr><th style="min-width:170px;">Event</th><th>Typical re-check work</th></tr>
+        <tr><td><b>Reagent lot change</b></td><td>IQC continuity + short paired-sample bias check (old lot vs new lot, typically 10–20 samples).</td></tr>
+        <tr><td><b>Calibrator lot change</b></td><td>Short trueness check vs CRM or peer consensus; IQC drift monitoring.</td></tr>
+        <tr><td><b>Maintenance or software update</b></td><td>IQC verification + short precision check + bias spot-check, per lab SOP.</td></tr>
+        <tr><td><b>EQA drift</b> or failure</td><td>Root-cause investigation + targeted bias / precision re-check on the affected concentration level. The documented investigation is the response.</td></tr>
+        <tr><td><b>Scheduled periodic re-verification</b></td><td>EQA trending + precision re-check, typically annual or at re-accreditation audit. CLSI does not mandate a frequency — labs set their own.</td></tr>
+        <tr><td><b>Pre-analytical change</b> (tube, additive, transport, storage, centrifugation)</td><td>Paired-sample bias study + stability / commutability check. Framework covered in the <a href="#" onclick="window.parent.loadTool('stability_theory.html','Concepts &amp; Theory — Sample Validation');return false;" style="color:#1e40af;font-weight:600;">Sample Validation</a> module.</td></tr>
+      </table>
+
+      <h3>Protocol mode per APS characteristic</h3>
+      <p>Each APS characteristic has a CLSI protocol that can run in two <b>modes</b>. <b>Validation</b> means running the full study — you have no prior claims to lean on. <b>Verification</b> means confirming an existing manufacturer claim — the same characteristic, but with a reduced design. The <b>APS itself determines which characteristics apply</b> to the method: the lab lists every characteristic the method needs based on its intended clinical use, and each listed characteristic must be evaluated against its own acceptance criterion. §C and §C2 tell you which method types and events trigger work; this table tells you how much for each characteristic the APS requires.</p>
+      <table>
+        <tr><th>APS characteristic</th><th>Validation (full)</th><th>Verification (reduced)</th><th>Material</th></tr>
+        <tr><td><b>Precision</b> (CVa)</td><td>EP05-A3 (20 × 2 × 2)¹</td><td>EP15-A3 (5 × 5)²</td><td>Pooled patient samples or commercial QC at ≥ 2 decision levels</td></tr>
+        <tr><td><b>Bias / trueness</b></td><td>EP09-A3 (≥ 40 patient samples, full method comparison)</td><td>EP15-A3 (paired samples) / EQA comparison</td><td>CRM, EQA sample, or paired patient samples vs. comparator method — see the next subsection <a href="#iso15189" style="color:#1e40af;font-weight:600;">"Which standards govern each bias reference"</a> for the standard behind each.</td></tr>
+        <tr><td><b>Linearity</b></td><td>EP06-Ed2 (≥ 5 levels, polynomial fit)³</td><td>Accept manufacturer's claim; abbreviated EP06 (e.g. 3 levels) only if it does not translate</td><td>Mixing series made from high + low patient pools</td></tr>
+        <tr><td><b>Interferences</b></td><td>EP07-A3 (≥ 10 replicates per condition)⁴</td><td>Accept manufacturer's claim; test only locally relevant interferents</td><td>Patient pool spiked with interferent + unspiked paired control</td></tr>
+        <tr><td><b>LoB / LoD / LoQ</b></td><td>EP17-A2 (≥ 20 replicates per level)</td><td>Accept manufacturer's claim; simple confirmation at claimed LoD</td><td>Blank matrix + low-level spiked patient pool</td></tr>
+        <tr><td><b>Carry-over</b></td><td>EP10-A3</td><td>Accept manufacturer's claim; spot-check only if concern</td><td>High-concentration sample followed by low-concentration sample</td></tr>
+        <tr><td><b>Reference interval</b></td><td>EP28-A3c establishment (≥ 120 reference individuals)</td><td>EP28-A3c verification (20 samples, ≤ 2 outside rule)⁵</td><td>Fresh native samples from defined reference population</td></tr>
+        <tr><td><b>Stability</b></td><td>EP25-A (pre-defined time points)</td><td>Accept manufacturer's claim; verify only if storage conditions differ</td><td>Aliquoted patient samples / reagents under test storage conditions</td></tr>
+        <tr><td><b>Qualitative performance</b></td><td>EP12-A2 (≥ 50 pos + ≥ 50 neg)</td><td>Accept manufacturer's claim; reduced agreement check on local samples</td><td>Patient samples near the clinical decision point</td></tr>
+        <tr><td><b>Metrological traceability</b></td><td>ISO 17511 (documented traceability chain)</td><td>Confirm manufacturer's chain + verify calibrator lot</td><td>(documentation only, no material study)</td></tr>
+      </table>
+      <p style="font-size:12px;color:#475569;margin-top:4px;"><b>Notes on the design numbers:</b></p>
+      <ul style="font-size:12px;color:#475569;">
+        <li><b>¹ 20 × 2 × 2</b> = <b>20 days × 2 runs per day × 2 replicates per run</b> = 80 measurements per concentration level. The 20 days must be <em>separate calendar days</em> — the between-day component (Sb) is what distinguishes EP05 from a one-day repeatability study.</li>
+        <li><b>² 5 × 5</b> = <b>5 days × 5 replicates per day</b> = 25 measurements per level. Much shorter than EP05 because you are only verifying an existing manufacturer claim.</li>
+        <li><b>³ ≥ 5 levels</b> = at least 5 equally spaced concentrations spanning the full measuring range, made by mixing a high pool with a low pool in known ratios. Polynomial regression then tests whether a linear fit is adequate.</li>
+        <li><b>⁴ ≥ 10 replicates per condition</b> = per interferent: test sample (spiked with the interferent) and control sample (unspiked), ≥ 10 replicates each, at the clinical decision level.</li>
+        <li><b>⁵ 20 samples, ≤ 2 outside rule</b> = run 20 fresh samples from your own reference population; if ≤ 2 fall outside the existing reference interval, it is verified. If 3 or more fall outside, re-assess.</li>
+      </ul>
+
+      <h3>Which standards govern each bias reference</h3>
+      <p>Bias can be measured against three different references, and each is governed by a different standard. This answers a different question from §C3 (which gave the protocol for bias as a single characteristic) — here the focus is which standard backs each reference type.</p>
+      <table>
+        <tr><th>Bias reference</th><th>Who states the requirement</th><th>Protocol / standard that governs the study</th></tr>
+        <tr><td><b>vs. CRM</b> (trueness against a certified true value)</td><td>ISO 15189 §7.3.2 (performance verification); ISO 17511 (metrological traceability of IVD calibrators and measurement results)</td><td><b>CLSI EP15-A3</b> for verification; <b>CLSI EP09-A3</b> when the CRM is used as one "method" in a comparison. Approved CRMs are listed by <b>JCTLM</b>.</td></tr>
+        <tr><td><b>vs. EQA / peer consensus</b> (trueness relative to other labs)</td><td>ISO 15189 §7.3.7.2 (interlaboratory comparisons); national accreditation bodies (DANAK, SWEDAC, Norsk Akkreditering, FINAS, ISAC) require ongoing EQA participation as part of accreditation</td><td><b>ISO/IEC 17043</b> (standard for PT providers); <b>CLSI GP27-A3</b> (using proficiency-testing data); plus the scheme rules of the provider (DEKS, UKNEQAS, Equalis, CAP, RfB, etc.).</td></tr>
+        <tr><td><b>vs. another method</b> (comparator or reference method)</td><td>ISO 15189 §7.3.2; local laboratory policy when replacing an established routine method</td><td><b>CLSI EP09-A3</b> (full method-comparison design) or <b>CLSI EP15-A3</b> (reduced design for verification).</td></tr>
+      </table>
+
+      <h3>Core vs scope (what you actually do)</h3>
+      <p>Across every cell in the implementation and change tables above, three characteristics form the non-negotiable core of ISO 15189 §7.3.2: <b>precision</b> (CVa), <b>bias / trueness</b>, and the combined <b>total error / TAE</b> check against a pre-defined allowable limit. These are always required, in both verification and validation, regardless of method type.</p>
+      <p>What changes between verification and validation is the scope <em>around</em> that core. A <b>verification</b> accepts the manufacturer's data for linearity, interferences, LoD/LoQ, reference interval, and stability — confirming them only if they don't translate to your patient population or equipment. A <b>validation</b> establishes every one of those characteristics from scratch, because no prior data exists (in-house) or because your modification invalidated the supplier's claims (modified commercial).</p>
+
+    <div class="info"><b>Next →</b> ISO 15189 defines the requirements. The next section shows the practical validation workflow — the step-by-step sequence laboratories follow when introducing a new method.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
   <!-- 15 -->
   <div class="section" id="workflow">
-    <h2>21. Typical validation workflow</h2>
+    <h2>21. Typical validation workflow (in-house, modified, or full establishment)</h2>
     <p>
-      In practice, analytical performance validation follows a standard three-step sequence. Each step builds on the previous one — you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
+      When the method has no prior IVD validation to lean on — it is in-house, modified, or being established from scratch — the work follows a standard three-step sequence. Each step builds on the previous one: you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
     </p>
 
     <div style="display:flex;flex-direction:column;gap:0;margin:24px 0;">
@@ -882,8 +1003,9 @@
           <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Precision study — measure CV%</div>
           <p style="margin:0 0 6px 0;">Run your method repeatedly under controlled conditions to quantify random error. Use <strong>intermediate precision</strong> (day-to-day) rather than repeatability for a realistic CV%.</p>
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
-            <li><strong>Quick study</strong> — 20+ patient samples or QC material over multiple days → use the <em>Precision — Quick</em> tool</li>
-            <li><strong>Full precision study</strong> — CLSI EP05 design (5 days × 2 runs × 2 replicates minimum) → use the <em>Precision (EP05)</em> tool</li>
+            <li><strong>Quick check</strong> — 20+ patient samples or QC material over multiple days (informal, not a CLSI protocol) → use the <em>Precision Monitor</em> tool</li>
+            <li><strong>Full precision study (EP05-A3)</strong> — 20 days × 2 runs × 2 replicates = 80 measurements per level → use the <em>Precision Study (EP05 / EP15)</em> tool (EP05 validation mode)</li>
+            <li><strong>Verification (EP15-A3)</strong> — 5 days × 5 replicates = 25 measurements per level → use the <em>Precision Study (EP05 / EP15)</em> tool (EP15 verification mode)</li>
           </ul>
           <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% (total intermediate precision)</div>
         </div>
@@ -929,9 +1051,87 @@
 
     <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;">
       <strong>In the app:</strong> After you calculate results in the Precision tool, a blue card appears at the bottom guiding you to the Bias tool — and from Bias to Total Error &amp; Sigma. Your CV% and Bias% are automatically transferred so you do not need to re-enter them.
+      <br><br>
+      <strong>Report Builder:</strong> Inside each tool, click <b>Add to Report</b> on the sections you want to keep (study design, results, plots, conclusion). The <b>Report Builder</b> panel in the sidebar collects sections across all tools as you work. When you are done, open it and click <b>Preview &amp; Save PDF</b> to generate a single structured report covering your whole validation — precision + bias + total error + sigma in one PDF, with your raw data and conclusions. Sections persist across tools until you hit <b>Clear all sections</b>.
+    </div>
+
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;">
+      <strong>What IS in scope:</strong> a full validation means establishing every performance characteristic the APS requires. For an in-house or modified method this typically covers precision (EP05), bias (EP09), linearity (EP06), interferences (EP07), and detection capability (EP17), plus EP28 if a reference interval is reported and EP25 if stability matters for the intended use. Characteristics the APS does not require do not need to be established. See <a href="#iso15189" data-secref="Section"></a> — "Protocol mode per APS characteristic" — for the full mapping.
     </div>
 
         <div class="info"><b>Next →</b> The validation workflow gives you the overview. Now the specific protocols — starting with EP05 for precision evaluation.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+  <hr class="divider"/>
+
+  <div class="section" id="workflow-verification">
+    <h2>22. Typical verification workflow (commercial IVD or transferred method) <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>
+      When the manufacturer (or originating lab) has already done the full validation, the work is lighter — you are <em>confirming</em> the claims hold in your hands rather than establishing numbers from scratch. Same three-step shape as validation, but with reduced designs and fewer characteristics in scope.
+    </p>
+
+    <div style="display:flex;flex-direction:column;gap:0;margin:24px 0;">
+
+      <!-- Step 1 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div style="width:2px;background:#bfdbfe;flex:1;margin-top:4px;"></div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:8px;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Precision verification (EP15-A3) — confirm the manufacturer's CV claim</div>
+          <p style="margin:0 0 6px 0;">Run the abbreviated design and test whether your observed CV% is statistically consistent with the manufacturer's claim.</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>Design:</strong> 5 days × 5 replicates per level = 25 measurements per level, on ≥ 2 concentration levels bracketing the medical decision points.</li>
+            <li><strong>Tool:</strong> <em>Precision Study (EP05 / EP15)</em> in EP15 verification mode. Enter the manufacturer's claim; the tool reports whether the 95% CI on your CV% contains the claim.</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% with 95% CI, verdict against manufacturer's claim</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div style="width:2px;background:#bfdbfe;flex:1;margin-top:4px;"></div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:8px;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Bias verification — pick the reference available to you</div>
+          <p style="margin:0 0 6px 0;">Verification accepts any of the three bias references, usually a combination. Pick by what is actually available for the analyte.</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>EQA / peer consensus</strong> — participate in an ongoing PT scheme (DEKS, UKNEQAS, Equalis, CAP) and use 3+ rounds to confirm peer-group agreement.</li>
+            <li><strong>CRM</strong> — measure a certified reference material. Use the <em>Precision Study (EP05 / EP15)</em> tool with the EP15 verification setting (it includes a bias check against the CRM's assigned value), or use the dedicated <em>Bias</em> tool.</li>
+            <li><strong>Abbreviated method comparison</strong> — if replacing a known comparator method, run ~20 paired patient samples in the <em>Method Comparison</em> tool.</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> Mean Bias% (and CI, if available)</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="display:flex;gap:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#16a34a;color:white;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div style="width:2px;background:#bbf7d0;flex:1;margin-top:4px;margin-bottom:0;"></div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:0;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Total Error &amp; Sigma — combine and evaluate (same as validation)</div>
+          <p style="margin:0 0 6px 0;">The TE / TAE / Sigma step is identical to validation — it does not change with scope.</p>
+          <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
+            <li><strong>TE</strong> = |Bias%| + 1.65 × CV% — does total error fit the APS-defined TAE?</li>
+            <li><strong>Sigma</strong> = (TAE% − |Bias%|) / CV% — how much margin is left for QC?</li>
+            <li><strong>Verdict:</strong> method passes if every per-characteristic acceptance criterion is met — precision, bias, and TE ≤ TAE.</li>
+          </ul>
+          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> TE%, sigma metric, QC rule recommendation</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;">
+      <strong>What is <em>not</em> in scope:</strong> for a commercial IVD used as intended, linearity, interferences, LoD/LoQ, reference interval, and stability are accepted from the manufacturer's IVD/CE-IVDR dossier. You only re-establish those characteristics if the manufacturer's data cannot be applied to your patient population or equipment — in which case that specific characteristic moves from verification to full validation (see <a href="#iso15189" data-secref="Section"></a>).
+    </div>
+
+    <div class="info"><b>Next →</b> We now dive into each CLSI EP protocol in depth — starting with EP05 for full precision validation.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
   <hr class="divider"/>
@@ -982,9 +1182,7 @@
       <strong>between-run (Sb)</strong> — from how run means scatter around the grand mean.
       This is the only way to get both components separately, which is exactly what EP05 requires.
     </p>
-    <div class="good">
-      <b>In practice:</b> you never need to run nested ANOVA yourself — the EP05 tool does it automatically when you enter your data. Understanding the structure just helps you design the study correctly: replicates must be measured within the same run, and runs must be genuinely separate analytical sessions.
-    </div>
+    <p><b>In practice:</b> you never need to run nested ANOVA yourself — the EP05 tool does it automatically when you enter your data. Understanding the structure just helps you design the study correctly: replicates must be measured within the same run, and runs must be genuinely separate analytical sessions.</p>
 
     <h3>Acceptance criteria</h3>
     <p>Compare your CV% against the allowable imprecision derived from your performance specification:</p>
@@ -1038,12 +1236,8 @@
       <li>If the upper 95% confidence limit of your observed CV% ≤ manufacturer's CV% → <strong>PASS</strong></li>
       <li>If the upper limit exceeds the claim → <strong>FAIL</strong> — investigate before clinical release</li>
     </ul>
-    <div class="good">
-      <b>Practical note:</b> With only 15 measurements, the CI on your CV% is wide. A result that barely fails may still be acceptable — always evaluate the clinical impact alongside the statistical result. If the manufacturer's CV% is 2.0% and you observe 2.2%, the CI may overlap and the method may still be fit for purpose.
-    </div>
-    <div class="warn">
-      <b>EP15 does not replace EP05.</b> If no manufacturer claim exists, or if you are modifying the method, or if the method is developed in-house, a full validation (EP05 or equivalent) is required.
-    </div>
+    <p><b>Practical note:</b> With only 15 measurements, the CI on your CV% is wide. The EP15 tool displays the 95% CI (computed via the chi-square method) alongside the point estimate — when the manufacturer's claim falls inside this CI, the observed difference is within sampling variation and the method can still be fit for purpose. A result that barely fails should always be evaluated against both the CI and the clinical impact, not the point estimate alone.</p>
+    <p><b>EP15 does not replace EP05.</b> If no manufacturer claim exists, or if you are modifying the method, or if the method is developed in-house, a full validation (EP05 or equivalent) is required.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
     </div>
@@ -1053,7 +1247,7 @@
 
   <!-- 17 -->
   <div class="section" id="ep09">
-    <h2>24. EP09 — Method Comparison and Bias Estimation (CLSI EP09-A3)</h2>
+    <h2>24. EP09 — Method Comparison (bias against another method)</h2>
     <p>
       CLSI EP09 defines the standard protocol for comparing two measurement procedures using patient samples.
       Its goal is to estimate <strong>systematic bias</strong> between methods and determine whether they are
@@ -1120,14 +1314,14 @@
       <strong>The identity line:</strong> If slope = 1 and intercept = 0, the regression equation becomes y = x — the line of identity. This means the two methods give the same result at every concentration. Slope ≠ 1 signals proportional bias; intercept ≠ 0 signals constant bias. Lin's CCC measures how close the data are to this identity line, combining both correlation and agreement into a single coefficient.
     </div>
 
-    <h3>Residuals — what each method minimises <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h3>
+    <h3>Residuals — what each method minimises</h3>
     <ul>
       <li><b>OLS</b> — minimises the sum of squared <strong>vertical</strong> distances from each point to the line. Residuals are drawn as vertical lines from the data point to the regression line.</li>
       <li><b>Deming</b> — minimises the sum of squared <strong>perpendicular (orthogonal)</strong> distances. Residuals are drawn at right angles to the regression line. This is correct because both X and Y have measurement error.</li>
-      <li><b>Passing-Bablok</b> — does not minimise any distance. The slope is the <strong>median of all pairwise slopes</strong>, making it robust to outliers. Residuals are typically shown as vertical distances for simplicity.</li>
+      <li><b>Passing-Bablok</b> — does not minimise any distance. The slope is the <strong>median of all pairwise slopes</strong> between sample pairs, which makes it robust to outliers and free of the "which variable is exact?" assumption. Residuals are computed <em>after</em> fitting and drawn vertically by display convention only — this does not reflect what the method minimised, because it minimised nothing.</li>
     </ul>
 
-    <h3>Confidence intervals — how each method estimates uncertainty <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h3>
+    <h3>Confidence intervals — how each method estimates uncertainty</h3>
     <table>
       <tr><th>Method</th><th>CI calculation</th><th>CI band shape</th></tr>
       <tr><td><b>OLS</b></td><td>Based on residual variance (s²). Exact formula using t-distribution.</td><td>Hyperbolic — narrows at the mean of X, widens at the extremes.</td></tr>
@@ -1148,22 +1342,116 @@
       <li>Total Error (|bias| + 1.65 × SD of differences) ≤ TAE</li>
     </ul>
 
-    <div class="warn">
-      <b>Correlation is not agreement.</b> A high Pearson r or R² does not mean the methods agree — it only means they track each other. Two methods can correlate perfectly yet show clinically unacceptable systematic differences. Always base your conclusion on Bland-Altman and bias assessment, not r alone.
-    </div>
+    <p><b>Correlation is not agreement.</b> A high Pearson r or R² only means the two methods <em>track</em> each other — rise and fall together — not that they give the <em>same</em> numbers. Two methods can correlate perfectly yet show clinically unacceptable systematic differences. Agreement requires a different set of tools, each answering a different question:</p>
+    <ul>
+      <li><b>Passing-Bablok or Deming regression</b> — fits a line and reports <b>slope</b> and <b>intercept</b> with 95% CIs. <b>Slope</b> captures <em>proportional</em> bias (does the gap between methods grow with concentration?). <b>Intercept</b> captures <em>constant</em> bias (is there a fixed offset at every concentration?). The four combinations of slope = 1 / ≠ 1 and intercept = 0 / ≠ 0 are summarised below.</li>
+      <li><b>Lin's CCC</b> — one agreement score anchored to the line of identity (y = x). Penalises both poor correlation and deviation from y = x. Useful as a single summary number.</li>
+      <li><b>Bland-Altman</b> — plots the actual differences in measurement units across the range, with 95% limits of agreement. Most clinically interpretable: tells you <em>how big</em> the differences are and whether they fall inside clinically acceptable limits.</li>
+    </ul>
+    <p><i>The table below assumes slope and intercept come from <b>Passing-Bablok</b> (preferred default) or <b>Deming</b> regression, both of which account for error in both methods. OLS should not be used for this decision rule — when x has measurement error, its slope is biased toward 0 and its intercept is biased away from 0, so the "slope = 1, intercept = 0" test no longer reflects real agreement.</i></p>
+    <table>
+      <tr><th>Slope</th><th>Intercept</th><th>Agreement?</th><th>Bias present?</th><th>Interpretation</th><th>Action</th></tr>
+      <tr><td><b>= 1</b></td><td><b>= 0</b></td><td>✅ Yes</td><td>None</td><td>Full agreement — the line of identity y = x. The methods give the same numbers across the whole range.</td><td>Method passes comparison; move on to Bland-Altman to confirm clinical acceptability.</td></tr>
+      <tr><td><b>= 1</b></td><td><b>≠ 0</b></td><td>❌ No</td><td>Constant bias</td><td>Same gap at every concentration. Example: Y = X + 2 → at X = 10, Y = 12; at X = 100, Y = 102.</td><td>Investigate calibration offset (shared calibrator, re-calibrate, or apply a fixed correction if clinically justified).</td></tr>
+      <tr><td><b>≠ 1</b></td><td><b>= 0</b></td><td>❌ No</td><td>Proportional bias</td><td>Gap grows with concentration. Example: Y = 1.05 × X → at X = 10, Y = 10.5 (0.5 gap); at X = 100, Y = 105 (5-unit gap).</td><td>Investigate calibrator traceability, matrix effects, or method specificity differences. A fixed offset will not fix this.</td></tr>
+      <tr><td><b>≠ 1</b></td><td><b>≠ 0</b></td><td>❌ No</td><td>Both constant and proportional bias</td><td>Fixed offset <em>plus</em> a scaling disagreement — the worst case.</td><td>Do not release the method. Full investigation required before clinical use.</td></tr>
+    </table>
+    <p>Base your conclusion on these — not on r alone.</p>
 
-    <div class="callout">
-      <b>EP09 vs method comparison in general:</b> EP09 is specifically for patient sample comparisons. If you are comparing against a certified reference material (CRM), use EP15 (trueness verification) instead. EP09 is appropriate when both methods measure real patient samples under routine conditions.
-    </div>
+    <p><b>EP09 vs the other two bias references:</b> EP09 is specifically for patient-sample comparisons against another method. For bias against a <em>certified reference material</em> (CRM) see the next section (EP15 trueness). For bias relative to <em>peers</em> via EQA/proficiency testing see the section after that.</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('method_comparison_learning.html','Understanding Method Comparison');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Understanding Method Comparison</a><br>
       → <a href="#" onclick="window.parent.loadTool('method_comparison.html','Method Comparison');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Method Comparison</a>
     </div>
-        <div class="info"><b>Next →</b> Method comparison evaluates your method against a reference. But what about the reference intervals your method reports against? EP28 covers how to establish and verify reference intervals.</div>
+    <div class="info"><b>Next →</b> EP09 covers bias against another method. The next section covers bias against an absolute reference — a CRM, via EP15 trueness.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
-  <!-- 23 — Reference Intervals -->
+  <hr class="divider">
+
+  <div class="section" id="ep15-trueness">
+    <h2>25. EP15 trueness — bias against a CRM <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>
+      CLSI EP15-A3 is primarily a precision <em>verification</em> protocol, but it also defines a standard design for <strong>trueness verification</strong> — confirming that a method's results agree with a <strong>certified reference material (CRM)</strong> whose assigned value is traceable to an SI unit or a reference measurement procedure. It is the formal way to answer the question: "Is my method correct in absolute terms?"
+    </p>
+
+    <h3>Study design</h3>
+    <ul>
+      <li><strong>CRM with a certified assigned value</strong> — traceability and uncertainty must be stated on the certificate of analysis.</li>
+      <li><strong>≥ 2 concentration levels</strong> when CRMs are available at more than one level (e.g. low and high clinical decision points).</li>
+      <li><strong>5 days × 5 replicates per level</strong> (the EP15 5 × 5 design) — same structure as precision verification, which is why they are usually run together.</li>
+      <li><strong>Single analyser, single reagent lot, single calibration</strong> during the study.</li>
+    </ul>
+
+    <h3>Statistical analysis</h3>
+    <p>The mean of all measurements is compared against the certified value:</p>
+    <ul>
+      <li><b>Observed bias</b> = mean − certified value.</li>
+      <li><b>95% CI on the bias</b> is built from the intermediate-precision SD (from the same 5 × 5 runs) and the certificate's uncertainty.</li>
+      <li><b>Verdict:</b> the method passes if the 95% CI on the observed bias contains zero <em>and</em> the point estimate is within the APS-defined allowable bias.</li>
+    </ul>
+
+    <h3>Pitfalls</h3>
+    <ul>
+      <li><b>Commutability</b> — a non-commutable CRM shows apparent bias that does not exist for patient samples. Check the certificate for a commutability statement.</li>
+      <li><b>Method-specific CRMs</b> (often immunoassay) are only valid on the assigned method family. Measuring on a different platform will show false bias.</li>
+      <li><b>Wrong concentration level</b> — a CRM only tells you about bias at its own level. If your APS demands unbiased performance at multiple decision points, use multi-level CRMs or combine with EP09 method comparison.</li>
+    </ul>
+
+    <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
+      → <a href="#" onclick="window.parent.loadTool('bias.html','Bias');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Bias</a><br>
+      → <a href="#" onclick="window.parent.loadTool('precision_ep05.html','Precision Study (EP05 / EP15)');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Precision Study (EP05 / EP15)</a>
+    </div>
+    <div class="info"><b>Next →</b> CRM gives you absolute bias; EQA gives you bias relative to peers. The next section covers EQA-based bias monitoring.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section" id="eqa-bias">
+    <h2>26. EQA bias monitoring — bias against peer consensus <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <p>
+      Where EP09 compares against a specific alternative method and EP15 trueness compares against an absolute CRM, <strong>External Quality Assessment (EQA)</strong> compares against the <strong>consensus of many laboratories</strong>. It is the primary mechanism for ongoing bias monitoring in routine clinical laboratories and a mandatory part of ISO 15189 accreditation.
+    </p>
+
+    <h3>Governing standards</h3>
+    <ul>
+      <li><b>ISO/IEC 17043</b> — sets the competence requirements for proficiency-testing providers (sample homogeneity, statistical treatment, z-scores, reporting). Accredits the provider.</li>
+      <li><b>CLSI GP27-A3</b> — lab-side guidance on how to use PT data: interpreting reports, setting acceptance limits, investigating unacceptable results, and documenting corrective actions.</li>
+      <li><b>ISO 15189 §7.3.7.2</b> — requires the lab to participate in interlaboratory comparisons covering all accredited examinations.</li>
+      <li><b>National accreditation bodies</b> (DANAK, SWEDAC, Norsk Akkreditering, FINAS, ISAC) enforce ongoing EQA participation as a condition of accreditation.</li>
+    </ul>
+
+    <h3>How an EQA round works</h3>
+    <p>The provider distributes blind samples of unknown concentration to all participating laboratories. Each lab measures the samples under routine conditions and reports the results back. The provider then calculates a peer-group mean (or an assigned target value) and returns a report showing each lab's result and its deviation from the consensus.</p>
+    <ul>
+      <li><strong>Sample design</strong> is the <em>provider's</em> responsibility under ISO/IEC 17043 — the lab does not design the study, only runs the samples.</li>
+      <li><strong>Frequency</strong> varies by scheme — typically 4–6 rounds per year for clinical chemistry, more frequent for haematology and coagulation. Each round usually covers multiple analytes in the same samples.</li>
+      <li><strong>Scoring</strong> is typically a z-score or a percentage deviation from the peer-group mean, compared against a pre-defined acceptance window.</li>
+    </ul>
+
+    <h3>Statistical analysis — what the lab does</h3>
+    <p>The lab does not run a regression or a paired study. Instead, each round produces a single bias value per analyte:</p>
+    <ul>
+      <li><b>Per-round bias</b> = (your result − peer group mean) / peer group mean × 100%.</li>
+      <li><b>Trend over rounds</b> — plot the per-round bias over time. A consistent offset from zero suggests true systematic bias; scatter around zero is normal between-lab variation.</li>
+      <li><b>Rolling mean</b> over several rounds is more reliable than any single round.</li>
+      <li><b>Verdict per round</b> — the provider's report calls each result acceptable or unacceptable based on the scheme's pre-defined window.</li>
+    </ul>
+
+    <h3>Pitfalls</h3>
+    <ul>
+      <li><b>Peer consensus is not a true value</b> — a whole peer group can share the same bias (e.g. all labs using the same reagent lot). EQA agreement with peers does <em>not</em> guarantee trueness.</li>
+      <li><b>Commutability of EQA material</b> — especially for immunoassays, EQA samples may be non-commutable. Apparent bias may be a matrix artefact.</li>
+      <li><b>Peer-group stratification</b> — most schemes break results down by method/instrument group; compare against the right peer group (your method family), not the all-lab average.</li>
+      <li><b>Single-round investigations</b> — do not over-react to a single unacceptable round; investigate over 2–3 rounds to distinguish random scatter from real drift.</li>
+    </ul>
+
+    <div class="info"><b>Next →</b> With precision, bias (against method, CRM, and peers), and TAE all covered, the next section turns to the reference intervals your results are reported against.</div>
+    <a href="#" class="back-top">↑ Back to top</a>
+  </div>
+
+  <!-- Reference Intervals -->
   <div class="section" id="ref-interval">
     <h2>25. Reference Intervals — EP28 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
 
@@ -1184,11 +1472,9 @@
       <tr><td><b>Pre-analytical standardisation</b></td><td>Time of day, posture (sitting 15 min), no vigorous exercise within 24h, no alcohol within 48h</td><td>Pre-analytical variation can be larger than biological variation for some analytes</td></tr>
     </table>
 
-    <div class="callout">
-      <b>Example — establishing a fasting glucose reference interval:</b> You recruit 120 adults aged 18–65. Each must: have no diabetes diagnosis, take no glucose-lowering medication, fast ≥ 8 hours, have no acute illness, and have a confirmed HbA1c &lt; 42 mmol/mol. Blood is drawn between 07:00–09:00 after 15 minutes seated rest. Only then is the glucose value included in the reference interval calculation.
-    </div>
+    <p><b>Example — establishing a fasting glucose reference interval:</b> You recruit 120 adults aged 18–65. Each must: have no diabetes diagnosis, take no glucose-lowering medication, fast ≥ 8 hours, have no acute illness, and have a confirmed HbA1c &lt; 42 mmol/mol. Blood is drawn between 07:00–09:00 after 15 minutes seated rest. Only then is the glucose value included in the reference interval calculation.</p>
 
-    <div class="warn"><b>"Healthy" must be verified, not assumed.</b> A reference individual is someone who has been screened against all defined criteria — not someone who simply says they are healthy. A single unrecognised diabetic in a group of 120 can shift the upper reference limit significantly.</div>
+    <p><b>"Healthy" must be verified, not assumed.</b> A reference individual is someone who has been screened against all defined criteria — not someone who simply says they are healthy. A single unrecognised diabetic in a group of 120 can shift the upper reference limit significantly.</p>
 
     <h3>Establishing vs. verifying</h3>
     <table>
@@ -1317,6 +1603,10 @@
     <div class="good">
       <b>Key insight:</b> Reference intervals are not just about statistics — they depend on the reference population, pre-analytical conditions (fasting, posture, time of day), and the analytical method. An interval established on one platform cannot be assumed valid on another without verification.
     </div>
+
+    <h3><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span>When the population reference interval is not enough — recall the Index of Individuality</h3>
+    <p>Everything above assumes that comparing a patient's value to a population-based interval is clinically informative. For some analytes, it isn't. Recall the <b>Index of Individuality (II) = CVi / CVg</b> from <a href="#bioval" data-secref></a>: when II &lt; 0.6, each person sits inside their own narrow band <em>within</em> the population range, so a value can change substantially for that individual while still appearing "normal" against the population RI.</p>
+    <p>For low-II analytes — <b>CRP, ferritin, troponin</b>, and others — the population RI is structurally insufficient. The more meaningful reference is the patient's <b>own baseline</b>, combined with the <b>Reference Change Value (RCV)</b> to decide whether a change is real. A "normal" troponin can still represent a clinically important rise from that patient's prior value.</p>
 
         <div class="info"><b>Next →</b> Reference intervals apply to quantitative methods. For qualitative methods (positive/negative), a different question applies: what is the lowest concentration the method can reliably detect?</div>
     <a href="#" class="back-top">↑ Back to top</a>
@@ -1459,7 +1749,7 @@
     <h3>Qualitative stability — Kappa + McNemar over time</h3>
     <p>
       For pos/neg methods, each time point generates a 2×2 table (T0 vs T<sub>i</sub> results).
-      Apply Cohen's Kappa and McNemar's test at each time point (see Section 20).
+      Apply Cohen's Kappa and McNemar's test at each time point (see <a href="#categorical-mc" data-secref="Section"></a>).
     </p>
     <ul>
       <li>Pass criterion example: κ ≥ 0.80 <em>and</em> McNemar p ≥ 0.05</li>
@@ -1491,7 +1781,7 @@
 
   <!-- 24 — ROC & Diagnostic Accuracy -->
   <div class="section" id="qual-lod">
-    <h2>28. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></h2>
+    <h2>28. Qualitative Limit of Detection — EP17 <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span></h2>
 
     <p>
       Qualitative and semi-quantitative methods (e.g., rapid antigen tests, PCR-based assays, lateral flow immunoassays) report a binary result — <strong>positive (detected)</strong> or <strong>negative (not detected)</strong>. The <strong>Limit of Detection (LoD)</strong> is the lowest analyte concentration at which the method reliably detects the target.
@@ -1707,7 +1997,7 @@
     <h2>31. Summary table</h2>
     <table>
       <tr><th>Concept</th><th>What it measures</th><th>Expressed as</th><th>Tool</th></tr>
-      <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision — Quick / QC</td></tr>
+      <tr><td><b>Repeatability</b></td><td>Within-run random error</td><td>Sw, CVw%</td><td>Precision Monitor</td></tr>
       <tr><td><b>Intermediate precision</b></td><td>Within-lab variation across days</td><td>St = √(Sw²+Sb²), CVt%</td><td>Precision (EP05/EP15)</td></tr>
       <tr><td><b>Reproducibility</b></td><td>Between-laboratory variation</td><td>SD, CV%</td><td>EQA scheme</td></tr>
       <tr><td><b>Bias</b></td><td>Systematic error vs true value</td><td>Absolute, %</td><td>Bias — CRM / EQA</td></tr>
@@ -1787,5 +2077,7 @@
   }
   applyZoom();
 </script>
+<script src="assets/js/auto-toc.js" defer></script>
+<script src="assets/js/page-search.js" defer></script>
 </body>
 </html>

@@ -41,56 +41,79 @@
 
   /* ── Build lookup map ── */
   var terms = window.CLINICAL_TERMS || [];
-  var lookup = {};   // label (lowercase) → term object
+  var lookupCI = {}; // case-insensitive lookup (default): lowercase key → term
+  var lookupCS = {}; // case-sensitive lookup: exact key → term
   // Skip terms marked noTooltip (glossary-only)
   var tooltipTerms = terms.filter(function(t) { return !t.noTooltip; });
   // Build lookup using match field (short symbol) or label
   tooltipTerms.forEach(function(t) {
-    var key = (t.match || t.label).toLowerCase();
-    lookup[key] = t;
+    var key = (t.match || t.label);
+    if (t.caseSensitive) lookupCS[key] = t;
+    else lookupCI[key.toLowerCase()] = t;
   });
 
   /* Sorted labels longest-first to avoid partial matches */
-  var labels = tooltipTerms.map(function(t){ return t.match || t.label; });
-  labels.sort(function(a, b){ return b.length - a.length; });
+  var labelsCI = tooltipTerms.filter(function(t){return !t.caseSensitive;}).map(function(t){ return t.match || t.label; });
+  var labelsCS = tooltipTerms.filter(function(t){return t.caseSensitive;}).map(function(t){ return t.match || t.label; });
+  labelsCI.sort(function(a, b){ return b.length - a.length; });
+  labelsCS.sort(function(a, b){ return b.length - a.length; });
 
   /* ── Auto-mark text nodes ── */
   function escapeRE(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-  /* Build one combined regex: longest patterns first */
-  var pattern = labels.map(escapeRE).join('|');
-  var re = new RegExp('(?<![\\w])(' + pattern + ')(?![\\w%²])', 'g');
+  /* Two regexes: case-insensitive (default) and case-sensitive (for short acronyms) */
+  var reCI = labelsCI.length ? new RegExp('(?<![\\w])(' + labelsCI.map(escapeRE).join('|') + ')(?![\\w%²])', 'gi') : null;
+  var reCS = labelsCS.length ? new RegExp('(?<![\\w])(' + labelsCS.map(escapeRE).join('|') + ')(?![\\w%²])', 'g') : null;
+
+  // Build a termById map so mouseenter can re-find the term cheaply.
+  var termById = {};
+  tooltipTerms.forEach(function(t){ termById[t.id] = t; });
+
+  function collectMatches(text) {
+    var hits = [];
+    function run(re, lookup, caseSensitive) {
+      if (!re) return;
+      re.lastIndex = 0;
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        var matched = m[1];
+        var term = caseSensitive ? lookup[matched] : lookup[matched.toLowerCase()];
+        if (!term) continue;
+        hits.push({ start: m.index, end: m.index + matched.length, matched: matched, term: term });
+      }
+    }
+    run(reCI, lookupCI, false);
+    run(reCS, lookupCS, true);
+    hits.sort(function(a, b){ return a.start - b.start || b.end - a.end; });
+    // Drop overlapping matches (longer-first is already preferred within each regex).
+    var filtered = [];
+    var lastEnd = -1;
+    hits.forEach(function(h){
+      if (h.start >= lastEnd) { filtered.push(h); lastEnd = h.end; }
+    });
+    return filtered;
+  }
 
   function markNode(textNode) {
     var text = textNode.nodeValue;
-    if (!re.test(text)) return;
-    re.lastIndex = 0;
+    var hits = collectMatches(text);
+    if (!hits.length) return;
 
     var frag = document.createDocumentFragment();
-    var last = 0, m;
-    re.lastIndex = 0;
-    while ((m = re.exec(text)) !== null) {
-      var matched = m[1];
-      var term = lookup[matched.toLowerCase()];
-      if (!term) continue;
-
-      // Text before match
-      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-
-      // Marked span
+    var last = 0;
+    hits.forEach(function(h){
+      if (h.start > last) frag.appendChild(document.createTextNode(text.slice(last, h.start)));
       var span = document.createElement('span');
       span.className = 'fagterm';
-      span.textContent = matched;
-      span.dataset.termId = term.id;
-      span.addEventListener('mouseenter', function(e){ showTip(e, lookup[this.dataset.termId] || lookup[this.textContent.toLowerCase()]); });
+      span.textContent = h.matched;
+      span.dataset.termId = h.term.id;
+      span.addEventListener('mouseenter', function(e){ showTip(e, termById[this.dataset.termId]); });
       span.addEventListener('mousemove',  positionTip);
       span.addEventListener('mouseleave', hideTip);
       frag.appendChild(span);
-
-      last = m.index + matched.length;
-    }
+      last = h.end;
+    });
     if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-
     textNode.parentNode.replaceChild(frag, textNode);
   }
 

@@ -75,6 +75,17 @@
   <h1>Inferential Statistics — Concepts &amp; Theory</h1>
   <p class="lead">A practical introduction to hypothesis testing, p-values, confidence intervals, effect size, power, and categorical tests — written for clinicians and laboratory scientists without assuming prior statistics knowledge.</p>
 
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin:12px 0 18px;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;">How this module is organised <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">REVIEW</span></div>
+    <p style="margin:0 0 8px 0;font-size:13px;">The module has three parts:</p>
+    <ul style="margin:0 0 8px 0;padding-left:20px;font-size:13px;line-height:1.7;">
+      <li><b>Foundations — the concepts.</b> What inferential statistics is and why we need it; the Central Limit Theorem; hypothesis testing, p-values, significance levels; Type I/II errors and power; confidence intervals; statistical vs clinical significance; frequentist vs Bayesian framing; parametric vs non-parametric choice.</li>
+      <li><b>Quantitative tests — comparing means or medians.</b> One-sample, independent, and paired t-tests; ANOVA; their non-parametric counterparts (Mann-Whitney U, Wilcoxon signed-rank). How each test fits a specific study design.</li>
+      <li><b>Categorical tests — comparing proportions or agreement.</b> Chi-square (goodness of fit and independence), Fisher's exact, McNemar's test, Cohen's Kappa (and weighted Kappa for ordinal agreement). References close the module.</li>
+    </ul>
+    <p style="margin:0;font-size:12px;color:#475569;font-style:italic;">Read the Foundations first if the concepts are new to you; skip to Quantitative or Categorical tests when you know which design you are running and just need the test-specific details.</p>
+  </div>
+
   <!-- Index -->
   <div class="index">
     <h3>Contents</h3>
@@ -133,9 +144,9 @@
     <p>The <b>Central Limit Theorem (CLT)</b> states that when you take repeated random samples from any population — regardless of the shape of that population's distribution — the distribution of sample means will approach a <b>normal (Gaussian) distribution</b> as sample size increases. This holds even if individual measurements are skewed, bimodal, or otherwise non-normal.</p>
     <p>A common rule of thumb: the sampling distribution of the mean is approximately normal when <b>n ≥ 30</b>, though this threshold is lower for distributions that are already roughly symmetric, and higher for heavily skewed ones.</p>
 
-    <div class="good">
+    <p>
       <b>Why CLT matters in the lab:</b> Many biological measurements are not normally distributed in individuals — serum ferritin is strongly right-skewed, troponin values cluster near zero with a long tail, and platelet counts are roughly log-normal. Yet when we compare <em>group means</em> (e.g. mean HbA1c in two patient groups), CLT justifies treating the distribution of those means as normal, making parametric tests valid even with non-normal raw data — as long as n is adequate.
-    </div>
+    </p>
 
     <p>This is the mathematical foundation that makes <b>parametric tests</b> (t-tests, ANOVA) robust in practice. Non-parametric tests, by contrast, work with ranks rather than means and do not rely on CLT.</p>
 
@@ -188,13 +199,13 @@
       </tr>
     </table>
 
-    <div class="warn">
+    <p>
       <b>When CLT breaks down:</b> With very small samples (n &lt; 10–15) from heavily skewed distributions, the sampling distribution of the mean may not be adequately normal. In these cases, prefer non-parametric alternatives or consider transforming the data (e.g. log-transform for skewed lab values).
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Practical takeaway:</b> For most clinical laboratory comparisons with n ≥ 30, CLT makes parametric tests valid regardless of how individual patient values are distributed. Below that threshold, assess the raw data distribution first — or default to a non-parametric test.
-    </div>
+    </p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
   <hr class="divider"/>
@@ -292,33 +303,33 @@
       </div>
     </div>
 
-    <div class="good">
+    <p>
       <b>The relationship between one-tailed and two-tailed p-values:</b><br>
       For symmetric distributions (t, z): <b>p<sub>one-tailed</sub> = p<sub>two-tailed</sub> / 2</b><br><br>
       If a two-tailed test gives p = 0.06 (not significant at α = 0.05), a one-tailed test in the correct direction would give p = 0.03 (significant). This is why one-tailed tests are more powerful — but they must be justified <em>before</em> seeing the data, not chosen because the two-tailed test "almost" worked.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Example — QC bias check:</b><br>
       Two-tailed: "Does the analyser differ from target?" → H₁: μ ≠ 5.0 (bias in either direction is a problem)<br>
       One-tailed: "Is the new treatment better?" → H₁: μ<sub>new</sub> &gt; μ<sub>old</sub> (only interested in improvement)
-    </div>
+    </p>
 
     <p><b>Key differences:</b></p>
     <p>A one-sided test is more powerful in the hypothesised direction (the p-value is halved), but it <b>completely ignores</b> differences in the other direction. If the effect goes the opposite way, you cannot reject H₀ regardless of how large it is.</p>
 
-    <div class="warn">
+    <p>
       <b>In clinical laboratory work: almost always use two-tailed tests.</b> Both directions matter — an analyser that reads too high is just as problematic as one that reads too low. One-tailed tests are only justified when you have a strong scientific reason to expect a specific direction, and a difference in the other direction is meaningless.
-    </div>
+    </p>
 
     <h3 style="font-size:16px;margin:20px 0 8px;">Multiple hypothesis tests</h3>
     <p>Some analyses involve more than one hypothesis test:</p>
     <p><b>Sequential testing:</b> ANOVA first tests whether <em>any</em> group differs (omnibus test). If significant, post-hoc tests (Tukey, Bonferroni) then test <em>which specific pairs</em> differ. Each step has its own H₀ and H₁.</p>
     <p><b>Multi-aspect analysis:</b> Method comparison typically runs several tests on the same dataset — Passing-Bablok (slope = 1? intercept = 0?), paired t-test (mean bias = 0?), and Bland-Altman (limits of agreement). Each answers a different question about agreement.</p>
 
-    <div class="warn">
+    <p>
       <b>Multiple testing problem:</b> Running many tests on the same data inflates the chance of a false positive. If you run 20 tests at α = 0.05, you expect 1 false positive by chance alone. Corrections like <b>Bonferroni</b> (divide α by the number of tests) or <b>Tukey HSD</b> (built into ANOVA post-hoc) control this.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -328,18 +339,18 @@
   <div class="section" id="pvalue">
     <h2>4. The p-value</h2>
     <p>The p-value is the probability of obtaining a result <b>at least as extreme</b> as the observed one, assuming the null hypothesis is true. It is not the probability that H₀ is true, and it does not measure the size or importance of an effect.</p>
-    <div class="good">
+    <p>
       <b>Correct interpretation:</b> A p-value of 0.03 means: if H₀ were true, there would be a 3% chance of seeing a difference this large (or larger) purely by chance.
-    </div>
+    </p>
     <p>A useful way to think about it: if the null hypothesis is true and you repeated the same experiment 100 times, you would expect to see a result as extreme as yours — or more extreme — in about <b>p × 100</b> of those repetitions, purely by chance.</p>
     <p>So p = 0.03 means roughly <b>3 out of 100</b> repetitions would produce a result this extreme by chance alone. That is rare enough to make you doubt H₀ — but it does not prove H₀ is false, and it says nothing about how large or clinically important the effect is.</p>
-    <div class="warn">
+    <p>
       <b>Common misconceptions:</b><br>
       ✗ "p = 0.03 means there is a 3% chance H₀ is true." — <em>Wrong. The p-value assumes H₀ is true — it cannot tell you the probability that it is.</em><br>
       ✗ "p = 0.03 means there is a 97% chance the result is real." — <em>Wrong.</em><br>
       ✗ "A smaller p-value means a bigger effect." — <em>Wrong. A tiny p-value can come from a trivially small effect in a very large sample.</em><br>
       ✗ "p ≥ 0.05 means there is no effect." — <em>Wrong. It means the data are insufficient to reject H₀ — absence of evidence is not evidence of absence.</em>
-    </div>
+    </p>
     <p>In practice, the p-value is treated as <b>dichotomous</b>: either p &lt; α (reject H₀, "significant") or p ≥ α (fail to reject H₀, "not significant"). A p = 0.049 and p = 0.051 represent essentially the same evidence, yet are treated completely differently by this threshold. This is why effect size and confidence intervals matter more than the p-value alone.</p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -349,9 +360,9 @@
     <h2>5. Significance level (α)</h2>
     <p>The significance level α is the threshold we set <em>before</em> the experiment. It defines how willing we are to make a <b>Type I error</b> — falsely rejecting a true null hypothesis (a false positive).</p>
     <p>The most commonly used threshold is α = 0.05, meaning we accept a 5% risk of a false positive. This is a convention, not a law — in some contexts (e.g. genomics, safety-critical decisions) much lower α values are used.</p>
-    <div class="good">
+    <p>
       <b>Key point:</b> α is set before data collection. Changing it after seeing the results is a form of p-hacking and invalidates the test.
-    </div>
+    </p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
   <hr class="divider"/>
@@ -365,10 +376,10 @@
       <tr><td><b>Reject H₀</b> (p &lt; α)</td><td><span class="tag tag-red">Type I error — false positive (α)</span></td><td><span class="tag tag-green">Correct decision — Power (1 − β)</span></td></tr>
       <tr><td><b>Fail to reject H₀</b> (p ≥ α)</td><td><span class="tag tag-green">Correct decision (1 − α)</span></td><td><span class="tag tag-red">Type II error — false negative (β)</span></td></tr>
     </table>
-    <div class="callout">
+    <p>
       <b>Type I error (α):</b> You conclude there is an effect when there isn't one. Setting α = 0.05 means you accept a 5% risk of this.<br><br>
       <b>Type II error (β):</b> You fail to detect a real effect. Conventionally β = 0.20, meaning a 20% chance of missing a true effect.
-    </div>
+    </p>
     <p>There is an inherent trade-off: lowering α reduces false positives but increases false negatives, and vice versa. The only way to reduce both simultaneously is to increase sample size.</p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -385,12 +396,12 @@
       <tr><td><b>Effect size (Δ)</b></td><td>Larger true difference → higher power. A large signal is easier to detect.</td></tr>
       <tr><td><b>Significance level (α)</b></td><td>Higher α → higher power, but at the cost of more false positives.</td></tr>
     </table>
-    <div class="good">
+    <p>
       <b>Try it:</b> Open the <em>Dance of the p-values</em> simulator. Increase n while keeping the effect fixed — watch power rise and significant results become more frequent.
-    </div>
-    <div class="warn">
+    </p>
+    <p>
       <b>Underpowered studies:</b> A non-significant result in an underpowered study does <em>not</em> mean there is no effect. It may simply mean the study was too small to detect it.
-    </div>
+    </p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
   <hr class="divider"/>
@@ -399,12 +410,12 @@
   <div class="section" id="ci">
     <h2>8. Confidence intervals</h2>
     <p>A 95% confidence interval (CI) is a range calculated from sample data that, in repeated sampling, would contain the true population parameter 95% of the time. It does <em>not</em> mean there is a 95% probability that the true value lies within any single interval.</p>
-    <div class="good">
+    <p>
       <b>Correct interpretation:</b> If you repeated the same experiment 100 times and computed a 95% CI each time, approximately 95 of those intervals would contain the true population value. Any single CI either contains the true value or it doesn't — we just don't know which.
-    </div>
-    <div class="warn">
+    </p>
+    <p>
       <b>Common misconception:</b> "There is a 95% probability that the true value lies within this specific interval." — The true value is fixed; it is the interval that varies between experiments.
-    </div>
+    </p>
     <p>The <b>width</b> of the CI reflects <b>precision</b>: a narrow CI means more precise estimation. Increasing sample size narrows the CI.</p>
 
     <h3 style="font-size:16px;margin:20px 0 8px;">CI formula — general structure</h3>
@@ -412,6 +423,7 @@
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
       95% CI = estimate ± critical value × standard error
     </p>
+    <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span>The <b>critical value</b> is the number of standard errors you go out from the estimate to capture the desired confidence level. For a 95% CI it is <b>1.96</b> when using the standard normal (z) distribution — i.e. for large samples, or for known-σ cases. For small samples with σ estimated from the data, the critical value comes from the <b>t-distribution</b> and is slightly larger (e.g. ≈ 2.26 at n = 10). The tables below use "t" as shorthand for this critical value.</p>
     <p>The specific formula depends on what you are estimating:</p>
     <table>
       <tr><th>CI for</th><th>Formula</th><th>Null value</th><th>Significant if CI excludes</th><th>Used in</th></tr>
@@ -424,28 +436,28 @@
       <tr><td><b>Regression slope</b></td><td>b ± t × SE<sub>b</sub></td><td>0 or 1</td><td>0 (no relationship) or 1 (no proportional bias)</td><td>Linear regression, Passing-Bablok</td></tr>
       <tr><td><b>Regression intercept</b></td><td>a ± t × SE<sub>a</sub></td><td>0</td><td>Zero (= no constant bias)</td><td>Linear regression, Passing-Bablok</td></tr>
     </table>
-    <div class="good">
+    <p>
       <b>Pattern:</b> The "null value" is always the value that means "no effect." For differences it's <b>0</b>. For ratios (OR, RR) it's <b>1</b>. For slopes it depends on context — 0 (no relationship) or 1 (identity, no proportional bias). If the CI excludes the null value → statistically significant.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — "Does the CI include zero?"</b><br><br>
       Paired t-test comparing two analysers: mean difference d̄ = +1.2 mmol/L.<br><br>
       <b>95% CI = [0.42, 1.98]</b> → does NOT include 0 → <b>significant bias</b>. The true difference is somewhere between +0.42 and +1.98 — it's definitely not zero.<br><br>
       <b>95% CI = [−0.35, 2.75]</b> → DOES include 0 → <b>not significant</b>. The true difference could be zero — we can't rule out "no bias" with this data.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — "Does the CI include the hypothesised value?"</b><br><br>
       One-sample t-test: QC target μ₀ = 5.0 mmol/L. Measured mean x̄ = 5.18.<br><br>
       <b>95% CI = [5.07, 5.29]</b> → does NOT include 5.0 → <b>reject H₀</b>. The instrument is biased — the true mean is above the target.<br><br>
       <b>95% CI = [4.92, 5.44]</b> → DOES include 5.0 → <b>fail to reject H₀</b>. The target value is within the plausible range.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>CI vs p-value — the CI tells you more:</b><br>
       The p-value only says "significant or not." The CI tells you the <b>range of plausible values</b> for the true effect. A CI of [0.1, 15.2] is significant but imprecise (wide). A CI of [1.8, 2.4] is significant AND precise (narrow). Both have p &lt; 0.05, but the second is far more useful clinically.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -462,14 +474,14 @@
       <tr><td><b>Effect size (e.g. Cohen's δ)</b></td><td>How large the difference is in standardised units, independent of sample size</td></tr>
       <tr><td><b>Clinical significance</b></td><td>Whether the difference matters in practice — a clinical judgement, not a statistical one</td></tr>
     </table>
-    <div class="good">
+    <p>
       <b>Cohen's δ guidelines (approximate):</b><br>
       0.2 = small &nbsp;·&nbsp; 0.5 = medium &nbsp;·&nbsp; 0.8 = large<br><br>
       A δ of 0.05 with p &lt; 0.001 may be statistically robust but clinically irrelevant. A δ of 0.8 with p = 0.08 may be clinically important but the study was underpowered to detect it.
-    </div>
-    <div class="warn">
+    </p>
+    <p>
       <b>Always report effect size alongside the p-value.</b> Statistical significance without effect size is incomplete reporting.
-    </div>
+    </p>
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
   <hr class="divider"/>
@@ -488,9 +500,7 @@
       </tbody>
     </table>
 
-    <div class="good" style="margin-top:14px;">
-      <b>The frequentist interpretation is correct for p-values</b> because p-values are a frequentist tool — they were designed within that framework. The question most researchers <em>want</em> to ask is actually Bayesian: "given my data, what is the probability that H₀ is true?" But a p-value cannot answer that. It answers the reverse: "given H₀ is true, how probable is this data?" Trying to give a p-value a Bayesian reading is not a matter of preference — it is simply wrong.
-    </div>
+    <p style="margin-top:14px;"><b>The frequentist interpretation is correct for p-values</b> because p-values are a frequentist tool — they were designed within that framework. The question most researchers <em>want</em> to ask is actually Bayesian: "given my data, what is the probability that H₀ is true?" But a p-value cannot answer that. It answers the reverse: "given H₀ is true, how probable is this data?" Trying to give a p-value a Bayesian reading is not a matter of preference — it is simply wrong.</p>
 
     <p>The two most influential statisticians in this area — Ronald Fisher and Jerzy Neyman/Egon Pearson — both worked within the frequentist framework. They disagreed on the details of how to use p-values: Fisher saw the p-value as a continuous measure of evidence against H₀, while Neyman and Pearson wanted a strict yes/no decision rule based on a pre-set threshold. But neither was asking "what is the probability that H₀ is true?" — that question belongs to the Bayesian world.</p>
     <p>Bayesian statistics is a completely separate approach that answers different questions using different tools. Instead of p-values, it produces something called a <b>posterior probability</b> — a direct statement about how likely something is given the data. It is not better or worse than frequentist statistics; it is built for a different purpose and requires prior knowledge to be specified in advance.</p>
@@ -523,13 +533,13 @@
       <tr><td>Three or more groups</td><td>ANOVA</td><td>Kruskal-Wallis</td></tr>
     </table>
 
-    <div class="good">
+    <p>
       <b>Rule of thumb:</b> If your data is continuous, reasonably symmetric, and n ≥ 20–30 — use parametric (more power). If your data is ordinal, heavily skewed, has outliers, or n is small — use non-parametric (more robust). When in doubt, run both — if they agree, report the parametric result.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>Common misconception:</b> "My data isn't normally distributed, so I must use a non-parametric test." This is often too cautious. The CLT means that for moderate sample sizes (n ≥ 30), the <em>sampling distribution of the mean</em> is approximately normal even if the raw data isn't. The normality assumption applies to the test statistic, not the raw data. For the paired t-test, it's the <em>differences</em> that need to be approximately normal — not the original measurements.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -578,12 +588,12 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> μ = μ₀ (the population mean equals the hypothesised value)<br>
       <b>H₁:</b> μ ≠ μ₀ (two-sided) or μ &gt; μ₀ / μ &lt; μ₀ (one-sided)<br><br>
       <b>Example:</b> A QC sample with target 5.0 mmol/L was measured 20 times. Mean = 5.18, SD = 0.24.<br>
       H₀: μ = 5.0 — H₁: μ ≠ 5.0 — Is the instrument biased?
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -601,13 +611,13 @@
     <p>The t-value measures how many standard errors the sample mean is from the hypothesised value. Compare |t| to the critical value from the t-distribution, or use the p-value directly.</p>
 
     <p><b>Confidence interval interpretation:</b></p>
-    <div class="good">
+    <p>
       The 95% CI for the mean is calculated as x̄ ± t<sub>crit</sub> × (s / √n).<br>
       If the CI <b>does not include</b> the hypothesised value μ₀ → reject H₀ (significant at α = 0.05).<br>
       If the CI <b>includes</b> μ₀ → fail to reject H₀.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — QC glucose target:</b><br><br>
       A QC sample with target value μ₀ = 5.0 mmol/L is measured 20 times.<br>
       Results: x̄ = 5.18, s = 0.24, n = 20.<br><br>
@@ -620,7 +630,7 @@
       <b>Step 4: Confidence interval</b><br>
       95% CI = 5.18 ± 2.093 × 0.054 = [5.07, 5.29]<br>
       The CI does not include 5.0 → confirms the instrument reads significantly higher than target. Mean bias = +0.18 mmol/L.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -643,12 +653,12 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> μ₁ = μ₂ (no difference between group means)<br>
       <b>H₁:</b> μ₁ ≠ μ₂<br><br>
       <b>Example:</b> Mean creatinine in males (n=45) = 88 μmol/L vs. females (n=52) = 72 μmol/L.<br>
       H₀: No difference — H₁: There is a difference.
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -663,13 +673,13 @@
     <p>The pooled version (Student's) uses a common variance estimate: s²<sub>p</sub> = [(n₁−1)s₁² + (n₂−1)s₂²] / (n₁+n₂−2). Welch's version is preferred because it does not assume equal variances.</p>
 
     <p><b>Confidence interval interpretation:</b></p>
-    <div class="good">
+    <p>
       The 95% CI is for the <b>difference</b> between means (μ₁ − μ₂).<br>
       If the CI <b>does not include 0</b> → the means are significantly different.<br>
       If the CI <b>includes 0</b> → no significant difference at α = 0.05.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Creatinine: males vs females:</b><br><br>
       Males (n₁ = 45): x̄₁ = 88 μmol/L, s₁ = 15.<br>
       Females (n₂ = 52): x̄₂ = 72 μmol/L, s₂ = 12.<br><br>
@@ -683,7 +693,7 @@
       95% CI for the difference = 16 ± 1.99 × 2.79 = [10.4, 21.6] μmol/L — does not include 0.<br>
       Cohen's d = 16 / √((15² + 12²)/2) = 16 / 13.6 = <b>1.18</b> (large effect).<br><br>
       Males have significantly higher creatinine than females — a well-known physiological difference due to higher muscle mass.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -705,12 +715,12 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> μ<sub>d</sub> = 0 (the mean difference between pairs is zero — no systematic bias)<br>
       <b>H₁:</b> μ<sub>d</sub> ≠ 0 (there is a systematic difference)<br><br>
       <b>Example:</b> 30 patient samples measured on two analysers. Mean difference d̄ = +1.2 mmol/L, SD<sub>d</sub> = 2.1.<br>
       H₀: No systematic difference — H₁: One analyser reads systematically higher.
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -726,13 +736,13 @@
     </table>
 
     <p><b>Confidence interval interpretation:</b></p>
-    <div class="good">
+    <p>
       The 95% CI is for the <b>mean difference</b> d̄.<br>
       If the CI <b>does not include 0</b> → there is a systematic bias between the two conditions.<br>
       If the CI <b>includes 0</b> → no evidence of systematic difference.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Two analysers measuring sodium:</b><br><br>
       30 patient samples measured on both Analyser A (new) and Analyser B (reference). Same samples → paired.<br><br>
       Results: d̄ = +1.2 mmol/L, s<sub>d</sub> = 2.1, n = 30.<br><br>
@@ -744,11 +754,11 @@
       <b>Step 3: Confidence interval</b><br>
       95% CI = 1.2 ± 2.045 × 0.383 = [0.42, 1.98] mmol/L — does not include 0.<br><br>
       <b>Conclusion:</b> Analyser A reads systematically <b>+1.2 mmol/L higher</b> than Analyser B. The CI tells us the true bias is somewhere between +0.42 and +1.98 mmol/L. Whether this matters clinically depends on the sodium reference interval (136–145 mmol/L) — a 1.2 mmol/L bias may or may not be acceptable.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>Common pitfall:</b> The paired t-test detects <b>constant (additive) bias</b> — it tests whether the average difference is zero. It does <b>not</b> detect proportional bias (where the difference grows with concentration). For that, use <b>Bland-Altman analysis</b> or <b>Passing-Bablok regression</b>.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -771,11 +781,11 @@
     </table>
 
     <p><b>Hypotheses (one-way):</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> μ₁ = μ₂ = μ₃ = … = μ<sub>k</sub> (all group means are equal)<br>
       <b>H₁:</b> At least one group mean differs<br><br>
       <b>Example:</b> Comparing potassium levels from 3 different analysers. ANOVA tests if any analyser gives a systematically different result.
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -793,12 +803,12 @@
     </table>
     <p>A large F means groups differ more than expected by chance. If F exceeds the critical value → reject H₀.</p>
 
-    <div class="good">
+    <p>
       <b>The intuition behind F:</b> Imagine three groups, each as a bell curve. The <b>grand mean</b> (dashed line) sits in the middle. F asks: are the group means (x̄₁, x̄₂, x̄₃) far apart relative to how spread out the values are within each group?<br><br>
       <b>Large F</b> → group means are far apart, within-group spread is small → groups are genuinely different.<br>
       <b>Small F</b> → group means are close together, within-group spread is large → differences could be noise.<br><br>
       The pink arrows (between-group variation) compared to the black arrows (within-group variation) — that ratio is F.
-    </div>
+    </p>
 
     <p><b>The ANOVA table:</b></p>
     <table>
@@ -827,7 +837,7 @@
     </table>
     <p>η² tells you what proportion of the total variation is explained by group membership. η² = 0.30 means 30% of the variation in the outcome is due to group differences.</p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Haemoglobin across 3 hospital departments:</b><br><br>
       Does mean haemoglobin differ between Emergency (n=5), Surgery (n=5), and Oncology (n=5)?<br><br>
       <table>
@@ -854,17 +864,17 @@
 
       <b>Post-hoc (Tukey HSD):</b> Emergency vs Surgery: not significant (p = 0.42). Emergency vs Oncology: significant (p &lt; 0.001). Surgery vs Oncology: significant (p &lt; 0.001).<br>
       → Oncology patients have significantly lower haemoglobin than the other two departments.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>ANOVA tells you <em>that</em> groups differ, not <em>which</em> ones.</b> Use post-hoc tests (Tukey HSD, Bonferroni) to identify which specific pairs differ. Without post-hoc, a significant ANOVA only tells you "at least one group is different."
-    </div>
+    </p>
 
     <h3 style="font-size:16px;margin:20px 0 8px;">Two-way ANOVA</h3>
     <p>Two-way ANOVA tests <b>two factors simultaneously</b> — e.g., does haemoglobin differ by department AND by gender? It can also test whether the two factors <b>interact</b> (does the effect of department depend on gender?).</p>
 
     <p><b>Without replication</b> — one observation per cell:</p>
-    <div class="callout">
+    <p>
       <b>Example:</b> 3 analysers × 4 QC levels. Each analyser measures each level <b>once</b>.<br><br>
       <table>
         <tr><th></th><th>Level 1</th><th>Level 2</th><th>Level 3</th><th>Level 4</th></tr>
@@ -874,7 +884,7 @@
       </table>
       <b>Can test:</b> main effect of analyser (rows) + main effect of QC level (columns).<br>
       <b>Cannot test:</b> interaction — only one value per cell, so there is no within-cell variation to estimate error. The interaction term IS the error term.
-    </div>
+    </p>
 
     <p><b>ANOVA table (without replication):</b></p>
     <table>
@@ -886,7 +896,7 @@
     </table>
 
     <p><b>With replication</b> — multiple observations per cell:</p>
-    <div class="callout">
+    <p>
       <b>Example:</b> 3 analysers × 2 QC levels. Each combination measured <b>3 times</b> (n = 3 replicates).<br><br>
       <table>
         <tr><th></th><th>Level 1 (low)</th><th>Level 2 (high)</th></tr>
@@ -896,7 +906,7 @@
       </table>
       <b>Can test:</b> main effect of analyser + main effect of level + <b>interaction</b>.<br>
       The interaction answers: does the difference between analysers depend on the QC level? If Analyser C reads high only at high concentrations (proportional bias), the interaction will be significant.
-    </div>
+    </p>
 
     <p><b>ANOVA table (with replication):</b></p>
     <table>
@@ -915,15 +925,15 @@
       <tr><td>SS<sub>A×B</sub></td><td>Interaction sum of squares — variation due to the combined effect of A and B beyond their individual effects</td></tr>
     </table>
 
-    <div class="warn">
+    <p>
       <b>When to use which:</b><br>
       <b>Without replication:</b> When each combination can only be measured once (expensive samples, limited material). You lose the ability to test interaction — you must assume no interaction exists.<br>
       <b>With replication:</b> When you can repeat measurements. Always preferred — the interaction test is often the most clinically important result (e.g., does bias depend on concentration?).
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Interaction — the key insight:</b> A significant interaction means the effect of one factor <b>depends on the level of the other factor</b>. In method validation, this often reveals <b>proportional bias</b> — the difference between methods changes with concentration. A non-significant interaction means the bias is <b>constant</b> across levels.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -945,11 +955,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> The two groups come from the same distribution (no systematic difference)<br>
       <b>H₁:</b> The distributions differ (one group tends to have higher/lower values)<br><br>
       <b>Example:</b> Pain scores (1–10 scale) after two different anaesthetics. Ordinal data → Mann-Whitney is appropriate.
-    </div>
+    </p>
 
     <p><b>How it works:</b></p>
     <p>All values from both groups are combined and ranked from lowest to highest. The <b>rank sum</b> for each group is calculated. If one group has systematically higher values, its rank sum will be unusually high (or low). The U statistic counts how often a value from group 1 precedes a value from group 2 in the ranking.</p>
@@ -965,7 +975,7 @@
       <tr><td>U = min(U₁, U₂)</td><td>The test statistic — compared to critical value or normal approximation</td></tr>
     </table>
 
-    <div class="callout">
+    <p>
       <b>Worked example — CRP levels in two patient groups:</b><br><br>
       CRP (mg/L) measured in patients with mild infection (n₁ = 5) vs severe infection (n₂ = 5). CRP is heavily right-skewed → Mann-Whitney is appropriate.<br><br>
 
@@ -1008,15 +1018,15 @@
       For n₁ = 5, n₂ = 5 at α = 0.05 (two-sided), U<sub>crit</sub> = 2.<br>
       1.5 &lt; 2 → <b>Reject H₀</b> — Severe infection patients have significantly higher CRP than mild infection patients.<br><br>
       Note: CRP ranges from 4–22 in mild vs 15–120 in severe — highly skewed data where a parametric t-test on raw values would be misleading. The rank-based approach handles the skew and the outlier (120) naturally.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>Rank-based tests detect systematic differences</b> — if one treatment consistently produces higher values, the rank sum will be shifted. However, they have less statistical power than parametric tests when assumptions are met.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Mann-Whitney vs Wilcoxon:</b> Mann-Whitney is for <b>independent</b> groups (different subjects). Wilcoxon signed-rank is for <b>paired</b> data (same subjects, two conditions). Both use ranks, but the logic is different — Mann-Whitney compares rank sums between groups, Wilcoxon compares signed ranks of differences within pairs.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1038,11 +1048,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> The median difference between pairs is zero (no systematic bias)<br>
       <b>H₁:</b> The median difference is not zero<br><br>
       <b>Example:</b> 15 blood samples measured by two methods. Differences are skewed with an outlier. Paired t-test would be unreliable → Wilcoxon signed-rank is appropriate.
-    </div>
+    </p>
 
     <p><b>How it works:</b></p>
     <ol style="font-size:14px;line-height:1.8;color:#374151;">
@@ -1063,7 +1073,7 @@
     </p>
     <p>Compare W to a critical value table. For large n, a normal approximation is used.</p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Before vs After treatment:</b><br><br>
       10 patients measured before and after treatment. Is there a systematic change?<br><br>
       <b>Step 1–4: Compute differences, <span style="background:#fef3c7;padding:1px 4px;border-radius:3px;">sort by |d|</span>, rank, assign signs</b>
@@ -1091,11 +1101,11 @@
       W = min(31.5, 23.5) = <b>23.5</b><br>
       For n = 10 at α = 0.05 (two-sided), W<sub>crit</sub> = 8.<br>
       23.5 &gt; 8 → <b>Fail to reject H₀</b> — no significant systematic difference between before and after.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Detecting systematic bias with ranks:</b> If method B consistently reads higher than method A, most differences will be positive, and W⁻ will be small → significant result. The Wilcoxon test is robust against outliers because extreme values get the same rank increment as moderate ones.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1117,11 +1127,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> Observed frequencies match the expected distribution<br>
       <b>H₁:</b> Observed frequencies deviate from the expected distribution<br><br>
       <b>Example:</b> Expected blood type distribution: A=44%, O=42%, B=10%, AB=4%. Observed in 200 patients: A=96, O=78, B=18, AB=8. Does our sample match?
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -1139,7 +1149,7 @@
     </table>
     <p>Large χ² → observed differs from expected → reject H₀.</p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Blood type distribution:</b><br><br>
       A hospital wants to check if its patient population matches the known national blood type distribution. 200 patients are typed.<br><br>
       <b>Step 1: Observed vs Expected</b>
@@ -1154,15 +1164,15 @@
       <b>Step 2: Decision</b><br>
       df = k − 1 = 4 − 1 = 3. χ²<sub>crit</sub> = 7.81 at α = 0.05.<br>
       1.36 &lt; 7.81 → <b>Fail to reject H₀</b> — the hospital's blood type distribution is consistent with the national distribution.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>GOF vs Independence:</b> Goodness of Fit tests one variable against a known distribution. Independence tests whether two variables are associated. Same formula, different question — GOF has df = k − 1, Independence has df = (r−1)(c−1).
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>When expected counts are too small:</b> If any E<sub>i</sub> &lt; 5, the χ² approximation is unreliable. Solutions: combine small categories (e.g., merge B and AB into "other"), increase sample size, or use an exact multinomial test.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1183,11 +1193,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> The two variables are independent (no association)<br>
       <b>H₁:</b> The two variables are associated<br><br>
       <b>Example:</b> 2×2 table — ICU admission (yes/no) vs. diabetes status (yes/no). Is diabetes associated with ICU admission?
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -1203,7 +1213,7 @@
     </table>
     <p>The test compares what we observe against what we would expect if the two variables were completely independent.</p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Vaccination &amp; Influenza:</b><br><br>
       <b>Step 1: Observed counts</b>
       <table>
@@ -1225,11 +1235,11 @@
       χ² = 6.67 + 5.00 + 6.67 + 5.00 = <b>23.3</b><br><br>
       df = (2−1)(2−1) = 1. χ²<sub>crit</sub> = 3.84 at α = 0.05.<br>
       23.3 &gt; 3.84 → <b>Reject H₀</b> — there is a significant association between vaccination and influenza.
-    </div>
+    </p>
 
-    <div class="warn">
+    <p>
       <b>Chi-square detects association, not causation.</b> A significant result means the variables are not independent — it does not prove that one causes the other.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1251,11 +1261,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> No association between the two variables (odds ratio = 1)<br>
       <b>H₁:</b> There is an association (odds ratio ≠ 1)<br><br>
       <b>Example:</b> A rare adverse reaction occurs in 2 of 8 patients in the treatment group vs. 0 of 10 in the control group. Expected counts are too small for chi-square → Fisher's exact test.
-    </div>
+    </p>
 
     <p><b>How it works:</b></p>
     <p>Fisher's test calculates the exact probability of observing the current table (or a more extreme one) under H₀, using the hypergeometric distribution. No approximation is needed — hence "exact". The p-value is the sum of probabilities for all tables as extreme or more extreme than the observed one.</p>
@@ -1272,9 +1282,9 @@
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
       E<sub>ij</sub> = (row total × column total) / N
     </p>
-    <div class="warn">
+    <p>
       <b>When to use Fisher's vs Chi-square:</b> Calculate the expected count for each cell. If <b>any</b> expected count is &lt; 5, use Fisher's exact test. The rule is about <b>expected</b> counts, not observed — you can observe 0 in a cell and still use chi-square if the expected count is ≥ 5.
-    </div>
+    </p>
 
     <p><b>Effect size — Odds Ratio:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -1288,7 +1298,7 @@
     </table>
     <p>The 95% CI for the odds ratio is calculated using the Woolf logit method: ln(OR) ± 1.96 × √(1/a + 1/b + 1/c + 1/d). If the CI excludes 1.0, the association is statistically significant.</p>
 
-    <div class="callout">
+    <p>
       <b>Example:</b> Testing whether a new rapid test detects infection as well as the standard test.<br><br>
       <table>
         <tr><th></th><th>Infected</th><th>Not infected</th></tr>
@@ -1299,11 +1309,11 @@
       Expected count for cell c: (1+14) × (8+1) / 25 = 5.4 ≥ 5 — chi-square would work, but Fisher's is always valid.<br>
       OR = (8 × 14) / (2 × 1) = <b>56.0</b> — strong association. p = 0.0002 → significant.<br>
       Patients testing positive on the rapid test are 56 times more likely to be truly infected.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Key insight:</b> Fisher's exact test gives the same answer as chi-square for large samples, but is always valid regardless of sample size. In practice, many statisticians recommend using Fisher's exact test for <b>all</b> 2×2 tables — it is never wrong, only sometimes unnecessarily conservative.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1331,11 +1341,11 @@
     </table>
 
     <p><b>Hypotheses:</b></p>
-    <div class="callout">
+    <p>
       <b>H₀:</b> The probability of changing in each direction is equal: P(+→−) = P(−→+), i.e. b = c<br>
       <b>H₁:</b> There is a systematic shift in one direction (b ≠ c)<br><br>
       <b>Example:</b> 100 patients tested for an infection before and after treatment. Concordant (both positive or both negative) pairs are irrelevant. Only the <b>discordant</b> pairs matter: 15 patients converted from positive to negative (b), 3 from negative to positive (c). Is the treatment effective?
-    </div>
+    </p>
 
     <p><b>Test statistic:</b></p>
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
@@ -1365,14 +1375,14 @@
     </table>
     <p>95% CI for the odds ratio: if the CI excludes 1.0, the asymmetry is statistically significant.</p>
 
-    <div class="callout">
+    <p>
       <b>Example:</b> 100 patients tested before and after treatment. 15 converted positive → negative (b = 15), 3 converted negative → positive (c = 3).<br><br>
       OR = 15 / 3 = <b>5.0</b> — patients are 5 times more likely to convert from positive to negative than the reverse.<br>
       χ² = (|15 − 3| − 1)² / (15 + 3) = 121/18 = <b>6.72</b>, p = 0.010 → significant.<br><br>
       The p-value says "the shift is real." The OR says "it's a 5-fold shift." Both are needed for a complete interpretation.
-    </div>
+    </p>
 
-    <div class="callout">
+    <p>
       <b>Worked example — Medication A vs B:</b><br><br>
       53 patients are treated with both Medication A and Medication B (paired design). For each patient, the outcome is B (better) or U (unchanged).<br><br>
       <b>Step 1: Raw paired data → 2×2 table</b><br>
@@ -1391,11 +1401,11 @@
       df = 1, χ²<sub>crit</sub> = 3.84 → 1.16 &lt; 3.84 → <b>Fail to reject H₀</b><br>
       OR = 19/12 = <b>1.58</b><br><br>
       <b>Conclusion:</b> No statistically significant difference between medications (p = 0.28). The OR of 1.58 suggests a trend favouring Medication A, but the sample of 31 discordant pairs is insufficient to confirm it.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>Key insight:</b> McNemar's test is specifically designed to detect <b>systematic bias in paired categorical data</b>. Concordant pairs (a and d) carry no information about change — the entire test is driven by the discordant pairs. The odds ratio (b/c) quantifies the magnitude of that shift.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1447,16 +1457,16 @@
     <p style="text-align:center; font-size:16px; font-family:serif; margin:14px 0;">
       P<sub>e</sub> = <span style="font-size:14px;">( <sup>(a+b)</sup>&frasl;<sub>N</sub> × <sup>(a+c)</sup>&frasl;<sub>N</sub> ) + ( <sup>(c+d)</sup>&frasl;<sub>N</sub> × <sup>(b+d)</sup>&frasl;<sub>N</sub> )</span>
     </p>
-    <div class="callout">
+    <p>
       <b>In numbers:</b> 200 samples. Rater 1 says "Positive" on 120 → rate = 120/200 = 0.60. Rater 2 says "Positive" on 110 → rate = 110/200 = 0.55.<br><br>
       P<sub>e</sub> = (0.60 × 0.55) + (0.40 × 0.45) = 0.33 + 0.18 = <b>0.51</b><br><br>
       So by pure chance, they would agree 51% of the time. If they actually agree 85% of the time (P<sub>o</sub> = 0.85):<br>
       κ = (0.85 − 0.51) / (1 − 0.51) = 0.34 / 0.49 = <b>0.69</b> — substantial agreement.
-    </div>
+    </p>
 
-    <div class="good">
+    <p>
       <b>What Kappa does:</b> It subtracts the chance agreement (P<sub>e</sub>) from the observed agreement (P<sub>o</sub>), then scales by the maximum possible improvement over chance (1 − P<sub>e</sub>). This is why κ = 0 means "no better than chance" — not "no agreement".
-    </div>
+    </p>
 
     <p><b>Interpretation (Landis &amp; Koch):</b></p>
     <table>
@@ -1469,9 +1479,9 @@
       <tr><td>0.81 – 1.00</td><td>Almost perfect</td></tr>
     </table>
 
-    <div class="callout">
+    <p>
       <b>Example:</b> Two pathologists independently classify 200 tissue samples as "malignant" or "benign". They agree on 170 (P<sub>o</sub> = 0.85). But by chance alone (given their individual rates), they would agree on 140 (P<sub>e</sub> = 0.70). κ = (0.85 − 0.70) / (1 − 0.70) = 0.50 — <b>moderate agreement</b>.
-    </div>
+    </p>
 
     <p><b>Weighted Kappa (ordinal data):</b></p>
     <p>When categories are ordered (e.g., "normal", "borderline", "abnormal"), disagreeing by one step is less severe than disagreeing by two steps. Weighted Kappa assigns partial credit using weights. Two common weighting schemes:</p>
@@ -1481,9 +1491,9 @@
       <tr><td>Quadratic</td><td>w = 1 − (i−j)² / (k−1)²</td><td>When larger disagreements are disproportionately worse (most common)</td></tr>
     </table>
 
-    <div class="warn">
+    <p>
       <b>Kappa paradoxes:</b> Kappa can be misleadingly low when prevalence is very high or very low (most items fall in one category), even if raw agreement is high. This is called the <b>prevalence problem</b>. Always report both raw agreement (P<sub>o</sub>) and Kappa together.
-    </div>
+    </p>
 
     <a class="back-top" href="#top">↑ Back to top</a>
   </div>
@@ -1531,5 +1541,7 @@
   }
   applyZoom();
 </script>
+<script src="assets/js/auto-toc.js" defer></script>
+<script src="assets/js/page-search.js" defer></script>
 </body>
 </html>
