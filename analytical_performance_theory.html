@@ -147,19 +147,20 @@
     <h3>What happens when results are wrong?</h3>
     <table>
       <tr><th>Error type</th><th>Clinical consequence</th><th>Example</th></tr>
-      <tr><td><b>False high</b></td><td>Unnecessary treatment, delayed procedures, patient anxiety</td><td>Potassium falsely elevated due to haemolysis → patient receives insulin/glucose they don't need</td></tr>
+      <tr><td><b>False high</b></td><td>Unnecessary treatment, delayed procedures, patient anxiety</td><td>Potassium falsely elevated due to haemolysis → patient receives insulin/glucose they don't need → <b>risk of iatrogenic hypoglycaemia</b> (and a missed real cause of the symptoms)</td></tr>
       <tr><td><b>False low</b></td><td>Missed diagnosis, delayed treatment</td><td>Troponin falsely low → AMI missed → patient sent home</td></tr>
       <tr><td><b>Imprecise</b></td><td>Unreliable monitoring, inconsistent follow-up decisions</td><td>HbA1c varies ±8% between runs → clinician can't tell if diabetes treatment is working</td></tr>
       <tr><td><b>Consistently biased</b></td><td>Systematic misclassification of patients</td><td>Glucose reads 0.5 mmol/L too high → healthy patients flagged as pre-diabetic</td></tr>
     </table>
 
-    <div class="callout">
-      <b>The laboratory's responsibility:</b> You do not just produce numbers — you produce clinical decisions. Every imprecision and every bias translates directly into a risk to patient care. Analytical performance evaluation exists to quantify that risk and ensure it stays within clinically acceptable limits.
-    </div>
+    <p><b>The laboratory's responsibility:</b> You do not just produce numbers — you produce clinical decisions. Every imprecision and every bias translates directly into a risk to patient care. Analytical performance evaluation exists to quantify that risk and ensure it stays within clinically acceptable limits.</p>
 
-    <p>This module covers the concepts and tools you need to evaluate whether your method is fit for clinical use. We start with understanding where variation comes from, then move through the methods for measuring and controlling it.</p>
+    <p>Think of it as <b>signal vs noise</b>: the <b>signal</b> is the true clinical change the clinician needs to see (a real rise in potassium, a real drop in HbA1c). The <b>noise</b> is everything that obscures it — biological fluctuation plus analytical imprecision and bias. If the noise is too large, the signal disappears into it and the clinical decision is made on the wrong information.</p>
 
-    <div class="info"><b>Next →</b> Before we can evaluate analytical error, we need to understand the two fundamental sources of variation in any laboratory result: the patient themselves and the measurement system.</div>
+    <p><b>This module is, at its core, about one question:</b> is the total noise in the result small enough that the clinical signal still gets through? Total noise has three sources — biological, pre-analytical, and analytical<a href="#post-analytical-note" style="text-decoration:none;">*</a> — and only the analytical component is what this module unpacks in depth. The other two are introduced in section 2 (where each source is broken down) and section 5 (where the error phases are framed together).</p>
+    <p id="post-analytical-note"><i>* Post-analytical errors (transcription, wrong reference interval, miscommunication) also affect the final result, but they are discrete mistakes rather than statistical noise.</i></p>
+
+    <div class="info"><b>Next →</b> Signal and noise both come from variation — so before we can evaluate analytical error, we need to understand the two fundamental sources of variation in any laboratory result: the <b>patient</b> (biological variation — the unavoidable baseline noise we cannot remove) and the <b>measurement system</b> (analytical variation — the noise we add on top, and the only one we can control). Together they define how much noise sits between the clinician and the true clinical signal.</div>
     <a href="#" class="back-top">↑ Back to top</a>
   </div>
 
@@ -167,24 +168,21 @@
 
   <!-- 2 — Types of variation -->
   <div class="section" id="types-variation">
-    <h2>2. Types of variation — biological and analytical</h2>
-    <p>Every laboratory result is a combination of two independent sources of variation:</p>
+    <h2>2. Types of variation — biological, pre-analytical, and analytical</h2>
+    <p>Every laboratory result is a combination of <b>three</b> independent sources of variation. All three add noise to the signal — none can be ignored:</p>
     <table>
       <tr><th>Source</th><th>What it is</th><th>Can you control it?</th></tr>
       <tr><td><b>Biological variation</b> (from the patient)</td><td>The patient's own analyte levels fluctuate naturally — from hour to hour, day to day, and between individuals. This is not error; it is physiology.</td><td>No — it is inherent to the patient. But you must understand it to set meaningful performance limits.</td></tr>
+      <tr><td><b>Pre-analytical variation</b> (from sample handling)</td><td>Everything that happens to the sample <i>before</i> it reaches the instrument: patient preparation (fasting, posture, time of day), tube type, tourniquet time, transport, centrifugation, storage. Often the <b>largest</b> source of noise — and the cause of ~60–70% of all lab errors.</td><td>Partly — through SOPs, training, sample acceptance criteria, and standardised collection. Cannot be removed by statistics. Validation of changes to any of these factors is covered in <a href="#" onclick="window.parent.loadTool('stability_theory.html','Concepts &amp; Theory — Sample Validation');return false;" style="color:#1e40af;font-weight:600;">Sample Validation → Concepts &amp; Theory</a>.</td></tr>
       <tr><td><b>Analytical variation</b> (from the instrument)</td><td>The measurement system introduces its own variation: pipetting, reagent stability, detector noise, calibration drift. This is the error your laboratory can and must control.</td><td>Yes — through quality control, calibration, and method validation.</td></tr>
     </table>
+    <p><i>(Post-analytical errors — transcription, wrong reference interval applied, miscommunication with the clinician — also affect the final result, but they are mistakes rather than statistical variation. See section 5.)</i></p>
 
-    <div class="warn">
-      <b>The total variation in a result</b> is the sum of biological and analytical variation. A clinician cannot tell them apart — they only see the final number. Your job is to ensure that the analytical component is small enough that it does not obscure the clinical <b>signal</b>.
-    </div>
+    <p><b>Biological variation is the baseline noise</b> — it is always there and cannot be reduced. Pre-analytical and analytical noise stack on top of that baseline. The <b>total noise in a result</b> is therefore biological (baseline) + pre-analytical + analytical. A clinician cannot tell them apart — they only see the final number. Your job is to keep the two components on top of the baseline small enough that the clinical <b>signal</b> still gets through.</p>
 
-    <h3>Signal vs noise</h3>
-    <p>If a patient's glucose rises from 5.0 to 5.4 mmol/L, is that a real clinical change or just normal biological fluctuation combined with measurement imprecision? The <b>signal</b> is the true clinical change you want to detect; the <b>noise</b> is all the random variation (biological + analytical) that obscures it. If the noise is larger than the signal, you cannot tell them apart.</p>
+    <p><i>Concrete example:</i> if a patient's glucose rises from 5.0 to 5.4 mmol/L, is that a real clinical change or just biological fluctuation plus measurement imprecision? Whether you can tell depends on how the signal (0.4 mmol/L) compares with the combined biological + analytical noise.</p>
 
-    <div class="callout">
-      <b>Smaller biological variation → stricter analytical requirements.</b> An analyte with a narrow CVi (e.g. sodium, CVi ≈ 0.6%) leaves almost no room for analytical error — even a 1% CV from the instrument would dominate the total variation. In contrast, an analyte with wide CVi (e.g. CRP, CVi ≈ 42%) is far more tolerant of analytical imprecision because the patient's own variation is already large. This is why the EFLM biological variation database gives different allowable CV% for every analyte — the limits are derived directly from CVi.
-    </div>
+    <p><b>Smaller biological variation → stricter analytical requirements.</b> An analyte with a narrow CVi (e.g. sodium, CVi ≈ 0.6%) leaves almost no room for analytical error — even a 1% CV from the instrument would dominate the total variation. In contrast, an analyte with wide CVi (e.g. CRP, CVi ≈ 42%) is far more tolerant of analytical imprecision because the patient's own variation is already large. This is why the EFLM biological variation database gives different allowable CV% for every analyte — the limits are derived directly from CVi.</p>
 
     <div class="info"><b>Next →</b> Let's look at biological variation in detail — what CVi and CVg mean, where the numbers come from, and why they set the benchmark for analytical performance.</div>
     <a href="#" class="back-top">↑ Back to top</a>
