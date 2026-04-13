@@ -127,6 +127,8 @@
         if (p.classList && p.classList.contains('fagterm')) return NodeFilter.FILTER_REJECT;
         if (['SCRIPT','STYLE','CODE','PRE','TEXTAREA'].indexOf(tag) >= 0) return NodeFilter.FILTER_REJECT;
         if (p.classList && (p.classList.contains('formula-box') || p.classList.contains('index'))) return NodeFilter.FILTER_REJECT;
+        /* Skip SVG content — <span> wrappers don't render inside SVG <text> elements. */
+        if (p.closest && p.closest('svg')) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       }
     }, false);
