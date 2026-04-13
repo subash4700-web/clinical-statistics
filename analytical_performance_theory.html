@@ -273,7 +273,25 @@
     </table>
     <p>This is why a troponin "in the normal range" can still represent a clinically important rise from that patient's own baseline — and why the meaningful reference for low-II analytes is the patient, not the population.</p>
 
-    <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span><b>In signal/noise terms:</b> II tells you which biological noise baseline the signal must exceed — between-people noise (CVg) for high-II, within-person noise (CVi) for low-II. The RI is the right noise-aware tool for high-II analytes; <b>RCV</b> is the right tool for low-II analytes (covered with the formula in the biological-variation section).</p>
+    <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span><b>In signal/noise terms:</b> II tells you which biological noise baseline the signal must exceed — between-people noise (CVg) for high-II, within-person noise (CVi) for low-II. The RI is the right noise-aware tool for high-II analytes; <b>RCV</b> (defined below) is the right tool for low-II analytes.</p>
+
+    <h3><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span>Reference Change Value (RCV)</h3>
+    <p>The <b>Reference Change Value</b> is the smallest difference between two consecutive measurements from the same patient that can be considered statistically real (rather than just noise). It combines analytical noise (CVa) and within-person biological noise (CVi) into a single threshold for "is this change meaningful?"</p>
+    <div class="formula-box">
+      <span class="f-label">Reference Change Value:</span>
+      <span class="f-correct">RCV = 2.77 × √(CVa² + CVi²)</span>
+    </div>
+    <p>The factor <b>2.77</b> comes from <b>√2 × 1.96</b>: the √2 because two independent measurements each contribute their own variation (so the variance doubles), and 1.96 is the two-tailed 95% z-score (a change can go up or down).</p>
+
+    <p><b>Worked example — creatinine:</b></p>
+    <ul>
+      <li>Patient creatinine: today <b>88 µmol/L</b>, last week <b>75 µmol/L</b> → observed change of 17%</li>
+      <li>Method CVa = 3%, creatinine CVi ≈ 5.9% (EFLM)</li>
+      <li>RCV = 2.77 × √(3² + 5.9²) = 2.77 × √43.81 ≈ <b>18.3%</b></li>
+      <li>Observed change (17%) is <em>less than</em> RCV (18.3%) → the change is <b>not statistically significant</b>; it could plausibly be noise. Confirm with a repeat sample before acting on it.</li>
+    </ul>
+
+    <p>RCV is the right tool whenever you are interpreting a <b>change</b> in a patient's results over time — particularly for low-II analytes where the population RI is structurally insufficient (CRP, ferritin, troponin, see <a href="#ref-interval" data-secref></a>'s clinical worked example for the single-result version using MU).</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
       → <a href="#" onclick="window.parent.loadTool('tae.html','Total Error &amp; Sigma');return false;" style="color:#1e40af;font-weight:600;">Try in tool: Total Error &amp; Sigma</a>
     </div>
