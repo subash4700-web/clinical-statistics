@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reference Change Value (RCV)</title>
+  <link rel="stylesheet" href="assets/css/tools.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 16px 20px 80px; }
+    h1 { font-size: 22px; margin: 0 0 6px; color: #0f172a; letter-spacing: -.01em; }
+    .subtitle { color: #6b7280; font-size: 13px; margin: 0 0 18px; }
+    .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+    .panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #0f172a; letter-spacing: .02em; }
+    .row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .row label { font-size: 13px; color: #374151; min-width: 200px; }
+    .row input[type="text"], .row input[type="number"] { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; flex: 1; min-width: 120px; max-width: 240px; }
+    .row .hint { font-size: 11px; color: #6b7280; margin-left: 8px; }
+    .btn-primary { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-report { background: #16a34a; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+    .btn-report:hover { background: #15803d; }
+    .btn-report.added { background: #22c55e; }
+    .results { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-top: 14px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px; }
+    .kpi { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; }
+    .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin-bottom: 4px; }
+    .kpi-value { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .verdict { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .verdict-real { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .verdict-noise { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .verdict-borderline { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .note { font-size: 12px; color: #6b7280; line-height: 1.6; margin: 8px 0 0; }
+    .formula-box { background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; }
+    .formula-box .f-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 4px; }
+    #wf-import-banner { display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:12px 16px; margin-bottom:12px; }
+    #wf-import-banner .wf-title { font-size:13px; font-weight:700; color:#14532d; margin-bottom:4px; }
+    #wf-import-banner .wf-details { font-size:12px; color:#166534; margin-bottom:8px; }
+    .wf-actions { display:flex; gap:8px; }
+    .scenario-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:10px; }
+    .scenario-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; cursor:pointer; transition: all .15s; }
+    .scenario-card:hover { background:#eff6ff; border-color:#bfdbfe; }
+    .scenario-card .sc-title { font-size:12px; font-weight:700; color:#1e40af; }
+    .scenario-card .sc-detail { font-size:11px; color:#475569; margin-top:3px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Reference Change Value (RCV) <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;vertical-align:middle;">BETA</span></h1>
+  <p class="subtitle">Decide whether a change between two consecutive results on the same patient is statistically real — or just noise. Combines analytical noise (CVa) and within-person biological noise (CVi) into a single change-detection threshold.</p>
+
+  <!-- Workflow import banner -->
+  <div id="wf-import-banner">
+    <div class="wf-title">📥 Data available from previous step</div>
+    <div class="wf-details" id="wf-import-details"></div>
+    <div class="wf-actions">
+      <button class="btn-primary" style="font-size:12px;padding:6px 14px;" onclick="importWorkflowData()">Import</button>
+      <button class="btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="document.getElementById('wf-import-banner').style.display='none'">Dismiss</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1. Method &amp; analyte parameters</h2>
+    <div class="row">
+      <label for="inp-cva">Analytical CV (CVa, %)</label>
+      <input type="number" id="inp-cva" step="0.01" min="0" placeholder="e.g. 3.0">
+      <span class="hint">Your method's intermediate-precision CV. Auto-imported from Precision tool if available.</span>
+    </div>
+    <div class="row">
+      <label for="inp-cvi">Within-person biological variation (CVi, %)</label>
+      <input type="number" id="inp-cvi" step="0.01" min="0" placeholder="e.g. 5.9">
+      <span class="hint">From the EFLM biological variation database (biologicalvariation.eu).</span>
+    </div>
+    <div class="row">
+      <label for="inp-z">z-score (significance)</label>
+      <input type="number" id="inp-z" step="0.01" value="1.96" min="1" max="3.5">
+      <span class="hint">1.96 → 95% (default, two-tailed); 1.65 → 90%; 2.58 → 99%.</span>
+    </div>
+    <div class="row">
+      <label for="inp-analyte">Analyte (optional)</label>
+      <input type="text" id="inp-analyte" placeholder="e.g. Creatinine">
+      <input type="text" id="inp-unit" placeholder="unit (e.g. µmol/L)" style="max-width:140px;">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Patient values (optional — for change comparison)</h2>
+    <p class="note" style="margin-bottom:10px;">If you enter both, the tool computes the observed % change and compares it to RCV. Leave empty to compute RCV alone.</p>
+    <div class="row">
+      <label for="inp-prev">Previous result</label>
+      <input type="number" id="inp-prev" step="0.01" placeholder="e.g. 75">
+    </div>
+    <div class="row">
+      <label for="inp-curr">Current result</label>
+      <input type="number" id="inp-curr" step="0.01" placeholder="e.g. 88">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Quick scenarios</h2>
+    <p class="note" style="margin-bottom:10px;">Click to load common analyte presets (CVi from EFLM):</p>
+    <div class="scenario-grid">
+      <div class="scenario-card" onclick="loadScenario('creatinine')">
+        <div class="sc-title">Creatinine</div>
+        <div class="sc-detail">CVi ≈ 5.9% · "is renal function changing?"</div>
+      </div>
+      <div class="scenario-card" onclick="loadScenario('hba1c')">
+        <div class="sc-title">HbA1c</div>
+        <div class="sc-detail">CVi ≈ 1.9% · "is diabetes control changing?"</div>
+      </div>
+      <div class="scenario-card" onclick="loadScenario('crp')">
+        <div class="sc-title">CRP</div>
+        <div class="sc-detail">CVi ≈ 42.2% · low-II analyte; RI is structurally insufficient</div>
+      </div>
+      <div class="scenario-card" onclick="loadScenario('troponin')">
+        <div class="sc-title">Troponin (hs-cTn)</div>
+        <div class="sc-detail">CVi ≈ 14% · low-II; the canonical RCV use-case</div>
+      </div>
+      <div class="scenario-card" onclick="loadScenario('potassium')">
+        <div class="sc-title">Potassium</div>
+        <div class="sc-detail">CVi ≈ 4.6% · narrow biological range</div>
+      </div>
+      <div class="scenario-card" onclick="loadScenario('ferritin')">
+        <div class="sc-title">Ferritin</div>
+        <div class="sc-detail">CVi ≈ 14.2% · low-II analyte</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:14px;">
+    <button class="btn-primary" onclick="calculateRCV()">Calculate RCV</button>
+    <button class="btn-secondary" onclick="resetForm()">Reset</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none;">
+    <div class="results">
+      <h2 style="margin:0 0 12px;font-size:16px;font-weight:800;color:#0f172a;">Results</h2>
+
+      <div class="formula-box">
+        <span class="f-label">Reference Change Value</span>
+        RCV = <span id="formula-z">2.77</span> × √(CVa² + CVi²) = <span id="formula-z2">2.77</span> × √(<span id="formula-cva">—</span>² + <span id="formula-cvi">—</span>²) = <span id="formula-rcv">—</span>%
+        <br>
+        <span class="f-label" style="margin-top:8px;">Coverage factor</span>
+        z × √2 → for two measurements at <span id="formula-conf">95%</span> two-tailed (z = <span id="formula-zval">1.96</span>): factor = <span id="formula-factor">2.77</span>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Reference Change Value (RCV)</div>
+          <div class="kpi-value" id="kpi-rcv">—</div>
+          <div class="kpi-sub">Smallest change considered statistically real</div>
+        </div>
+        <div class="kpi" id="kpi-observed-card" style="display:none;">
+          <div class="kpi-label">Observed change</div>
+          <div class="kpi-value" id="kpi-observed">—</div>
+          <div class="kpi-sub" id="kpi-observed-sub">—</div>
+        </div>
+        <div class="kpi" id="kpi-verdict-card" style="display:none;">
+          <div class="kpi-label">Verdict</div>
+          <div class="kpi-value" id="kpi-verdict">—</div>
+          <div class="kpi-sub" id="kpi-verdict-sub">—</div>
+        </div>
+      </div>
+
+      <h3 style="margin:18px 0 8px;font-size:14px;font-weight:800;color:#0f172a;">Visualisation — observed change vs RCV threshold</h3>
+      <div id="rcv-svg-container"></div>
+
+      <h3 style="margin:18px 0 8px;font-size:14px;font-weight:800;color:#0f172a;">Interpretation</h3>
+      <div id="rcv-interpretation" style="font-size:13px;color:#374151;line-height:1.7;"></div>
+
+      <button id="rcv-add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── EFLM CVi presets ──────────────────────────────────────────────────────────
+var SCENARIOS = {
+  creatinine: { analyte: 'Creatinine', unit: 'µmol/L', cva: 3.0, cvi: 5.9, prev: 75, curr: 88 },
+  hba1c:      { analyte: 'HbA1c',       unit: 'mmol/mol', cva: 1.5, cvi: 1.9, prev: 48, curr: 53 },
+  crp:        { analyte: 'CRP',          unit: 'mg/L',   cva: 4.0, cvi: 42.2, prev: 5,  curr: 10 },
+  troponin:   { analyte: 'Troponin',     unit: 'ng/L',   cva: 5.0, cvi: 14.0, prev: 8,  curr: 18 },
+  potassium:  { analyte: 'Potassium',    unit: 'mmol/L', cva: 1.5, cvi: 4.6, prev: 4.2, curr: 4.6 },
+  ferritin:   { analyte: 'Ferritin',     unit: 'µg/L',   cva: 4.0, cvi: 14.2, prev: 80, curr: 110 }
+};
+function loadScenario(key) {
+  var s = SCENARIOS[key];
+  if (!s) return;
+  document.getElementById('inp-analyte').value = s.analyte;
+  document.getElementById('inp-unit').value = s.unit;
+  document.getElementById('inp-cva').value = s.cva;
+  document.getElementById('inp-cvi').value = s.cvi;
+  document.getElementById('inp-prev').value = s.prev;
+  document.getElementById('inp-curr').value = s.curr;
+  document.getElementById('inp-z').value = '1.96';
+  calculateRCV();
+}
+
+// ── Calculation ───────────────────────────────────────────────────────────────
+function calculateRCV() {
+  var cva = parseFloat(document.getElementById('inp-cva').value);
+  var cvi = parseFloat(document.getElementById('inp-cvi').value);
+  var z = parseFloat(document.getElementById('inp-z').value) || 1.96;
+  var prev = parseFloat(document.getElementById('inp-prev').value);
+  var curr = parseFloat(document.getElementById('inp-curr').value);
+  var analyte = document.getElementById('inp-analyte').value.trim();
+  var unit = document.getElementById('inp-unit').value.trim();
+
+  if (isNaN(cva) || cva <= 0 || isNaN(cvi) || cvi <= 0) {
+    alert('Enter both CVa and CVi (must be > 0).');
+    return;
+  }
+
+  var factor = Math.sqrt(2) * z;
+  var rcv = factor * Math.sqrt(cva * cva + cvi * cvi);
+
+  var conf = z >= 2.5 ? '99%' : (z >= 1.9 ? '95%' : (z >= 1.6 ? '90%' : (z * 100).toFixed(0) + 'th percentile'));
+
+  // Update formula display
+  document.getElementById('formula-z').textContent = factor.toFixed(2);
+  document.getElementById('formula-z2').textContent = factor.toFixed(2);
+  document.getElementById('formula-cva').textContent = cva.toFixed(1);
+  document.getElementById('formula-cvi').textContent = cvi.toFixed(1);
+  document.getElementById('formula-rcv').textContent = rcv.toFixed(2);
+  document.getElementById('formula-conf').textContent = conf;
+  document.getElementById('formula-zval').textContent = z.toFixed(2);
+  document.getElementById('formula-factor').textContent = factor.toFixed(2);
+
+  document.getElementById('kpi-rcv').textContent = '± ' + rcv.toFixed(2) + '%';
+
+  // Observed change comparison
+  var verdict = null;
+  var observed = null;
+  if (!isNaN(prev) && !isNaN(curr) && prev !== 0) {
+    observed = ((curr - prev) / prev) * 100;
+    var absObs = Math.abs(observed);
+    document.getElementById('kpi-observed-card').style.display = '';
+    document.getElementById('kpi-observed').textContent = (observed >= 0 ? '+' : '') + observed.toFixed(2) + '%';
+    document.getElementById('kpi-observed-sub').textContent = prev.toFixed(2) + ' → ' + curr.toFixed(2) + (unit ? ' ' + unit : '');
+
+    document.getElementById('kpi-verdict-card').style.display = '';
+    var v = document.getElementById('kpi-verdict');
+    var s = document.getElementById('kpi-verdict-sub');
+    if (absObs >= rcv) {
+      verdict = 'real';
+      v.innerHTML = '<span class="verdict verdict-real">REAL CHANGE</span>';
+      s.textContent = '|observed| ' + absObs.toFixed(2) + '% ≥ RCV ' + rcv.toFixed(2) + '%';
+    } else if (absObs >= rcv * 0.85) {
+      verdict = 'borderline';
+      v.innerHTML = '<span class="verdict verdict-borderline">BORDERLINE</span>';
+      s.textContent = '|observed| ' + absObs.toFixed(2) + '% close to RCV ' + rcv.toFixed(2) + '% — consider repeating';
+    } else {
+      verdict = 'noise';
+      v.innerHTML = '<span class="verdict verdict-noise">NOT SIGNIFICANT</span>';
+      s.textContent = '|observed| ' + absObs.toFixed(2) + '% < RCV ' + rcv.toFixed(2) + '% — could plausibly be noise';
+    }
+  } else {
+    document.getElementById('kpi-observed-card').style.display = 'none';
+    document.getElementById('kpi-verdict-card').style.display = 'none';
+  }
+
+  // SVG visualisation
+  document.getElementById('rcv-svg-container').innerHTML = renderRcvSvg(rcv, observed, verdict, analyte);
+
+  // Interpretation
+  var interp = '<p>An RCV of <b>' + rcv.toFixed(2) + '%</b> means: any change of less than this between two consecutive measurements on the same patient is plausibly explained by analytical noise (CVa = ' + cva.toFixed(1) + '%) plus within-person biological variation (CVi = ' + cvi.toFixed(1) + '%). A change <em>greater</em> than ± ' + rcv.toFixed(2) + '% is statistically real at the ' + conf + ' confidence level.</p>';
+  if (verdict === 'real') {
+    interp += '<p><b>This patient\'s observed change of ' + Math.abs(observed).toFixed(2) + '% exceeds the RCV — it is unlikely to be explained by noise alone.</b> Whether the change is <em>clinically</em> meaningful is a separate question and depends on the analyte and the patient\'s context.</p>';
+  } else if (verdict === 'borderline') {
+    interp += '<p><b>The observed change of ' + Math.abs(observed).toFixed(2) + '% is close to the RCV threshold.</b> Statistically inconclusive — the change <em>could</em> be real but cannot be confirmed from a single comparison. A repeat sample would tighten the verdict.</p>';
+  } else if (verdict === 'noise') {
+    interp += '<p><b>The observed change of ' + Math.abs(observed).toFixed(2) + '% is smaller than the RCV.</b> The two results are consistent with no real change in the patient\'s value — the difference is plausibly explained by the combined analytical and biological noise. Confirm with a repeat sample before acting on the apparent change.</p>';
+  }
+  document.getElementById('rcv-interpretation').innerHTML = interp;
+
+  document.getElementById('results').style.display = 'block';
+
+  // Save to workflow
+  try {
+    localStorage.setItem('wf_rcv', JSON.stringify({
+      rcv: +rcv.toFixed(3), cva: cva, cvi: cvi, z: z, analyte: analyte, unit: unit
+    }));
+  } catch(e) {}
+
+  // Reset Add-to-Report button state
+  var rb = document.getElementById('rcv-add-report-btn');
+  rb.classList.remove('added');
+  rb.textContent = '+ Add to Report';
+}
+
+function renderRcvSvg(rcv, observed, verdict, analyte) {
+  var w = 700, h = 200;
+  var cx = w / 2, cy = 100;
+  // Scale: extend ±1.5×RCV from centre
+  var extent = Math.max(rcv * 1.5, observed != null ? Math.abs(observed) * 1.2 : 0);
+  if (extent === 0) extent = 1;
+  var scale = (w * 0.42) / extent;
+
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="max-width:700px;width:100%;font-family:system-ui,sans-serif;">';
+  // Baseline at centre
+  var rcvPx = rcv * scale;
+  // RCV "no significant change" zone (green)
+  svg += '<rect x="' + (cx - rcvPx) + '" y="' + (cy - 18) + '" width="' + (2 * rcvPx) + '" height="36" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>';
+  svg += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Within RCV (± ' + rcv.toFixed(2) + '%) — not significant</text>';
+  // Endpoints
+  svg += '<line x1="' + (cx - rcvPx) + '" y1="' + (cy - 24) + '" x2="' + (cx - rcvPx) + '" y2="' + (cy + 24) + '" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg += '<line x1="' + (cx + rcvPx) + '" y1="' + (cy - 24) + '" x2="' + (cx + rcvPx) + '" y2="' + (cy + 24) + '" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="3,2"/>';
+  svg += '<text x="' + (cx - rcvPx) + '" y="' + (cy - 32) + '" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="600">−RCV</text>';
+  svg += '<text x="' + (cx + rcvPx) + '" y="' + (cy - 32) + '" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="600">+RCV</text>';
+
+  // Centre baseline tick
+  svg += '<line x1="' + cx + '" y1="' + (cy - 28) + '" x2="' + cx + '" y2="' + (cy + 28) + '" stroke="#0f172a" stroke-width="1.5"/>';
+  svg += '<text x="' + cx + '" y="' + (cy + 48) + '" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="600">previous result (0% change)</text>';
+
+  // Observed change marker
+  if (observed != null) {
+    var obsX = cx + observed * scale;
+    var color = verdict === 'real' ? '#dc2626' : (verdict === 'borderline' ? '#d97706' : '#0d9488');
+    svg += '<line x1="' + obsX + '" y1="' + (cy - 50) + '" x2="' + obsX + '" y2="' + (cy + 30) + '" stroke="' + color + '" stroke-width="3"/>';
+    svg += '<circle cx="' + obsX + '" cy="' + (cy - 50) + '" r="6" fill="' + color + '"/>';
+    svg += '<text x="' + obsX + '" y="' + (cy - 58) + '" text-anchor="middle" font-size="11" fill="' + color + '" font-weight="700">' + (observed >= 0 ? '+' : '') + observed.toFixed(2) + '%</text>';
+    svg += '<text x="' + obsX + '" y="' + (cy + 70) + '" text-anchor="middle" font-size="9" fill="' + color + '" font-weight="600">current result</text>';
+  }
+
+  // Tail labels
+  svg += '<text x="20" y="' + (cy + 4) + '" font-size="10" fill="#9ca3af">significant ↓</text>';
+  svg += '<text x="' + (w - 20) + '" y="' + (cy + 4) + '" text-anchor="end" font-size="10" fill="#9ca3af">significant ↑</text>';
+
+  svg += '</svg>';
+  return svg;
+}
+
+function resetForm() {
+  ['inp-cva','inp-cvi','inp-prev','inp-curr','inp-analyte','inp-unit'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('inp-z').value = '1.96';
+  document.getElementById('results').style.display = 'none';
+}
+
+// ── Workflow import (from Precision tool) ─────────────────────────────────────
+(function checkImport() {
+  try {
+    var prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    if (!prec) return;
+    var precL1 = prec.levels ? prec.levels[0] : prec;
+    if (!precL1 || !precL1.cv) return;
+    var details = '<b>CVa = ' + precL1.cv + '%</b> from Precision' + (precL1.analyte ? ' · ' + precL1.analyte : '');
+    document.getElementById('wf-import-details').innerHTML = details;
+    document.getElementById('wf-import-banner').style.display = 'block';
+  } catch(e) {}
+})();
+
+function importWorkflowData() {
+  try {
+    var prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    var precL1 = prec ? (prec.levels ? prec.levels[0] : prec) : null;
+    if (precL1) {
+      if (precL1.cv) document.getElementById('inp-cva').value = precL1.cv;
+      if (precL1.analyte) document.getElementById('inp-analyte').value = precL1.analyte;
+      if (precL1.unit) document.getElementById('inp-unit').value = precL1.unit;
+    }
+    document.getElementById('wf-import-banner').style.display = 'none';
+  } catch(e) {}
+}
+
+// ── Report Builder ────────────────────────────────────────────────────────────
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+function addToReport() {
+  var cva = parseFloat(document.getElementById('inp-cva').value);
+  var cvi = parseFloat(document.getElementById('inp-cvi').value);
+  var z = parseFloat(document.getElementById('inp-z').value) || 1.96;
+  if (isNaN(cva) || isNaN(cvi)) { alert('Calculate RCV first.'); return; }
+  var factor = Math.sqrt(2) * z;
+  var rcv = factor * Math.sqrt(cva * cva + cvi * cvi);
+  var prev = parseFloat(document.getElementById('inp-prev').value);
+  var curr = parseFloat(document.getElementById('inp-curr').value);
+  var analyte = document.getElementById('inp-analyte').value.trim();
+  var unit = document.getElementById('inp-unit').value.trim();
+  var observed = (!isNaN(prev) && !isNaN(curr) && prev !== 0) ? ((curr - prev) / prev) * 100 : null;
+  var conf = z >= 2.5 ? '99%' : (z >= 1.9 ? '95%' : (z >= 1.6 ? '90%' : 'custom'));
+
+  var verdictHtml = '';
+  if (observed != null) {
+    var absObs = Math.abs(observed);
+    var v = absObs >= rcv ? 'REAL CHANGE' : (absObs >= rcv * 0.85 ? 'BORDERLINE' : 'NOT SIGNIFICANT');
+    var col = absObs >= rcv ? '#991b1b' : (absObs >= rcv * 0.85 ? '#92400e' : '#166534');
+    verdictHtml =
+      '<p><b>Previous → Current:</b> ' + prev.toFixed(2) + ' → ' + curr.toFixed(2) + (unit ? ' ' + unit : '') + ' (observed ' + (observed >= 0 ? '+' : '') + observed.toFixed(2) + '%)</p>' +
+      '<p><b>Verdict (' + conf + ' confidence):</b> <b style="color:' + col + ';">' + v + '</b> — |observed| = ' + absObs.toFixed(2) + '% ' + (absObs >= rcv ? '≥' : '<') + ' RCV = ' + rcv.toFixed(2) + '%</p>';
+  }
+
+  var html =
+    '<h3>Reference Change Value (RCV)' + (analyte ? ' — ' + escapeHtml(analyte) : '') + '</h3>' +
+    '<p><b>RCV = ' + factor.toFixed(2) + ' × √(CVa² + CVi²) = ' + factor.toFixed(2) + ' × √(' + cva.toFixed(1) + '² + ' + cvi.toFixed(1) + '²) = ± ' + rcv.toFixed(2) + '%</b> (' + conf + ' two-tailed, z = ' + z.toFixed(2) + ')</p>' +
+    '<p>Inputs: <b>CVa</b> = ' + cva.toFixed(1) + '% (analytical) · <b>CVi</b> = ' + cvi.toFixed(1) + '% (within-person biological, EFLM)</p>' +
+    verdictHtml +
+    '<p style="font-size:11px;color:#6b7280;margin-top:8px;"><i>RCV is the smallest difference between two consecutive results on the same patient that can be considered statistically real (rather than analytical + biological noise). A change &lt; RCV is consistent with no real change; ≥ RCV indicates a real difference at the stated confidence.</i></p>';
+
+  try {
+    if (window.parent && typeof window.parent.addReportSection === 'function') {
+      window.parent.addReportSection({ toolId: 'rcv', toolName: 'Reference Change Value (RCV)' + (analyte ? ' — ' + analyte : ''), html: html });
+      var btn = document.getElementById('rcv-add-report-btn');
+      btn.classList.add('added');
+      btn.textContent = '✓ Added to Report';
+    } else {
+      alert('Report Builder is only available inside the app shell.');
+    }
+  } catch(e) { alert('Could not add to report: ' + e.message); }
+}
+
+// Save/Load API
+window.getSaveData = function() {
+  return {
+    cva: parseFloat(document.getElementById('inp-cva').value) || null,
+    cvi: parseFloat(document.getElementById('inp-cvi').value) || null,
+    z: parseFloat(document.getElementById('inp-z').value) || 1.96,
+    prev: parseFloat(document.getElementById('inp-prev').value) || null,
+    curr: parseFloat(document.getElementById('inp-curr').value) || null,
+    analyte: document.getElementById('inp-analyte').value,
+    unit: document.getElementById('inp-unit').value
+  };
+};
+window.loadSaveData = function(d) {
+  if (!d) return;
+  if (d.cva != null) document.getElementById('inp-cva').value = d.cva;
+  if (d.cvi != null) document.getElementById('inp-cvi').value = d.cvi;
+  if (d.z != null) document.getElementById('inp-z').value = d.z;
+  if (d.prev != null) document.getElementById('inp-prev').value = d.prev;
+  if (d.curr != null) document.getElementById('inp-curr').value = d.curr;
+  if (d.analyte) document.getElementById('inp-analyte').value = d.analyte;
+  if (d.unit) document.getElementById('inp-unit').value = d.unit;
+};
+</script>
+</body>
+</html>
