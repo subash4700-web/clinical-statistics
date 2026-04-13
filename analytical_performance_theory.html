@@ -731,20 +731,28 @@
           <marker id="arrYR" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#eab308"/></marker>
           <marker id="arrYL" markerWidth="7" markerHeight="7" refX="1" refY="3.5" orient="auto"><path d="M7,0 L0,3.5 L7,7 z" fill="#eab308"/></marker>
           <marker id="arrRed" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#dc2626"/></marker>
+          <linearGradient id="tailRedGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#fecaca" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#fecaca" stop-opacity="0.2"/>
+          </linearGradient>
         </defs>
-        <text x="380" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">Total Error (TE) and TAE</text>
-        <text x="380" y="34" text-anchor="middle" font-size="9" fill="#6b7280">covers within-method analytical error</text>
+        <text x="380" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">Total Error (TE) and TAE</text>
+        <text x="380" y="32" text-anchor="middle" font-size="9" fill="#6b7280">covers within-method analytical error</text>
         <!-- Bell centred on the METHOD MEAN (X̄), shifted right of true value -->
         <path d="M295,160 Q340,160 340,155 Q360,90 395,90 Q430,90 450,155 Q450,160 495,160" fill="url(#bellGradTriBias)" stroke="#fca5a5" stroke-width="1.5"/>
+        <!-- 5% TAIL: shaded region under the bell beyond +1.65·SD -->
+        <path d="M455,160 Q455,160 455,150 Q468,140 480,150 Q485,158 495,160 Z" fill="url(#tailRedGrad)" stroke="#dc2626" stroke-width="1" opacity="0.85"/>
+        <text x="475" y="138" text-anchor="middle" font-size="10" font-weight="800" fill="#7f1d1d">5%</text>
+        <line x1="475" y1="142" x2="478" y2="156" stroke="#7f1d1d" stroke-width="0.8"/>
         <!-- True value: clear vertical line on the LEFT, well separated from the bell -->
-        <line x1="320" y1="78" x2="320" y2="195" stroke="#0f172a" stroke-width="1.5"/>
-        <text x="320" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#0f172a">true value</text>
-        <!-- Method mean (X̄) tick at bell apex -->
+        <line x1="320" y1="60" x2="320" y2="195" stroke="#0f172a" stroke-width="1.5"/>
+        <text x="320" y="52" text-anchor="middle" font-size="9" font-weight="700" fill="#0f172a">true value</text>
+        <!-- Method mean (X̄) tick at bell apex (label below to avoid overlap) -->
         <line x1="395" y1="100" x2="395" y2="195" stroke="#7f1d1d" stroke-width="1" stroke-dasharray="3,2"/>
-        <text x="395" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#7f1d1d">X̄ (method mean)</text>
+        <text x="395" y="52" text-anchor="middle" font-size="9" font-weight="700" fill="#7f1d1d">X̄ (mean)</text>
         <!-- +1.65·SD line at the TE endpoint -->
-        <line x1="455" y1="100" x2="455" y2="195" stroke="#7f1d1d" stroke-width="1" stroke-dasharray="3,2"/>
-        <text x="455" y="70" text-anchor="middle" font-size="9" fill="#7f1d1d">+1.65·SD</text>
+        <line x1="455" y1="155" x2="455" y2="195" stroke="#7f1d1d" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="455" y="52" text-anchor="middle" font-size="9" fill="#7f1d1d">+1.65·SD</text>
         <!-- BIAS arrow (yellow) — true value ↔ X̄ -->
         <line x1="320" y1="175" x2="395" y2="175" stroke="#eab308" stroke-width="3.5" marker-end="url(#arrYR)" marker-start="url(#arrYL)"/>
         <text x="357" y="170" text-anchor="middle" font-size="9" font-weight="700" fill="#a16207">|Bias|</text>
@@ -755,9 +763,9 @@
         <line x1="320" y1="200" x2="455" y2="200" stroke="#dc2626" stroke-width="3" marker-end="url(#arrRed)"/>
         <text x="385" y="215" text-anchor="middle" font-size="10" font-weight="800" fill="#dc2626">TE = |Bias| + 1.65·SD</text>
         <!-- TAE ceiling: dashed teal line further right -->
-        <line x1="478" y1="78" x2="478" y2="210" stroke="#0d9488" stroke-width="2" stroke-dasharray="4,3"/>
-        <text x="478" y="70" text-anchor="middle" font-size="9" font-weight="700" fill="#0d9488">TAE</text>
-        <text x="478" y="223" text-anchor="middle" font-size="8" fill="#0d9488">(ceiling)</text>
+        <line x1="490" y1="60" x2="490" y2="210" stroke="#0d9488" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="490" y="52" text-anchor="middle" font-size="9" font-weight="700" fill="#0d9488">TAE</text>
+        <text x="490" y="223" text-anchor="middle" font-size="8" fill="#0d9488">(ceiling)</text>
         <!-- Component CIs (sampling uncertainty on Bias and CV) -->
         <rect x="305" y="195" width="50" height="12" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
         <text x="330" y="204" text-anchor="middle" font-size="7" font-weight="600" fill="#b45309">CI on Bias</text>
