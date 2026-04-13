@@ -1191,9 +1191,7 @@
           <button class="learn-btn" onclick="loadTool('method_comparison_learning.html','Understanding Method Comparison', this)">📚 Method Comparison<span class="btn-hint">Bland-Altman · bias types · r trap · paired methods</span></button>
           <button class="learn-btn" onclick="loadTool('tae_learning.html','Understanding Total Error &amp; Sigma', this)">📚 Total Error &amp; Sigma<span class="btn-hint">TE · TAE · sigma metric · QC design</span></button>
           <button class="learn-btn" onclick="loadTool('categorical_method_comparison_learning.html','Understanding Categorical Method Comparison', this)">📚 Categorical Method Comparison<span class="btn-hint">Kappa paradox · McNemar bias direction · pos/neg methods</span></button>
-          <button class="learn-btn" onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">📚 ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
           <button class="learn-btn" onclick="loadTool('reference_interval_learning.html','Understanding Reference Intervals', this)">📚 Reference Intervals<span class="btn-hint">Sample size · outliers · parametric vs non-parametric</span></button>
-          <button class="learn-btn" onclick="loadTool('antibiotic_learning.html','Understanding Antibiotic Susceptibility', this)">📚 Antibiotic Susceptibility<span class="btn-hint">VME · ME · agreement matrix · error rates</span></button>
           <button class="learn-btn" onclick="loadTool('qualitative_lod_learning.html','Understanding Qualitative LoD', this)">📚 Qualitative LoD<span class="btn-hint">Hit rate · probit · replicates · concentration</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('precision.html','Precision Monitor', this)">Precision Monitor<span class="btn-hint">Daily QC · within-run repeatability</span></button>
@@ -1201,12 +1199,11 @@
           <button onclick="loadTool('bias.html','Bias (EP15-A3)', this)">Bias (CRM / EQA)<span class="btn-hint">EP15-A3 · Known reference value vs your method</span></button>
           <button onclick="loadTool('method_comparison.html','Method Comparison (EP09-A3)', this)">Method Comparison (EP09)<span class="btn-hint">EP09-A3 · Bland-Altman · Passing-Bablok · Deming</span></button>
           <button onclick="loadTool('tae.html','Total Error &amp; Sigma', this)">Total Error &amp; Sigma<span class="btn-hint">Sigma metric · QC design · uses Precision + Bias</span></button>
+          <button onclick="loadTool('mu.html','Measurement Uncertainty (MU)', this)">Measurement Uncertainty (MU) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">GUM / ISO 15189 §7.3.4 · u_c = √Σuᵢ² · expanded U</span></button>
           <button onclick="loadTool('reference_interval.html','Reference Interval (EP28)', this)">Reference Interval (EP28) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">EP28-A3c · 2.5th/97.5th percentile · outlier detection</span></button>
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('qualitative_agreement.html','Categorical Method Comparison (EP12-A2)', this)">Categorical Method Comparison (EP12)<span class="btn-hint">EP12-A2 · Kappa · McNemar · pos/neg agreement</span></button>
-          <button onclick="loadTool('antibiotic_agreement.html','Antibiotic Susceptibility Agreement', this)">Antibiotic Susceptibility <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">EUCAST/CLSI · S/I/R · VME/ME error rates</span></button>
           <button onclick="loadTool('qualitative_lod.html','Qualitative LoD (EP17)', this)">Qualitative LoD (EP17) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Hit rate testing · detection limit · probit</span></button>
-          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)">ROC &amp; Diagnostic Accuracy<span class="btn-hint">AUC · Sens/Spec · PPV/NPV · cut-off</span></button>
         </div>
       </div>
 
@@ -1219,6 +1216,19 @@
           <div class="sidebar-sep"></div>
           <button onclick="loadTool('stability_study.html','Quantitative Stability Study', this)">Quantitative Stability (EP25-A)<span class="btn-hint">% change from T0 · functional expiry · CLSI EP25-A</span></button>
           <button onclick="loadTool('qualitative_stability.html','Qualitative Stability Study', this)">Qualitative Stability (EP25-A)<span class="btn-hint">Kappa over time · functional expiry · stored panel</span></button>
+        </div>
+      </div>
+
+      <!-- Clinical Accuracy -->
+      <div class="collapsible-section">
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.clinicalAccuracy">Clinical Accuracy <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></button>
+        <div class="collapsible-content child-nav">
+          <button class="learn-btn" onclick="loadTool('roc_learning.html','Understanding ROC &amp; Diagnostic Performance', this)">📚 ROC<span class="btn-hint">Sensitivity · specificity · AUC · cut-off</span></button>
+          <button class="learn-btn" onclick="loadTool('antibiotic_learning.html','Understanding Antibiotic Susceptibility', this)">📚 Antibiotic Susceptibility<span class="btn-hint">VME · ME · agreement matrix · error rates</span></button>
+          <div class="sidebar-sep"></div>
+          <button onclick="loadTool('logistic_regression_roc.html','ROC &amp; Diagnostic Performance', this)">ROC &amp; Diagnostic Accuracy<span class="btn-hint">AUC · Sens/Spec · PPV/NPV · cut-off</span></button>
+          <button onclick="loadTool('rcv.html','Reference Change Value (RCV)', this)">Reference Change Value (RCV) <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Is a change real? · 2.77 × √(CVa² + CVi²)</span></button>
+          <button onclick="loadTool('antibiotic_agreement.html','Antibiotic Susceptibility Agreement', this)">Antibiotic Susceptibility <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">EUCAST/CLSI · S/I/R · VME/ME error rates</span></button>
         </div>
       </div>
 
@@ -2514,6 +2524,7 @@
         'cat.hypothesisTests': 'inferential',
         'cat.analytical':      'analytical',
         'cat.stability':       'stability',
+        'cat.clinicalAccuracy': 'clinicalAccuracy',
         'cat.correlation':     'regression',
         'cat.lab':             'lab',
         'ui.pcr':              'pcr',
@@ -2535,6 +2546,7 @@
       'cat.quantitativeTests':'Quantitative Tests','cat.nonparametric':'Nonparametric Tests','cat.qualitative':'Categorical Tests',
       'sub.tests':'Tests','cat.analytical':'Analytical Performance',
       'cat.stability':'Sample Validation',
+      'cat.clinicalAccuracy':'Clinical Accuracy',
       'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">BETA</span>',
       'tool.normalDist':'Normal Distribution','tool.fDist':'F Distribution',
       'tool.oneSampleT':'One-Sample T-Test','tool.pairedT':'Paired T-Test',
@@ -2582,6 +2594,7 @@
       'cat.quantitativeTests':'Kvantitative Test','cat.nonparametric':'Ikke-parametriske Test','cat.qualitative':'Kategoriske Test',
       'sub.tests':'Test','cat.analytical':'Analytisk Præstation',
       'cat.stability':'Prøvevalidering',
+      'cat.clinicalAccuracy':'Klinisk nøjagtighed',
       'cat.correlation':'Korrelation & Regression','cat.lab':'Laboratorieværktøjer <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
       'tool.normalDist':'Normalfordeling','tool.fDist':'F-fordeling',
       'tool.oneSampleT':'Én-stikprøve T-test','tool.pairedT':'Parret T-test',
