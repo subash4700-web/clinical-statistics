@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Understanding Reference Change Value (RCV)</title>
+  <link rel="stylesheet" href="assets/css/base_no_header.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <style>
+    :root{
+      --panel:#fff;--ink:#101828;--muted:#667085;--line:#e5e7eb;
+      --accent:#2b6cb0;--good:#118a4b;--warn:#b42318;
+      --shadow:0 2px 12px rgba(16,24,40,.07);--radius:12px;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f7fb;color:var(--ink);}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 18px 40px;}
+    h1{margin:0 0 4px;font-size:22px;letter-spacing:-.01em;}
+    .subtitle{color:var(--muted);font-size:13px;margin:0 0 18px;}
+    .page-header{background:linear-gradient(135deg,#134e4a 0%,#0f766e 60%,#0d9488 100%);color:#fff;padding:20px 28px 18px;border-radius:12px;margin-bottom:18px;}
+    .page-header h1{color:#fff;margin:0 0 4px;font-size:22px;font-weight:900;}
+    .page-header p{color:rgba(255,255,255,.85);margin:0;font-size:13px;line-height:1.55;}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:14px;}
+    .panel h2{margin:0 0 10px;font-size:16px;font-weight:800;color:#0f172a;letter-spacing:.01em;}
+    .panel h3{margin:14px 0 8px;font-size:14px;font-weight:700;color:#1f2937;}
+    .panel p{font-size:14px;line-height:1.7;margin:0 0 10px;color:#374151;}
+    .panel ul{font-size:14px;line-height:1.7;margin:0 0 12px;padding-left:22px;color:#374151;}
+    .panel li{margin-bottom:5px;}
+    .formula-box{background:#f8fafc;border-left:4px solid #2563eb;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:14px;}
+    .formula-box .f-label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;}
+    .formula-box .f-correct{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-weight:700;color:#1e40af;}
+    .callout{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin:12px 0;font-size:13px;color:#1e3a8a;line-height:1.65;}
+    .callout-good{background:#f0fdf4;border-color:#86efac;color:#14532d;}
+    .callout-warn{background:#fffbeb;border-color:#fcd34d;color:#78350f;}
+    table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+    th{text-align:left;padding:8px 10px;font-weight:700;color:#475569;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+    td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;}
+    .step{display:flex;gap:10px;align-items:flex-start;margin:14px 0;}
+    .step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#2563eb;color:white;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+    .step-body{flex:1;}
+    .step-body h4{margin:0 0 4px;font-size:14px;font-weight:700;color:#1e3a8a;}
+    .step-body p{margin:0 0 4px;font-size:13px;color:#374151;}
+    .tool-link{display:inline-block;background:#16a34a;color:white;text-decoration:none;padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;margin-top:8px;}
+    .tool-link:hover{background:#15803d;}
+    .tag-low{background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;}
+    .tag-high{background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-header">
+    <h1>Understanding Reference Change Value (RCV)</h1>
+    <p>The smallest change between two consecutive results on the same patient that you can call <em>real</em>. This page builds the concept from first principles — why two patient values can differ without anything having changed, and how RCV separates the signal from the noise.</p>
+  </div>
+
+  <div class="panel">
+    <h2>1. The clinical question</h2>
+    <p>A patient's potassium today is <b>4.6 mmol/L</b>. Last week it was <b>4.2 mmol/L</b>. Both values are inside the reference interval (3.5–5.0). But the patient's potassium has gone <em>up</em>. Is that real, or just noise?</p>
+    <p>This is the question RCV answers. It is one of the most common bedside questions in clinical chemistry — has the patient changed, or did the same patient simply produce two slightly different numbers because of how biology and analysers work?</p>
+    <div class="callout">
+      <b>Why RI does not answer this.</b> The reference interval tells you whether a single value is typical of the healthy population. It does not tell you whether a <em>change</em> in one patient over time is meaningful. Two consecutive values can both sit inside the RI and still represent a real change — or both sit at the edge and represent nothing at all.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Where the noise comes from</h2>
+    <p>When you measure the same person twice on different days, the two values will almost never be identical — even if nothing has actually changed in the patient. Two independent sources of variation explain this:</p>
+    <table>
+      <tr><th style="width:30%">Source</th><th>What it captures</th><th>Symbol</th></tr>
+      <tr><td><b>Within-person biological variation</b></td><td>The natural fluctuation of the analyte in the same person from day to day (circadian rhythm, fluid status, recent meals, posture, exercise, hormone cycles).</td><td>CVi</td></tr>
+      <tr><td><b>Analytical imprecision</b></td><td>The measurement system's own variation: pipetting, reagent batch, calibration drift, detector noise.</td><td>CVa</td></tr>
+    </table>
+    <p>Both contributions exist for <em>each</em> of the two measurements you are comparing. Together they form the <b>noise floor</b> that any real change must rise above.</p>
+    <div class="callout-good callout">
+      <b>RCV is the noise calculator for change-over-time.</b> It combines CVa and CVi into a single threshold: any difference smaller than RCV is plausibly noise; any difference larger than RCV is a real change at the chosen confidence level.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. The formula — and why it looks like that</h2>
+    <div class="formula-box">
+      <span class="f-label">Reference Change Value (RCV)</span>
+      <span class="f-correct">RCV = 2.77 × √(CVa² + CVi²)</span>
+    </div>
+    <p>Three things produce this formula. Let's build it step by step.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Combine CVa and CVi in <em>quadrature</em>, not linearly</h4>
+        <p>Two independent sources of variation combine using the root sum of squares (RSS), not by adding linearly. This is the basic rule of variances: <b>variances add, standard deviations don't.</b> If CVa and CVi are independent, the combined variance is CVa² + CVi², and the combined standard deviation is √(CVa² + CVi²).</p>
+        <p>Adding them linearly (CVa + CVi) would <em>overestimate</em> the combined noise — it assumes the two sources always work in the same direction at the same time. They don't. Quadrature is the honest combination.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Multiply by √2 — because there are <em>two</em> measurements</h4>
+        <p>RCV is the noise on a <em>difference</em> between two measurements, not on one measurement. Each measurement carries its own variation, and when you subtract two measurements with the same standard deviation σ, the difference has a standard deviation of σ × √2 (basic statistics: variance of a difference of two independent values is the sum of variances).</p>
+        <p>So one factor of √2 ≈ 1.414 enters the formula because we are comparing two values, not one.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Multiply by 1.96 — for 95% two-tailed confidence</h4>
+        <p>To call a change "real" with 95% confidence, the observed difference must exceed 1.96 standard deviations of the difference distribution. This is the standard z-score for a two-tailed 95% test: 95% of differences from a stable patient will fall within ±1.96 SD; differences outside that range are unlikely to be noise alone.</p>
+        <p>If you wanted 99% confidence instead, use z = 2.58 (and the multiplier becomes 2.58 × √2 ≈ 3.65).</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Putting it together:</b> the multiplier is √2 × 1.96 = <b>2.77</b>. That is where the 2.77 in RCV = 2.77 × √(CVa² + CVi²) comes from.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>4. Two worked examples — high-II vs low-II analyte</h2>
+    <p>The Index of Individuality (II = CVi / CVg) decides whether RCV is the right tool for an analyte. RCV is most useful for <b>low-II analytes</b>, where each person sits in their own narrow band inside the population RI and population-based interpretation misses real changes.</p>
+
+    <h3>Example A — Sodium <span class="tag-high">High II</span></h3>
+    <ul>
+      <li>CVa ≈ 0.7%, CVi ≈ 0.6%, CVg ≈ 1.0% → II ≈ 0.6 (intermediate)</li>
+      <li>RCV = 2.77 × √(0.7² + 0.6²) = 2.77 × √(0.49 + 0.36) = 2.77 × √0.85 ≈ <b>2.55%</b></li>
+      <li>For a baseline sodium of 140 mmol/L, an RCV of 2.55% is a change of ~3.6 mmol/L</li>
+      <li>Most clinically meaningful sodium changes are larger than this; the RI is also reasonably useful here</li>
+    </ul>
+
+    <h3>Example B — CRP <span class="tag-low">Low II</span></h3>
+    <ul>
+      <li>CVa ≈ 4%, CVi ≈ 42%, CVg ≈ 76% → II ≈ 0.55 → in fact <b>much</b> more about within-person change than population position</li>
+      <li>RCV = 2.77 × √(4² + 42²) = 2.77 × √(16 + 1764) = 2.77 × √1780 ≈ <b>117%</b></li>
+      <li>This is enormous — you need CRP to <em>more than double</em> for the change to be statistically real at 95%</li>
+      <li>The RI for CRP (typically &lt; 5 mg/L) is almost useless for monitoring inflammation; what matters is whether <em>this patient's</em> CRP has changed by more than RCV</li>
+    </ul>
+
+    <div class="callout-warn callout">
+      <b>Why CRP needs RCV but sodium tolerates RI:</b> for CRP, biological variation within a person is so large that small-to-medium "changes" are routinely meaningless. For sodium, biological variation is so tight that even a small genuine change is detectable. The RCV formula handles both cases automatically — you just feed in the analyte's CVi.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>5. Common mistakes</h2>
+    <ul>
+      <li><b>Using the population RI to interpret a change.</b> A patient's troponin moving from 8 ng/L to 18 ng/L is a 125% rise — clinically alarming — but both values are inside the RI. The RI does not flag the change; RCV would.</li>
+      <li><b>Forgetting that RCV needs CVa <em>and</em> CVi.</b> The "biological variation" alone is not enough — your method's analytical noise also contributes. A noisy method has a larger RCV than a precise one; both are real.</li>
+      <li><b>Adding CVa and CVi linearly instead of in quadrature.</b> Linear addition overestimates the noise and makes RCV look larger than it really is. Always use √(CVa² + CVi²).</li>
+      <li><b>Using a one-tailed z (1.65) when a two-tailed test is appropriate.</b> A patient's value can change up <em>or</em> down — you typically care about both directions, so use the two-tailed z (1.96 for 95%).</li>
+      <li><b>Treating "change &lt; RCV" as "no change."</b> Within-RCV does not prove the patient is unchanged — it just means the change is not statistically distinguishable from noise from a single comparison. A repeat sample tightens the verdict.</li>
+      <li><b>Ignoring the clinical question.</b> A statistically real change is not always clinically important, and a clinically important change can be smaller than RCV (the test is then underpowered for the question you are asking — collect more samples or accept the uncertainty).</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>6. When to use RCV vs other tools</h2>
+    <table>
+      <tr><th>Question</th><th>Right tool</th></tr>
+      <tr><td>Is this single result above/below the limit?</td><td>RI + MU (see Reference Intervals theory)</td></tr>
+      <tr><td>Is the change between two consecutive results real?</td><td><b>RCV</b> (this page)</td></tr>
+      <tr><td>Is the method itself fit for clinical use?</td><td>TE / TAE / Sigma (Westgard) or MU (GUM)</td></tr>
+      <tr><td>Is this analyte better tracked against population or against patient baseline?</td><td>Index of Individuality (II)</td></tr>
+    </table>
+    <p style="margin-top:14px;">
+      <b>Try the calculator:</b>
+      <a href="#" onclick="if(window.parent&&window.parent.loadTool)window.parent.loadTool('rcv.html','Reference Change Value (RCV)');return false;" class="tool-link">→ Open RCV Calculator</a>
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>7. Summary</h2>
+    <ul>
+      <li><b>RCV</b> = the smallest change between two consecutive results on the same patient that can be considered statistically real (rather than analytical + biological noise)</li>
+      <li>Formula: <b>RCV = 2.77 × √(CVa² + CVi²)</b> for 95% two-tailed</li>
+      <li>The 2.77 = √2 × 1.96 (√2 because two measurements, 1.96 for 95%)</li>
+      <li>RCV is most useful for <b>low-II analytes</b> (CRP, ferritin, troponin) where the population RI is structurally insufficient</li>
+      <li>A change &lt; RCV is consistent with noise; ≥ RCV is a real change at the chosen confidence</li>
+      <li>RCV is one tool in a family — use RI + MU for single-result interpretation, RCV for change interpretation</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
