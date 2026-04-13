@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Measurement Uncertainty (MU)</title>
+  <link rel="stylesheet" href="assets/css/tools.css">
+  <script src="assets/js/terms.js"></script>
+  <script src="assets/js/term-tooltip.js" defer></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f4f6f8; color: #111827; }
+    .wrap { max-width: min(1100px, 96%); margin: 0 auto; padding: 16px 20px 80px; }
+    h1 { font-size: 22px; margin: 0 0 6px; color: #0f172a; letter-spacing: -.01em; }
+    .subtitle { color: #6b7280; font-size: 13px; margin: 0 0 18px; }
+    .formula { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; color: #1e293b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+    .panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 800; color: #0f172a; letter-spacing: .02em; }
+    .panel h2 .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px; background: #fbbf24; color: #78350f; }
+    .row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .row label { font-size: 13px; color: #374151; min-width: 180px; }
+    .row input[type="text"], .row input[type="number"] { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; flex: 1; min-width: 120px; max-width: 240px; }
+    .row .unit { font-size: 12px; color: #6b7280; min-width: 30px; }
+    .row .hint { font-size: 11px; color: #6b7280; margin-left: 8px; }
+    .components-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .components-table th { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+    .components-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .components-table input[type="text"], .components-table input[type="number"] { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 12px; width: 100%; box-sizing: border-box; }
+    .components-table .col-label input { font-weight: 600; }
+    .components-table .col-value { width: 110px; }
+    .components-table .col-action { width: 50px; text-align: center; }
+    .btn-remove { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 5px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+    .btn-remove:hover { background: #fee2e2; }
+    .btn-add { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .btn-add:hover { background: #dbeafe; }
+    .btn-primary { background: #2563eb; color: white; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-report { background: #16a34a; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+    .btn-report:hover { background: #15803d; }
+    .btn-report.added { background: #22c55e; }
+    .results { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 18px; margin-top: 14px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+    .kpi { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; }
+    .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin-bottom: 4px; }
+    .kpi-value { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .verdict { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .verdict-pass { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .verdict-fail { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .verdict-na { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .note { font-size: 12px; color: #6b7280; line-height: 1.6; margin: 8px 0 0; }
+    .formula-box { background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; }
+    .formula-box .f-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 4px; }
+    #wf-import-banner { display:none; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:12px 16px; margin-bottom:12px; }
+    #wf-import-banner .wf-title { font-size:13px; font-weight:700; color:#14532d; margin-bottom:4px; }
+    #wf-import-banner .wf-details { font-size:12px; color:#166534; margin-bottom:8px; }
+    .wf-actions { display:flex; gap:8px; }
+    #wf-next-card { display:none; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 16px; margin-top:14px; }
+    #wf-next-card .wf-step { font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    #wf-next-card .wf-saved { font-size:12px; color:#1e3a8a; margin-bottom:8px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Measurement Uncertainty (MU) <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;vertical-align:middle;">BETA</span></h1>
+  <p class="subtitle">GUM-compliant computation of Expanded Uncertainty (U) from individual uncertainty components, combined in quadrature. Required by ISO 15189 §7.3.4.</p>
+
+  <!-- Workflow import banner -->
+  <div id="wf-import-banner">
+    <div class="wf-title">📥 Data available from previous step</div>
+    <div class="wf-details" id="wf-import-details"></div>
+    <div class="wf-actions">
+      <button class="btn-primary" style="font-size:12px;padding:6px 14px;" onclick="importWorkflowData()">Import</button>
+      <button class="btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="document.getElementById('wf-import-banner').style.display='none'">Dismiss</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1. Uncertainty components</h2>
+    <p class="note" style="margin-bottom:10px;">Enter each contribution as a <b>standard uncertainty (uᵢ)</b> in % (relative). Components combine in quadrature: u<sub>c</sub> = √(u₁² + u₂² + …).</p>
+    <table class="components-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th class="col-value">u (%)</th>
+          <th class="col-action"></th>
+        </tr>
+      </thead>
+      <tbody id="components-body">
+        <tr data-component>
+          <td class="col-label"><input type="text" value="Calibrator (u_cal)" data-label></td>
+          <td class="col-value"><input type="number" step="0.01" min="0" placeholder="e.g. 1.0" data-value></td>
+          <td class="col-action"><button class="btn-remove" onclick="removeComponent(this)">×</button></td>
+        </tr>
+        <tr data-component>
+          <td class="col-label"><input type="text" value="Imprecision (CVa)" data-label></td>
+          <td class="col-value"><input type="number" step="0.01" min="0" placeholder="e.g. 2.5" data-value></td>
+          <td class="col-action"><button class="btn-remove" onclick="removeComponent(this)">×</button></td>
+        </tr>
+        <tr data-component>
+          <td class="col-label"><input type="text" value="Bias (u_bias)" data-label></td>
+          <td class="col-value"><input type="number" step="0.01" min="0" placeholder="e.g. 0.5" data-value></td>
+          <td class="col-action"><button class="btn-remove" onclick="removeComponent(this)">×</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn-add" onclick="addComponent()">+ Add component</button>
+    <p class="note" style="margin-top:10px;"><b>Bias handling note:</b> ideally, a known bias is <em>corrected</em> before reporting; only the residual uncertainty of the correction enters u_bias. If bias is uncorrected and you want to fold it into U, use u_bias = |Bias| / √3 (rectangular-distribution convention) or simply enter |Bias|.</p>
+  </div>
+
+  <div class="panel">
+    <h2>2. Coverage factor and APS</h2>
+    <div class="row">
+      <label for="inp-k">Coverage factor (k)</label>
+      <input type="number" id="inp-k" step="0.01" value="2" min="1">
+      <span class="hint">k = 2 → ~95% (default); k = 1 → ~68% (standard uncertainty); k = 3 → ~99.7%</span>
+    </div>
+    <div class="row">
+      <label for="inp-allowable-u">Allowable U (%) — from APS</label>
+      <input type="number" id="inp-allowable-u" step="0.01" min="0" placeholder="e.g. 6.0">
+      <span class="hint">Optional. Used for the pass/fail verdict. Derived from the Milan hierarchy.</span>
+    </div>
+    <div class="row">
+      <label for="inp-analyte">Analyte (optional)</label>
+      <input type="text" id="inp-analyte" placeholder="e.g. Glucose">
+      <input type="text" id="inp-unit" placeholder="unit (e.g. mmol/L)" style="max-width:140px;">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:14px;">
+    <button class="btn-primary" onclick="calculateMU()">Calculate U</button>
+    <button class="btn-secondary" onclick="resetForm()">Reset</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none;">
+    <div class="results">
+      <h2 style="margin:0 0 12px;font-size:16px;font-weight:800;color:#0f172a;">Results</h2>
+
+      <div class="formula-box">
+        <span class="f-label">Combined standard uncertainty</span>
+        u<sub>c</sub> = √(u₁² + u₂² + …) = <span id="formula-uc">—</span>
+        <br>
+        <span class="f-label" style="margin-top:8px;">Expanded uncertainty (k = <span id="formula-k">2</span>)</span>
+        U = k × u<sub>c</sub> = <span id="formula-U">—</span>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Combined standard uncertainty (u<sub>c</sub>)</div>
+          <div class="kpi-value" id="kpi-uc">—</div>
+          <div class="kpi-sub">RSS combination of all components</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Expanded uncertainty (U)</div>
+          <div class="kpi-value" id="kpi-U">—</div>
+          <div class="kpi-sub">95% coverage interval at k = 2</div>
+        </div>
+        <div class="kpi" id="kpi-verdict-card" style="display:none;">
+          <div class="kpi-label">Verdict vs allowable U</div>
+          <div class="kpi-value" id="kpi-verdict">—</div>
+          <div class="kpi-sub" id="kpi-verdict-sub">—</div>
+        </div>
+      </div>
+
+      <h3 style="margin:18px 0 8px;font-size:14px;font-weight:800;color:#0f172a;">Component contributions</h3>
+      <p class="note" style="margin-bottom:8px;">How much each component contributes to the combined uncertainty (u<sub>c</sub>²). Larger contributors are where to focus improvement effort.</p>
+      <div id="component-bars"></div>
+
+      <h3 style="margin:18px 0 8px;font-size:14px;font-weight:800;color:#0f172a;">Visualisation — result ± U coverage</h3>
+      <div id="mu-svg-container"></div>
+
+      <button id="mu-add-report-btn" onclick="addToReport()" class="btn-report">+ Add to Report</button>
+
+      <!-- Workflow next card -->
+      <div id="wf-next-card">
+        <div class="wf-step">Workflow — step 4</div>
+        <div class="wf-saved" id="wf-next-saved"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-primary" style="font-size:12px;padding:6px 14px;" onclick="window.parent && window.parent.loadToolFromWorkflow && window.parent.loadToolFromWorkflow('tae.html','Total Error &amp; Sigma')">Compare with TAE / Sigma →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Component management ───────────────────────────────────────────────────────
+function addComponent() {
+  var tbody = document.getElementById('components-body');
+  var tr = document.createElement('tr');
+  tr.setAttribute('data-component', '');
+  tr.innerHTML = '<td class="col-label"><input type="text" placeholder="e.g. Matrix" data-label></td>' +
+                 '<td class="col-value"><input type="number" step="0.01" min="0" placeholder="u (%)" data-value></td>' +
+                 '<td class="col-action"><button class="btn-remove" onclick="removeComponent(this)">×</button></td>';
+  tbody.appendChild(tr);
+}
+function removeComponent(btn) {
+  var tr = btn.closest('tr');
+  var tbody = document.getElementById('components-body');
+  if (tbody.querySelectorAll('tr[data-component]').length > 1) tr.remove();
+  else { var inputs = tr.querySelectorAll('input'); inputs[0].value = ''; inputs[1].value = ''; }
+}
+
+// ── Calculation ───────────────────────────────────────────────────────────────
+function readComponents() {
+  var rows = document.querySelectorAll('#components-body tr[data-component]');
+  var comps = [];
+  rows.forEach(function(r) {
+    var label = r.querySelector('[data-label]').value.trim();
+    var val = parseFloat(r.querySelector('[data-value]').value);
+    if (label && !isNaN(val) && val > 0) comps.push({ label: label, u: val });
+  });
+  return comps;
+}
+
+function calculateMU() {
+  var comps = readComponents();
+  if (comps.length === 0) {
+    alert('Enter at least one uncertainty component with a label and a value > 0.');
+    return;
+  }
+  var k = parseFloat(document.getElementById('inp-k').value) || 2;
+  var allowableU = parseFloat(document.getElementById('inp-allowable-u').value);
+  var analyte = document.getElementById('inp-analyte').value.trim();
+  var unit = document.getElementById('inp-unit').value.trim();
+
+  var sumSq = comps.reduce(function(s, c) { return s + c.u * c.u; }, 0);
+  var uc = Math.sqrt(sumSq);
+  var U = k * uc;
+
+  // Display formula
+  var ucExpr = comps.map(function(c) { return c.u.toFixed(2) + '²'; }).join(' + ');
+  document.getElementById('formula-uc').textContent = '√(' + ucExpr + ') = ' + uc.toFixed(2) + '%';
+  document.getElementById('formula-k').textContent = k.toFixed(k % 1 === 0 ? 0 : 2);
+  document.getElementById('formula-U').textContent = k.toFixed(k % 1 === 0 ? 0 : 2) + ' × ' + uc.toFixed(2) + '% = ' + U.toFixed(2) + '%';
+
+  // KPIs
+  document.getElementById('kpi-uc').textContent = uc.toFixed(2) + '%';
+  document.getElementById('kpi-U').textContent = '± ' + U.toFixed(2) + '%';
+
+  // Verdict
+  if (!isNaN(allowableU) && allowableU > 0) {
+    document.getElementById('kpi-verdict-card').style.display = '';
+    var pass = U <= allowableU;
+    var v = document.getElementById('kpi-verdict');
+    var s = document.getElementById('kpi-verdict-sub');
+    v.innerHTML = '<span class="verdict ' + (pass ? 'verdict-pass' : 'verdict-fail') + '">' + (pass ? 'PASS' : 'FAIL') + '</span>';
+    s.textContent = 'U = ' + U.toFixed(2) + '% ' + (pass ? '≤' : '>') + ' allowable ' + allowableU.toFixed(2) + '%';
+  } else {
+    document.getElementById('kpi-verdict-card').style.display = 'none';
+  }
+
+  // Component bars
+  var totalSq = sumSq;
+  var bars = comps.map(function(c) {
+    var contribSq = c.u * c.u;
+    var pct = (contribSq / totalSq) * 100;
+    return '<div style="margin:6px 0;">' +
+             '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">' +
+               '<span style="font-weight:600;color:#374151;">' + escapeHtml(c.label) + '</span>' +
+               '<span style="color:#6b7280;">u = ' + c.u.toFixed(2) + '% · contributes ' + pct.toFixed(1) + '% to u<sub>c</sub>²</span>' +
+             '</div>' +
+             '<div style="height:10px;background:#f1f5f9;border-radius:3px;overflow:hidden;">' +
+               '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#3b82f6,#1e40af);"></div>' +
+             '</div>' +
+           '</div>';
+  }).join('');
+  document.getElementById('component-bars').innerHTML = bars;
+
+  // SVG visualisation
+  document.getElementById('mu-svg-container').innerHTML = renderMuSvg(uc, U, k, allowableU, analyte, unit);
+
+  document.getElementById('results').style.display = 'block';
+
+  // Save to workflow for downstream tools
+  try {
+    localStorage.setItem('wf_mu', JSON.stringify({
+      uc: +uc.toFixed(3),
+      U: +U.toFixed(3),
+      k: k,
+      analyte: analyte,
+      unit: unit,
+      components: comps.map(function(c){return {label:c.label,u:c.u};})
+    }));
+  } catch(e) {}
+
+  // Show next card if there's a TAE comparison to be made
+  var nextCard = document.getElementById('wf-next-card');
+  document.getElementById('wf-next-saved').textContent = 'U = ± ' + U.toFixed(2) + '% saved. Compare against TAE/Sigma to see the parallel Westgard verdict.';
+  nextCard.style.display = 'block';
+
+  // Reset Add-to-Report button state
+  var rb = document.getElementById('mu-add-report-btn');
+  rb.classList.remove('added');
+  rb.textContent = '+ Add to Report';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+function renderMuSvg(uc, U, k, allowableU, analyte, unit) {
+  // Visualisation: result point ± U, optionally showing allowable U as a wider/narrower band
+  var w = 700, h = 200;
+  var cx = w / 2, cy = 110;
+  var maxU = Math.max(U, isNaN(allowableU) ? 0 : allowableU) * 1.3;
+  var scale = (w * 0.4) / maxU; // half-width in px
+  var uPx = U * scale;
+  var aPx = isNaN(allowableU) ? 0 : allowableU * scale;
+
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="max-width:700px;width:100%;font-family:system-ui,sans-serif;">';
+  // Allowable U band (lighter, behind)
+  if (!isNaN(allowableU) && allowableU > 0) {
+    svg += '<rect x="' + (cx - aPx) + '" y="' + (cy - 18) + '" width="' + (2 * aPx) + '" height="36" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    svg += '<text x="' + (cx + aPx + 6) + '" y="' + (cy + 4) + '" font-size="10" font-weight="700" fill="#b45309">Allowable U ± ' + allowableU.toFixed(2) + '%</text>';
+  }
+  // Measured U band
+  svg += '<rect x="' + (cx - uPx) + '" y="' + (cy - 12) + '" width="' + (2 * uPx) + '" height="24" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>';
+  svg += '<text x="' + cx + '" y="' + (cy + 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Result ± ' + U.toFixed(2) + '% (k = ' + k.toFixed(k % 1 === 0 ? 0 : 2) + ')</text>';
+  // Result tick at centre
+  svg += '<line x1="' + cx + '" y1="' + (cy - 22) + '" x2="' + cx + '" y2="' + (cy + 22) + '" stroke="#0f172a" stroke-width="2"/>';
+  svg += '<text x="' + cx + '" y="' + (cy - 28) + '" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="600">Result' + (analyte ? ' (' + escapeHtml(analyte) + ')' : '') + '</text>';
+  // Endpoint labels
+  svg += '<text x="' + (cx - uPx) + '" y="' + (cy + 38) + '" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="600">−U</text>';
+  svg += '<text x="' + (cx + uPx) + '" y="' + (cy + 38) + '" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="600">+U</text>';
+  // Standard reference at bottom
+  svg += '<text x="' + cx + '" y="' + (h - 10) + '" text-anchor="middle" font-size="9" fill="#6b7280">GUM / ISO 15189 §7.3.4</text>';
+  svg += '</svg>';
+  return svg;
+}
+
+function resetForm() {
+  document.querySelectorAll('#components-body input').forEach(function(i) { i.value = ''; });
+  document.getElementById('inp-k').value = '2';
+  document.getElementById('inp-allowable-u').value = '';
+  document.getElementById('inp-analyte').value = '';
+  document.getElementById('inp-unit').value = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('wf-next-card').style.display = 'none';
+}
+
+// ── Workflow import (from Precision/Bias) ─────────────────────────────────────
+(function checkImport() {
+  try {
+    var prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    var bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
+    if (!prec && !bias) return;
+    var precL1 = prec ? (prec.levels ? prec.levels[0] : prec) : null;
+    var details = '';
+    if (precL1 && precL1.cv) details += '<b>CVa = ' + precL1.cv + '%</b> from Precision' + (precL1.analyte ? ' · ' + precL1.analyte : '') + '<br>';
+    if (bias && bias.bias) details += '<b>|Bias| = ' + bias.bias + '%</b> from Bias study';
+    if (!details) return;
+    document.getElementById('wf-import-details').innerHTML = details;
+    document.getElementById('wf-import-banner').style.display = 'block';
+  } catch(e) {}
+})();
+
+function importWorkflowData() {
+  try {
+    var prec = JSON.parse(localStorage.getItem('wf_precision') || 'null');
+    var bias = JSON.parse(localStorage.getItem('wf_bias') || 'null');
+    var precL1 = prec ? (prec.levels ? prec.levels[0] : prec) : null;
+    var rows = document.querySelectorAll('#components-body tr[data-component]');
+    // Find/fill the imprecision (CVa) row
+    if (precL1 && precL1.cv) {
+      var found = false;
+      rows.forEach(function(r) {
+        var lbl = r.querySelector('[data-label]').value.toLowerCase();
+        if (!found && (lbl.indexOf('imprec') >= 0 || lbl.indexOf('cva') >= 0)) {
+          r.querySelector('[data-value]').value = precL1.cv;
+          found = true;
+        }
+      });
+      if (precL1.analyte) document.getElementById('inp-analyte').value = precL1.analyte;
+      if (precL1.unit) document.getElementById('inp-unit').value = precL1.unit;
+    }
+    // Find/fill the bias row
+    if (bias && bias.bias) {
+      var found2 = false;
+      rows.forEach(function(r) {
+        var lbl = r.querySelector('[data-label]').value.toLowerCase();
+        if (!found2 && lbl.indexOf('bias') >= 0) {
+          r.querySelector('[data-value]').value = bias.bias;
+          found2 = true;
+        }
+      });
+      // TAE → allowable U (rough first approximation; lab should review)
+      if (bias.tae && !document.getElementById('inp-allowable-u').value) {
+        document.getElementById('inp-allowable-u').value = bias.tae;
+      }
+    }
+    document.getElementById('wf-import-banner').style.display = 'none';
+  } catch(e) { console.error('importWorkflowData error:', e); }
+}
+
+// ── Report Builder integration ────────────────────────────────────────────────
+function addToReport() {
+  var comps = readComponents();
+  if (comps.length === 0) { alert('Calculate U first.'); return; }
+  var k = parseFloat(document.getElementById('inp-k').value) || 2;
+  var allowableU = parseFloat(document.getElementById('inp-allowable-u').value);
+  var analyte = document.getElementById('inp-analyte').value.trim();
+  var unit = document.getElementById('inp-unit').value.trim();
+  var sumSq = comps.reduce(function(s, c) { return s + c.u * c.u; }, 0);
+  var uc = Math.sqrt(sumSq);
+  var U = k * uc;
+  var verdictHtml = '';
+  if (!isNaN(allowableU) && allowableU > 0) {
+    var pass = U <= allowableU;
+    verdictHtml = '<p><b>Verdict:</b> U = ' + U.toFixed(2) + '% ' + (pass ? '≤' : '>') + ' allowable ' + allowableU.toFixed(2) + '% — <b style="color:' + (pass ? '#166534' : '#991b1b') + ';">' + (pass ? 'PASS' : 'FAIL') + '</b></p>';
+  }
+  var compRows = comps.map(function(c) {
+    return '<tr><td>' + escapeHtml(c.label) + '</td><td>' + c.u.toFixed(2) + '%</td><td>' + ((c.u * c.u / sumSq) * 100).toFixed(1) + '%</td></tr>';
+  }).join('');
+  var html =
+    '<h3>Measurement Uncertainty (MU)' + (analyte ? ' — ' + escapeHtml(analyte) : '') + '</h3>' +
+    '<p><b>Combined standard uncertainty u<sub>c</sub> = √Σuᵢ² = ' + uc.toFixed(2) + '%</b></p>' +
+    '<p><b>Expanded uncertainty U = k × u<sub>c</sub> = ' + k + ' × ' + uc.toFixed(2) + '% = ± ' + U.toFixed(2) + '%</b> (' + (k === 2 ? '~95% coverage' : 'k = ' + k) + ')</p>' +
+    verdictHtml +
+    '<table><thead><tr><th>Component</th><th>u (%)</th><th>Contribution to u<sub>c</sub>²</th></tr></thead><tbody>' + compRows + '</tbody></table>' +
+    '<p style="font-size:11px;color:#6b7280;margin-top:8px;"><i>Computed via GUM (ISO 15189 §7.3.4). Components combined in root-sum-of-squares; expanded uncertainty U covers ~95% at k = 2.</i></p>';
+  try {
+    if (window.parent && typeof window.parent.addReportSection === 'function') {
+      window.parent.addReportSection({
+        toolId: 'mu',
+        toolName: 'Measurement Uncertainty (MU)' + (analyte ? ' — ' + analyte : ''),
+        html: html
+      });
+      var btn = document.getElementById('mu-add-report-btn');
+      btn.classList.add('added');
+      btn.textContent = '✓ Added to Report';
+    } else {
+      alert('Report Builder is only available inside the app shell.');
+    }
+  } catch(e) { alert('Could not add to report: ' + e.message); }
+}
+
+// Expose Save/Load API for the parent app
+window.getSaveData = function() {
+  return {
+    components: readComponents(),
+    k: parseFloat(document.getElementById('inp-k').value) || 2,
+    allowableU: parseFloat(document.getElementById('inp-allowable-u').value) || null,
+    analyte: document.getElementById('inp-analyte').value,
+    unit: document.getElementById('inp-unit').value
+  };
+};
+window.loadSaveData = function(d) {
+  if (!d) return;
+  if (d.components && Array.isArray(d.components)) {
+    var tbody = document.getElementById('components-body');
+    tbody.innerHTML = '';
+    d.components.forEach(function(c) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-component', '');
+      tr.innerHTML = '<td class="col-label"><input type="text" data-label></td>' +
+                     '<td class="col-value"><input type="number" step="0.01" min="0" data-value></td>' +
+                     '<td class="col-action"><button class="btn-remove" onclick="removeComponent(this)">×</button></td>';
+      tr.querySelector('[data-label]').value = c.label || '';
+      tr.querySelector('[data-value]').value = c.u || '';
+      tbody.appendChild(tr);
+    });
+  }
+  if (d.k != null) document.getElementById('inp-k').value = d.k;
+  if (d.allowableU != null) document.getElementById('inp-allowable-u').value = d.allowableU;
+  if (d.analyte) document.getElementById('inp-analyte').value = d.analyte;
+  if (d.unit) document.getElementById('inp-unit').value = d.unit;
+};
+</script>
+</body>
+</html>
