@@ -727,11 +727,13 @@
             <path d="M0,0 L6,3 L0,6 z" fill="#7f1d1d"/>
           </marker>
         </defs>
-        <line x1="345" y1="100" x2="345" y2="125" stroke="#7f1d1d" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="345" y1="100" x2="345" y2="148" stroke="#7f1d1d" stroke-width="1" stroke-dasharray="2,2"/>
         <text x="349" y="98" font-size="7" fill="#7f1d1d" font-weight="600">|Bias|</text>
-        <!-- Coverage interval: 1.65 × CV span around mean -->
-        <rect x="290" y="150" width="150" height="14" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
-        <text x="365" y="161" text-anchor="middle" font-size="9" font-weight="700" fill="#7f1d1d">|Bias| + 1.65·CV</text>
+        <!-- True value label -->
+        <text x="345" y="184" text-anchor="middle" font-size="8" fill="#7f1d1d" font-weight="600">true value</text>
+        <!-- Coverage interval: |Bias| + 1.65·CV, from true value to TE -->
+        <rect x="345" y="150" width="95" height="14" rx="3" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+        <text x="392" y="161" text-anchor="middle" font-size="9" font-weight="700" fill="#7f1d1d">|Bias| + 1.65·CV</text>
         <!-- TE endpoint marker -->
         <line x1="440" y1="142" x2="440" y2="172" stroke="#dc2626" stroke-width="2"/>
         <text x="440" y="184" text-anchor="middle" font-size="8" fill="#dc2626" font-weight="600">TE</text>
@@ -1027,9 +1029,9 @@
     <h3>The four layers at a glance</h3>
       <p>Before diving in, here is the structural map everything below expands on:</p>
       <ul>
-        <li><b>ISO 15189</b> — says <em>when</em> a validation or verification is required, and the mandatory menu of performance characteristics to evaluate (precision, bias, TAE, measuring range, reference interval, interferences). It does <em>not</em> specify the acceptance criteria or the protocol.</li>
-        <li><b>APS (Analytical Performance Specification)</b> — a written document stating the method's <em>intended clinical use</em> and the resulting <em>acceptance criteria</em> (allowable CVa, bias, TAE, required LoD, etc.). Each criterion is derived from the Milan hierarchy; the document is finalised <em>before</em> any study is run.</li>
-        <li><b>CLSI EP protocols</b> — the standard <em>protocols for investigating</em> each performance characteristic (EP05, EP09, EP06, EP07, EP17, EP25, EP28 …). The lab can substitute an equivalent design if it can be defended statistically.</li>
+        <li><b>ISO 15189</b> — says <em>when</em> a validation or verification is required, and the mandatory menu of performance characteristics to evaluate (precision, bias, <b>measurement uncertainty (MU, §7.3.4)</b>, measuring range, reference interval, interferences). It does <em>not</em> specify the acceptance criteria or the protocol. Note: ISO mandates MU, not TAE — TAE is the CLSI/Westgard convention used alongside MU; see <a href="#tae" data-secref></a>.</li>
+        <li><b>APS (Analytical Performance Specification)</b> — a written document stating the method's <em>intended clinical use</em> and the resulting <em>acceptance criteria</em> (allowable CVa, bias, TAE, <b>allowable MU</b>, required LoD, etc.). Each criterion is derived from the Milan hierarchy; the document is finalised <em>before</em> any study is run.</li>
+        <li><b>CLSI EP protocols + GUM</b> — the standard <em>protocols for investigating</em> each performance characteristic. <b>CLSI EP</b> covers the empirical studies (EP05 precision, EP09 method comparison, EP06 linearity, EP07 interferences, EP17 detection capability, EP25 stability, EP28 reference intervals …). <b>GUM</b> (the ISO Guide to the Expression of Uncertainty in Measurement) is the protocol for computing MU from the EP study data via quadrature combination. The lab can substitute an equivalent design if it can be defended statistically.</li>
         <li><b>Pass/fail</b> — the verdict works at two levels. <b>Per characteristic:</b> each performance characteristic in the APS is tested independently against its own acceptance criterion — a <b>meets specification: yes / no</b> verdict for each (precision CVa, bias, combined TE ≤ TAE, linearity, LoD, interferences, stability, measuring range, and so on). <b>Overall:</b> the method is fit for clinical use only when <em>every</em> per-characteristic verdict passes. There is no averaging or trade-off between characteristics.<br><i><b>Note on bias, precision, and TAE — two philosophies:</b> The <b>Westgard view</b> treats TAE as a single combined budget — as long as <b>TE ≤ TAE</b>, the method passes; the individual bias and CVa limits are guidelines for balancing the budget. The <b>EFLM / Milan view</b> keeps each characteristic as its own independent verdict — precision, bias, <em>and</em> TAE all have to pass on their own; excessive bias is a fail even when TE stays within TAE, because bias is systematic and correctable. Most European accreditation bodies follow the EFLM / Milan view. A lab that prefers the Westgard combined-budget approach must document that choice in its APS and defend it at audit.</i></li>
       </ul>
       <p><i>Read in order: ISO tells you what is required, APS sets the acceptance criteria, the protocol is used to evaluate the method's performance, and you reach a pass/fail verdict by comparing each result to its acceptance criterion.</i></p>
