@@ -655,6 +655,17 @@
 
     <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span><b>One framing point before the formulas:</b> ISO 15189 mandates <b>Measurement Uncertainty (MU)</b>. It does not mandate TAE. TAE is the CLSI/Westgard/EFLM convention that historically dominates clinical chemistry; many labs use it alongside MU because it drives QC strategy more naturally. ISO accepts either, as long as the lab's chosen framework defines acceptance criteria, measures performance against them, and documents the result. The rest of this section uses TAE because that is what the QC tooling and Sigma-metric framework are built on; MU is its GUM/ISO companion (see the glossary entry for <b>Measurement Uncertainty</b>).</p>
 
+    <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span><b>One conceptual question, several quantitative tools.</b> All of the analytical-error metrics in this module quantify the same <em>"noise"</em> introduced in <a href="#why-accuracy" data-secref></a> — just through different statistical lenses, depending on the use case:</p>
+    <table>
+      <tr><th>Concept</th><th>What it quantifies</th><th>When you use it</th></tr>
+      <tr><td><b>CV%</b> (precision)</td><td>Analytical noise as relative spread (one source — random error)</td><td>Day-to-day method monitoring; QC</td></tr>
+      <tr><td><b>TE / TAE</b></td><td>Analytical noise as a worst-case error in one result, including bias</td><td>Westgard pass/fail: "is the method fit for use?"</td></tr>
+      <tr><td><b>MU</b></td><td>Analytical noise as a 95% coverage interval around one result, GUM quadrature combination</td><td>Interpreting one specific result clinically (e.g. against an RI limit)</td></tr>
+      <tr><td><b>RCV</b> (Reference Change Value)</td><td>Total noise (analytical + within-person biological) between two consecutive measurements</td><td>"Is this change real?" between two patient results</td></tr>
+      <tr><td><b>APS</b></td><td>The maximum allowable noise the lab will accept</td><td>Setting acceptance criteria for any of the above</td></tr>
+    </table>
+    <p>The signal/noise question is universal; what changes is the statistical lens you reach for. <b>CV%</b> for ongoing QC, <b>TE/TAE</b> for method-validation pass/fail, <b>MU</b> for clinical interpretation of a single result, <b>RCV</b> for interpreting a change between two results — all bounded by the <b>APS</b> that the lab has defined. The rest of this section uses TAE; MU is covered in the glossary and in the <a href="#ref-interval" data-secref></a> worked example.</p>
+
     <p><span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">NEW</span><b>RI, TE, and MU are structural twins.</b> All three are 95% coverage intervals around a point, with sampling uncertainty on their endpoints. They differ only in <em>what variation</em> they cover:</p>
     <div style="margin:20px 0;text-align:center;">
       <svg viewBox="0 0 720 360" style="max-width:720px;width:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
