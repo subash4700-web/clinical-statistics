@@ -73,6 +73,53 @@
     .ladder-item:last-child { border-radius: 0 0 10px 10px; background: #fef2f2; border-color: #fecaca; border-top: none; }
     .ladder-item .l-title { font-weight: 800; font-size: 13px; margin-bottom: 3px; }
     .ladder-item .l-desc { color: #6b7280; font-size: 12px; }
+
+    .part-banner { margin: 44px 0 22px; padding: 18px 24px; border-radius: 14px; background: linear-gradient(135deg, #134e4a 0%, #0f766e 60%, #0d9488 100%); color: #fff; box-shadow: 0 2px 12px rgba(16,24,40,.07); }
+    .part-banner .part-kicker { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .8; margin-bottom: 4px; }
+    .part-banner .part-title { font-size: 22px; font-weight: 900; letter-spacing: -.01em; margin: 0 0 4px; }
+    .part-banner .part-sub { font-size: 13px; line-height: 1.55; opacity: .9; margin: 0; }
+
+    .print-title { display: none; }
+
+    @media print {
+      @page { size: A4; margin: 14mm 14mm 16mm; }
+      html, body { background: white !important; color: #111 !important; font-size: 11pt; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .wrap { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+
+      /* Hide UI chrome that should never print */
+      .font-toolbar, #auto-toc-dropdown, .back-top, #page-search, [data-no-print] { display: none !important; }
+
+      /* Print-only title showing the app name */
+      .print-title { display: block !important; margin: 0 0 10px; padding: 0 0 8px; border-bottom: 1px solid #999; }
+      .print-title .app-name { font-size: 10pt; color: #555; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+      .print-title .page-name { font-size: 20pt; font-weight: 800; color: #111; margin-top: 2px; }
+
+      /* Readable body text — turn OFF justification (fixes the "rivers" / loose word spacing) */
+      p, li, td, th, .callout, .warn, .good, .info { text-align: left !important; hyphens: manual !important; word-spacing: normal !important; }
+
+      /* Un-stick sticky headers so they don't repeat strangely */
+      .section h2 { position: static !important; top: auto !important; background: none !important; padding-top: 0 !important; padding-bottom: 4px !important; }
+
+      /* Section flow: avoid awkward page breaks */
+      .section { margin-bottom: 18px !important; page-break-inside: auto; break-inside: auto; }
+      .section h2, .section h3 { page-break-after: avoid; break-after: avoid; }
+      table, .callout, .warn, .good, .info, .formula-box, .precision-ladder { page-break-inside: avoid; break-inside: avoid; }
+
+      /* Keep long tables flowing across pages */
+      thead { display: table-header-group; }
+      tr, td, th { page-break-inside: avoid; }
+
+      /* No forced page breaks — let the browser paginate naturally */
+      .index { page-break-after: auto; break-after: auto; }
+
+      /* Drop sticky/fixed so nothing reserves phantom vertical space on paper */
+      * { position: static !important; }
+      .font-toolbar { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+
+      /* Make divider less dramatic on paper */
+      .divider { margin: 12px 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -84,18 +131,23 @@
   <button class="ft-btn" onclick="changeFontSize(1)" style="font-size:15px;">A+</button>
 </div>
 
+  <div class="print-title">
+    <div class="app-name">Clinical Statistics</div>
+    <div class="page-name">Analytical Performance — Concepts &amp; Theory</div>
+  </div>
   <h1>Analytical Performance — Concepts &amp; Theory</h1>
   <p class="lead">A practical guide to precision, bias, total error, and method validation — written for clinical laboratory scientists. Covers the concepts behind the tools and explains when and how to use them.</p>
 
   <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin:12px 0 18px;">
     <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;">How this module is organised</div>
-    <p style="margin:0 0 8px 0;font-size:13px;">The module is structured in three parts:</p>
+    <p style="margin:0 0 8px 0;font-size:13px;">The module is structured in four chapters:</p>
     <ul style="margin:0 0 8px 0;padding-left:20px;font-size:13px;line-height:1.7;">
-      <li><b>Analytical Performance — the concepts.</b> What accuracy, precision, bias, total error, and Sigma mean; where allowable limits come from; how biological variation sets the noise floor. Every subsequent section rests on these.</li>
-      <li><b>Compliance — the rules and the protocols.</b> How ISO 15189 frames validation and verification; what an APS is and how to set acceptance criteria; the CLSI EP protocols that measure each performance characteristic (EP05, EP15, EP09, EP15 trueness, EQA bias monitoring, EP28).</li>
+      <li><b>Concepts.</b> What accuracy, precision, bias, total error, and Sigma mean; where allowable limits come from; how biological variation sets the noise floor. Every subsequent part rests on these.</li>
+      <li><b>Compliance — the rules.</b> How ISO 15189 frames validation and verification; what an APS is and how to set acceptance criteria; the validation and verification workflows a lab follows.</li>
+      <li><b>Protocols — how the studies are run.</b> The CLSI EP protocols that measure each performance characteristic — EP05 (precision), EP15 (precision verification), EP09 (method comparison), EP15 trueness (CRM), EQA bias monitoring, EP28 (reference intervals).</li>
       <li><b>Categorical methods, clinical accuracy, and appendix.</b> Qualitative methods (EP12, EP17), diagnostic accuracy (ROC), antibiotic susceptibility agreement, summary table, and references.</li>
     </ul>
-    <p style="margin:0 0 10px 0;font-size:12px;color:#475569;font-style:italic;">Read the concepts section first if the theory is new to you; skip to the compliance section if you already know the theory and need the rules and protocols for running a study.</p>
+    <p style="margin:0 0 10px 0;font-size:12px;color:#475569;font-style:italic;">Read Concepts first if the theory is new; jump to Compliance for the rules and workflow; jump to Protocols for the step-by-step of a specific study.</p>
 
     <p style="margin:14px 0 6px 0;font-size:13px;">The theory above is read here on this page; the calculators that put it into practice live in the app's sidebar. The mapping is not one-to-one — a few sidebar groups draw on theory from this page, and a few have their own theory pages. Here is where each related tool lives:</p>
     <ul style="margin:0;padding-left:22px;font-size:13px;line-height:1.7;color:#374151;">
@@ -103,12 +155,15 @@
       <li><b>Sample Validation</b> sidebar group — pre-analytical and stability tools (paired-sample bias studies, EP25 stability, EP30 commutability, etc.). Cross-references in this page that point to "Sample Validation" load that module's Concepts &amp; Theory page; the related calculators are in the same sidebar group.</li>
       <li><b>Clinical Accuracy</b> sidebar group — ROC &amp; Diagnostic Accuracy, Reference Change Value (RCV), Antibiotic Susceptibility Agreement. ROC theory is covered in <a href="#roc" data-secref></a>; RCV theory in <a href="#ref-interval" data-secref></a> ("Comparing two consecutive results — what RCV adds"); antibiotic-agreement theory in <a href="#antibiotic" data-secref></a>.</li>
     </ul>
+    <div style="margin-top:14px;padding:10px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:12px;color:#78350f;line-height:1.6;">
+<b>A note on local responsibility.</b> This module is a general reference. Standards, acceptance criteria, regulatory expectations, and clinical decision thresholds vary by country, accreditation body, analyte, patient population, and intended clinical use. The figures, designs, and verdict rules shown here are illustrative — not a substitute for your own APS, your accreditation body's current requirements, or clinical consultation. Apply everything within your laboratory's own quality framework, and involve the relevant clinicians or physicians when the choices affect patient interpretation.
+    </div>
   </div>
 
   <div class="index">
     <h3>Contents</h3>
 
-        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:12px 0 6px;">Analytical Performance</div>
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:12px 0 6px;">Concepts</div>
     <ol start="1">
       <li><a href="#why-accuracy">Why accurate results matter</a></li>
       <li><a href="#types-variation">Types of variation — biological and analytical</a></li>
@@ -136,6 +191,9 @@
       <li><a href="#iso15189">ISO 15189 — Validation and Verification Requirements</a></li>
       <li><a href="#workflow">Typical validation workflow</a></li>
       <li><a href="#workflow-verification">Typical verification workflow</a></li>
+    </ol>
+    <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#0d9488;margin:16px 0 6px;">Protocols</div>
+    <ol start="23">
       <li><a href="#ep05">EP05 — Precision Study Protocol (CLSI EP05-A3)</a></li>
       <li><a href="#ep15">EP15 — Precision Verification Protocol (CLSI EP15-A3)</a></li>
       <li><a href="#ep09">EP09 — Method Comparison (bias against another method)</a></li>
@@ -159,6 +217,12 @@
       <li><a href="#summary">Summary table</a></li>
       <li><a href="#references">References</a></li>
     </ol>
+  </div>
+
+  <div class="part-banner" id="part-concepts">
+    <div class="part-kicker">Chapter 1</div>
+    <div class="part-title">Concepts</div>
+    <p class="part-sub">What the quantities mean, where limits come from, and why biological variation sets the floor under every analytical decision.</p>
   </div>
 
   <!-- 1 — Why accurate results matter -->
@@ -273,12 +337,24 @@
 
     <p>The conventional thresholds:</p>
     <table>
-      <tr><th>II</th><th>Interpretation</th><th>What to use clinically</th></tr>
+      <tr><th>II (Index of Individuality)</th><th>Interpretation</th><th>What to use clinically</th></tr>
       <tr><td><b>≥ 1.4 (high)</b></td><td>Patient fluctuates a lot relative to between-person differences. The population <b>reference interval (RI)</b> — the range derived from healthy people, covered fully in <a href="#ref-interval" data-secref></a> — covers the patient's natural range well.</td><td>Population RI is meaningful.</td></tr>
       <tr><td><b>0.6 – 1.4 (intermediate)</b></td><td>Population RI is usable but with caution — both individual and population variation matter.</td><td>Population RI + clinical context.</td></tr>
-      <tr><td><b>&lt; 0.6 (low)</b></td><td>Each patient sits in their own narrow band inside the population RI. A value can change substantially for that patient while still appearing "normal" against the population.</td><td>Patient's own baseline + Reference Change Value (RCV). Examples: CRP, ferritin, troponin.</td></tr>
+      <tr><td><b>&lt; 0.6 (low)</b></td><td>Each patient sits in their own narrow band inside the population RI. A value can change substantially for that patient while still appearing "normal" against the population.</td><td>Patient's own baseline + Reference Change Value (RCV). Examples: creatinine, CRP, ferritin, troponin.</td></tr>
     </table>
-    <p>This is why a troponin "in the normal range" can still represent a clinically important rise from that patient's own baseline — and why the meaningful reference for low-II analytes is the patient, not the population.</p>
+    <p style="font-size:12px;color:#78350f;margin-top:-6px;font-style:italic;">Note: a <b>low II (Index of Individuality) = HIGH individuality</b>, and a <b>high II = LOW individuality</b>.</p>
+    <div class="callout" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;"><b>Example — creatinine and acute kidney injury.</b>
+    <ul style="margin:8px 0 0 0;padding-left:20px;line-height:1.75;">
+      <li><b>Setting:</b> adult male patient, two serum creatinine samples 48 hours apart.</li>
+      <li><b>Result 1:</b> 70 µmol/L · <b>Result 2:</b> 95 µmol/L · <b>Change:</b> +35%.</li>
+      <li><b>Population reference interval (adult males):</b> ~65–120 µmol/L. Both results sit comfortably inside — on a single-result readout, both look "normal".</li>
+      <li><b>Why that's misleading:</b> creatinine is a low-II analyte (CVi ≈ 5.9%, CVg ≈ 14% → II ≈ 0.42). Each patient has their own narrow baseline band <em>inside</em> the wider population range.</li>
+      <li><b>Reference Change Value (RCV) — the threshold:</b> for creatinine, RCV ≈ 17%. This is a fixed property of the analyte + method (computed once from CVa + CVi), <em>not</em> this patient's change. It is the line that separates "could be noise" from "real change at 95% confidence." (Full derivation in <a href="#ref-interval" data-secref></a>.)</li>
+      <li><b>Observed change (Δ) — the measurement:</b> 35% (from this patient's two results). Compare Δ against RCV.</li>
+      <li><b>Verdict — Δ ≥ RCV:</b> 35% ≥ 17% → the RCV is breached, so this is a real change at 95% confidence, not noise. This is the textbook pattern of <b>acute kidney injury</b>, flagged clinically well before the population RI is breached.</li>
+      <li><b>Takeaway:</b> for low-II analytes the signal lives in the <em>change</em> against the patient's own baseline, not in the absolute number against the population RI.</li>
+    </ul>
+    </div>
 
     <p><b>In signal/noise terms:</b> II tells you which biological noise baseline the signal must exceed — between-people noise (CVg) for high-II, within-person noise (CVi) for low-II. The RI is the right noise-aware tool for high-II analytes; <b>RCV</b> is the right tool for low-II analytes (defined in <a href="#ref-interval" data-secref></a> alongside the parallel MU+RI tool).</p>
     <div style="margin-top:12px;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;">
@@ -863,9 +939,9 @@
 
     <p>The method passes if <b>TE ≤ TAE</b>. <b>Interpreting TE:</b> bias and imprecision both consume part of the error budget, so a method with large bias has less room for imprecision and vice versa. A method can fail on total error even if both bias and imprecision individually appear acceptable — because they accumulate.</p>
 
-    <div class="callout"><b>Two philosophies — combined budget vs independent verdicts.</b> The <b>Westgard view</b> treats TAE as a single combined budget: as long as <b>TE ≤ TAE</b>, the method passes; the individual bias and CVa limits are guidelines for balancing the budget. The <b>EFLM / Milan view</b> keeps each characteristic as its own independent verdict — precision, bias, <em>and</em> TAE all have to pass on their own; excessive bias is a fail even when TE stays within TAE, because bias is systematic and correctable. Most European accreditation bodies follow the EFLM / Milan view. A lab that prefers the Westgard combined-budget approach must document that choice in its APS and defend it at audit. (Restated in <a href="#iso15189" data-secref></a> for the compliance context.)</div>
+    <div class="callout"><span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:4px;">REVIEW</span><b>Two philosophies — combined budget vs independent verdicts.</b> The <b>Westgard view</b> treats TAE as a single combined budget: as long as <b>TE ≤ TAE</b>, the method passes; the individual bias and CVa limits are guidelines for balancing the budget. The <b>EFLM / Milan view</b> keeps each characteristic as its own independent verdict — precision, bias, <em>and</em> TAE all have to pass on their own; excessive bias is a fail even when TE stays within TAE, because bias is systematic and correctable. Most European accreditation bodies follow the EFLM / Milan view. A lab that prefers the Westgard combined-budget approach must document that choice in its APS and defend it at audit. (Restated in <a href="#iso15189" data-secref></a> for the compliance context.)</div>
 
-    <h3>Worked example — same data, three verdicts</h3>
+    <h3><span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-right:6px;">REVIEW</span>Worked example — same data, three verdicts</h3>
     <p>To make the choice of framework concrete, take a glucose method evaluated against an EFLM / Milan-tier APS:</p>
     <table>
       <tr><th>Component</th><th>Measured</th><th>Allowable (APS)</th></tr>
@@ -1010,7 +1086,13 @@
 
   <hr class="divider">
 
-  <!-- Why we do controls -->
+  <div class="part-banner" id="part-compliance">
+    <div class="part-kicker">Chapter 2</div>
+    <div class="part-title">Compliance — the rules</div>
+    <p class="part-sub">How ISO 15189 frames validation and verification, what an APS is, and the workflows a lab follows to meet accreditation. No specific protocols yet — just the rules.</p>
+  </div>
+
+  <!-- Compliance part starts -->
   <div class="section" id="why-compliance">
     <h2>19. What is compliance — and why does it matter?</h2>
     <p><b>The concepts section taught you <em>what</em> to measure and <em>why</em>.</b> This compliance section teaches you <em>how</em> — the specific protocols, standards, and workflows that regulatory bodies require.</p>
@@ -1099,7 +1181,7 @@
     <h3>The four layers at a glance</h3>
       <p>Before diving in, here is the structural map everything below expands on:</p>
       <ul>
-        <li><b>ISO 15189</b> — says <em>when</em> a validation or verification is required, and the mandatory menu of performance characteristics to evaluate (precision, bias, <b>measurement uncertainty (MU, §7.3.4)</b>, measuring range, reference interval, interferences). It does <em>not</em> specify the acceptance criteria or the protocol. Note: ISO mandates MU, not TAE — TAE is the CLSI/Westgard convention used alongside MU; see <a href="#tae" data-secref></a>.</li>
+        <li><b>ISO 15189</b> — says <em>when</em> a validation or verification is required, and the mandatory menu of performance characteristics to evaluate (precision, bias, <b>measurement uncertainty (MU, §7.3.4)</b>, measuring range, reference interval, interferences). It does <em>not</em> specify the acceptance criteria or the protocol. <br><i>Enforced nationally by the country's accreditation body (DANAK in Denmark, UKAS in the UK, DAkkS in Germany…). They don't change the requirements — they audit against them and set operational details like audit cycle and EQA participation frequency.</i><br>Note: ISO mandates MU, not TAE — TAE is the CLSI/Westgard convention used alongside MU; see <a href="#tae" data-secref></a>.</li>
         <li><b>APS (Analytical Performance Specification)</b> — a written document stating the method's <em>intended clinical use</em> and the resulting <em>acceptance criteria</em> (allowable CVa, bias, TAE, <b>allowable MU</b>, required LoD, etc.). Each criterion is derived from the Milan hierarchy; the document is finalised <em>before</em> any study is run.</li>
         <li><b>CLSI EP protocols + GUM</b> — the standard <em>protocols for investigating</em> each performance characteristic. <b>CLSI EP</b> covers the empirical studies (EP05 precision, EP09 method comparison, EP06 linearity, EP07 interferences, EP17 detection capability, EP25 stability, EP28 reference intervals …). <b>GUM</b> (the ISO Guide to the Expression of Uncertainty in Measurement) is the protocol for computing MU from the EP study data via quadrature combination. The lab can substitute an equivalent design if it can be defended statistically.</li>
         <li><b>Pass/fail</b> — the verdict works at two levels. <b>Per characteristic:</b> each performance characteristic in the APS is tested independently against its own acceptance criterion — a <b>meets specification: yes / no</b> verdict for each (precision CVa, bias, combined TE ≤ TAE, linearity, LoD, interferences, stability, measuring range, and so on). <b>Overall:</b> the method is fit for clinical use only when <em>every</em> per-characteristic verdict passes. There is no averaging or trade-off between characteristics.<br><i><b>Note on the combined-error verdict:</b> ISO 15189 mandates <b>MU</b> (U ≤ allowable U) as the primary combined-uncertainty statement. <b>TAE</b> sits alongside MU as the CLSI/Westgard convention used to drive QC strategy, and within TAE itself two schools (Westgard combined-budget vs EFLM / Milan independent verdicts) can disagree on the same data. The three frameworks, the formulas, and a worked example showing how they can produce different verdicts on identical numbers are in <a href="#tae" data-secref></a>.</i></li>
@@ -1136,7 +1218,7 @@
         <tr><td><b>Commercial IVD</b> (used as intended)</td><td><b>Verification</b> — EP15 (precision) + bias against EQA or CRM + confirmation of the reportable range.</td></tr>
         <tr><td><b>Modified commercial method</b> (changed sample type, dilution, range)</td><td><b>Validation</b> of the changed characteristics — EP05 + EP09 + whichever of EP06 / EP07 / EP17 the modification affects. Unchanged characteristics may still be accepted from the supplier.</td></tr>
         <tr><td><b>In-house developed method</b></td><td><b>Full validation</b> of every performance characteristic required by the <b>APS</b>. Typically this means EP05 + EP09 + EP06 + EP07 + EP17, plus EP28 if the method reports against a reference interval and EP25 if storage/stability is part of the intended use. Characteristics that the APS does not require (e.g. reference interval for a method feeding an algorithm, or stability for a point-of-care assay run on fresh samples) do not need to be established.</td></tr>
-        <tr><td><b>Method transferred from another lab</b></td><td><b>Verification</b> — EP15 abbreviated + paired patient samples run at both sites (mini EP09).</td></tr>
+        <tr><td><b>Method transferred from another lab</b></td><td><b>Verification</b> — EP15 (reduced design — fewer days than the standard 5) + paired patient samples run at both sites (mini EP09).</td></tr>
       </table>
       <p><i>"Full validation" is informal emphasis on scope — ISO 15189 and CLSI recognise only two formal categories: <b>verification</b> (lighter) and <b>validation</b> (establish from scratch).</i></p>
 
@@ -1152,13 +1234,47 @@
         <tr><td><b>Pre-analytical change</b> (tube, additive, transport, storage, centrifugation)</td><td>Paired-sample bias study + stability / commutability check. Framework covered in the <a href="#" onclick="window.parent.loadTool('stability_theory.html','Concepts &amp; Theory — Sample Validation');return false;" style="color:#1e40af;font-weight:600;">Sample Validation</a> module.</td></tr>
       </table>
 
+      <h3>What's mandatory in verification — at a glance</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0 14px;font-size:13px;">
+        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;">
+          <div style="font-weight:800;color:#991b1b;margin-bottom:4px;">Always required (per analyte)</div>
+          <ul style="margin:0;padding-left:18px;line-height:1.6;">
+            <li><b>Precision</b> (CVa)</li>
+            <li><b>Bias / trueness</b></li>
+            <li><b>Measurement Uncertainty</b> (ISO 15189 §7.3.4)</li>
+            <li><b>Measuring interval</b> (range)</li>
+            <li><b>Reference interval</b> — verify it transfers to local population</li>
+            <li><b>Diagnostic sens./spec.</b> — qualitative methods only</li>
+          </ul>
+        </div>
+        <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;">
+          <div style="font-weight:800;color:#92400e;margin-bottom:4px;">Conditionally required</div>
+          <ul style="margin:0;padding-left:18px;line-height:1.6;">
+            <li><b>LoD / LoQ</b> — if results near the limit drive clinical decisions</li>
+            <li><b>Interferences</b> — if known interferents are common locally</li>
+            <li><b>Stability</b> — if local storage / transport differ from IFU</li>
+            <li><b>Carry-over</b> — if sample type or automation pattern differ from IFU</li>
+          </ul>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px;">
+          <div style="font-weight:800;color:#1e3a8a;margin-bottom:4px;">Always required as records</div>
+          <ul style="margin:0;padding-left:18px;line-height:1.6;">
+            <li>Written <b>verification plan</b> (before the study)</li>
+            <li>Finalised <b>APS</b> with acceptance criteria</li>
+            <li>Verification <b>report</b> with raw data, analysis, pass/fail, sign-off</li>
+            <li>Evidence of <b>ongoing monitoring</b> (IQC rules + EQA participation)</li>
+          </ul>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#475569;margin:0 0 14px;font-style:italic;">Source: ISO 15189:2022 §7.3.2 (verification), §7.3.4 (measurement uncertainty); CLSI EP15-A3, EP09-A3, EP28-A3c, EP12-A2 for the per-characteristic protocols.</p>
+
       <h3>Protocol mode per APS characteristic</h3>
       <p>Each APS characteristic has a CLSI protocol that can run in two <b>modes</b>. <b>Validation</b> means running the full study — you have no prior claims to lean on. <b>Verification</b> means confirming an existing manufacturer claim — the same characteristic, but with a reduced design. The <b>APS itself determines which characteristics apply</b> to the method: the lab lists every characteristic the method needs based on its intended clinical use, and each listed characteristic must be evaluated against its own acceptance criterion. §C and §C2 tell you which method types and events trigger work; this table tells you how much for each characteristic the APS requires.</p>
       <table>
         <tr><th>APS characteristic</th><th>Validation (full)</th><th>Verification (reduced)</th><th>Material</th></tr>
         <tr><td><b>Precision</b> (CVa)</td><td>EP05-A3 (20 × 2 × 2)¹</td><td>EP15-A3 (5 × 5)²</td><td>Pooled patient samples or commercial QC at ≥ 2 decision levels</td></tr>
         <tr><td><b>Bias / trueness</b></td><td>EP09-A3 (≥ 40 patient samples, full method comparison)</td><td>EP15-A3 (paired samples) / EQA comparison</td><td>CRM, EQA sample, or paired patient samples vs. comparator method — see the next subsection <a href="#iso15189" style="color:#1e40af;font-weight:600;">"Which standards govern each bias reference"</a> for the standard behind each.</td></tr>
-        <tr><td><b>Measurement Uncertainty (MU)</b> <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">NEW</span></td><td>Computed via GUM from the EP05 + EP09 data: U = 2 × √(u<sub>cal</sub>² + u<sub>imp</sub>² + u<sub>bias</sub>² + …). Required by ISO 15189 §7.3.4.</td><td>Same calculation, but reusing precision and bias data from the EP15 verification studies; calibrator uncertainty inherited from the manufacturer.</td><td>No new material — derived from the precision and bias study data; calibrator uncertainty taken from the IFU / certificate of analysis.</td></tr>
+        <tr><td><b>Measurement Uncertainty (MU)</b></td><td>Computed via GUM from the EP05 + EP09 data: U = 2 × √(u<sub>cal</sub>² + u<sub>imp</sub>² + u<sub>bias</sub>² + …). Required by ISO 15189 §7.3.4.</td><td>Same calculation, but reusing precision and bias data from the EP15 verification studies; calibrator uncertainty inherited from the manufacturer.</td><td>No new material — derived from the precision and bias study data; calibrator uncertainty taken from the IFU / certificate of analysis.</td></tr>
         <tr><td><b>Linearity</b></td><td>EP06-Ed2 (≥ 5 levels, polynomial fit)³</td><td>Accept manufacturer's claim; abbreviated EP06 (e.g. 3 levels) only if it does not translate</td><td>Mixing series made from high + low patient pools</td></tr>
         <tr><td><b>Interferences</b></td><td>EP07-A3 (≥ 10 replicates per condition)⁴</td><td>Accept manufacturer's claim; test only locally relevant interferents</td><td>Patient pool spiked with interferent + unspiked paired control</td></tr>
         <tr><td><b>LoB / LoD / LoQ</b></td><td>EP17-A2 (≥ 20 replicates per level)</td><td>Accept manufacturer's claim; simple confirmation at claimed LoD</td><td>Blank matrix + low-level spiked patient pool</td></tr>
@@ -1171,7 +1287,7 @@
       <p style="font-size:12px;color:#475569;margin-top:4px;"><b>Notes on the design numbers:</b></p>
       <ul style="font-size:12px;color:#475569;">
         <li><b>¹ 20 × 2 × 2</b> = <b>20 days × 2 runs per day × 2 replicates per run</b> = 80 measurements per concentration level. The 20 days must be <em>separate calendar days</em> — the between-day component (Sb) is what distinguishes EP05 from a one-day repeatability study.</li>
-        <li><b>² 5 × 5</b> = <b>5 days × 5 replicates per day</b> = 25 measurements per level. Much shorter than EP05 because you are only verifying an existing manufacturer claim.</li>
+        <li><b>² 5 × 2 × 3</b> = <b>5 days × 2 runs/day × 3 replicates/run</b> = 30 measurements per level. Much shorter than EP05 because you are only verifying an existing manufacturer claim.</li>
         <li><b>³ ≥ 5 levels</b> = at least 5 equally spaced concentrations spanning the full measuring range, made by mixing a high pool with a low pool in known ratios. Polynomial regression then tests whether a linear fit is adequate.</li>
         <li><b>⁴ ≥ 10 replicates per condition</b> = per interferent: test sample (spiked with the interferent) and control sample (unspiked), ≥ 10 replicates each, at the clinical decision level.</li>
         <li><b>⁵ 20 samples, ≤ 2 outside rule</b> = run 20 fresh samples from your own reference population; if ≤ 2 fall outside the existing reference interval, it is verified. If 3 or more fall outside, re-assess.</li>
@@ -1200,6 +1316,8 @@
     <p>
       When the method has no prior IVD validation to lean on — it is in-house, modified, or being established from scratch — the work follows a standard three-step sequence. Each step builds on the previous one: you need CV% before you can calculate sigma, and you need Bias% to complete the picture.
     </p>
+    <p style="font-size:13px;color:#475569;font-style:italic;">The sequence below is the <b>standard CLSI protocol shape</b> (EP05 for precision, EP09 for bias, then the verdict computation). In practice laboratories translate this into their own <b>SOP</b> — adjusting sample numbers, levels, or the order of steps to fit local instruments and clinical context — and it is that SOP the auditor holds the lab to. The CLSI design is the starting point, not a rigid script.</p>
+    <div class="callout"><b>Before starting:</b> the APS must already declare the release framework (Westgard, Milan / EFLM, or GUM — see <a href="#tae" data-secref></a>). Step 3 below is written in the Milan / EFLM form; the other two variants are noted at the end of that step.</div>
 
     <div style="display:flex;flex-direction:column;gap:0;margin:24px 0;">
 
@@ -1215,7 +1333,6 @@
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
             <li><strong>Quick check</strong> — 20+ patient samples or QC material over multiple days (informal, not a CLSI protocol) → use the <em>Precision Monitor</em> tool</li>
             <li><strong>Full precision study (EP05-A3)</strong> — 20 days × 2 runs × 2 replicates = 80 measurements per level → use the <em>Precision Study (EP05 / EP15)</em> tool (EP05 validation mode)</li>
-            <li><strong>Verification (EP15-A3)</strong> — 5 days × 5 replicates = 25 measurements per level → use the <em>Precision Study (EP05 / EP15)</em> tool (EP15 verification mode)</li>
           </ul>
           <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% (total intermediate precision)</div>
         </div>
@@ -1246,14 +1363,23 @@
           <div style="width:2px;background:#bbf7d0;flex:1;margin-top:4px;margin-bottom:0;"></div>
         </div>
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:0;flex:1;">
-          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Total Error &amp; Sigma — combine and evaluate</div>
-          <p style="margin:0 0 6px 0;">Enter CV% + Bias% + TAE% (from EFLM or your specification) to calculate:</p>
+          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Verdict — three independent checks (Milan / EFLM)</div>
+          <p style="margin:0 0 6px 0;">Enter CV% + Bias% + the allowable limits from your APS (EFLM biological-variation goals or local specification). The method passes only if <em>all three</em> independent checks pass:</p>
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
-            <li><strong>TE</strong> = |Bias%| + 1.65 × CV% — does total error fit within the allowable limit?</li>
-            <li><strong>Sigma metric</strong> = (TAE% − |Bias%|) / CV% — how much margin does your method have?</li>
-            <li><strong>QC strategy</strong> — sigma ≥ 6: minimal QC needed; sigma 4–6: standard Westgard rules; sigma &lt; 4: tighten QC or improve method.</li>
+            <li><strong>Imprecision:</strong> CVa ≤ allowable CV%</li>
+            <li><strong>Bias:</strong> |Bias%| ≤ allowable bias% — excessive bias is a fail even if TE fits, because bias is systematic and correctable</li>
+            <li><strong>Combined:</strong> TE = |Bias%| + 1.65 × CV% ≤ allowable TAE%</li>
           </ul>
-          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> TE%, sigma metric, QC rule recommendation</div>
+          <p style="margin:8px 0 0 0;font-size:12px;color:#374151;"><strong>Sigma metric</strong> (margin indicator, not a verdict): σ = (TAE% − |Bias%|) / CV%. Used for QC strategy — σ ≥ 6: minimal QC; 4–6: standard Westgard rules; &lt; 4: tighten QC or improve method.</p>
+          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> three-verdict pass/fail (CVa / Bias / TE), sigma metric, QC rule recommendation</div>
+          <div style="margin-top:8px;padding:8px 10px;background:#fafafa;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;">
+            <b>If your APS uses a different framework, Step 3 looks like this instead:</b>
+            <ul style="margin:4px 0 0 0;padding-left:18px;line-height:1.6;">
+              <li><b>Westgard:</b> one check only — <code>TE ≤ TAE</code>. CVa and Bias are shown as components, not as independent verdicts.</li>
+              <li><b>GUM (MU):</b> one check only — <code>U ≤ allowable U</code>, where U combines CVa, Bias, calibrator and matrix uncertainty in quadrature. Replaces TE entirely.</li>
+            </ul>
+            <div style="margin-top:4px;font-size:11px;color:#6b7280;font-style:italic;">Worked comparison of all three on the same data: <a href="#tae" data-secref></a>.</div>
+          </div>
         </div>
       </div>
 
@@ -1263,9 +1389,7 @@
       <strong>In the app:</strong> After you calculate results in the Precision tool, a blue card appears at the bottom guiding you to the Bias tool — and from Bias to Total Error &amp; Sigma. Your CV% and Bias% are automatically transferred so you do not need to re-enter them.
       <br><br>
       <strong>Report Builder:</strong> Inside each tool, click <b>Add to Report</b> on the sections you want to keep (study design, results, plots, conclusion). The <b>Report Builder</b> panel in the sidebar collects sections across all tools as you work. When you are done, open it and click <b>Preview &amp; Save PDF</b> to generate a single structured report covering your whole validation — precision + bias + total error + sigma in one PDF, with your raw data and conclusions. Sections persist across tools until you hit <b>Clear all sections</b>.
-    </div>
-
-    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;">
+      <br><br>
       <strong>What IS in scope:</strong> a full validation means establishing every performance characteristic the APS requires. For an in-house or modified method this typically covers precision (EP05), bias (EP09), linearity (EP06), interferences (EP07), and detection capability (EP17), plus EP28 if a reference interval is reported and EP25 if stability matters for the intended use. Characteristics the APS does not require do not need to be established. See <a href="#iso15189" data-secref="Section"></a> — "Protocol mode per APS characteristic" — for the full mapping.
     </div>
 
@@ -1275,10 +1399,11 @@
   <hr class="divider"/>
 
   <div class="section" id="workflow-verification">
-    <h2>22. Typical verification workflow (commercial IVD or transferred method) <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:6px;">NEW</span></h2>
+    <h2>22. Typical verification workflow (commercial IVD or transferred method)</h2>
     <p>
       When the manufacturer (or originating lab) has already done the full validation, the work is lighter — you are <em>confirming</em> the claims hold in your hands rather than establishing numbers from scratch. Same three-step shape as validation, but with reduced designs and fewer characteristics in scope.
     </p>
+    <div class="callout"><b>Before starting:</b> as in the validation workflow, the APS must already declare the release framework (see <a href="#tae" data-secref></a>). Step 3 below is written in the Milan / EFLM form; Westgard and GUM variants are noted at the end of that step.</div>
 
     <div style="display:flex;flex-direction:column;gap:0;margin:24px 0;">
 
@@ -1292,7 +1417,7 @@
           <div style="font-weight:700;font-size:14px;color:#1e3a8a;margin-bottom:4px;">Precision verification (EP15-A3) — confirm the manufacturer's CV claim</div>
           <p style="margin:0 0 6px 0;">Run the abbreviated design and test whether your observed CV% is statistically consistent with the manufacturer's claim.</p>
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
-            <li><strong>Design:</strong> 5 days × 5 replicates per level = 25 measurements per level, on ≥ 2 concentration levels bracketing the medical decision points.</li>
+            <li><strong>Design:</strong> 5 days × 2 runs/day × 3 replicates/run = 30 measurements per level, on ≥ 2 concentration levels bracketing the medical decision points.</li>
             <li><strong>Tool:</strong> <em>Precision Study (EP05 / EP15)</em> in EP15 verification mode. Enter the manufacturer's claim; the tool reports whether the 95% CI on your CV% contains the claim.</li>
           </ul>
           <div style="margin-top:8px;font-size:12px;color:#3b82f6;"><strong>Output:</strong> CV% with 95% CI, verdict against manufacturer's claim</div>
@@ -1324,14 +1449,23 @@
           <div style="width:2px;background:#bbf7d0;flex:1;margin-top:4px;margin-bottom:0;"></div>
         </div>
         <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-left:12px;margin-bottom:0;flex:1;">
-          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Total Error &amp; Sigma — combine and evaluate (same as validation)</div>
-          <p style="margin:0 0 6px 0;">The TE / TAE / Sigma step is identical to validation — it does not change with scope.</p>
+          <div style="font-weight:700;font-size:14px;color:#14532d;margin-bottom:4px;">Verdict — three independent checks (Milan / EFLM, same as validation)</div>
+          <p style="margin:0 0 6px 0;">The verdict step is identical to validation — it does not change with scope. Method passes only if all three independent checks pass:</p>
           <ul style="margin:4px 0 0 0;padding-left:18px;font-size:13px;color:#374151;">
-            <li><strong>TE</strong> = |Bias%| + 1.65 × CV% — does total error fit the APS-defined TAE?</li>
-            <li><strong>Sigma</strong> = (TAE% − |Bias%|) / CV% — how much margin is left for QC?</li>
-            <li><strong>Verdict:</strong> method passes if every per-characteristic acceptance criterion is met — precision, bias, and TE ≤ TAE.</li>
+            <li><strong>Imprecision:</strong> CVa ≤ allowable CV%</li>
+            <li><strong>Bias:</strong> |Bias%| ≤ allowable bias%</li>
+            <li><strong>Combined:</strong> TE = |Bias%| + 1.65 × CV% ≤ allowable TAE%</li>
           </ul>
-          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> TE%, sigma metric, QC rule recommendation</div>
+          <p style="margin:8px 0 0 0;font-size:12px;color:#374151;"><strong>Sigma metric</strong> (margin indicator): σ = (TAE% − |Bias%|) / CV% — informs QC strategy, not the pass/fail.</p>
+          <div style="margin-top:8px;font-size:12px;color:#16a34a;"><strong>Output:</strong> three-verdict pass/fail (CVa / Bias / TE), sigma metric, QC rule recommendation</div>
+          <div style="margin-top:8px;padding:8px 10px;background:#fafafa;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;">
+            <b>If your APS uses a different framework, Step 3 looks like this instead:</b>
+            <ul style="margin:4px 0 0 0;padding-left:18px;line-height:1.6;">
+              <li><b>Westgard:</b> one check only — <code>TE ≤ TAE</code>.</li>
+              <li><b>GUM (MU):</b> one check only — <code>U ≤ allowable U</code>, replacing TE with the full uncertainty quadrature.</li>
+            </ul>
+            <div style="margin-top:4px;font-size:11px;color:#6b7280;font-style:italic;">Worked comparison: <a href="#tae" data-secref></a>.</div>
+          </div>
         </div>
       </div>
 
@@ -1346,7 +1480,14 @@
   </div>
   <hr class="divider"/>
 
-  <!-- 18 -->
+  <div class="part-banner" id="part-protocols">
+    <div class="part-kicker">Chapter 3</div>
+    <div class="part-title">Protocols — how the studies are run</div>
+    <p class="part-sub">The CLSI EP suite: step-by-step study designs for each performance characteristic. This is what the compliance rules point to for execution — EP05, EP15, EP09, EP15 trueness, EQA bias, EP28.</p>
+  </div>
+  <p style="font-size:13px;color:#475569;font-style:italic;margin:0 20px 22px;">The sections below describe the <b>standard CLSI protocol shape</b> for each performance characteristic. In practice laboratories translate these into their own <b>SOP</b> — adjusting sample numbers, levels, or the order of steps to fit local instruments and clinical context — and it is that SOP the auditor holds the lab to. The CLSI designs are the starting point, not a rigid script.</p>
+
+  <!-- Protocols part starts -->
   <div class="section" id="ep05">
     <h2>22. EP05 — Precision Study Protocol (CLSI EP05-A3)</h2>
     <p>
@@ -1356,13 +1497,14 @@
     </p>
 
     <h3>Study design</h3>
-    <p>The recommended design is <strong>2 levels × 2 replicates × 20 days</strong>:</p>
+    <p>The recommended design is <strong>2 levels × 20 days × 2 runs/day × 2 replicates/run</strong>:</p>
     <ul>
       <li><strong>2 concentration levels</strong> — typically a low-normal and a high-pathological concentration, ideally at clinical decision points</li>
-      <li><strong>2 replicates per run</strong> — measured in the same analytical run, back-to-back</li>
       <li><strong>20 days</strong> — spread over at least 20 working days (not necessarily consecutive)</li>
+      <li><strong>2 runs per day</strong> — separated in time so between-run variation is captured</li>
+      <li><strong>2 replicates per run</strong> — measured back-to-back in the same analytical run</li>
     </ul>
-    <p>This gives 40 measurements per level. A shorter design (5 days × 4 replicates) is allowed for verification studies (EP15).</p>
+    <p>This gives <strong>80 measurements per level</strong> (20 × 2 × 2). The 2 × 2 within-day structure is what lets ANOVA separate within-run, between-run, and between-day components. A shorter design (5 days × 2 runs × 3 replicates = 30 per level) is allowed for verification studies (EP15).</p>
 
     <h3>What is estimated</h3>
     <ul>
@@ -1423,7 +1565,7 @@
       <tr><th></th><th>Validation (EP05)</th><th>Verification (EP15)</th></tr>
       <tr><td><strong>Purpose</strong></td><td>Establish performance from scratch</td><td>Confirm claimed performance in your lab</td></tr>
       <tr><td><strong>Question asked</strong></td><td>"What is this method's precision?"</td><td>"Can we reproduce the manufacturer's precision?"</td></tr>
-      <tr><td><strong>Study design</strong></td><td>2 levels × 2 replicates × 20 days</td><td>2 levels × 3–5 replicates × 5 days</td></tr>
+      <tr><td><strong>Study design</strong></td><td>2 levels × 20 days × 2 runs/day × 2 replicates/run (= 80/level)</td><td>2 levels × 5 days × 2 runs/day × 3 replicates/run (= 30/level)</td></tr>
       <tr><td><strong>Who does it</strong></td><td>Manufacturers, research labs</td><td>Clinical laboratories</td></tr>
       <tr><td><strong>Prior data needed</strong></td><td>No</td><td>Yes — manufacturer's stated CV%</td></tr>
       <tr><td><strong>Output</strong></td><td>New precision estimates + CI</td><td>Pass/fail vs stated specification</td></tr>
@@ -1589,7 +1731,7 @@
     <ul>
       <li><strong>CRM with a certified assigned value</strong> — traceability and uncertainty must be stated on the certificate of analysis.</li>
       <li><strong>≥ 2 concentration levels</strong> when CRMs are available at more than one level (e.g. low and high clinical decision points).</li>
-      <li><strong>5 days × 5 replicates per level</strong> (the EP15 5 × 5 design) — same structure as precision verification, which is why they are usually run together.</li>
+      <li><strong>5 days × 2 runs × 3 replicates per level</strong> (the EP15 5 × 2 × 3 design = 30 per level) — same structure as precision verification, which is why they are usually run together.</li>
       <li><strong>Single analyser, single reagent lot, single calibration</strong> during the study.</li>
     </ul>
 
@@ -1862,7 +2004,13 @@
 
   <hr class="divider">
 
-  <!-- 22 — Qualitative LoD -->
+  <div class="part-banner" id="part-clinical">
+    <div class="part-kicker">Chapter 4</div>
+    <div class="part-title">Categorical methods, clinical accuracy, and appendix</div>
+    <p class="part-sub">Qualitative methods (EP12, EP17), diagnostic accuracy (ROC), antibiotic susceptibility agreement, and the summary table + references.</p>
+  </div>
+
+  <!-- Part 4 starts -->
   <div class="section" id="categorical-mc">
     <h2>26. Categorical Method Comparison — Kappa and McNemar</h2>
     <p>

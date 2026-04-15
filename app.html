@@ -281,6 +281,8 @@
       .rp-note-card { background: transparent !important; border: none !important; border-top: 1px solid #e2e8f0 !important; }
       .rp-note-remove { display: none !important; }
       .rp-section-card { box-shadow: none !important; border: none !important; border-bottom: 1px solid #e2e8f0 !important; border-radius: 0 !important; page-break-inside: avoid; }
+      .rp-hide-toggle { display: none !important; }
+      .rp-section-card.rp-card-hidden { display: none !important; }
     }
 
     .workspace-content {
@@ -1235,7 +1237,7 @@
 
       <!-- Correlation & Regression -->
       <div class="collapsible-section">
-        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression</button>
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.correlation">Correlation &amp; Regression <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></button>
         <div class="collapsible-content child-nav">
           <button class="learn-btn" onclick="loadTool('correlation_regression_theory.html','Correlation &amp; Regression — Concepts &amp; Theory', this)">📚 Concepts &amp; Theory<span class="btn-hint">r · R² · regression</span></button>
           <button class="learn-btn" onclick="loadTool('correlation_learning.html','Understanding Correlation &amp; Linear Regression', this)">📚 Correlation<span class="btn-hint">r · R² · scatter · residuals · outliers</span></button>
@@ -1246,7 +1248,7 @@
 
       <!-- Lab Tools -->
       <div class="collapsible-section">
-        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.lab">Lab Tools</button>
+        <button class="collapsible-header" onclick="toggleCollapsible(this)" data-i18n="cat.lab">Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span></button>
         <div class="collapsible-content child-nav">
           <button class="learn-btn" onclick="loadTool('bacterial_id.html','Bacterial Identification', this)">📚 Bacterial Identification <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;">BETA</span><span class="btn-hint">Interactive flowchart · biochemical tests · ID</span></button>
           <div class="sidebar-sep"></div>
@@ -1276,6 +1278,7 @@
         <div style="display:flex;align-items:center;gap:0;flex-shrink:0;">
           <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
           <button class="sidebar-home-btn" onclick="loadHome()" title="Home">⌂</button>
+          <button id="parentTocBtn" onclick="toggleIframeToc()" title="Contents of this page" style="display:none;background:#2563eb;border:none;cursor:pointer;padding:6px 10px;border-radius:6px;color:#fff;font-size:13px;font-weight:700;line-height:1;flex-shrink:0;margin-left:6px;">≡ TOC</button>
         </div>
         <span id="toolTitle"></span>
         <div>
@@ -1321,6 +1324,13 @@
             <div style="font-size:11px;opacity:.6;margin-top:2px;">Insert notes between sections, then save</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
+            <div id="rp-framework-toolbar" style="display:flex;align-items:center;gap:8px;background:#1e293b;border-radius:8px;padding:4px 10px;font-size:12px;color:#e2e8f0;">
+              <span style="color:#94a3b8;">View:</span>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="radio" name="rb-framework" value="all" onchange="setReportFramework('all');buildReportPreviewModal();">All</label>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="radio" name="rb-framework" value="westgard" onchange="setReportFramework('westgard');buildReportPreviewModal();">Westgard</label>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="radio" name="rb-framework" value="milan" checked onchange="setReportFramework('milan');buildReportPreviewModal();">Milan</label>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="radio" name="rb-framework" value="gum" onchange="setReportFramework('gum');buildReportPreviewModal();">GUM</label>
+            </div>
             <div style="display:flex;align-items:center;gap:4px;background:#1e293b;border-radius:8px;padding:4px 8px;">
               <button onclick="adjustReportZoom(-10)" title="Zoom out" style="background:none;border:none;color:white;font-size:16px;cursor:pointer;padding:2px 6px;line-height:1;">−</button>
               <span id="rp-zoom-label" style="font-size:12px;color:#94a3b8;min-width:36px;text-align:center;">100%</span>
@@ -1571,6 +1581,9 @@
       // Reset comments sidebar for new page
       renderCommentsSidebar([]);
 
+      // Refresh parent-toolbar Contents button visibility for this page
+      setTimeout(updateParentTocBtn, 300);
+
       if (_pendingRestore) {
         var state = _pendingRestore;
         _pendingRestore = null;
@@ -1635,6 +1648,23 @@
 
   function toggleSidebar() {
     document.querySelector('.app-shell').classList.toggle('sidebar-collapsed');
+  }
+
+  function toggleIframeToc() {
+    var iframe = document.getElementById('toolIframe');
+    if (!iframe || !iframe.contentWindow) return;
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    if (!doc) return;
+    var target = doc.querySelector('.index') || doc.querySelector('#contents') || doc.querySelector('nav') || doc.body;
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function updateParentTocBtn() {
+    var btn = document.getElementById('parentTocBtn');
+    if (!btn) return;
+    var page = (window._currentToolFile || '').toLowerCase();
+    var isTheory = page.indexOf('theory') >= 0 || page.indexOf('_learning') >= 0;
+    btn.style.display = isTheory ? 'inline-flex' : 'none';
   }
 
   function toggleInfo() {
@@ -2548,7 +2578,7 @@
       'sub.tests':'Tests','cat.analytical':'Analytical Performance',
       'cat.stability':'Sample Validation <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span>',
       'cat.clinicalAccuracy':'Clinical Accuracy <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span>',
-      'cat.correlation':'Correlation & Regression','cat.lab':'Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">BETA</span>',
+      'cat.correlation':'Correlation & Regression <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">BETA</span>','cat.lab':'Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:4px;">BETA</span>',
       'tool.normalDist':'Normal Distribution','tool.fDist':'F Distribution',
       'tool.oneSampleT':'One-Sample T-Test','tool.pairedT':'Paired T-Test',
       'tool.independentT':'Independent T-Test','tool.oneWayAnova':'One-Way ANOVA',
@@ -2573,11 +2603,11 @@
       'home.analyticalDesc':'Learn and calculate precision, bias, and total error. Covers EP05/EP15 validation, method comparison, TAE, sigma metrics, and biological variation goals.',
       'home.stability':'Sample Validation',
       'home.stabilityDesc':'Validate every part of the pre-analytical pathway — tube changes, additives, storage, transport, centrifugation, and reagent/sample stability over time. Paired-sample bias studies, CLSI EP25-A time-course studies, and EP30 commutability in one framework.',
-      'home.regression':'Correlation &amp; Regression',
+      'home.regression':'Correlation &amp; Regression <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:6px;">BETA</span>',
       'home.regressionDesc':'Explore relationships between continuous variables — understand correlation coefficients, R², and build linear regression models.',
       'home.pcr':'PCR',
       'home.pcrDesc':'End-to-end PCR workflow: in silico primer design and validation, master mix calculator, and primer dilution planning.',
-      'home.labTools':'Lab Tools',
+      'home.labTools':'Lab Tools <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:6px;">BETA</span>',
       'home.labDesc':'Everyday laboratory calculators for dilution series, solution preparation, photometry, and potentiometry.',
       'home.aboutText':'Built to bridge the gap between bench-level data and rigorous statistical analysis — helping laboratory professionals apply evidence-based methods with confidence. Use <strong>Help → Report an Issue</strong> in the menu bar to send feedback or submit a crash report.',
       'home.disclaimerTitle':'For educational and research use only',
@@ -2596,7 +2626,7 @@
       'sub.tests':'Test','cat.analytical':'Analytisk Præstation',
       'cat.stability':'Prøvevalidering <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span>',
       'cat.clinicalAccuracy':'Klinisk nøjagtighed <span style="background:#fbbf24;color:#78350f;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;vertical-align:middle;">BETA</span>',
-      'cat.correlation':'Korrelation & Regression','cat.lab':'Laboratorieværktøjer <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
+      'cat.correlation':'Korrelation & Regression <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>','cat.lab':'Laboratorieværktøjer <span style="font-size:9px;background:#fef9c3;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;">beta</span>',
       'tool.normalDist':'Normalfordeling','tool.fDist':'F-fordeling',
       'tool.oneSampleT':'Én-stikprøve T-test','tool.pairedT':'Parret T-test',
       'tool.independentT':'Uafhængig T-test','tool.oneWayAnova':'Envejs ANOVA',
@@ -2621,11 +2651,11 @@
       'home.analyticalDesc':'Lær og beregn præcision, bias og total fejl. Dækker EP05/EP15-validering, metodekomparing, TAE og sigma-metrikker.',
       'home.stability':'Prøvevalidering',
       'home.stabilityDesc':'Valider hele den præanalytiske fase — ændringer i rør, additiver, opbevaring, transport, centrifugering og stabilitet over tid. Parrede bias-studier, CLSI EP25-A tidsforløbsstudier og EP30 kommutabilitet i ét samlet framework.',
-      'home.regression':'Regression &amp; Diagnostik',
+      'home.regression':'Regression &amp; Diagnostik <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:6px;">BETA</span>',
       'home.regressionDesc':'Undersøg sammenhænge mellem variable og evaluer den diagnostiske præstation af tests og biomarkører.',
       'home.pcr':'PCR',
       'home.pcrDesc':'Komplet PCR-arbejdsgang: in silico primerdesign og validering, mastermix-beregner og primerfortyndingsplanlægning.',
-      'home.labTools':'Laboratorieværktøjer',
+      'home.labTools':'Laboratorieværktøjer <span style="background:#fbbf24;color:#78350f;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:6px;">BETA</span>',
       'home.labDesc':'Daglige laboratorieberegnere til fortyndingsrækker og opløsningsfremstilling fra molære koncentrationer.',
       'home.aboutText':'Bygget til at bygge bro mellem laboratoriedata og stringent statistisk analyse — hjælper laboratorieprofessionelle med at anvende evidensbaserede metoder med sikkerhed. Brug <strong>Rapportér problem</strong>-knappen i ethvert værktøj til at dele feedback.',
       'home.disclaimerTitle':'Kun til uddannelses- og forskningsbrug',
@@ -2692,6 +2722,50 @@
   // ── WHAT'S NEW ────────────────────────────────────────────────────────────
 
   const CHANGELOG = {
+    '2.2.2': {
+      highlights: [
+        {
+          icon: '📚',
+          title: 'Analytical Performance — restructured into 4 chapters',
+          detail: 'The theory module now reads as Concepts → Compliance → Protocols → Clinical methods, with visible chapter banners in the body and matching groups in the Contents index. A "How this module is organised" panel up front, plus a note on local responsibility (standards and acceptance criteria vary by lab and country).'
+        },
+        {
+          icon: '⚖️',
+          title: 'Westgard · Milan · GUM — framework selector in the Report Preview',
+          detail: 'New toolbar selector (All / Westgard / Milan / GUM) that stamps the chosen release rule on the report cover and filters visible sections by relevance. GUM picks show inline inputs for u_cal, u_matrix, k, allowable U, plus an ISO 17511 traceability checkbox.'
+        },
+        {
+          icon: '🧮',
+          title: 'Three verdict philosophies explained in §17',
+          detail: 'New "Two philosophies" callout plus a worked glucose example showing Westgard PASS / Milan FAIL / GUM FAIL on identical numbers. Step 3 of the validation and verification workflows is now written in Milan form with Westgard and GUM variants named as footer notes.'
+        },
+        {
+          icon: '✅',
+          title: 'What\'s mandatory in verification — at a glance',
+          detail: 'New 3-column panel in §20 lists Always required / Conditionally required / Always as records, sourced from ISO 15189 §7.3.2 + §7.3.4 and the relevant CLSI EP documents. Audit/compliance section restructured into process → audit questions → verdict → CAPA.'
+        },
+        {
+          icon: '🩺',
+          title: 'Low-II example rewritten around creatinine',
+          detail: 'Index-of-Individuality example now uses creatinine (70 → 95 µmol/L AKI pattern) — a Gaussian-distributed analyte where the standard RCV formula applies cleanly. Non-normal analytes (troponin, CRP, ferritin) are flagged as a parked theory TODO.'
+        },
+        {
+          icon: '🔗',
+          title: 'Bias → MU tool handoff',
+          detail: 'The Bias tool\'s Step 2 complete card now offers two handoff buttons: Open Total Error & Sigma (primary) and Open MU (secondary) — both auto-fill CVa and |Bias| from the study.'
+        },
+        {
+          icon: '📄',
+          title: 'Print-ready theory pages',
+          detail: 'Added @media print CSS to the Analytical Performance theory page — app name appears above the headline, text no longer has loose word-spacing, sticky headers are neutralised, and empty pages before the content are gone. A ≡ TOC button in the workspace header scrolls to the Contents index on any theory page.'
+        },
+        {
+          icon: '🧪',
+          title: 'Tool and label polish',
+          detail: 'BETA badges added to Correlation & Regression and Lab Tools. Export to Excel button removed from the Bias & Trueness tool. EP05 design corrected to 20 × 2 × 2 = 80 per level; EP15 aligned to 5 × 2 × 3 = 30 per level across theory and tool.'
+        }
+      ]
+    },
     '2.0.10': {
       highlights: [
         {
@@ -3263,6 +3337,41 @@
 // Report Builder — persistent across all tools
 // ─────────────────────────────────────────────
 var _reportSections = [];
+var _reportFramework = 'milan'; // 'westgard' | 'milan' | 'gum'
+
+function setReportFramework(fw) {
+  _reportFramework = fw;
+  var extra = document.getElementById('rb-gum-extra');
+  if (extra) extra.style.display = (fw === 'gum') ? 'block' : 'none';
+}
+
+function _frameworkLabel(fw) {
+  if (fw === 'westgard') return 'Westgard (combined budget): TE = |Bias| + 1.65·CVa ≤ TAE';
+  if (fw === 'gum') return 'GUM / MU (ISO 15189 §7.3.4): U = k·√Σuᵢ² ≤ allowable U';
+  if (fw === 'all') return 'Comparison view — no single release rule committed';
+  return 'Milan / EFLM (independent verdicts): CVa, Bias, TE each ≤ allowable';
+}
+
+var _gumParams = { uCal: 0, uMatrix: 0, k: 2, uAllow: 0, traceable: false };
+
+function _gumReportBlock() {
+  var traceLine = _gumParams.traceable
+    ? '<div style="color:#15803d;margin-top:6px;">✓ Calibrator confirmed traceable per ISO 17511 (lab attestation).</div>'
+    : '<div style="color:#b45309;font-style:italic;margin-top:6px;">⚠ Traceability per ISO 17511 not confirmed — U is indicative only.</div>';
+  return '<div style="margin-top:8px;padding:10px 12px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:12px;color:#14532d;">'
+    + '<div style="font-weight:700;margin-bottom:6px;">GUM inputs (editable — from calibrator certificate / matrix study):</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">'
+      + '<label>u_cal (%)<input type="number" step="0.1" value="' + _gumParams.uCal + '" onchange="_gumParams.uCal=parseFloat(this.value)||0;buildReportPreviewModal();" style="width:100%;padding:4px 6px;border:1px solid #86efac;border-radius:4px;font-size:12px;"></label>'
+      + '<label>u_matrix (%)<input type="number" step="0.1" value="' + _gumParams.uMatrix + '" onchange="_gumParams.uMatrix=parseFloat(this.value)||0;buildReportPreviewModal();" style="width:100%;padding:4px 6px;border:1px solid #86efac;border-radius:4px;font-size:12px;"></label>'
+      + '<label>k<input type="number" step="0.01" value="' + _gumParams.k + '" onchange="_gumParams.k=parseFloat(this.value)||2;buildReportPreviewModal();" style="width:100%;padding:4px 6px;border:1px solid #86efac;border-radius:4px;font-size:12px;"></label>'
+      + '<label>Allowable U (%)<input type="number" step="0.1" value="' + _gumParams.uAllow + '" onchange="_gumParams.uAllow=parseFloat(this.value)||0;buildReportPreviewModal();" style="width:100%;padding:4px 6px;border:1px solid #86efac;border-radius:4px;font-size:12px;"></label>'
+    + '</div>'
+    + '<label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;cursor:pointer;"><input type="checkbox" ' + (_gumParams.traceable ? 'checked' : '') + ' onchange="_gumParams.traceable=this.checked;buildReportPreviewModal();"> I confirm calibrator is traceable per ISO 17511 (stamped on report)</label>'
+    + '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #86efac;"><b>Summary:</b> u_cal = ' + _gumParams.uCal + '% · u_matrix = ' + _gumParams.uMatrix + '% · k = ' + _gumParams.k + ' · allowable U = ' + _gumParams.uAllow + '%'
+    + traceLine
+    + '</div>'
+    + '</div>';
+}
 
 function addToReport(sectionData) {
   // sectionData: { tool, analyte, timestamp, html }
@@ -3355,6 +3464,9 @@ function previewFullReport() {
   _rpZoom = 100;
   document.getElementById('rp-body').style.zoom = 1;
   document.getElementById('rp-zoom-label').textContent = '100%';
+  // Sync toolbar radios to current framework state
+  var fwRadio = document.querySelector('input[name="rb-framework"][value="' + _reportFramework + '"]');
+  if (fwRadio) fwRadio.checked = true;
   document.getElementById('report-preview-modal').style.display = 'flex';
 }
 
@@ -3392,9 +3504,13 @@ function buildReportPreviewModal() {
   var hdr = document.createElement('div');
   hdr.style.cssText = 'margin-bottom:20px;';
   hdr.innerHTML = '<h1 style="font-size:22px;font-weight:900;color:#0f172a;margin:0 0 4px;">Clinical Statistics \u2014 Analytical Validation Report</h1>'
-    + '<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">Generated ' + dateStr + '</div>'
-    + '<hr style="border:none;border-top:2px solid #e2e8f0;">';
+    + '<div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Generated ' + dateStr + '</div>'
+    + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:12px;color:#1e3a8a;margin-bottom:6px;"><b>APS framework (release rule):</b> ' + _frameworkLabel(_reportFramework) + '</div>'
+    + (_reportFramework === 'gum' ? _gumReportBlock() : '')
+    + '<hr style="border:none;border-top:2px solid #e2e8f0;margin-top:12px;">';
   body.appendChild(hdr);
+  var fwLabelEl = document.getElementById('rp-filter-fw-label');
+  if (fwLabelEl) fwLabelEl.textContent = 'relevant to ' + _reportFramework.toUpperCase();
 
   // Insert zone before first section
   body.appendChild(_rpInsertZone());
@@ -3402,11 +3518,84 @@ function buildReportPreviewModal() {
   _reportSections.forEach(function(s, i) {
     var card = document.createElement('div');
     card.className = 'rp-section-card';
-    card.innerHTML = '<h2 style="font-size:15px;font-weight:800;color:#1e3a8a;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;">'
-      + s.tool + (s.analyte ? ' \u2014 ' + s.analyte : '') + '</h2>'
+    card.setAttribute('data-rp-tool', _rpToolKey(s.tool));
+    var relevance = _rpRelevanceFor(_rpToolKey(s.tool), _reportFramework);
+    var badge = relevance.relevant
+      ? '<span style="background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:8px;">' + relevance.label + '</span>'
+      : '<span style="background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:8px;">' + relevance.label + '</span>';
+    card.innerHTML = '<h2 style="font-size:15px;font-weight:800;color:#1e3a8a;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid #e2e8f0;display:flex;align-items:center;gap:8px;">'
+      + '<span style="flex:1;">' + s.tool + (s.analyte ? ' \u2014 ' + s.analyte : '') + badge + '</span>'
+      + '<button class="rp-hide-toggle" data-sid="' + s.id + '" onclick="_rpToggleCard(\'' + s.id + '\', this)" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">👁 Hide</button>'
+      + '</h2>'
       + s.html;
     body.appendChild(card);
     body.appendChild(_rpInsertZone());
+  });
+
+  _rpApplyFilter();
+}
+
+// Map tool name to a stable key for filter rules
+function _rpToolKey(toolName) {
+  var n = (toolName || '').toLowerCase();
+  if (n.indexOf('measurement uncertainty') >= 0 || n.indexOf(' mu') >= 0 || n.endsWith('mu')) return 'mu';
+  if (n.indexOf('total error') >= 0 || n.indexOf('sigma') >= 0 || n === 'tae') return 'tae';
+  if (n.indexOf('precision') >= 0 || n.indexOf('ep05') >= 0 || n.indexOf('ep15') >= 0) return 'precision';
+  if (n.indexOf('bias') >= 0 || n.indexOf('trueness') >= 0 || n.indexOf('crm') >= 0 || n.indexOf('eqa') >= 0) return 'bias';
+  if (n.indexOf('method comparison') >= 0 || n.indexOf('ep09') >= 0) return 'methodcomp';
+  if (n.indexOf('rcv') >= 0) return 'rcv';
+  return 'other';
+}
+
+// Which tool kinds are relevant under which framework
+function _rpRelevanceFor(toolKey, framework) {
+  // Precision, bias, and method comparison produce inputs that feed every framework
+  if (toolKey === 'precision' || toolKey === 'bias' || toolKey === 'methodcomp') {
+    return { relevant: true, label: 'input — all frameworks' };
+  }
+  if (toolKey === 'tae') {
+    if (framework === 'westgard') return { relevant: true, label: 'Westgard verdict' };
+    if (framework === 'milan')   return { relevant: true, label: 'Milan — TE component' };
+    return { relevant: false, label: 'not used in GUM' };
+  }
+  if (toolKey === 'mu') {
+    if (framework === 'gum') return { relevant: true, label: 'GUM verdict' };
+    return { relevant: true, label: 'MU supplement (ISO 15189 §7.3.4)' };
+  }
+  // RCV and anything else — always shown
+  return { relevant: true, label: 'supplementary' };
+}
+
+function _rpToggleCard(id, btn) {
+  var card = btn.closest('.rp-section-card');
+  if (!card) return;
+  var hidden = card.classList.toggle('rp-card-hidden');
+  if (hidden) {
+    card.style.opacity = '0.4';
+    btn.innerHTML = '👁 Show';
+    btn.style.background = '#fef3c7';
+    btn.style.color = '#92400e';
+    btn.style.borderColor = '#fcd34d';
+  } else {
+    card.style.opacity = '';
+    btn.innerHTML = '👁 Hide';
+    btn.style.background = '#f1f5f9';
+    btn.style.color = '#475569';
+    btn.style.borderColor = '#cbd5e1';
+  }
+}
+
+function _rpApplyFilter() {
+  var cards = document.querySelectorAll('#rp-body .rp-section-card');
+  cards.forEach(function(card) {
+    var toolKey = card.getAttribute('data-rp-tool');
+    var rel = _rpRelevanceFor(toolKey, _reportFramework);
+    var show = (_reportFramework === 'all') || rel.relevant;
+    card.style.display = show ? '' : 'none';
+    var next = card.nextElementSibling;
+    if (next && next.classList.contains('rp-insert-row')) {
+      next.style.display = show ? '' : 'none';
+    }
   });
 }
 

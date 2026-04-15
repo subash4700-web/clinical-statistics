@@ -254,7 +254,6 @@
     <div id="results-body"></div>
     <div class="btn-row">
       <button class="btn-ghost" onclick="document.querySelector('[data-tab=\'tab-input\']').click()">← Back</button>
-      <button class="btn-secondary" onclick="exportExcel()">Export to Excel</button>
     </div>
   </div>
 </div>
@@ -469,14 +468,18 @@ function _iqrOutliers(arr){
   return arr.map(v=>iqr>0&&(v<q1-1.5*iqr||v>q3+1.5*iqr));
 }
 
-function _wfNextCard(step, nextTool, savedMsg, page, title) {
+function _wfNextCard(step, nextTool, savedMsg, page, title, altPage, altTitle, altLabel) {
+  var altBtn = altPage ? `<button onclick="try{window.parent.loadToolFromWorkflow('${altPage}','${altTitle}')}catch(e){alert('Open ${altTitle} from the sidebar')}" style="background:white;color:#16a34a;border:1px solid #16a34a;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">${altLabel} →</button>` : '';
   return `<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <div>
       <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Step ${step} of 3 complete</div>
-      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ${nextTool}</div>
-      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">${savedMsg} · will auto-fill in Total Error &amp; Sigma</div>
+      <div style="font-size:14px;font-weight:600;color:#1e3a8a;">Next: ${nextTool}${altPage ? ' &nbsp;·&nbsp; or '+altLabel : ''}</div>
+      <div style="font-size:12px;color:#3b82f6;margin-top:2px;">${savedMsg} · will auto-fill downstream</div>
     </div>
-    <button onclick="try{window.parent.loadToolFromWorkflow('${page}','${title}')}catch(e){alert('Open ${title} from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ${nextTool} →</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      ${altBtn}
+      <button onclick="try{window.parent.loadToolFromWorkflow('${page}','${title}')}catch(e){alert('Open ${title} from the sidebar')}" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Open ${nextTool} →</button>
+    </div>
   </div>`;
 }
 
@@ -674,7 +677,7 @@ function _doCalculateBias(pairs){
       : undefined;
     localStorage.setItem('wf_bias', JSON.stringify({ bias: +Math.abs(meanBias).toFixed(2), analyte, unit, tae: biasTae }));
   } catch(e) {}
-  html+=_wfNextCard(2,'Total Error &amp; Sigma',`|Bias%| = ${Math.abs(meanBias).toFixed(2)}% saved`,'tae.html','Total Error &amp; Sigma');
+  html+=_wfNextCard(2,'Total Error &amp; Sigma',`|Bias%| = ${Math.abs(meanBias).toFixed(2)}% saved`,'tae.html','Total Error &amp; Sigma','mu.html','Measurement Uncertainty','Open MU');
   html+=`<p class="note" style="margin-top:10px;">Results are assessed against your specified criteria — clinical context and laboratory judgement should form the final decision.</p>`;
   html+=`<button id="bias-add-report-btn" onclick="addBiasToReport()" class="btn-report">+ Add to Report</button>`;
 

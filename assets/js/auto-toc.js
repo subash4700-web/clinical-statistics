@@ -102,13 +102,18 @@
     const dock = document.createElement('div');
     dock.id = 'mini-toc-dock';
     dock.innerHTML =
-      '<button id="mini-toc-btn" type="button">' +
+      '<button id="mini-toc-btn" type="button" style="display:none;">' +
         '<span>☰ Contents</span>' +
         '<span id="mini-toc-btn-chevron">▼</span>' +
       '</button>' +
       '<div id="mini-toc-panel"></div>';
     // Insert as the first child of the toolbar so it sits on the left
     toolbar.insertBefore(dock, toolbar.firstChild);
+
+    // Expose a toggle so the parent workspace header can open/close the panel
+    window.toggleAutoToc = function() {
+      dock.classList.toggle('open');
+    };
 
     // Populate panel from the main indexBlock — group headers + links in order.
     const panel = dock.querySelector('#mini-toc-panel');
